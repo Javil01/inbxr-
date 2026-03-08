@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>INBXR — Admin Login</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/style.css" />
+  <style>
+    body { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: var(--bg-2); }
+    .login-card {
+      background: #fff;
+      border: 1px solid var(--border-1);
+      border-radius: var(--r-4);
+      padding: 40px 36px;
+      width: 100%;
+      max-width: 380px;
+      box-shadow: var(--shadow-3);
+    }
+    .login-logo {
+      text-align: center;
+      margin-bottom: 8px;
+    }
+    .login-logo span {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .login-logo .logo-mark {
+      width: 28px; height: 28px;
+      background: linear-gradient(135deg, var(--brand), var(--brand-light));
+      border-radius: var(--r-2);
+      display: inline-flex; align-items: center; justify-content: center;
+      color: #fff; font-size: 11px; font-weight: 800;
+    }
+    .login-logo .logo-text {
+      font-size: 1.1rem; font-weight: 700; color: var(--text-1);
+    }
+    .login-title {
+      text-align: center;
+      font-size: 0.82rem;
+      color: var(--text-3);
+      margin-bottom: 28px;
+    }
+    .login-card .field { margin-bottom: 16px; }
+    .login-card .btn-analyze { margin-top: 8px; }
+    .login-error {
+      background: var(--red-muted);
+      border: 1px solid rgba(220,38,38,0.15);
+      border-radius: var(--r-2);
+      color: var(--red);
+      font-size: 0.8rem;
+      padding: 8px 12px;
+      margin-bottom: 16px;
+      text-align: center;
+    }
+    .login-back {
+      display: block;
+      text-align: center;
+      margin-top: 16px;
+      font-size: 0.78rem;
+      color: var(--text-3);
+    }
+    .login-back:hover { color: var(--brand); }
+  </style>
+</head>
+<body>
+  <div class="login-card">
+    <div class="login-logo">
+      <span>
+        <span class="logo-mark">IN</span>
+        <span class="logo-text">INBXR</span>
+      </span>
+    </div>
+    <p class="login-title">Admin Dashboard</p>
+
+    {% if error %}
+    <div class="login-error">{{ error }}</div>
+    {% endif %}
+
+    <form method="POST" action="/admin/login" novalidate>
+      <div class="field">
+        <label for="username">Username</label>
+        <input type="text" id="username" name="username" placeholder="admin" autocomplete="username" required />
+      </div>
+      <div class="field">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" placeholder="Password" autocomplete="current-password" required />
+      </div>
+      <button type="submit" class="btn-analyze">
+        <span class="btn-text">Sign In</span>
+      </button>
+    </form>
+    <a href="/" class="login-back">&larr; Back to INBXR</a>
+  </div>
+</body>
+</html>

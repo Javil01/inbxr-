@@ -1,0 +1,285 @@
+/* ══════════════════════════════════════════════════════
+   INBXR — Admin Editor Styles
+   Only loaded when is_admin is true
+   ══════════════════════════════════════════════════════ */
+
+/* ── Admin toolbar ──────────────────────────────────── */
+.admin-toolbar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 9999;
+  height: 44px;
+  background: #1e1b4b;
+  color: #e0e7ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  box-shadow: 0 -2px 12px rgba(0,0,0,0.15);
+}
+
+.admin-toolbar__label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.admin-toolbar__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #10b981;
+  animation: adminPulse 2s ease-in-out infinite;
+}
+
+@keyframes adminPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.admin-toolbar__sep {
+  width: 1px;
+  height: 18px;
+  background: rgba(255,255,255,0.15);
+}
+
+.admin-toolbar a {
+  color: #c7d2fe;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.15s;
+}
+
+.admin-toolbar a:hover { color: #fff; }
+
+/* ── Drag handle ────────────────────────────────────── */
+.section-drag-handle {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 50;
+  width: 32px;
+  height: 32px;
+  background: #1e1b4b;
+  color: #c7d2fe;
+  border: none;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  cursor: grab;
+  opacity: 0;
+  transition: opacity 0.15s, transform 0.15s;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.section-drag-handle:active { cursor: grabbing; }
+
+.page-section:hover > .section-drag-handle,
+.section-drag-handle:focus {
+  opacity: 1;
+}
+
+/* ── Page section wrappers ──────────────────────────── */
+.page-section {
+  position: relative;
+  transition: outline 0.15s, opacity 0.2s;
+}
+
+.page-section.editable-section:hover {
+  outline: 2px dashed rgba(99,102,241,0.3);
+  outline-offset: -2px;
+}
+
+.page-section--locked {
+  pointer-events: auto;
+}
+
+/* ── Sortable states ────────────────────────────────── */
+.sortable-ghost {
+  opacity: 0.3;
+  outline: 2px dashed var(--brand) !important;
+}
+
+.sortable-chosen {
+  outline: 2px solid var(--brand) !important;
+  outline-offset: -2px;
+}
+
+.sortable-drag {
+  box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+}
+
+/* ── Contenteditable highlights ─────────────────────── */
+.page-section [contenteditable="true"] {
+  transition: outline 0.15s, background 0.15s;
+  outline: 2px solid transparent;
+  border-radius: 4px;
+  cursor: text;
+}
+
+.page-section [contenteditable="true"]:hover {
+  outline: 2px dashed rgba(99,102,241,0.25);
+}
+
+.page-section [contenteditable="true"]:focus,
+.admin-editing {
+  outline: 2px solid var(--brand) !important;
+  background: rgba(99,102,241,0.04) !important;
+}
+
+/* ── Toast notification ─────────────────────────────── */
+.admin-toast {
+  position: fixed;
+  bottom: 56px;
+  left: 50%;
+  transform: translateX(-50%) translateY(10px);
+  z-index: 10000;
+  background: #1e1b4b;
+  color: #e0e7ff;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 8px 18px;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+  opacity: 0;
+  transition: opacity 0.2s, transform 0.2s;
+  pointer-events: none;
+}
+
+.admin-toast--visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.admin-toast--error {
+  background: #991b1b;
+  color: #fecaca;
+}
+
+/* ── Hidden section ─────────────────────────────────── */
+.page-section--hidden {
+  opacity: 0.35;
+  pointer-events: auto;
+}
+
+.page-section--hidden::after {
+  content: 'HIDDEN';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: var(--red);
+  background: rgba(255,255,255,0.9);
+  padding: 4px 12px;
+  border-radius: 4px;
+  border: 1px solid var(--red);
+  pointer-events: none;
+}
+
+/* ── Visibility toggle button ───────────────────────── */
+.section-visibility-btn {
+  position: absolute;
+  top: 8px;
+  left: 48px;
+  z-index: 50;
+  width: 32px;
+  height: 32px;
+  background: #1e1b4b;
+  color: #c7d2fe;
+  border: none;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.page-section:hover > .section-visibility-btn { opacity: 1; }
+
+/* ── Prevent body editor contenteditable conflict ──── */
+.page-section .body-editor[contenteditable] {
+  outline: none !important;
+}
+
+.page-section .body-editor[contenteditable]:hover {
+  outline: none !important;
+}
+
+/* ── Save / Undo bar ───────────────────────────────── */
+.admin-save-bar {
+  position: fixed;
+  bottom: 52px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9998;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #1e1b4b;
+  padding: 8px 16px;
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+}
+
+.admin-save-bar__label {
+  color: #94a3b8;
+  font-size: 0.78rem;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: color 0.2s;
+}
+
+.admin-save-bar--dirty .admin-save-bar__label {
+  color: #fbbf24;
+}
+
+.admin-save-bar__btn {
+  border: none;
+  border-radius: 6px;
+  padding: 6px 18px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+}
+
+.admin-save-bar__btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.admin-save-bar__btn--save {
+  background: #6366f1;
+  color: #fff;
+}
+
+.admin-save-bar__btn--save:hover:not(:disabled) {
+  background: #4f46e5;
+}
+
+.admin-save-bar__btn--undo {
+  background: rgba(255,255,255,0.1);
+  color: #e0e7ff;
+}
+
+.admin-save-bar__btn--undo:hover {
+  background: rgba(255,255,255,0.18);
+}
+
+/* ── Add padding at bottom for toolbar ──────────────── */
+body.admin-mode {
+  padding-bottom: 44px;
+}

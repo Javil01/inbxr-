@@ -1,0 +1,293 @@
+<main class="layout">
+
+  <!-- ──────────── LEFT: INPUT FORM ──────────── -->
+  <aside class="panel panel--form">
+    <h2 class="panel-title">Analyze Your Email</h2>
+
+    <div class="tabs">
+      <button class="tab active" data-tab="compose">Compose</button>
+      <button class="tab" data-tab="settings">Settings</button>
+    </div>
+
+    <form id="analyzeForm" novalidate>
+
+      <!-- ── TAB: COMPOSE ── -->
+      <div class="tab-content active" id="tab-compose">
+
+        <div class="form-section">
+          <h3 class="section-label">Sender</h3>
+          <div class="field">
+            <label for="sender_email">Sender Email <span class="optional">(optional)</span></label>
+            <input type="email" id="sender_email" name="sender_email" placeholder="you@yourdomain.com" />
+          </div>
+          <div class="field">
+            <label for="industry">Industry</label>
+            <select id="industry" name="industry">
+              <option value="Other">General / Other</option>
+              <option value="SaaS">SaaS / Software</option>
+              <option value="Ecommerce">Ecommerce / Retail</option>
+              <option value="Info Products">Info Products / Courses</option>
+              <option value="Finance">Finance / Fintech</option>
+              <option value="Health">Health / Wellness</option>
+              <option value="Local Services">Local Services</option>
+              <option value="Political">Political / Nonprofit</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <h3 class="section-label">Subject &amp; Preview</h3>
+          <div class="field">
+            <label for="subject">Subject Line <span class="required">*</span></label>
+            <input type="text" id="subject" name="subject" placeholder="Your email subject line..." maxlength="200" />
+            <span class="char-counter" id="subject-counter">0 chars</span>
+          </div>
+          <div class="field">
+            <label for="preheader">Preheader Text <span class="optional">(optional)</span></label>
+            <input type="text" id="preheader" name="preheader" placeholder="Preview text shown in inbox..." maxlength="150" />
+          </div>
+        </div>
+
+        <!-- ════ BODY INPUT SECTION ════ -->
+        <div class="form-section">
+          <h3 class="section-label">Email Body <span class="required">*</span></h3>
+
+          <div class="input-mode-tabs" role="tablist" aria-label="Body input method">
+            <button type="button" class="input-mode-tab active" data-mode="paste-email" role="tab" aria-selected="true">
+              <span class="imt-icon">📋</span><span class="imt-label">Paste Email</span>
+            </button>
+            <button type="button" class="input-mode-tab" data-mode="paste-html" role="tab" aria-selected="false">
+              <span class="imt-icon">&lt;/&gt;</span><span class="imt-label">Paste HTML</span>
+            </button>
+            <button type="button" class="input-mode-tab" data-mode="upload" role="tab" aria-selected="false">
+              <span class="imt-icon">📁</span><span class="imt-label">Upload File</span>
+            </button>
+          </div>
+
+          <!-- Panel: Paste Email -->
+          <div class="body-mode-panel active" id="mode-paste-email">
+            <div class="body-toolbar">
+              <span class="paste-hint">
+                <span class="paste-hint__icon">📋</span>
+                <span>Paste from Gmail, Outlook, or any client — links captured automatically</span>
+              </span>
+              <button type="button" class="body-clear-btn" id="bodyClearBtn">Clear</button>
+            </div>
+            <div id="bodyEditor" class="body-editor" contenteditable="true"
+              data-placeholder="Paste your email here. Hyperlinks, formatting, and button text are preserved from your email client."
+              spellcheck="true" role="textbox" aria-multiline="true" aria-label="Email body"></div>
+            <div class="body-statusbar">
+              <span class="char-counter" id="body-counter">0 words</span>
+              <span class="link-badge hidden" id="linkBadge">
+                <span class="link-badge__dot"></span>
+                <span id="linkBadgeText">0 links</span>
+              </span>
+              <span class="paste-success hidden" id="pasteSuccess">✓ Rich paste captured</span>
+            </div>
+          </div>
+
+          <!-- Panel: Paste HTML -->
+          <div class="body-mode-panel" id="mode-paste-html">
+            <div class="body-toolbar">
+              <span class="paste-hint">
+                <span class="paste-hint__icon">&lt;/&gt;</span>
+                <span>Paste raw HTML source — exported from Mailchimp, Klaviyo, or your ESP</span>
+              </span>
+              <button type="button" class="body-clear-btn" id="htmlClearBtn">Clear</button>
+            </div>
+            <textarea id="htmlSource" class="html-source-textarea"
+              placeholder="&lt;!DOCTYPE html&gt;&#10;&lt;html&gt;...&lt;/html&gt;"
+              spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off"></textarea>
+            <div class="body-statusbar">
+              <span class="char-counter" id="html-counter">0 chars</span>
+            </div>
+          </div>
+
+          <!-- Panel: Upload file -->
+          <div class="body-mode-panel" id="mode-upload">
+            <input type="file" id="fileInput" accept=".html,.htm,.eml,.msg,.mbox" class="hidden" />
+            <div class="upload-zone" id="uploadZone">
+              <div class="upload-zone__icon">📧</div>
+              <p class="upload-zone__title">Drop your email file here</p>
+              <p class="upload-zone__sub">or <button type="button" class="upload-browse-btn" id="uploadBrowseBtn">browse to upload</button></p>
+              <ul class="upload-formats">
+                <li class="uf-chip">.eml</li>
+                <li class="uf-chip">.msg</li>
+                <li class="uf-chip">.mbox</li>
+                <li class="uf-chip">.html</li>
+              </ul>
+            </div>
+            <div class="upload-preview hidden" id="uploadPreview">
+              <div class="upload-preview__file">
+                <span class="upload-preview__icon" id="uploadFileIcon">📧</span>
+                <div class="upload-preview__info">
+                  <span class="upload-preview__name" id="uploadFileName">email.eml</span>
+                  <span class="upload-preview__meta" id="uploadFileMeta"></span>
+                </div>
+                <button type="button" class="upload-remove-btn" id="uploadRemoveBtn" title="Remove file">&#10005;</button>
+              </div>
+              <div class="upload-parsed hidden" id="uploadParsed">
+                <div class="upload-parsed__row" id="uploadParsedSubject"></div>
+                <div class="upload-parsed__row" id="uploadParsedFrom"></div>
+                <div class="upload-parsed__row" id="uploadParsedMsgCount"></div>
+              </div>
+            </div>
+            <p class="upload-error hidden" id="uploadError"></p>
+            <div class="upload-loading hidden" id="uploadLoading">
+              <span class="btn-spinner"></span>
+              <span>Parsing file...</span>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="form-section">
+          <h3 class="section-label">CTA Details <span class="optional">(optional — auto-detected)</span></h3>
+          <div class="field">
+            <label for="cta_texts">CTA Button Text(s)</label>
+            <input type="text" id="cta_texts" name="cta_texts" placeholder="Get Started Free, Download Now..." />
+            <span class="field-hint">Comma-separated if multiple</span>
+          </div>
+          <div class="field">
+            <label for="cta_urls">CTA URL(s)</label>
+            <input type="text" id="cta_urls" name="cta_urls" placeholder="https://yourdomain.com/landing" />
+            <span class="field-hint">Comma-separated if multiple</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ── TAB: SETTINGS ── -->
+      <div class="tab-content" id="tab-settings">
+        <div class="form-section">
+          <h3 class="section-label">Email Context</h3>
+          <div class="toggle-group">
+            <label class="toggle-label">
+              <input type="checkbox" id="is_transactional" name="is_transactional" />
+              <span class="toggle-track"><span class="toggle-thumb"></span></span>
+              <span class="toggle-text">
+                <strong>Transactional Email</strong>
+                <small>Order confirmations, password resets, receipts</small>
+              </span>
+            </label>
+            <label class="toggle-label">
+              <input type="checkbox" id="is_cold_email" name="is_cold_email" />
+              <span class="toggle-track"><span class="toggle-thumb"></span></span>
+              <span class="toggle-text">
+                <strong>Cold Outreach</strong>
+                <small>First-time contact to a prospected list</small>
+              </span>
+            </label>
+            <label class="toggle-label">
+              <input type="checkbox" id="is_plain_text" name="is_plain_text" />
+              <span class="toggle-track"><span class="toggle-thumb"></span></span>
+              <span class="toggle-text">
+                <strong>Plain Text Only</strong>
+                <small>No HTML formatting</small>
+              </span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <button type="submit" class="btn-analyze" id="submitBtn">
+        <span class="btn-text">Analyze Email</span>
+        <span class="btn-spinner hidden" aria-hidden="true"></span>
+      </button>
+
+    </form>
+  </aside>
+
+  <!-- ──────────── RIGHT: RESULTS ──────────── -->
+  <section class="panel panel--results" id="resultsPanel">
+
+    <div class="empty-state" id="emptyState">
+      <div class="empty-logo">INBXR</div>
+      <h3>Your Analysis Will Appear Here</h3>
+      <p>Fill out the form and click <strong>Analyze Email</strong> to get your full deliverability and effectiveness report.</p>
+      <div class="empty-features">
+        <div class="empty-feature">
+          <span class="empty-feature__icon">🛡</span>
+          <div><strong>Spam Risk Score</strong><span>Trigger word detection, structural red flags, compliance checks, and link analysis</span></div>
+        </div>
+        <div class="empty-feature">
+          <span class="empty-feature__icon">🎯</span>
+          <div><strong>Copy Effectiveness</strong><span>Hook strength, CTA analysis, conversion psychology audit, and clarity scoring</span></div>
+        </div>
+        <div class="empty-feature">
+          <span class="empty-feature__icon">✍</span>
+          <div><strong>Rewrite Suggestions</strong><span>Alternative subject lines, stronger CTAs, and improved opening lines</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="results-content hidden" id="resultsContent">
+      <div class="meta-bar" id="metaBar"></div>
+      <div class="score-row">
+        <div class="score-card" id="spamScoreCard">
+          <div class="score-card__header">
+            <span class="score-card__icon">🛡</span>
+            <span class="score-card__title">Spam Risk</span>
+          </div>
+          <div class="score-card__gauge-wrap">
+            <svg class="gauge" viewBox="0 0 120 70" xmlns="http://www.w3.org/2000/svg">
+              <path class="gauge-bg" d="M10,65 A55,55 0 0,1 110,65" />
+              <path class="gauge-fill" id="spamGaugeFill" d="M10,65 A55,55 0 0,1 110,65" stroke-dasharray="0 173" />
+              <text class="gauge-num" id="spamGaugeNum" x="60" y="58">0</text>
+              <text class="gauge-label-top" x="60" y="72">/ 100</text>
+            </svg>
+          </div>
+          <div class="score-card__badge" id="spamBadge">–</div>
+          <p class="score-card__summary" id="spamSummary"></p>
+        </div>
+        <div class="score-card" id="copyScoreCard">
+          <div class="score-card__header">
+            <span class="score-card__icon">🎯</span>
+            <span class="score-card__title">Copy Effectiveness</span>
+          </div>
+          <div class="score-card__gauge-wrap">
+            <svg class="gauge" viewBox="0 0 120 70" xmlns="http://www.w3.org/2000/svg">
+              <path class="gauge-bg" d="M10,65 A55,55 0 0,1 110,65" />
+              <path class="gauge-fill" id="copyGaugeFill" d="M10,65 A55,55 0 0,1 110,65" stroke-dasharray="0 173" />
+              <text class="gauge-num" id="copyGaugeNum" x="60" y="58">0</text>
+              <text class="gauge-label-top" x="60" y="72">/ 100</text>
+            </svg>
+          </div>
+          <div class="score-card__badge" id="copyBadge">–</div>
+          <p class="score-card__summary" id="copySummary"></p>
+        </div>
+      </div>
+
+      <div class="module-block">
+        <div class="module-header"><h2 class="module-title">🛡 Spam Risk Breakdown</h2></div>
+        <div class="category-list" id="spamCategories"></div>
+        <div class="accordion-section">
+          <button class="accordion-trigger" data-target="spamHighRisk"><span>High-Risk Elements</span><span class="badge-count" id="spamHighRiskCount">0</span><span class="accordion-arrow">▼</span></button>
+          <div class="accordion-body" id="spamHighRisk"><div class="flag-list" id="spamFlagList"></div></div>
+        </div>
+        <div class="accordion-section">
+          <button class="accordion-trigger" data-target="spamRecs"><span>Recommendations</span><span class="accordion-arrow">▼</span></button>
+          <div class="accordion-body open" id="spamRecs"><div class="rec-list" id="spamRecList"></div></div>
+        </div>
+      </div>
+
+      <div class="module-block">
+        <div class="module-header"><h2 class="module-title">🎯 Copy Effectiveness Breakdown</h2></div>
+        <div class="category-list" id="copyCategories"></div>
+        <div class="strengths-weaknesses-row">
+          <div class="sw-box sw-box--strength"><h4>Strengths</h4><ul id="copyStrengths"></ul></div>
+          <div class="sw-box sw-box--weakness"><h4>Weaknesses</h4><ul id="copyWeaknesses"></ul></div>
+        </div>
+        <div class="accordion-section">
+          <button class="accordion-trigger" data-target="copyFlags"><span>Issues Found</span><span class="badge-count" id="copyFlagCount">0</span><span class="accordion-arrow">▼</span></button>
+          <div class="accordion-body" id="copyFlags"><div class="flag-list" id="copyFlagList"></div></div>
+        </div>
+        <div class="accordion-section">
+          <button class="accordion-trigger" data-target="copyRewrites"><span>Rewrite Suggestions</span><span class="accordion-arrow">▼</span></button>
+          <div class="accordion-body open" id="copyRewrites"><div id="rewriteContent"></div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>

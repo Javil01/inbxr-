@@ -1,0 +1,95 @@
+<div class="sender-form-card" id="formCard">
+  <form id="senderForm" novalidate>
+    <div class="sender-fields">
+      <div class="field sender-field--primary">
+        <label for="domain">Sending Domain <span class="required">*</span></label>
+        <div class="domain-input-wrap">
+          <span class="domain-input-at">@</span>
+          <input type="text" id="domain" name="domain" placeholder="yourdomain.com" autocomplete="off" spellcheck="false" />
+        </div>
+        <span class="field-hint">The domain in your From address, e.g. company.com</span>
+      </div>
+      <div class="field">
+        <label for="sender_ip">Sending IP <span class="optional">(recommended)</span></label>
+        <input type="text" id="sender_ip" name="sender_ip" placeholder="203.0.113.42" autocomplete="off" spellcheck="false" />
+        <span class="field-hint">Your mail server's public IP — enables blocklist and PTR checks</span>
+      </div>
+      <div class="field">
+        <label for="dkim_selector">DKIM Selector <span class="optional">(optional)</span></label>
+        <input type="text" id="dkim_selector" name="dkim_selector" placeholder="default" autocomplete="off" spellcheck="false" />
+        <span class="field-hint">Leave blank to auto-discover common selectors</span>
+      </div>
+    </div>
+    <button type="submit" class="btn-analyze sender-submit" id="submitBtn">
+      <span class="btn-text">Run Reputation Check</span>
+      <span class="btn-spinner hidden"></span>
+    </button>
+  </form>
+</div>
+
+<div class="sender-loading hidden" id="senderLoading">
+  <div class="loading-ring"></div>
+  <p class="loading-msg" id="loadingMsg">Checking authentication records...</p>
+  <p class="loading-sub">This usually takes 5-15 seconds</p>
+</div>
+
+<div class="sender-results hidden" id="senderResults">
+  <div class="combined-card" id="combinedCard">
+    <div class="combined-card__left">
+      <div class="combined-meta" id="combinedMeta"></div>
+      <div class="combined-badge" id="combinedBadge">–</div>
+      <p class="combined-summary" id="combinedSummary"></p>
+    </div>
+    <div class="combined-gauges">
+      <div class="mini-gauge-wrap">
+        <svg class="gauge" viewBox="0 0 120 70">
+          <path class="gauge-bg" d="M10,65 A55,55 0 0,1 110,65"/>
+          <path class="gauge-fill" id="authGaugeFill" d="M10,65 A55,55 0 0,1 110,65" stroke-dasharray="0 173"/>
+          <text class="gauge-num" id="authGaugeNum" x="60" y="56">0</text>
+          <text class="gauge-label-top" x="60" y="68">/ 100</text>
+        </svg>
+        <span class="mini-gauge-label">Authentication</span>
+        <span class="mini-gauge-badge" id="authLabel">–</span>
+      </div>
+      <div class="mini-gauge-wrap">
+        <svg class="gauge" viewBox="0 0 120 70">
+          <path class="gauge-bg" d="M10,65 A55,55 0 0,1 110,65"/>
+          <path class="gauge-fill" id="repGaugeFill" d="M10,65 A55,55 0 0,1 110,65" stroke-dasharray="0 173"/>
+          <text class="gauge-num" id="repGaugeNum" x="60" y="56">0</text>
+          <text class="gauge-label-top" x="60" y="68">/ 100</text>
+        </svg>
+        <span class="mini-gauge-label">Reputation</span>
+        <span class="mini-gauge-badge" id="repLabel">–</span>
+      </div>
+    </div>
+  </div>
+
+  <section class="sender-section">
+    <h2 class="sender-section__title">Authentication Records</h2>
+    <div class="auth-grid" id="authGrid"></div>
+  </section>
+
+  <section class="sender-section">
+    <h2 class="sender-section__title">Blocklist Checks <span class="dnsbl-summary" id="dnsblSummary"></span></h2>
+    <div class="dnsbl-table-wrap">
+      <table class="dnsbl-table" id="dnsblTable">
+        <thead><tr><th>Status</th><th>List</th><th>Type</th><th>Severity</th><th>Info</th></tr></thead>
+        <tbody id="dnsblBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="sender-section" id="repSection">
+    <h2 class="sender-section__title">Reputation Signals</h2>
+    <div class="rep-signals" id="repSignals"></div>
+  </section>
+
+  <section class="sender-section" id="recsSection">
+    <h2 class="sender-section__title">Recommendations</h2>
+    <div class="rec-list" id="senderRecList"></div>
+  </section>
+
+  <div style="text-align:center;padding:12px 0 24px">
+    <button type="button" class="run-again-btn" id="runAgainBtn">&#8592; Run another check</button>
+  </div>
+</div>

@@ -1,0 +1,15 @@
+<header class="site-header">
+  <div class="header-inner">
+    <div class="logo">
+      <span class="logo-mark">IN</span>
+      <a href="/" class="logo-wordmark">INBXR</a>
+    </div>
+    <nav class="site-nav">
+      <a href="/"       class="nav-link{% if active_page == 'index' %} nav-link--active{% endif %}">Email Analyzer</a>
+      <a href="/sender" class="nav-link{% if active_page == 'sender' %} nav-link--active{% endif %}">Sender Check</a>
+      {% if is_admin %}
+      <a href="/admin/logout" class="nav-link" style="color:var(--red);margin-left:8px">Logout</a>
+      {% endif %}
+    </nav>
+  </div>
+</header>
