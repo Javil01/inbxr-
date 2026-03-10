@@ -1,0 +1,23 @@
+[
+  {
+    "provider": "gmail",
+    "label": "Gmail",
+    "email": "your-seed@gmail.com",
+    "username": "your-seed@gmail.com",
+    "password": "your-app-password"
+  },
+  {
+    "provider": "outlook",
+    "label": "Outlook",
+    "email": "your-seed@outlook.com",
+    "username": "your-seed@outlook.com",
+    "password": "your-app-password"
+  },
+  {
+    "provider": "yahoo",
+    "label": "Yahoo",
+    "email": "your-seed@yahoo.com",
+    "username": "your-seed@yahoo.com",
+    "password": "your-app-password"
+  }
+]

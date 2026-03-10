@@ -6,6 +6,16 @@ Flask backend: analysis API + file parsing + admin editor.
 import re
 import os
 import tempfile
+
+# ── Load .env file if present (no dependencies) ──────
+_env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
+if os.path.exists(_env_path):
+    with open(_env_path, "r", encoding="utf-8") as _f:
+        for _line in _f:
+            _line = _line.strip()
+            if _line and not _line.startswith("#") and "=" in _line:
+                _key, _, _val = _line.partition("=")
+                os.environ.setdefault(_key.strip(), _val.strip())
 import mailbox
 import email as email_lib
 from email import policy as email_policy
@@ -252,6 +262,142 @@ def sender():
                            active_page="sender")
 
 
+@app.route("/dashboard")
+def dashboard():
+    from modules.page_config import get_page_sections
+    sections = get_page_sections("dashboard")
+    if not _is_admin():
+        sections = [s for s in sections if s.get("visible", True)]
+    return render_template("dashboard.html",
+                           sections=sections,
+                           is_admin=_is_admin(),
+                           active_page="dashboard")
+
+
+@app.route("/subject-scorer")
+def subject_scorer():
+    from modules.page_config import get_page_sections
+    sections = get_page_sections("subject_scorer")
+    if not _is_admin():
+        sections = [s for s in sections if s.get("visible", True)]
+    return render_template("subject_scorer.html",
+                           sections=sections,
+                           is_admin=_is_admin(),
+                           active_page="subject_scorer")
+
+
+@app.route("/score-subjects", methods=["POST"])
+def score_subjects():
+    data = request.get_json(force=True, silent=True)
+    if data is None:
+        return jsonify({"error": "Invalid JSON payload"}), 400
+
+    subjects = data.get("subjects") or []
+    industry = (data.get("industry") or "Other").strip()
+
+    if not subjects or len(subjects) < 2:
+        return jsonify({"error": "At least 2 subject lines required."}), 400
+
+    # Sanitize — strip, limit to 10
+    subjects = [s.strip() for s in subjects if s.strip()][:10]
+
+    from modules.subject_scorer import score_subjects as do_score
+    result = do_score(subjects, industry=industry)
+    return jsonify(result)
+
+
+@app.route("/placement")
+def placement():
+    from modules.page_config import get_page_sections
+    sections = get_page_sections("placement")
+    if not _is_admin():
+        sections = [s for s in sections if s.get("visible", True)]
+    return render_template("placement.html",
+                           sections=sections,
+                           is_admin=_is_admin(),
+                           active_page="placement")
+
+
+@app.route("/placement/start", methods=["POST"])
+def placement_start():
+    from modules.inbox_placement import get_seed_info, generate_token
+
+    seeds = get_seed_info()
+    if not seeds:
+        return jsonify({"error": "No seed accounts configured. Add accounts to config/seed_accounts.json"}), 503
+
+    token = generate_token()
+    return jsonify({"token": token, "seeds": seeds})
+
+
+@app.route("/placement/check", methods=["POST"])
+def placement_check():
+    from modules.inbox_placement import (
+        InboxPlacementTester, generate_recommendations, check_rate_limit,
+    )
+
+    if not check_rate_limit():
+        return jsonify({"error": "Rate limit exceeded. Please wait a minute before checking again."}), 429
+
+    data = request.get_json(force=True, silent=True)
+    if not data:
+        return jsonify({"error": "Invalid JSON payload"}), 400
+
+    token = (data.get("token") or "").strip()
+    if not token or not re.match(r'^INBXR-[A-F0-9]{8}$', token):
+        return jsonify({"error": "Invalid or missing test token."}), 400
+
+    tester = InboxPlacementTester(token=token)
+    try:
+        results = tester.check_all()
+    except Exception as e:
+        return jsonify({"error": f"Placement check failed: {e}"}), 500
+
+    # Build summary
+    total = len(results)
+    inbox_count = sum(1 for r in results if r["placement"] == "inbox")
+    spam_count = sum(1 for r in results if r["placement"] == "spam")
+    not_found = sum(1 for r in results if r["placement"] == "not_found")
+
+    summary = {
+        "total": total,
+        "inbox": inbox_count,
+        "spam": spam_count,
+        "not_found": not_found,
+    }
+
+    return jsonify({
+        "token": token,
+        "results": results,
+        "summary": summary,
+        "recommendations": generate_recommendations(results, summary),
+    })
+
+
+@app.route("/placement/health", methods=["POST"])
+def placement_health():
+    """Admin-only: check IMAP connectivity of all seed accounts."""
+    if not _is_admin():
+        return jsonify({"error": "Unauthorized"}), 403
+
+    from modules.inbox_placement import check_seed_health
+    return jsonify({"seeds": check_seed_health()})
+
+
+@app.route("/placement/cleanup", methods=["POST"])
+def placement_cleanup():
+    """Admin-only: remove old test emails from seed inboxes."""
+    if not _is_admin():
+        return jsonify({"error": "Unauthorized"}), 403
+
+    from modules.inbox_placement import cleanup_seeds
+    try:
+        result = cleanup_seeds()
+    except Exception as e:
+        return jsonify({"error": f"Cleanup failed: {e}"}), 500
+    return jsonify(result)
+
+
 @app.route("/check-reputation", methods=["POST"])
 def check_reputation():
     data = request.get_json(force=True, silent=True)
@@ -285,6 +431,141 @@ def check_reputation():
     return jsonify(result)
 
 
+@app.route("/ai-rewrite", methods=["POST"])
+def ai_rewrite():
+    """AI-powered email rewrite using Groq API."""
+    data = request.get_json(force=True, silent=True)
+    if data is None:
+        return jsonify({"error": "Invalid JSON payload"}), 400
+
+    subject = (data.get("subject") or "").strip()
+    body = (data.get("body") or "").strip()
+    industry = (data.get("industry") or "General").strip()
+    tone = (data.get("tone") or "professional").strip()
+    cta_texts = data.get("cta_texts") or []
+    issues = data.get("issues") or []
+
+    if not subject and not body:
+        return jsonify({"error": "Subject or body is required."}), 400
+
+    from modules.ai_rewriter import rewrite_email, is_available, AIRewriteError
+
+    if not is_available():
+        return jsonify({"error": "AI rewrite not available — set GROQ_API_KEY environment variable."}), 503
+
+    try:
+        result = rewrite_email(
+            subject=subject, body=body, industry=industry,
+            tone=tone, cta_texts=cta_texts, issues=issues,
+        )
+    except AIRewriteError as e:
+        return jsonify({"error": str(e)}), 500
+    except Exception as e:
+        return jsonify({"error": f"Rewrite failed: {str(e)[:100]}"}), 500
+
+    return jsonify(result)
+
+
+@app.route("/ai-rewrite/status", methods=["GET"])
+def ai_rewrite_status():
+    """Check if AI rewrite is available."""
+    from modules.ai_rewriter import is_available
+    return jsonify({"available": is_available()})
+
+
+@app.route("/validate-bimi", methods=["POST"])
+def validate_bimi_route():
+    """Deep BIMI validation for a domain."""
+    data = request.get_json(force=True, silent=True)
+    if data is None:
+        return jsonify({"error": "Invalid JSON payload"}), 400
+
+    domain = (data.get("domain") or "").strip().lower().rstrip(".")
+    if not domain:
+        return jsonify({"error": "Domain is required."}), 400
+    if not re.match(r'^[a-z0-9][a-z0-9.\-]{0,251}[a-z0-9]$', domain):
+        return jsonify({"error": "Invalid domain format."}), 400
+
+    selector = (data.get("selector") or "default").strip()
+
+    from modules.bimi_validator import validate_bimi
+    try:
+        result = validate_bimi(domain, selector=selector)
+    except Exception as e:
+        return jsonify({"error": f"BIMI validation failed: {e}"}), 500
+
+    return jsonify(result)
+
+
+@app.route("/generate-bimi", methods=["POST"])
+def generate_bimi_route():
+    """Generate a BIMI DNS record."""
+    data = request.get_json(force=True, silent=True)
+    if data is None:
+        return jsonify({"error": "Invalid JSON payload"}), 400
+
+    domain = (data.get("domain") or "").strip().lower().rstrip(".")
+    if not domain:
+        return jsonify({"error": "Domain is required."}), 400
+
+    logo_url = (data.get("logo_url") or "").strip()
+    vmc_url = (data.get("vmc_url") or "").strip()
+    selector = (data.get("selector") or "default").strip()
+
+    from modules.bimi_validator import generate_bimi_record
+    result = generate_bimi_record(domain, logo_url, vmc_url, selector)
+    if result.get("error"):
+        return jsonify(result), 400
+
+    return jsonify(result)
+
+
+@app.route("/generate-dns", methods=["POST"])
+def generate_dns():
+    """Generate SPF, DKIM, and/or DMARC DNS records."""
+    data = request.get_json(force=True, silent=True)
+    if data is None:
+        return jsonify({"error": "Invalid JSON payload"}), 400
+
+    domain = (data.get("domain") or "").strip().lower().rstrip(".")
+    if not domain:
+        return jsonify({"error": "Domain is required."}), 400
+    if not re.match(r'^[a-z0-9][a-z0-9.\-]{0,251}[a-z0-9]$', domain):
+        return jsonify({"error": "Invalid domain format."}), 400
+
+    from modules.dns_generators import generate_spf, generate_dmarc, generate_dkim_instructions
+
+    results = {}
+    record_type = (data.get("type") or "all").lower()
+
+    if record_type in ("spf", "all"):
+        results["spf"] = generate_spf(
+            domain,
+            esps=data.get("esps", []),
+            extra_ips=data.get("ips", []),
+            extra_includes=data.get("includes", []),
+            mechanism=data.get("spf_mechanism", "-all"),
+        )
+
+    if record_type in ("dkim", "all"):
+        results["dkim"] = generate_dkim_instructions(
+            domain,
+            esp=data.get("esp"),
+            selector=data.get("dkim_selector"),
+        )
+
+    if record_type in ("dmarc", "all"):
+        results["dmarc"] = generate_dmarc(
+            domain,
+            policy=data.get("dmarc_policy", "none"),
+            rua_email=data.get("rua_email"),
+            ruf_email=data.get("ruf_email"),
+            pct=data.get("dmarc_pct", 100),
+        )
+
+    return jsonify({"domain": domain, "records": results})
+
+
 @app.route("/analyze", methods=["POST"])
 def analyze():
     data = request.get_json(force=True, silent=True)
@@ -302,6 +583,9 @@ def analyze():
     is_cold_email    = bool(data.get("is_cold_email",    False))
     is_plain_text    = bool(data.get("is_plain_text",    False))
 
+    if not sender_email:
+        return jsonify({"error": "Sender email address is required."}), 400
+
     if not subject and not body:
         return jsonify({"error": "Please provide at least a subject line and email body."}), 400
 
@@ -314,6 +598,9 @@ def analyze():
 
     from modules.spam_analyzer import SpamAnalyzer
     from modules.copy_analyzer import CopyAnalyzer
+    from modules.readability import analyze_readability
+    from modules.link_image_validator import validate_links_and_images
+    from modules.benchmarks import get_benchmarks
 
     spam = SpamAnalyzer(
         subject=subject, preheader=preheader, body=body,
@@ -328,9 +615,32 @@ def analyze():
         is_plain_text=is_plain_text, industry=industry,
     )
 
-    return jsonify({
+    # ── Sender reputation check (extract domain from email) ──
+    reputation_result = None
+    if sender_email and "@" in sender_email:
+        domain = sender_email.split("@", 1)[1].strip().lower().rstrip(".")
+        if domain and re.match(r'^[a-z0-9][a-z0-9.\-]{0,251}[a-z0-9]$', domain):
+            from modules.reputation_checker import ReputationChecker
+            try:
+                checker = ReputationChecker(domain=domain)
+                reputation_result = checker.analyze()
+            except Exception:
+                pass  # non-fatal — still return spam + copy results
+
+    readability_result = analyze_readability(body=body, subject=subject)
+
+    # Link & image validation (non-fatal)
+    link_image_result = None
+    if body:
+        try:
+            link_image_result = validate_links_and_images(body)
+        except Exception:
+            pass
+
+    result = {
         "spam": spam.analyze(),
         "copy": copy.analyze(),
+        "readability": readability_result,
         "meta": {
             "subject_length": len(subject),
             "body_word_count": len(re.findall(r"\b\w+\b", body)),
@@ -341,7 +651,54 @@ def analyze():
                 "Promotional"
             ),
         },
-    })
+    }
+
+    # Industry benchmarks
+    try:
+        result["benchmarks"] = get_benchmarks(
+            industry=industry,
+            spam_score=result["spam"]["score"],
+            copy_score=result["copy"]["score"],
+            readability_score=readability_result.get("score") if readability_result else None,
+            subject_length=len(subject),
+            body_word_count=len(re.findall(r"\b\w+\b", body)),
+        )
+    except Exception:
+        pass
+
+    if link_image_result:
+        result["link_image"] = link_image_result
+
+    if reputation_result:
+        result["reputation"] = reputation_result
+        # Generate DNS fix suggestions for missing/broken auth
+        try:
+            from modules.dns_generators import generate_from_auth_results
+            auth_cats = reputation_result.get("auth", {}).get("categories", [])
+            dns_suggestions = generate_from_auth_results(
+                domain=domain, auth_categories=auth_cats, sender_email=sender_email,
+            )
+            if dns_suggestions.get("has_suggestions"):
+                result["dns_suggestions"] = dns_suggestions
+        except Exception:
+            pass
+
+        # BIMI validation (non-fatal)
+        try:
+            from modules.bimi_validator import validate_bimi
+            bimi_result = validate_bimi(domain)
+            result["bimi"] = bimi_result
+        except Exception:
+            pass
+
+    # Pre-send audit checklist (aggregates all results)
+    try:
+        from modules.presend_audit import generate_audit
+        result["audit"] = generate_audit(result)
+    except Exception:
+        pass
+
+    return jsonify(result)
 
 
 @app.route("/parse-file", methods=["POST"])

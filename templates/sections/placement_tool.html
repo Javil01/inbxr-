@@ -1,0 +1,137 @@
+<div class="placement-container">
+
+  <!-- ── STEP INDICATOR ── -->
+  <div class="placement-steps">
+    <div class="placement-step active" id="stepIndicator1">
+      <span class="placement-step__num">1</span>
+      <span class="placement-step__label">Generate Token</span>
+    </div>
+    <div class="placement-step__line"></div>
+    <div class="placement-step" id="stepIndicator2">
+      <span class="placement-step__num">2</span>
+      <span class="placement-step__label">Send Email</span>
+    </div>
+    <div class="placement-step__line"></div>
+    <div class="placement-step" id="stepIndicator3">
+      <span class="placement-step__num">3</span>
+      <span class="placement-step__label">View Results</span>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════ -->
+  <!--  STEP 1: START TEST                             -->
+  <!-- ════════════════════════════════════════════════ -->
+  <div class="placement-panel" id="step1">
+    <div class="placement-card">
+      <div class="placement-card__icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="4" width="20" height="16" rx="2"/>
+          <path d="M22 7l-10 7L2 7"/>
+        </svg>
+      </div>
+      <h2 class="placement-card__title">Start Inbox Placement Test</h2>
+      <p class="placement-card__desc">We'll generate a unique token and show you the seed email addresses. You'll send your email to those addresses, then we'll check where it landed.</p>
+      <div class="placement-how">
+        <div class="placement-how__item">
+          <span class="placement-how__num">1</span>
+          <span>Click below to get your unique test token</span>
+        </div>
+        <div class="placement-how__item">
+          <span class="placement-how__num">2</span>
+          <span>Add the token to your subject line and send to our seed addresses</span>
+        </div>
+        <div class="placement-how__item">
+          <span class="placement-how__num">3</span>
+          <span>Click "Check Results" to see inbox vs. spam placement per provider</span>
+        </div>
+      </div>
+      <button type="button" class="btn-analyze" id="startTestBtn">
+        <span class="btn-text">Generate Test Token</span>
+        <span class="btn-spinner hidden"></span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════ -->
+  <!--  STEP 2: SEND EMAIL                            -->
+  <!-- ════════════════════════════════════════════════ -->
+  <div class="placement-panel hidden" id="step2">
+    <div class="placement-card">
+      <h2 class="placement-card__title">Send Your Email</h2>
+      <p class="placement-card__desc">Add this token <strong>anywhere</strong> in your subject line, then send your email to the seed addresses below.</p>
+
+      <div class="placement-token-box">
+        <span class="placement-token-label">Your Test Token</span>
+        <div class="placement-token-value" id="tokenDisplay"></div>
+        <button type="button" class="placement-token-copy" id="copyTokenBtn">Copy</button>
+      </div>
+
+      <!-- ESP / CRM Selector -->
+      <div class="esp-selector">
+        <label class="esp-selector__label">What are you sending from?</label>
+        <select id="espSelect" class="esp-selector__dropdown">
+          <option value="">Select your platform...</option>
+          <option value="mailchimp">Mailchimp</option>
+          <option value="klaviyo">Klaviyo</option>
+          <option value="activecampaign">ActiveCampaign</option>
+          <option value="convertkit">Kit (ConvertKit)</option>
+          <option value="hubspot">HubSpot</option>
+          <option value="sendgrid">SendGrid</option>
+          <option value="constantcontact">Constant Contact</option>
+          <option value="mailerlite">MailerLite</option>
+          <option value="brevo">Brevo (Sendinblue)</option>
+          <option value="aweber">AWeber</option>
+          <option value="getresponse">GetResponse</option>
+          <option value="drip">Drip</option>
+          <option value="beehiiv">Beehiiv</option>
+          <option value="campaignmonitor">Campaign Monitor</option>
+          <option value="flodesk">Flodesk</option>
+          <option value="gohighlevel">GoHighLevel</option>
+          <option value="gmail">Gmail / Google Workspace</option>
+          <option value="outlook">Outlook / Microsoft 365</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+
+      <!-- ESP-specific instructions (shown after selection) -->
+      <div class="esp-instructions hidden" id="espInstructions">
+        <div class="esp-instructions__header">
+          <span class="esp-instructions__icon" id="espIcon"></span>
+          <span class="esp-instructions__name" id="espName"></span>
+        </div>
+        <div class="esp-instructions__steps" id="espSteps"></div>
+      </div>
+
+      <!-- Seed addresses with ESP-optimized copy -->
+      <div class="placement-seed-list" id="seedList"></div>
+
+      <div class="placement-tip">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        <span>Send from your actual email system (ESP, mail server, or client) to test real-world placement. Wait 30-60 seconds after sending before checking results.</span>
+      </div>
+
+      <button type="button" class="btn-analyze" id="checkResultsBtn">
+        <span class="btn-text">Check Results</span>
+        <span class="btn-spinner hidden"></span>
+      </button>
+      <button type="button" class="placement-back-btn" id="backToStep1">&larr; Start Over</button>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════ -->
+  <!--  STEP 3: RESULTS                               -->
+  <!-- ════════════════════════════════════════════════ -->
+  <div class="placement-panel hidden" id="step3">
+    <div class="placement-results-summary" id="resultsSummary"></div>
+    <div class="placement-results-grid" id="resultsGrid"></div>
+    <div class="placement-recs" id="placementRecs"></div>
+    <div class="placement-actions">
+      <button type="button" class="btn-analyze placement-recheck-btn" id="recheckBtn">
+        <span class="btn-text">Re-check (email may still be arriving)</span>
+        <span class="btn-spinner hidden"></span>
+      </button>
+      <button type="button" class="placement-back-btn" id="newTestBtn">&larr; Run New Test</button>
+    </div>
+  </div>
+
+</div>

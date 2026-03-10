@@ -1,0 +1,59 @@
+<div class="ss-container">
+  <div class="ss-input-panel">
+    <h2 class="ss-panel-title">Enter Your Subject Lines</h2>
+    <p class="ss-panel-desc">Add 2-5 subject line variations to compare. We'll score each one and pick a winner.</p>
+
+    <div class="ss-inputs" id="ssInputs">
+      <div class="ss-input-row">
+        <span class="ss-input-label">A</span>
+        <input type="text" class="ss-input" placeholder="Your first subject line..." maxlength="200" autofocus />
+        <span class="ss-char-count">0</span>
+      </div>
+      <div class="ss-input-row">
+        <span class="ss-input-label">B</span>
+        <input type="text" class="ss-input" placeholder="Alternative version..." maxlength="200" />
+        <span class="ss-char-count">0</span>
+      </div>
+    </div>
+
+    <div class="ss-actions">
+      <button type="button" class="ss-add-btn" id="ssAddBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Add Another
+      </button>
+      <span class="ss-add-hint">Up to 5 subject lines</span>
+    </div>
+
+    <div class="ss-options">
+      <div class="ss-option">
+        <label class="ss-option-label" for="ssIndustry">Industry</label>
+        <select id="ssIndustry" class="ss-option-select">
+          <option value="Other">General / Other</option>
+          <option value="SaaS">SaaS / Software</option>
+          <option value="Ecommerce">Ecommerce / Retail</option>
+          <option value="Info Products">Info Products / Courses</option>
+          <option value="Finance">Finance / Fintech</option>
+          <option value="Health">Health / Wellness</option>
+          <option value="Local Services">Local Services</option>
+        </select>
+      </div>
+    </div>
+
+    <button type="button" class="btn-analyze" id="ssScoreBtn">
+      <span class="btn-text">Score &amp; Compare</span>
+      <span class="btn-spinner hidden"></span>
+    </button>
+  </div>
+
+  <!-- Results -->
+  <div class="ss-results hidden" id="ssResults">
+    <div class="ss-winner-banner" id="ssWinnerBanner"></div>
+    <div class="ss-cards" id="ssCards"></div>
+    <div class="ss-use-winner hidden" id="ssUseWinner">
+      <a href="/" class="ss-use-btn" id="ssUseBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
+        Analyze Full Email with This Subject
+      </a>
+    </div>
+  </div>
+</div>

@@ -5,8 +5,11 @@
       <a href="/" class="logo-wordmark">INBXR</a>
     </div>
     <nav class="site-nav">
-      <a href="/"       class="nav-link{% if active_page == 'index' %} nav-link--active{% endif %}">Email Analyzer</a>
-      <a href="/sender" class="nav-link{% if active_page == 'sender' %} nav-link--active{% endif %}">Sender Check</a>
+      <a href="/"                class="nav-link{% if active_page == 'index' %} nav-link--active{% endif %}">Email Analyzer</a>
+      <a href="/subject-scorer" class="nav-link{% if active_page == 'subject_scorer' %} nav-link--active{% endif %}">Subject Scorer</a>
+      <a href="/sender"         class="nav-link{% if active_page == 'sender' %} nav-link--active{% endif %}">Sender Check</a>
+      <a href="/placement"      class="nav-link{% if active_page == 'placement' %} nav-link--active{% endif %}">Inbox Placement</a>
+      <a href="/dashboard"      class="nav-link{% if active_page == 'dashboard' %} nav-link--active{% endif %}">Dashboard</a>
       {% if is_admin %}
       <a href="/admin/logout" class="nav-link" style="color:var(--red);margin-left:8px">Logout</a>
       {% endif %}

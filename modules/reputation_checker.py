@@ -1,10 +1,12 @@
 """
 INBXR — Sender Reputation & Authentication Checker
 Performs live DNS lookups for SPF, DKIM, DMARC, BIMI,
-PTR / FCrDNS, and parallel DNSBL checks.
+PTR / FCrDNS, parallel DNSBL checks, and SMTP diagnostics.
 """
 
 import re
+import socket
+import smtplib
 import ipaddress
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -59,40 +61,150 @@ COMMON_SELECTORS = [
 
 # ── IP-based DNSBL zones ──────────────────────────────
 IP_DNSBLS = [
-    {"zone": "zen.spamhaus.org",       "name": "Spamhaus ZEN",    "weight": "critical",
+    # ── Critical ──
+    {"zone": "zen.spamhaus.org",       "name": "Spamhaus ZEN",       "weight": "critical",
      "info": "Industry standard. Combines SBL (spam sources), XBL (exploited IPs), and PBL (policy block list)."},
-    {"zone": "bl.spamcop.net",         "name": "SpamCop",         "weight": "major",
+    # ── Major ──
+    {"zone": "bl.spamcop.net",         "name": "SpamCop",            "weight": "major",
      "info": "User-reported spam. Aggressive but decays quickly (24–48 h)."},
-    {"zone": "b.barracudacentral.org", "name": "Barracuda BRBL",  "weight": "major",
+    {"zone": "b.barracudacentral.org", "name": "Barracuda BRBL",     "weight": "major",
      "info": "Used by Barracuda Networks appliances worldwide."},
-    {"zone": "cbl.abuseat.org",        "name": "CBL",             "weight": "major",
+    {"zone": "cbl.abuseat.org",        "name": "CBL",                "weight": "major",
      "info": "Detects spambot behavior. Feeds into Spamhaus XBL."},
-    {"zone": "dnsbl.sorbs.net",        "name": "SORBS",           "weight": "moderate",
+    {"zone": "truncate.gbudb.net",     "name": "GBUdb Truncate",     "weight": "major",
+     "info": "Truncate list by Message Sniffer. Widely used in enterprise spam appliances."},
+    {"zone": "dnsbl.justspam.org",     "name": "JustSpam",           "weight": "major",
+     "info": "Spam-only blocklist. Does not list for policy reasons — only confirmed spam."},
+    # ── Moderate ──
+    {"zone": "dnsbl.sorbs.net",        "name": "SORBS",              "weight": "moderate",
      "info": "Spam and Open Relay Blocking System."},
-    {"zone": "spam.dnsbl.sorbs.net",   "name": "SORBS Spam",      "weight": "moderate",
+    {"zone": "spam.dnsbl.sorbs.net",   "name": "SORBS Spam",         "weight": "moderate",
      "info": "IPs that sent spam to SORBS honeypots."},
-    {"zone": "dnsbl-1.uceprotect.net", "name": "UCEPROTECT L1",   "weight": "moderate",
+    {"zone": "new.spam.dnsbl.sorbs.net","name": "SORBS New Spam",    "weight": "moderate",
+     "info": "Recently observed spam senders."},
+    {"zone": "recent.spam.dnsbl.sorbs.net","name":"SORBS Recent",    "weight": "moderate",
+     "info": "Very recently observed spam senders (48h window)."},
+    {"zone": "old.spam.dnsbl.sorbs.net","name": "SORBS Old Spam",    "weight": "moderate",
+     "info": "Long-term spam sources in the SORBS network."},
+    {"zone": "web.dnsbl.sorbs.net",    "name": "SORBS Web",          "weight": "moderate",
+     "info": "IPs with vulnerable web servers exploited for spam."},
+    {"zone": "smtp.dnsbl.sorbs.net",   "name": "SORBS SMTP",         "weight": "moderate",
+     "info": "Open SMTP relays detected by SORBS."},
+    {"zone": "socks.dnsbl.sorbs.net",  "name": "SORBS SOCKS",        "weight": "moderate",
+     "info": "Open SOCKS proxy servers exploited for spam."},
+    {"zone": "http.dnsbl.sorbs.net",   "name": "SORBS HTTP",         "weight": "moderate",
+     "info": "Open HTTP proxies exploited for spam."},
+    {"zone": "misc.dnsbl.sorbs.net",   "name": "SORBS Misc",         "weight": "moderate",
+     "info": "Miscellaneous open proxy/relay detections."},
+    {"zone": "dnsbl-1.uceprotect.net", "name": "UCEPROTECT L1",      "weight": "moderate",
      "info": "Individual IP spam sender list."},
-    {"zone": "psbl.surriel.com",       "name": "PSBL",            "weight": "moderate",
+    {"zone": "dnsbl-2.uceprotect.net", "name": "UCEPROTECT L2",      "weight": "moderate",
+     "info": "Netblock-level listing. Escalates from L1 if many IPs listed."},
+    {"zone": "dnsbl-3.uceprotect.net", "name": "UCEPROTECT L3",      "weight": "moderate",
+     "info": "ASN-level listing. Most aggressive tier — entire provider blocked."},
+    {"zone": "psbl.surriel.com",       "name": "PSBL",               "weight": "moderate",
      "info": "Passive spam block list. Automated trap-based."},
-    {"zone": "ix.dnsbl.manitu.net",    "name": "NiX Spam",        "weight": "moderate",
+    {"zone": "ix.dnsbl.manitu.net",    "name": "NiX Spam",           "weight": "moderate",
      "info": "Widely used in Europe. Fast decay on good behavior."},
-    {"zone": "noptr.spamrats.com",     "name": "SPAMRATS NoPtr",  "weight": "minor",
+    {"zone": "bl.mailspike.net",       "name": "Mailspike BL",       "weight": "moderate",
+     "info": "Mailspike reputation blocklist. Used by many European providers."},
+    {"zone": "bl.spamcannibal.org",    "name": "SpamCannibal",       "weight": "moderate",
+     "info": "DNS-based spam source blocklist."},
+    {"zone": "dnsbl.dronebl.org",      "name": "DroneBL",            "weight": "moderate",
+     "info": "Lists IPs of compromised machines (drones/botnets) used for spam or attacks."},
+    {"zone": "db.wpbl.info",           "name": "WPBL",               "weight": "moderate",
+     "info": "Weighted Private Block List. Community-driven spam source list."},
+    {"zone": "bl.blocklist.de",        "name": "Blocklist.de",       "weight": "moderate",
+     "info": "German blocklist tracking attacks, spam, and abuse. Widely used in Europe."},
+    {"zone": "bl.nordspam.com",        "name": "NordSpam BL",        "weight": "moderate",
+     "info": "Nordic spam blocklist. Tracks spam sources targeting Scandinavian networks."},
+    {"zone": "combined.abuse.ch",      "name": "abuse.ch Combined",  "weight": "moderate",
+     "info": "Tracks malware, botnets, and ransomware C2 servers."},
+    {"zone": "dnsbl.spfbl.net",        "name": "SPFBL DNSBL",        "weight": "moderate",
+     "info": "Brazilian-origin blocklist. SPF-aware spam filtering."},
+    {"zone": "hostkarma.junkemailfilter.com","name":"HostKarma JunkEmail","weight":"moderate",
+     "info": "Junk Email Filter blocklist. Used by hosting providers and ISPs."},
+    {"zone": "rbl.interserver.net",    "name": "InterServer RBL",    "weight": "moderate",
+     "info": "InterServer real-time blocklist. Used across their hosting network."},
+    {"zone": "ubl.unsubscore.com",     "name": "Lashback UBL",       "weight": "moderate",
+     "info": "Tracks senders who email addresses harvested from unsubscribe links."},
+    {"zone": "all.s5h.net",            "name": "S5H All",            "weight": "moderate",
+     "info": "Comprehensive blocklist aggregating multiple spam sources."},
+    {"zone": "rbl.megarbl.net",        "name": "MegaRBL",            "weight": "moderate",
+     "info": "Aggregated RBL from multiple spam trap sources."},
+    {"zone": "virus.rbl.jp",           "name": "RBL.JP Virus",       "weight": "moderate",
+     "info": "Japanese blocklist focused on virus-sending IPs."},
+    {"zone": "access.redhawk.org",     "name": "Redhawk",            "weight": "moderate",
+     "info": "Redhawk access list. Used in academic and research networks."},
+    {"zone": "rbl.schulte.org",        "name": "Schulte RBL",        "weight": "moderate",
+     "info": "Independent RBL based on spam trap data."},
+    # ── Minor ──
+    {"zone": "noptr.spamrats.com",     "name": "SPAMRATS NoPtr",     "weight": "minor",
      "info": "Flags IPs with no valid PTR record."},
+    {"zone": "dyna.spamrats.com",      "name": "SPAMRATS Dyna",      "weight": "minor",
+     "info": "Flags IPs with dynamic/generic PTR records."},
+    {"zone": "spam.spamrats.com",      "name": "SPAMRATS Spam",      "weight": "minor",
+     "info": "IPs observed sending spam to SPAMRATS traps."},
+    {"zone": "backscatter.spameatingmonkey.net","name":"SEM Backscatter","weight":"minor",
+     "info": "Detects IPs sending backscatter (bounces from forged senders)."},
+    {"zone": "bl.spameatingmonkey.net","name": "SEM BL",             "weight": "minor",
+     "info": "Spam Eating Monkey blocklist. Trap-based detection."},
+    {"zone": "netbl.spameatingmonkey.net","name":"SEM NetBL",        "weight": "minor",
+     "info": "Spam Eating Monkey netblock list."},
+    {"zone": "bogons.cymru.com",       "name": "Cymru Bogons",       "weight": "minor",
+     "info": "Lists bogon (unallocated/reserved) IP ranges. Should not originate mail."},
+    {"zone": "bl.fivetensg.com",       "name": "5ten SG BL",         "weight": "minor",
+     "info": "Five Ten Solutions Group blocklist."},
+    {"zone": "blackholes.five-ten-sg.com","name":"5ten Blackholes",  "weight": "minor",
+     "info": "Five Ten Solutions Group blackhole list."},
+    {"zone": "csi.cloudmark.com",      "name": "Cloudmark CSI",      "weight": "minor",
+     "info": "Cloudmark Sender Intelligence. Used by major ISPs including Comcast."},
+    {"zone": "0spam.fusionzero.com",   "name": "0Spam",              "weight": "minor",
+     "info": "Zero Spam blocklist. Trap-based with fast listings."},
+    {"zone": "wormrbl.imp.ch",         "name": "IMP WORM RBL",       "weight": "minor",
+     "info": "Swiss blocklist focused on worm/virus-sending IPs."},
+    {"zone": "spamsources.fabel.dk",   "name": "Fabel SpamSources",  "weight": "minor",
+     "info": "Danish spam source blocklist."},
+    {"zone": "singular.ttk.pte.hu",    "name": "TTK Singular",       "weight": "minor",
+     "info": "Hungarian blocklist from TTK network."},
+    {"zone": "dnsbl.rv-soft.info",     "name": "RV-Soft DNSBL",      "weight": "minor",
+     "info": "RV-Soft DNS blocklist."},
 ]
 
 # ── Domain-based DNSBL zones ─────────────────────────
 DOMAIN_DNSBLS = [
-    {"zone": "dbl.spamhaus.org",   "name": "Spamhaus DBL",  "weight": "critical",
+    {"zone": "dbl.spamhaus.org",        "name": "Spamhaus DBL",      "weight": "critical",
      "info": "Domain blocklist. Listed domains appear in spam campaigns."},
-    {"zone": "multi.surbl.org",    "name": "SURBL Multi",   "weight": "major",
+    {"zone": "multi.surbl.org",         "name": "SURBL Multi",       "weight": "major",
      "info": "URI blocklist used by many spam filters to check links."},
-    {"zone": "dbl.invaluement.com","name": "ivmSIP/24 DBL", "weight": "minor",
+    {"zone": "dbl.invaluement.com",     "name": "ivmSIP/24 DBL",    "weight": "major",
      "info": "Invaluement domain reputation list."},
+    {"zone": "rhsbl.sorbs.net",         "name": "SORBS RHSBL",      "weight": "moderate",
+     "info": "SORBS right-hand-side blocklist for sending domains."},
+    {"zone": "black.uribl.com",         "name": "URIBL Black",      "weight": "major",
+     "info": "URI-based blocklist. Checks domains found in spam message bodies."},
+    {"zone": "grey.uribl.com",          "name": "URIBL Grey",       "weight": "moderate",
+     "info": "URI blocklist grey zone — domains seen in spam but not yet confirmed."},
+    {"zone": "uri.blacklist.woody.ch",  "name": "Woody URI BL",     "weight": "moderate",
+     "info": "Swiss URI blocklist. Tracks domains used in spam campaigns."},
+    {"zone": "uribl.spameatingmonkey.net","name":"SEM URIBL",       "weight": "minor",
+     "info": "Spam Eating Monkey URI blocklist. Domain-level spam detection."},
+    {"zone": "fresh.spameatingmonkey.net","name":"SEM Fresh",        "weight": "minor",
+     "info": "Recently registered domains — often used for spam. 5-day window."},
+    {"zone": "dnsbl.invaluement.com",   "name": "ivmURI",           "weight": "minor",
+     "info": "Invaluement URI blocklist. Tracks domains in spam URIs."},
 ]
 
 # ── Scoring penalties ─────────────────────────────────
 WEIGHT_PENALTY = {"critical": 30, "major": 20, "moderate": 12, "minor": 6}
+
+# ── DNSBL false-positive keywords (found in TXT responses) ──
+_DNSBL_FALSE_POSITIVE_KEYWORDS = (
+    "query refused", "excessive number of queries", "not authorised",
+    "open resolver", "v=spf1", "rbldns server", "not listed",
+    "www.rbldns", "author vdv", "white listed", "whitelisted",
+    "not blacklisted", "is clean",
+)
 
 
 def _make_resolver() -> dns.resolver.Resolver:
@@ -383,9 +495,121 @@ class ReputationChecker:
                 [(r.preference, str(r.exchange).rstrip(".")) for r in answers],
                 key=lambda x: x[0]
             )
-            return {"found": True, "records": records}
+            # Resolve IPs for primary MX server
+            ips = []
+            if records:
+                try:
+                    a_answers = self.resolver.resolve(records[0][1], "A")
+                    ips = [str(r) for r in a_answers]
+                except Exception:
+                    pass
+            return {"found": True, "records": records, "ips": ips}
         except Exception:
-            return {"found": False, "records": []}
+            return {"found": False, "records": [], "ips": []}
+
+    def _check_domain_setup(self) -> dict:
+        """Evaluate domain establishment by checking DNS record breadth."""
+        record_types_found = 0
+        details = []
+
+        # Check A records
+        try:
+            self.resolver.resolve(self.domain, "A")
+            record_types_found += 1
+            details.append("A")
+        except Exception:
+            pass
+
+        # Check MX
+        try:
+            self.resolver.resolve(self.domain, "MX")
+            record_types_found += 1
+            details.append("MX")
+        except Exception:
+            pass
+
+        # Check NS
+        try:
+            self.resolver.resolve(self.domain, "NS")
+            record_types_found += 1
+            details.append("NS")
+        except Exception:
+            pass
+
+        # Check TXT (SPF indicator)
+        records, _ = _get_txt(self.resolver, self.domain)
+        has_spf = any(r.startswith("v=spf1") for r in records)
+        if records:
+            record_types_found += 1
+            details.append("TXT")
+
+        # Check DMARC
+        dmarc_records, _ = _get_txt(self.resolver, f"_dmarc.{self.domain}")
+        has_dmarc = any(r.startswith("v=DMARC1") for r in dmarc_records)
+
+        if record_types_found == 0:
+            status = "fail"
+            summary = "Domain has no DNS records"
+        elif record_types_found < 3:
+            status = "warning"
+            summary = f"Limited DNS configuration ({', '.join(details)})"
+        elif has_spf and has_dmarc and "MX" in details:
+            status = "pass"
+            summary = f"Well-established domain with full email setup ({', '.join(details)})"
+        elif "MX" in details and (has_spf or has_dmarc):
+            status = "pass"
+            summary = f"Established domain with email configuration ({', '.join(details)})"
+        else:
+            status = "warning"
+            summary = f"Domain exists but email setup may be incomplete ({', '.join(details)})"
+
+        return {
+            "status": status,
+            "record_types": details,
+            "record_count": record_types_found,
+            "has_spf": has_spf,
+            "has_dmarc": has_dmarc,
+            "summary": summary,
+        }
+
+    def _check_abuse_contact(self) -> dict:
+        """Check for abuse contact via TXT records and standard conventions."""
+        records, _ = _get_txt(self.resolver, self.domain)
+
+        # Look for abuse-related TXT records
+        abuse_record = next(
+            (r for r in records if "abuse" in r.lower() or "postmaster" in r.lower()),
+            None,
+        )
+
+        if abuse_record:
+            return {
+                "status": "pass",
+                "found": True,
+                "detail": "Abuse contact configured in TXT records",
+            }
+
+        # If domain has MX records, standard abuse@domain is assumed available
+        try:
+            self.resolver.resolve(self.domain, "MX")
+            return {
+                "status": "pass",
+                "found": True,
+                "detail": f"Standard abuse contact available (abuse@{self.domain})",
+            }
+        except Exception:
+            pass
+
+        self._flags.append({
+            "severity": "low", "category": "Reputation",
+            "item": "No abuse contact found for domain",
+            "recommendation": f"Ensure abuse@{self.domain} is a working address. Some providers check for abuse contacts as a trust signal.",
+        })
+        return {
+            "status": "warning",
+            "found": False,
+            "detail": "No abuse contact found",
+        }
 
     def _query_ip_dnsbl(self, ip_str: str, entry: dict) -> dict:
         result = {"zone": entry["zone"], "name": entry["name"],
@@ -402,14 +626,26 @@ class ReputationChecker:
             query = f"{rev}.{entry['zone']}"
             r = _make_resolver()  # own resolver per thread
             try:
-                r.resolve(query, "A")
-                result["listed"] = True
+                answers = r.resolve(query, "A")
+                # Filter false positives: 127.0.0.1 = query refused / info
+                response_ips = [rdata.address for rdata in answers]
+                if all(ip in ("127.0.0.1", "127.255.255.255") for ip in response_ips):
+                    result["listed"] = False
+                    result["error"] = "query_refused"
+                else:
+                    result["listed"] = True
                 try:
                     txts = r.resolve(query, "TXT")
                     for rdata in txts:
-                        result["reason"] = "".join(
+                        txt = "".join(
                             s.decode("utf-8", errors="replace") for s in rdata.strings
                         )
+                        result["reason"] = txt
+                        # Check TXT for refusal/rate-limit/false-positive indicators
+                        lower = txt.lower()
+                        if any(kw in lower for kw in _DNSBL_FALSE_POSITIVE_KEYWORDS):
+                            result["listed"] = False
+                            result["error"] = "query_refused"
                         break
                 except Exception:
                     pass
@@ -427,14 +663,24 @@ class ReputationChecker:
             query = f"{domain}.{entry['zone']}"
             r = _make_resolver()
             try:
-                r.resolve(query, "A")
-                result["listed"] = True
+                answers = r.resolve(query, "A")
+                response_ips = [rdata.address for rdata in answers]
+                if all(ip in ("127.0.0.1", "127.255.255.255") for ip in response_ips):
+                    result["listed"] = False
+                    result["error"] = "query_refused"
+                else:
+                    result["listed"] = True
                 try:
                     txts = r.resolve(query, "TXT")
                     for rdata in txts:
-                        result["reason"] = "".join(
+                        txt = "".join(
                             s.decode("utf-8", errors="replace") for s in rdata.strings
                         )
+                        result["reason"] = txt
+                        lower = txt.lower()
+                        if any(kw in lower for kw in _DNSBL_FALSE_POSITIVE_KEYWORDS):
+                            result["listed"] = False
+                            result["error"] = "query_refused"
                         break
                 except Exception:
                     pass
@@ -444,15 +690,16 @@ class ReputationChecker:
             result["error"] = str(e)
         return result
 
-    def _run_dnsbl_checks(self) -> list:
+    def _run_dnsbl_checks(self, check_ip: str = None) -> list:
         futures_map = {}
         results     = []
+        ip_to_check = check_ip or self.sender_ip
 
-        with ThreadPoolExecutor(max_workers=14) as pool:
-            # IP blocklists (only if IP provided)
-            if self.sender_ip:
+        with ThreadPoolExecutor(max_workers=30) as pool:
+            # IP blocklists (use provided IP, sender_ip, or MX-resolved IP)
+            if ip_to_check:
                 for entry in IP_DNSBLS:
-                    f = pool.submit(self._query_ip_dnsbl, self.sender_ip, entry)
+                    f = pool.submit(self._query_ip_dnsbl, ip_to_check, entry)
                     futures_map[f] = entry
 
             # Domain blocklists (always)
@@ -474,6 +721,122 @@ class ReputationChecker:
         weight_order = {"critical": 0, "major": 1, "moderate": 2, "minor": 3}
         results.sort(key=lambda x: (0 if x["listed"] else 1, weight_order.get(x["weight"], 4)))
         return results
+
+    # ════════════════════════════════════════════════════
+    #  SMTP DIAGNOSTICS
+    # ════════════════════════════════════════════════════
+
+    def _smtp_diagnostics(self, mx_host: str, mx_ips: list) -> dict:
+        """Connect to the primary MX server and run SMTP-level diagnostics."""
+        result = {
+            "checked": False,
+            "host": mx_host,
+            "ip": mx_ips[0] if mx_ips else None,
+            "banner": None,
+            "connect_time_ms": None,
+            "supports_starttls": False,
+            "open_relay": False,
+            "open_relay_status": "not_checked",
+            "errors": [],
+        }
+
+        target_ip = mx_ips[0] if mx_ips else None
+        if not target_ip:
+            # Try resolving the MX host ourselves
+            try:
+                target_ip = socket.gethostbyname(mx_host)
+                result["ip"] = target_ip
+            except Exception:
+                result["errors"].append("Could not resolve MX host IP")
+                return result
+
+        # ── Connect and get banner ──
+        try:
+            t0 = time.monotonic()
+            smtp = smtplib.SMTP(timeout=8)
+            code, banner_bytes = smtp.connect(target_ip, 25)
+            connect_ms = round((time.monotonic() - t0) * 1000)
+
+            result["checked"] = True
+            result["connect_time_ms"] = connect_ms
+            result["banner"] = banner_bytes.decode("utf-8", errors="replace").strip()[:200]
+
+            if connect_ms > 5000:
+                self._flags.append({
+                    "severity": "medium", "category": "SMTP",
+                    "item": f"Slow SMTP response: {connect_ms}ms",
+                    "recommendation": "SMTP connection took over 5 seconds. This may cause timeouts with impatient receiving servers. Check server load and network latency.",
+                })
+
+            # ── Check STARTTLS support ──
+            try:
+                smtp.ehlo_or_helo_if_needed()
+                if smtp.has_extn("starttls"):
+                    result["supports_starttls"] = True
+                else:
+                    result["supports_starttls"] = False
+                    self._flags.append({
+                        "severity": "medium", "category": "SMTP",
+                        "item": "Mail server does not advertise STARTTLS",
+                        "recommendation": "Enable STARTTLS on your mail server. Gmail, Yahoo, and Microsoft penalize servers that don't support encryption in transit.",
+                    })
+            except Exception:
+                pass
+
+            # ── Open Relay Test ──
+            # Try to relay a message from a foreign domain to a foreign domain.
+            # A properly configured server should reject this.
+            try:
+                smtp.ehlo_or_helo_if_needed()
+                # Use clearly fake addresses that won't cause real delivery
+                test_from = "openrelaytest@inbxr-test.example.com"
+                test_to   = "openrelaytest@inbxr-verify.example.net"
+
+                smtp.mail(test_from)
+                code_rcpt, _ = smtp.rcpt(test_to)
+
+                if code_rcpt < 400:
+                    # Server accepted RCPT TO for a foreign domain — open relay!
+                    result["open_relay"] = True
+                    result["open_relay_status"] = "open"
+                    self._flags.append({
+                        "severity": "critical", "category": "SMTP",
+                        "item": "OPEN RELAY DETECTED — server accepts mail for foreign domains",
+                        "recommendation": "Your mail server is an open relay. This means anyone can send spam through it. Fix immediately: restrict relaying to authenticated users and authorized domains only.",
+                    })
+                else:
+                    result["open_relay"] = False
+                    result["open_relay_status"] = "closed"
+
+                # Reset the SMTP session state
+                smtp.rset()
+            except smtplib.SMTPRecipientsRefused:
+                result["open_relay"] = False
+                result["open_relay_status"] = "closed"
+            except smtplib.SMTPSenderRefused:
+                result["open_relay"] = False
+                result["open_relay_status"] = "closed"
+            except Exception as e:
+                result["open_relay_status"] = "error"
+                result["errors"].append(f"Open relay test error: {str(e)[:80]}")
+
+            smtp.quit()
+
+        except smtplib.SMTPConnectError as e:
+            result["errors"].append(f"SMTP connect refused: {str(e)[:80]}")
+        except socket.timeout:
+            result["errors"].append("SMTP connection timed out (8s)")
+            self._flags.append({
+                "severity": "high", "category": "SMTP",
+                "item": "SMTP connection timed out",
+                "recommendation": "Mail server did not respond on port 25 within 8 seconds. Check firewall rules and ensure SMTP is accessible.",
+            })
+        except OSError as e:
+            result["errors"].append(f"Network error: {str(e)[:80]}")
+        except Exception as e:
+            result["errors"].append(f"SMTP error: {str(e)[:80]}")
+
+        return result
 
     # ════════════════════════════════════════════════════
     #  SCORING
@@ -529,11 +892,20 @@ class ReputationChecker:
             else:
                 auth_summary_parts.append(f"✗ {name}")
 
-        # ── Reputation checks (DNSBL parallel + PTR/FCrDNS) ──
-        dnsbl_results = self._run_dnsbl_checks()
+        # ── Reputation checks (resolve MX first for IP blocklists) ──
+        mx            = self._check_mx()
+        mx_ip         = mx.get("ips", [None])[0] if mx.get("ips") else None
+        dnsbl_results = self._run_dnsbl_checks(check_ip=mx_ip)
         ptr           = self._check_ptr()
         fcrdns        = self._check_fcrdns(ptr.get("hostname"))
-        mx            = self._check_mx()
+        domain_setup  = self._check_domain_setup()
+        abuse_contact = self._check_abuse_contact()
+
+        # ── SMTP diagnostics (only if we have an MX host) ──
+        smtp_diag = {"checked": False}
+        if mx["found"] and mx["records"]:
+            primary_mx_host = mx["records"][0][1]
+            smtp_diag = self._smtp_diagnostics(primary_mx_host, mx.get("ips", []))
 
         # Reputation scoring: start at 100, deduct penalties
         rep_score = 100
@@ -565,6 +937,22 @@ class ReputationChecker:
             rep_score -= 10
         if ptr.get("found") and not fcrdns.get("valid"):
             rep_score -= 8
+
+        # Domain setup penalty
+        if domain_setup["status"] == "fail":
+            rep_score -= 15
+        elif domain_setup["status"] == "warning":
+            rep_score -= 5
+
+        # Abuse contact penalty
+        if abuse_contact["status"] == "warning":
+            rep_score -= 3
+
+        # SMTP penalties
+        if smtp_diag.get("open_relay"):
+            rep_score -= 30
+        if smtp_diag.get("checked") and not smtp_diag.get("supports_starttls"):
+            rep_score -= 5
 
         rep_score = max(0, min(100, rep_score))
         rep_label, rep_color = self._rep_label(rep_score)
@@ -609,6 +997,9 @@ class ReputationChecker:
                 "ptr":          ptr,
                 "fcrdns":       fcrdns,
                 "mx":           mx,
+                "domain_setup": domain_setup,
+                "abuse_contact": abuse_contact,
+                "smtp": smtp_diag,
             },
             "combined": {
                 "score": combined_score,

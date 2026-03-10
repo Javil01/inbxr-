@@ -184,6 +184,14 @@ function buildCombinedSummary(auth, rep) {
     parts.push('No PTR record — impacts reputation with some providers.');
   }
 
+  if (rep.domain_setup?.status === 'pass') {
+    parts.push('Domain is well-established.');
+  } else if (rep.domain_setup?.status === 'warning') {
+    parts.push('Domain setup is incomplete.');
+  } else if (rep.domain_setup?.status === 'fail') {
+    parts.push('Domain has no DNS records.');
+  }
+
   return parts.join(' ') || 'Authentication and reputation check complete.';
 }
 
@@ -332,10 +340,86 @@ function renderRepSignals(reputation, meta) {
     label: 'MX Records',
     status: mx.found ? 'pass' : 'warning',
     value: mx.found
-      ? mx.records.slice(0, 3).map(r => r[1]).join(', ')
+      ? mx.records.slice(0, 3).map(r => r[1]).join(', ') + (mx.ips?.length ? ` (${mx.ips[0]})` : '')
       : 'No MX records found',
     note: mx.found ? null : 'No MX records found for this domain. This may affect deliverability if recipients try to verify your domain.',
   });
+
+  // Domain setup
+  const ds = reputation.domain_setup || {};
+  if (ds.status) {
+    rows.push({
+      label: 'Domain Setup',
+      status: ds.status,
+      value: ds.summary || 'Unknown',
+      note: ds.status === 'fail'
+        ? 'Domain has no DNS records. Ensure A, MX, SPF, DKIM, and DMARC records are properly configured.'
+        : ds.status === 'warning'
+        ? 'Domain DNS configuration is incomplete. Add missing email authentication records.'
+        : null,
+    });
+  }
+
+  // Abuse contact
+  const ac = reputation.abuse_contact || {};
+  if (ac.status) {
+    rows.push({
+      label: 'Abuse Contact',
+      status: ac.status,
+      value: ac.detail || 'Unknown',
+      note: ac.status === 'warning'
+        ? `Ensure abuse@${meta.domain} is a working address. Some providers check for abuse contacts as a trust signal.`
+        : null,
+    });
+  }
+
+  // SMTP diagnostics
+  const smtp = reputation.smtp || {};
+  if (smtp.checked) {
+    // Banner / connect time
+    rows.push({
+      label: 'SMTP Connection',
+      status: smtp.connect_time_ms <= 3000 ? 'pass' : (smtp.connect_time_ms <= 5000 ? 'warning' : 'fail'),
+      value: `Connected in ${smtp.connect_time_ms}ms` + (smtp.banner ? ` — ${smtp.banner.slice(0, 80)}` : ''),
+      note: smtp.connect_time_ms > 5000
+        ? 'Slow SMTP response. Check server load and network latency.'
+        : null,
+    });
+
+    // STARTTLS
+    rows.push({
+      label: 'STARTTLS Encryption',
+      status: smtp.supports_starttls ? 'pass' : 'warning',
+      value: smtp.supports_starttls
+        ? 'Server supports STARTTLS — encryption in transit available'
+        : 'Server does not advertise STARTTLS',
+      note: smtp.supports_starttls
+        ? null
+        : 'Enable STARTTLS. Gmail, Yahoo, and Microsoft penalize servers that don\'t support encryption in transit.',
+    });
+
+    // Open relay
+    const relayStatus = smtp.open_relay_status;
+    rows.push({
+      label: 'Open Relay Test',
+      status: relayStatus === 'closed' ? 'pass' : (relayStatus === 'open' ? 'fail' : 'info'),
+      value: relayStatus === 'closed'
+        ? 'Server correctly rejects unauthorized relay — not an open relay'
+        : relayStatus === 'open'
+        ? 'OPEN RELAY DETECTED — server accepts mail for foreign domains'
+        : 'Could not complete open relay test',
+      note: relayStatus === 'open'
+        ? 'Your server is an open relay! Fix immediately: restrict relaying to authenticated users only.'
+        : null,
+    });
+  } else if (smtp.errors?.length) {
+    rows.push({
+      label: 'SMTP Diagnostics',
+      status: 'info',
+      value: smtp.errors[0] || 'Could not connect to mail server on port 25',
+      note: 'SMTP connection failed. The server may block port 25, or a firewall is preventing access.',
+    });
+  }
 
   container.innerHTML = rows.map(r => `
     <div class="rep-signal-row">

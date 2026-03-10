@@ -3,3 +3,4 @@ __pycache__/
 *.pyo
 .env
 data/page_config.json
+config/seed_accounts.json

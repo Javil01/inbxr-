@@ -17,7 +17,7 @@
         <div class="form-section">
           <h3 class="section-label">Sender</h3>
           <div class="field">
-            <label for="sender_email">Sender Email <span class="optional">(optional)</span></label>
+            <label for="sender_email">Sender Email <span class="required">*</span></label>
             <input type="email" id="sender_email" name="sender_email" placeholder="you@yourdomain.com" />
           </div>
           <div class="field">
@@ -54,13 +54,13 @@
 
           <div class="input-mode-tabs" role="tablist" aria-label="Body input method">
             <button type="button" class="input-mode-tab active" data-mode="paste-email" role="tab" aria-selected="true">
-              <span class="imt-icon">📋</span><span class="imt-label">Paste Email</span>
+              <span class="imt-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg></span><span class="imt-label">Paste Email</span>
             </button>
             <button type="button" class="input-mode-tab" data-mode="paste-html" role="tab" aria-selected="false">
-              <span class="imt-icon">&lt;/&gt;</span><span class="imt-label">Paste HTML</span>
+              <span class="imt-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></span><span class="imt-label">Paste HTML</span>
             </button>
             <button type="button" class="input-mode-tab" data-mode="upload" role="tab" aria-selected="false">
-              <span class="imt-icon">📁</span><span class="imt-label">Upload File</span>
+              <span class="imt-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="12" y2="12"/><line x1="15" y1="15" x2="12" y2="12"/></svg></span><span class="imt-label">Upload File</span>
             </button>
           </div>
 
@@ -68,7 +68,7 @@
           <div class="body-mode-panel active" id="mode-paste-email">
             <div class="body-toolbar">
               <span class="paste-hint">
-                <span class="paste-hint__icon">📋</span>
+                <span class="paste-hint__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg></span>
                 <span>Paste from Gmail, Outlook, or any client — links captured automatically</span>
               </span>
               <button type="button" class="body-clear-btn" id="bodyClearBtn">Clear</button>
@@ -90,7 +90,7 @@
           <div class="body-mode-panel" id="mode-paste-html">
             <div class="body-toolbar">
               <span class="paste-hint">
-                <span class="paste-hint__icon">&lt;/&gt;</span>
+                <span class="paste-hint__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></span>
                 <span>Paste raw HTML source — exported from Mailchimp, Klaviyo, or your ESP</span>
               </span>
               <button type="button" class="body-clear-btn" id="htmlClearBtn">Clear</button>
@@ -107,7 +107,7 @@
           <div class="body-mode-panel" id="mode-upload">
             <input type="file" id="fileInput" accept=".html,.htm,.eml,.msg,.mbox" class="hidden" />
             <div class="upload-zone" id="uploadZone">
-              <div class="upload-zone__icon">📧</div>
+              <div class="upload-zone__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 7l-10 7L2 7"/></svg></div>
               <p class="upload-zone__title">Drop your email file here</p>
               <p class="upload-zone__sub">or <button type="button" class="upload-browse-btn" id="uploadBrowseBtn">browse to upload</button></p>
               <ul class="upload-formats">
@@ -207,26 +207,67 @@
       <p>Fill out the form and click <strong>Analyze Email</strong> to get your full deliverability and effectiveness report.</p>
       <div class="empty-features">
         <div class="empty-feature">
-          <span class="empty-feature__icon">🛡</span>
+          <span class="empty-feature__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span>
           <div><strong>Spam Risk Score</strong><span>Trigger word detection, structural red flags, compliance checks, and link analysis</span></div>
         </div>
         <div class="empty-feature">
-          <span class="empty-feature__icon">🎯</span>
+          <span class="empty-feature__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></span>
           <div><strong>Copy Effectiveness</strong><span>Hook strength, CTA analysis, conversion psychology audit, and clarity scoring</span></div>
         </div>
         <div class="empty-feature">
-          <span class="empty-feature__icon">✍</span>
+          <span class="empty-feature__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></span>
           <div><strong>Rewrite Suggestions</strong><span>Alternative subject lines, stronger CTAs, and improved opening lines</span></div>
         </div>
       </div>
     </div>
 
+    <!-- Analysis Progress Overlay -->
+    <div class="analysis-progress hidden" id="analysisProgress">
+      <div class="ap-inner">
+        <div class="ap-spinner"></div>
+        <h3 class="ap-title">Analyzing Your Email</h3>
+        <div class="ap-steps" id="apSteps">
+          <div class="ap-step active" data-step="spam"><span class="ap-step__dot"></span>Spam Risk Analysis</div>
+          <div class="ap-step" data-step="copy"><span class="ap-step__dot"></span>Copy Effectiveness</div>
+          <div class="ap-step" data-step="readability"><span class="ap-step__dot"></span>Readability Scoring</div>
+          <div class="ap-step" data-step="links"><span class="ap-step__dot"></span>Link & Image Validation</div>
+          <div class="ap-step" data-step="auth"><span class="ap-step__dot"></span>Sender Authentication</div>
+          <div class="ap-step" data-step="audit"><span class="ap-step__dot"></span>Pre-Send Audit</div>
+        </div>
+      </div>
+    </div>
+
     <div class="results-content hidden" id="resultsContent">
+      <!-- Pre-Send Audit Banner -->
+      <div id="auditBanner" style="display:none"></div>
+
+      <!-- Results Navigation -->
+      <nav class="results-nav" id="resultsNav">
+        <div class="results-nav__inner">
+          <a class="rnav-link active" href="#scores-section" data-nav="scores">Scores</a>
+          <a class="rnav-link" href="#spamModule" data-nav="spam">Spam</a>
+          <a class="rnav-link" href="#copyModule" data-nav="copy">Copy</a>
+          <a class="rnav-link" href="#inboxPreviewModule" data-nav="inbox">Inbox Preview</a>
+          <a class="rnav-link" href="#benchmarkModule" data-nav="benchmarks">Benchmarks</a>
+          <a class="rnav-link" href="#readabilityModule" data-nav="readability">Readability</a>
+          <a class="rnav-link" href="#emailPreviewModule" data-nav="preview">Preview</a>
+          <a class="rnav-link" href="#aiRewriteModule" data-nav="ai">AI Rewrite</a>
+          <a class="rnav-link" href="#linkImageModule" data-nav="links">Links</a>
+          <a class="rnav-link" href="#bimiModule" data-nav="bimi">BIMI</a>
+          <a class="rnav-link" href="#senderRepModule" data-nav="auth">Auth</a>
+          <a class="rnav-link" href="#auditModule" data-nav="audit">Audit</a>
+        </div>
+        <button class="results-nav__export" id="exportReportBtn" title="Export Report">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <span>Export</span>
+        </button>
+      </nav>
+
       <div class="meta-bar" id="metaBar"></div>
-      <div class="score-row">
+      <div class="score-row" id="scores-section">
         <div class="score-card" id="spamScoreCard">
           <div class="score-card__header">
-            <span class="score-card__icon">🛡</span>
+            <span class="score-card__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span>
             <span class="score-card__title">Spam Risk</span>
           </div>
           <div class="score-card__gauge-wrap">
@@ -239,10 +280,11 @@
           </div>
           <div class="score-card__badge" id="spamBadge">–</div>
           <p class="score-card__summary" id="spamSummary"></p>
+          <div class="score-card__bench" id="spamBench"></div>
         </div>
         <div class="score-card" id="copyScoreCard">
           <div class="score-card__header">
-            <span class="score-card__icon">🎯</span>
+            <span class="score-card__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></span>
             <span class="score-card__title">Copy Effectiveness</span>
           </div>
           <div class="score-card__gauge-wrap">
@@ -255,11 +297,36 @@
           </div>
           <div class="score-card__badge" id="copyBadge">–</div>
           <p class="score-card__summary" id="copySummary"></p>
+          <div class="score-card__bench" id="copyBench"></div>
         </div>
       </div>
 
-      <div class="module-block">
-        <div class="module-header"><h2 class="module-title">🛡 Spam Risk Breakdown</h2></div>
+      <!-- Inbox Client Previews -->
+      <div class="module-block" id="inboxPreviewModule" style="display:none">
+        <div class="module-header collapsible" data-collapse="inboxPreviewModule">
+          <h2 class="module-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 7l-10 7L2 7"/></svg> Inbox Client Preview</h2>
+          <span class="module-collapse-icon">&#9660;</span>
+        </div>
+        <div class="module-body ip-body">
+          <div class="ip-tabs">
+            <button class="ip-tab active" data-client="gmail">Gmail</button>
+            <button class="ip-tab" data-client="outlook">Outlook</button>
+            <button class="ip-tab" data-client="apple">Apple Mail</button>
+            <button class="ip-tab" data-client="mobile">Mobile</button>
+          </div>
+          <div class="ip-preview-area" id="ipPreviewArea"></div>
+          <p class="ip-note">Approximate rendering — actual appearance may vary by device, OS, and client version.</p>
+        </div>
+      </div>
+
+      <!-- Industry Benchmarks Module -->
+      <div class="module-block" id="benchmarkModule" style="display:none">
+        <div class="module-header collapsible" data-collapse="benchmarkModule"><h2 class="module-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 16l4-8 4 4 4-6"/></svg> Industry Benchmarks</h2><span class="module-collapse-icon">&#9660;</span></div>
+        <div class="bench-grid" id="benchGrid"></div>
+      </div>
+
+      <div class="module-block" id="spamModule">
+        <div class="module-header collapsible" data-collapse="spamModule"><h2 class="module-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Spam Risk Breakdown</h2><span class="module-collapse-icon">&#9660;</span></div>
         <div class="category-list" id="spamCategories"></div>
         <div class="accordion-section">
           <button class="accordion-trigger" data-target="spamHighRisk"><span>High-Risk Elements</span><span class="badge-count" id="spamHighRiskCount">0</span><span class="accordion-arrow">▼</span></button>
@@ -271,8 +338,8 @@
         </div>
       </div>
 
-      <div class="module-block">
-        <div class="module-header"><h2 class="module-title">🎯 Copy Effectiveness Breakdown</h2></div>
+      <div class="module-block" id="copyModule">
+        <div class="module-header collapsible" data-collapse="copyModule"><h2 class="module-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg> Copy Effectiveness Breakdown</h2><span class="module-collapse-icon">&#9660;</span></div>
         <div class="category-list" id="copyCategories"></div>
         <div class="strengths-weaknesses-row">
           <div class="sw-box sw-box--strength"><h4>Strengths</h4><ul id="copyStrengths"></ul></div>
@@ -286,6 +353,147 @@
           <button class="accordion-trigger" data-target="copyRewrites"><span>Rewrite Suggestions</span><span class="accordion-arrow">▼</span></button>
           <div class="accordion-body open" id="copyRewrites"><div id="rewriteContent"></div></div>
         </div>
+      </div>
+      <!-- Readability Module -->
+      <div class="module-block" id="readabilityModule" style="display:none">
+        <div class="module-header collapsible" data-collapse="readabilityModule">
+          <h2 class="module-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg> Readability Analysis</h2>
+          <span class="module-collapse-icon">&#9660;</span>
+        </div>
+        <div class="readability-overview" id="readabilityOverview"></div>
+        <div class="readability-stats" id="readabilityStats"></div>
+        <div class="readability-issues" id="readabilityIssues"></div>
+        <div class="accordion-section">
+          <button class="accordion-trigger" data-target="readabilityRecs"><span>Recommendations</span><span class="accordion-arrow">&#9660;</span></button>
+          <div class="accordion-body open" id="readabilityRecs"><div class="rec-list" id="readabilityRecList"></div></div>
+        </div>
+      </div>
+      <!-- Email Rendering Preview Module -->
+      <div class="module-block" id="emailPreviewModule" style="display:none">
+        <div class="module-header collapsible" data-collapse="emailPreviewModule">
+          <h2 class="module-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg> Email Rendering Preview</h2>
+          <span class="module-collapse-icon">&#9660;</span>
+        </div>
+        <div class="module-body" id="emailPreviewBody">
+          <div class="ep-toolbar">
+            <div class="ep-viewport-tabs">
+              <button class="ep-viewport-btn active" data-viewport="desktop" title="Desktop (600px)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                <span>Desktop</span>
+              </button>
+              <button class="ep-viewport-btn" data-viewport="mobile" title="Mobile (375px)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+                <span>Mobile</span>
+              </button>
+            </div>
+            <div class="ep-client-tabs">
+              <button class="ep-client-btn active" data-client="clean" title="Clean render">Clean</button>
+              <button class="ep-client-btn" data-client="gmail" title="Gmail-style dark mode">Dark Mode</button>
+            </div>
+          </div>
+          <div class="ep-frame-wrap" id="epFrameWrap">
+            <div class="ep-frame-chrome ep-frame-chrome--desktop" id="epChrome">
+              <div class="ep-chrome-bar">
+                <span class="ep-chrome-dots"><i></i><i></i><i></i></span>
+                <span class="ep-chrome-title" id="epChromeTitle">Email Preview</span>
+              </div>
+              <iframe id="emailPreviewIframe" class="ep-iframe" sandbox="allow-same-origin" title="Email rendering preview"></iframe>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- AI Rewrite Engine Module -->
+      <div class="module-block" id="aiRewriteModule" style="display:none">
+        <div class="module-header collapsible" data-collapse="aiRewriteModule">
+          <h2 class="module-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg> AI Rewrite Engine</h2>
+          <span class="ai-powered-badge" id="aiPoweredBadge">Powered by AI</span>
+          <span class="module-collapse-icon">&#9660;</span>
+        </div>
+        <div id="aiRewriteControls" class="ai-controls">
+          <div class="ai-tone-selector">
+            <label class="ai-tone-label">Tone:</label>
+            <select id="aiToneSelect" class="ai-tone-select">
+              <option value="professional">Professional</option>
+              <option value="friendly">Friendly</option>
+              <option value="urgent">Urgent</option>
+              <option value="casual">Casual</option>
+              <option value="authoritative">Authoritative</option>
+            </select>
+            <button type="button" class="btn-ai-rewrite" id="aiRewriteBtn">
+              <span class="btn-text">Generate AI Rewrite</span>
+              <span class="btn-spinner hidden" aria-hidden="true"></span>
+            </button>
+          </div>
+        </div>
+        <div id="aiRewriteContent" style="display:none">
+          <div id="aiSubjectAlts"></div>
+          <div id="aiOpeningHook"></div>
+          <div id="aiBodyRewrite"></div>
+          <div id="aiClosingRewrite"></div>
+          <div id="aiCtaAlts"></div>
+          <div id="aiPreheader"></div>
+          <div id="aiTips"></div>
+          <div id="aiMeta" class="ai-meta"></div>
+        </div>
+        <div id="aiRewriteError" class="ai-error hidden"></div>
+      </div>
+      <!-- Link & Image Validation Module -->
+      <div class="module-block" id="linkImageModule" style="display:none">
+        <div class="module-header collapsible" data-collapse="linkImageModule">
+          <h2 class="module-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg> Link &amp; Image Validation</h2>
+          <span class="module-collapse-icon">&#9660;</span>
+        </div>
+        <div id="linkImageOverview"></div>
+        <div id="linkImageIssues"></div>
+        <div class="accordion-section">
+          <button class="accordion-trigger" data-target="linkDetails"><span>Link Details</span><span class="badge-count" id="linkCount">0</span><span class="accordion-arrow">&#9660;</span></button>
+          <div class="accordion-body" id="linkDetails"><div id="linkDetailList"></div></div>
+        </div>
+        <div class="accordion-section">
+          <button class="accordion-trigger" data-target="imageDetails"><span>Image Details</span><span class="badge-count" id="imageCount">0</span><span class="accordion-arrow">&#9660;</span></button>
+          <div class="accordion-body" id="imageDetails"><div id="imageDetailList"></div></div>
+        </div>
+        <div class="accordion-section">
+          <button class="accordion-trigger" data-target="linkImageRecs"><span>Recommendations</span><span class="accordion-arrow">&#9660;</span></button>
+          <div class="accordion-body open" id="linkImageRecs"><div class="rec-list" id="linkImageRecList"></div></div>
+        </div>
+      </div>
+      <!-- BIMI Validation Module -->
+      <div class="module-block" id="bimiModule" style="display:none">
+        <div class="module-header collapsible" data-collapse="bimiModule">
+          <h2 class="module-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px"><circle cx="12" cy="12" r="10"/><path d="M9 12l2 2 4-4"/></svg> BIMI Validation</h2>
+          <span class="module-collapse-icon">&#9660;</span>
+        </div>
+        <div id="bimiOverview"></div>
+        <div id="bimiDetails"></div>
+        <div id="bimiIssues"></div>
+        <div class="accordion-section">
+          <button class="accordion-trigger" data-target="bimiRecs"><span>Recommendations</span><span class="accordion-arrow">&#9660;</span></button>
+          <div class="accordion-body open" id="bimiRecs"><div class="rec-list" id="bimiRecList"></div></div>
+        </div>
+      </div>
+      <!-- Sender Reputation Module -->
+      <div class="module-block" id="senderRepModule" style="display:none">
+        <div class="module-header collapsible" data-collapse="senderRepModule">
+          <h2 class="module-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg> Sender Reputation</h2>
+          <span class="module-collapse-icon">&#9660;</span>
+        </div>
+        <div class="sender-rep-overview" id="senderRepOverview"></div>
+        <div class="sender-rep-auth" id="senderRepAuth"></div>
+        <div class="sender-rep-blocklists" id="senderRepBlocklists"></div>
+        <div class="dns-suggestions" id="dnsSuggestions" style="display:none"></div>
+        <div class="accordion-section">
+          <button class="accordion-trigger" data-target="senderRepRecs"><span>Recommendations</span><span class="accordion-arrow">&#9660;</span></button>
+          <div class="accordion-body open" id="senderRepRecs"><div class="rec-list" id="senderRepRecList"></div></div>
+        </div>
+      </div>
+      <!-- Pre-Send Audit Checklist (full) -->
+      <div class="module-block" id="auditModule" style="display:none">
+        <div class="module-header collapsible" data-collapse="auditModule">
+          <h2 class="module-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg> Pre-Send Audit Checklist</h2>
+          <span class="module-collapse-icon">&#9660;</span>
+        </div>
+        <div id="auditChecklist"></div>
       </div>
     </div>
   </section>

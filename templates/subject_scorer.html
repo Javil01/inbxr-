@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>INBXR — Email Spam Risk & Copy Effectiveness Analyzer</title>
+  <title>INBXR — Subject Line A/B Scorer</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/static/css/style.css" />
   {% if is_admin %}<link rel="stylesheet" href="/static/css/admin.css" />{% endif %}
 </head>
-<body{% if is_admin %} class="admin-mode" data-page="index"{% endif %}>
+<body class="subject-page{% if is_admin %} admin-mode{% endif %}"{% if is_admin %} data-page="subject_scorer"{% endif %}>
 
 {% if is_admin %}
 <div class="admin-toolbar">
@@ -40,7 +40,7 @@
 {% endfor %}
 </div>
 
-<script src="/static/js/app.js"></script>
+<script src="/static/js/subject_scorer.js"></script>
 {% if is_admin %}
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 <script src="/static/js/admin_editor.js"></script>

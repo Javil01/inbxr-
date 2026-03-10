@@ -1,0 +1,44 @@
+<div class="db-container">
+
+  <!-- Empty state (shown when no history) -->
+  <div class="db-empty" id="dbEmpty">
+    <div class="db-empty__icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="48" height="48"><path d="M3 3v18h18"/><path d="M7 16l4-4 4 4 5-5"/></svg>
+    </div>
+    <h3>No Analyses Yet</h3>
+    <p>Run your first email analysis and it will automatically appear here. Your history is stored locally in your browser.</p>
+    <a href="/" class="btn-analyze" style="display:inline-flex;width:auto;padding:12px 28px;text-decoration:none">Analyze Your First Email</a>
+  </div>
+
+  <!-- Dashboard content (shown when history exists) -->
+  <div class="db-content hidden" id="dbContent">
+
+    <!-- Stats row -->
+    <div class="db-stats" id="dbStats"></div>
+
+    <!-- Score trend chart -->
+    <div class="db-chart-card">
+      <div class="db-chart-header">
+        <h3 class="db-chart-title">Score Trends</h3>
+        <div class="db-chart-legend">
+          <span class="db-legend-item"><i style="background:var(--brand)"></i>Spam Risk</span>
+          <span class="db-legend-item"><i style="background:var(--green)"></i>Copy Score</span>
+        </div>
+      </div>
+      <div class="db-chart" id="dbChart"></div>
+    </div>
+
+    <!-- Streak -->
+    <div class="db-streak hidden" id="dbStreak"></div>
+
+    <!-- Recent analyses -->
+    <div class="db-recent">
+      <div class="db-recent-header">
+        <h3 class="db-recent-title">Recent Analyses</h3>
+        <button type="button" class="db-clear-btn" id="dbClearBtn">Clear History</button>
+      </div>
+      <div class="db-recent-list" id="dbRecentList"></div>
+    </div>
+
+  </div>
+</div>

@@ -67,7 +67,7 @@ def _default_config():
                     "editable_fields": {
                         "eyebrow": "Real-Time DNS Intelligence",
                         "heading": "Diagnose Your Email Infrastructure",
-                        "description": "Misconfigured authentication is the #1 reason emails land in spam. INBXR performs live DNS lookups to verify your SPF, DKIM, DMARC, and BIMI records, scans your sending IP and domain against 13 industry blocklists including Spamhaus, SpamCop, and Barracuda, and checks your reverse DNS and forward-confirmed rDNS \u2014 giving you a complete sender health report in seconds.",
+                        "description": "Misconfigured authentication is the #1 reason emails land in spam. INBXR performs live DNS lookups to verify your SPF, DKIM, DMARC, and BIMI records, scans your sending IP and domain against 62 blocklists including Spamhaus, SpamCop, Barracuda, SORBS, UCEPROTECT, and SURBL, and checks your reverse DNS and forward-confirmed rDNS \u2014 giving you a complete sender health report in seconds.",
                         "detail_1_title": "Authentication Protocols",
                         "detail_1_text": "SPF validates which servers can send on your behalf. DKIM cryptographically signs your messages to prove they haven\u2019t been altered. DMARC ties them together with an enforcement policy. BIMI displays your brand logo in supported inboxes like Gmail, Yahoo, and Apple Mail.",
                         "detail_2_title": "Blocklist Scanning",
@@ -93,6 +93,111 @@ def _default_config():
                     }
                 }
             ]
+        },
+        "dashboard": {
+            "sections": [
+                {
+                    "id": "header",
+                    "type": "header",
+                    "order": 0,
+                    "draggable": False,
+                    "editable_fields": {}
+                },
+                {
+                    "id": "dashboard_hero",
+                    "type": "dashboard_hero",
+                    "order": 1,
+                    "draggable": True,
+                    "editable_fields": {
+                        "eyebrow": "Your Email Intelligence",
+                        "heading": "Score History & Trends",
+                        "description": "Track your email quality over time. Every analysis is automatically saved to your browser \u2014 no account needed. See how your spam risk and copy scores improve as you iterate."
+                    }
+                },
+                {
+                    "id": "dashboard_tool",
+                    "type": "dashboard_tool",
+                    "order": 2,
+                    "draggable": False,
+                    "editable_fields": {}
+                }
+            ]
+        },
+        "subject_scorer": {
+            "sections": [
+                {
+                    "id": "header",
+                    "type": "header",
+                    "order": 0,
+                    "draggable": False,
+                    "editable_fields": {}
+                },
+                {
+                    "id": "subject_hero",
+                    "type": "subject_hero",
+                    "order": 1,
+                    "draggable": True,
+                    "editable_fields": {
+                        "eyebrow": "Subject Line Intelligence",
+                        "heading": "Which Subject Line Wins?",
+                        "description": "Enter 2-5 subject line variations and instantly see which one scores highest on deliverability, emotional pull, clarity, and engagement. Pick your winner before you hit send."
+                    }
+                },
+                {
+                    "id": "subject_tool",
+                    "type": "subject_tool",
+                    "order": 2,
+                    "draggable": False,
+                    "editable_fields": {}
+                },
+                {
+                    "id": "footer",
+                    "type": "subject_footer",
+                    "order": 3,
+                    "draggable": True,
+                    "editable_fields": {
+                        "text": "INBXR \u2014 Subject line scoring is based on deliverability heuristics and engagement best practices. Actual open rates depend on sender reputation, audience, and timing."
+                    }
+                }
+            ]
+        },
+        "placement": {
+            "sections": [
+                {
+                    "id": "header",
+                    "type": "header",
+                    "order": 0,
+                    "draggable": False,
+                    "editable_fields": {}
+                },
+                {
+                    "id": "placement_hero",
+                    "type": "placement_hero",
+                    "order": 1,
+                    "draggable": True,
+                    "editable_fields": {
+                        "eyebrow": "Real Inbox Placement Testing",
+                        "heading": "See Where Your Email Actually Lands",
+                        "description": "Send your email to our seed accounts across Gmail, Outlook, Yahoo, and more \u2014 then see exactly whether it hit the inbox, spam folder, or promotions tab. No guesswork, no predictions \u2014 real placement results from real mailboxes."
+                    }
+                },
+                {
+                    "id": "placement_tool",
+                    "type": "placement_tool",
+                    "order": 2,
+                    "draggable": False,
+                    "editable_fields": {}
+                },
+                {
+                    "id": "footer",
+                    "type": "placement_footer",
+                    "order": 3,
+                    "draggable": True,
+                    "editable_fields": {
+                        "text": "INBXR \u2014 Inbox placement results reflect real mailbox checks at the time of scan. Placement may vary by sender reputation, content, and ISP filtering rules."
+                    }
+                }
+            ]
         }
     }
 
@@ -101,11 +206,22 @@ def load_config():
     """Load config from JSON file, or return default if missing/corrupt."""
     try:
         with open(CONFIG_PATH, "r", encoding="utf-8") as f:
-            return json.load(f)
+            cfg = json.load(f)
     except (FileNotFoundError, json.JSONDecodeError):
         cfg = _default_config()
         save_config(cfg)
         return cfg
+
+    # Merge any new pages from defaults into existing config
+    defaults = _default_config()
+    changed = False
+    for page_name, page_data in defaults.items():
+        if page_name not in cfg:
+            cfg[page_name] = page_data
+            changed = True
+    if changed:
+        save_config(cfg)
+    return cfg
 
 
 def save_config(config):

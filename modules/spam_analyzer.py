@@ -366,6 +366,35 @@ class SpamAnalyzer:
                 "recommendation": "Use .com, .org, .net or established ccTLDs. Low-reputation TLDs dramatically increase spam score."
             })
 
+        # --- Phishing / typosquat link detection (0-5) ---
+        phishing_brand_patterns = [
+            r'paypa[l1]', r'app[l1]e', r'amaz[o0]n', r'g[o0]{2}g[l1]e',
+            r'micr[o0]s[o0]ft', r'faceb[o0]{2}k', r'netf[l1]ix',
+        ]
+        phishing_subdomain_patterns = [
+            r'-secure\.', r'-verify\.', r'-account\.', r'-login\.', r'-update\.',
+            r'login-\.', r'secure-\.', r'verify-\.', r'account-\.',
+        ]
+        all_phishing_patterns = phishing_brand_patterns + phishing_subdomain_patterns
+
+        phishing_urls = []
+        for url in urls:
+            parsed = urlparse(url if url.startswith("http") else "https://" + url)
+            hostname = parsed.netloc.lower()
+            for pat in all_phishing_patterns:
+                if re.search(pat, hostname, re.IGNORECASE):
+                    phishing_urls.append(url)
+                    break
+
+        if phishing_urls:
+            phishing_risk = min(5, len(phishing_urls) * 3)
+            risk += phishing_risk
+            flags.append({
+                "severity": "high",
+                "item": f"Possible phishing/typosquat URL(s): {', '.join(phishing_urls[:3])}",
+                "recommendation": "Remove or replace suspicious URLs that mimic well-known brands. Typosquat and phishing links trigger aggressive spam filtering and erode recipient trust."
+            })
+
         # --- Non-HTTPS URLs (0-3) ---
         http_only = [u for u in urls if u.startswith("http://")]
         if http_only:
@@ -467,6 +496,43 @@ class SpamAnalyzer:
                         "recommendation": "Remove all hidden text. Invisible text is a black-hat spam technique that causes immediate filtering."
                     })
                     break
+
+            # Check for form elements (phishing indicator)
+            if re.search(r'(?i)<form|<input.*type=["\']password', body_full):
+                risk += 3
+                flags.append({
+                    "severity": "high",
+                    "item": "Form elements detected in email (common phishing indicator)",
+                    "recommendation": "Remove all form elements. Legitimate emails link to web forms rather than embedding them. Forms in email are a major phishing signal."
+                })
+
+            # Check for JavaScript
+            if re.search(r'(?i)<script|javascript:|on\w+=', body_full):
+                risk += 3
+                flags.append({
+                    "severity": "high",
+                    "item": "JavaScript detected in email HTML",
+                    "recommendation": "Remove all JavaScript. Most email clients block scripts entirely, and their presence triggers spam filters."
+                })
+
+            # Check for iframes
+            if re.search(r'(?i)<iframe', body_full):
+                risk += 2
+                flags.append({
+                    "severity": "high",
+                    "item": "Iframe element detected in email",
+                    "recommendation": "Remove iframe elements. They are blocked by virtually all email clients and signal spam or phishing."
+                })
+
+            # Check for excessive base64 encoded images
+            base64_count = len(re.findall(r'data:image/[^;]+;base64', body_full))
+            if base64_count > 3:
+                risk += 2
+                flags.append({
+                    "severity": "medium",
+                    "item": f"{base64_count} base64 encoded images detected",
+                    "recommendation": "Host images on your server instead of embedding base64 data. Excessive inline images increase email size and trigger spam filters."
+                })
 
         # --- Very long lines in plain text (0-2) ---
         if not self.is_html_body:

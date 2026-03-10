@@ -1,0 +1,7 @@
+<div class="tool-hero">
+  <div class="tool-hero__inner">
+    <span class="tool-hero__eyebrow"{% if is_admin %} contenteditable="true" data-field="eyebrow"{% endif %}>{{ section.editable_fields.eyebrow }}</span>
+    <h1 class="tool-hero__h1"{% if is_admin %} contenteditable="true" data-field="heading"{% endif %}>{{ section.editable_fields.heading }}</h1>
+    <p class="tool-hero__p"{% if is_admin %} contenteditable="true" data-field="description"{% endif %}>{{ section.editable_fields.description }}</p>
+  </div>
+</div>
