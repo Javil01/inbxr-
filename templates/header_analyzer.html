@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>INBXR — Inbox Placement Test</title>
+  <title>INBXR — Email Header Analyzer</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/static/css/style.css" />
+  <link rel="stylesheet" href="/static/css/style.css?v={{ range(1000,9999) | random }}" />
   {% if is_admin %}<link rel="stylesheet" href="/static/css/admin.css" />{% endif %}
 </head>
-<body class="placement-page{% if is_admin %} admin-mode{% endif %}"{% if is_admin %} data-page="placement"{% endif %}>
+<body class="sender-page{% if is_admin %} admin-mode{% endif %}"{% if is_admin %} data-page="header_analyzer"{% endif %}>
 
 {% if is_admin %}
 <div class="admin-toolbar">
@@ -40,7 +40,7 @@
 {% endfor %}
 </div>
 
-<script src="/static/js/placement.js"></script>
+<script src="/static/js/header_analyzer.js?v={{ range(1000,9999) | random }}"></script>
 {% if is_admin %}
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 <script src="/static/js/admin_editor.js"></script>

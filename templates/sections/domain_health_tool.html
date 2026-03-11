@@ -1,0 +1,87 @@
+<div class="sender-form-card" id="formCard">
+  <form id="domainHealthForm" novalidate>
+    <div class="sender-fields">
+      <div class="field sender-field--primary">
+        <label for="dhDomain">Domain <span class="required">*</span></label>
+        <div class="domain-input-wrap">
+          <span class="domain-input-at">@</span>
+          <input type="text" id="dhDomain" name="domain" placeholder="yourdomain.com" autocomplete="off" spellcheck="false" />
+        </div>
+        <span class="field-hint">Enter the domain you want to check</span>
+      </div>
+      <div class="field">
+        <label for="dhSelector">DKIM Selector <span class="optional">(optional)</span></label>
+        <input type="text" id="dhSelector" name="dkim_selector" placeholder="default" autocomplete="off" spellcheck="false" />
+        <span class="field-hint">Leave blank to auto-discover common selectors</span>
+      </div>
+    </div>
+    <button type="submit" class="btn-analyze sender-submit" id="submitBtn">
+      <span class="btn-text">Run Health Check</span>
+      <span class="btn-spinner hidden"></span>
+    </button>
+  </form>
+</div>
+
+<div class="sender-loading hidden" id="dhLoading">
+  <div class="loading-ring"></div>
+  <p class="loading-msg" id="loadingMsg">Running domain health checks...</p>
+  <p class="loading-sub">Checking authentication, blocklists, BIMI, and more</p>
+</div>
+
+<div class="sender-results hidden" id="dhResults">
+
+  <!-- Overall Grade Card -->
+  <div class="et-assessment-grade" id="overallGrade">
+    <div class="et-assessment-grade__letter" id="gradeLetter">-</div>
+    <div class="et-assessment-grade__body">
+      <span class="et-assessment-grade__label" id="gradeLabel">Domain Health Score</span>
+      <div class="et-assessment-grade__counts" id="gradeCounts"></div>
+    </div>
+  </div>
+
+  <!-- Category Breakdown -->
+  <section class="sender-section">
+    <h2 class="sender-section__title">Category Breakdown</h2>
+    <div class="auth-grid" id="categoryCards"></div>
+  </section>
+
+  <!-- Authentication Details -->
+  <section class="sender-section">
+    <h2 class="sender-section__title">Authentication Details</h2>
+    <div class="auth-grid" id="authDetails"></div>
+  </section>
+
+  <!-- Blocklist Scan Results -->
+  <section class="sender-section" id="blocklistSection">
+    <h2 class="sender-section__title">Blocklist Scan <span class="dnsbl-summary" id="blocklistSummary"></span></h2>
+    <div class="dnsbl-table-wrap">
+      <table class="dnsbl-table" id="blocklistTable">
+        <thead><tr><th>Status</th><th>List</th><th>Type</th><th>Severity</th><th>Info</th></tr></thead>
+        <tbody id="blocklistBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- DNS Records Found -->
+  <section class="sender-section">
+    <h2 class="sender-section__title">DNS Records</h2>
+    <div class="rep-signals" id="dnsRecords"></div>
+  </section>
+
+  <!-- BIMI Details -->
+  <section class="sender-section hidden" id="bimiSection">
+    <h2 class="sender-section__title">BIMI Details</h2>
+    <div class="rep-signals" id="bimiDetails"></div>
+  </section>
+
+  <!-- Recommendations -->
+  <section class="sender-section" id="recsSection">
+    <h2 class="sender-section__title">Recommendations</h2>
+    <div class="rec-list" id="recsList"></div>
+  </section>
+
+  <div style="text-align:center;padding:12px 0 24px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+    <a href="/sender" class="run-again-btn" id="generateFixBtn" style="text-decoration:none">Generate Fix Records</a>
+    <button type="button" class="run-again-btn" id="runAgainBtn">&#8592; Run another check</button>
+  </div>
+</div>

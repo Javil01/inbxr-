@@ -1,0 +1,8 @@
+<section class="hero-band">
+  <div class="hero-inner">
+    {% set f = section.editable_fields %}
+    <span class="hero-eyebrow"{% if is_admin %} contenteditable="true" data-field="eyebrow"{% endif %}>{{ f.eyebrow }}</span>
+    <h1 class="hero-heading typewriter-target"{% if is_admin %} contenteditable="true" data-field="heading"{% endif %}>{{ f.heading }}</h1>
+    <p class="hero-description"{% if is_admin %} contenteditable="true" data-field="description"{% endif %}>{{ f.description }}</p>
+  </div>
+</section>

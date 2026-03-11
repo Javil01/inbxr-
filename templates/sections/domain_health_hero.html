@@ -1,0 +1,10 @@
+<div class="sender-hero">
+  <div class="sender-hero__inner">
+    <span class="sender-hero__eyebrow"
+      {% if is_admin %}contenteditable="true" data-field="eyebrow"{% endif %}>{{ section.editable_fields.eyebrow }}</span>
+    <h1 class="sender-hero__title"
+      {% if is_admin %}contenteditable="true" data-field="heading"{% endif %}>{{ section.editable_fields.heading }}</h1>
+    <p class="sender-hero__sub"
+      {% if is_admin %}contenteditable="true" data-field="description"{% endif %}>{{ section.editable_fields.description }}</p>
+  </div>
+</div>

@@ -61,10 +61,16 @@ COMMON_SELECTORS = [
 
 # ── IP-based DNSBL zones ──────────────────────────────
 IP_DNSBLS = [
-    # ── Critical ──
+    # ── Critical (listing here = major delivery impact) ──
     {"zone": "zen.spamhaus.org",       "name": "Spamhaus ZEN",       "weight": "critical",
      "info": "Industry standard. Combines SBL (spam sources), XBL (exploited IPs), and PBL (policy block list)."},
-    # ── Major ──
+    {"zone": "sbl.spamhaus.org",       "name": "Spamhaus SBL",       "weight": "critical",
+     "info": "Spamhaus Block List — verified spam sources. Used by 80%+ of email providers."},
+    {"zone": "xbl.spamhaus.org",       "name": "Spamhaus XBL",       "weight": "critical",
+     "info": "Exploits Block List — hijacked PCs, botnet nodes, open proxies."},
+    {"zone": "pbl.spamhaus.org",       "name": "Spamhaus PBL",       "weight": "critical",
+     "info": "Policy Block List — dynamic/residential IPs that should not send mail directly."},
+    # ── Major (widely used, significant impact) ──
     {"zone": "bl.spamcop.net",         "name": "SpamCop",            "weight": "major",
      "info": "User-reported spam. Aggressive but decays quickly (24–48 h)."},
     {"zone": "b.barracudacentral.org", "name": "Barracuda BRBL",     "weight": "major",
@@ -75,6 +81,12 @@ IP_DNSBLS = [
      "info": "Truncate list by Message Sniffer. Widely used in enterprise spam appliances."},
     {"zone": "dnsbl.justspam.org",     "name": "JustSpam",           "weight": "major",
      "info": "Spam-only blocklist. Does not list for policy reasons — only confirmed spam."},
+    {"zone": "rbl.rbldns.ru",          "name": "RBLDNS.ru",          "weight": "major",
+     "info": "Large Russian blocklist. Used widely across Eastern European mail servers."},
+    {"zone": "dnsrbl.org",             "name": "DNSRBL",             "weight": "major",
+     "info": "Real-time blocklist aggregating multiple spam trap feeds."},
+    {"zone": "zen.bl.nszones.com",     "name": "NSZones ZEN",        "weight": "major",
+     "info": "NSZones combined blocklist. Aggregates IP reputation data from multiple sources."},
     # ── Moderate ──
     {"zone": "dnsbl.sorbs.net",        "name": "SORBS",              "weight": "moderate",
      "info": "Spam and Open Relay Blocking System."},
@@ -96,6 +108,10 @@ IP_DNSBLS = [
      "info": "Open HTTP proxies exploited for spam."},
     {"zone": "misc.dnsbl.sorbs.net",   "name": "SORBS Misc",         "weight": "moderate",
      "info": "Miscellaneous open proxy/relay detections."},
+    {"zone": "zombie.dnsbl.sorbs.net", "name": "SORBS Zombie",       "weight": "moderate",
+     "info": "IPs of hijacked/zombie machines used for spam relay."},
+    {"zone": "dul.dnsbl.sorbs.net",    "name": "SORBS DUL",          "weight": "moderate",
+     "info": "Dynamic User List — residential/dynamic IPs that should use a smarthost."},
     {"zone": "dnsbl-1.uceprotect.net", "name": "UCEPROTECT L1",      "weight": "moderate",
      "info": "Individual IP spam sender list."},
     {"zone": "dnsbl-2.uceprotect.net", "name": "UCEPROTECT L2",      "weight": "moderate",
@@ -108,6 +124,8 @@ IP_DNSBLS = [
      "info": "Widely used in Europe. Fast decay on good behavior."},
     {"zone": "bl.mailspike.net",       "name": "Mailspike BL",       "weight": "moderate",
      "info": "Mailspike reputation blocklist. Used by many European providers."},
+    {"zone": "z.mailspike.net",        "name": "Mailspike Z",        "weight": "moderate",
+     "info": "Mailspike zero-hour reputation — catches new spam sources within minutes."},
     {"zone": "bl.spamcannibal.org",    "name": "SpamCannibal",       "weight": "moderate",
      "info": "DNS-based spam source blocklist."},
     {"zone": "dnsbl.dronebl.org",      "name": "DroneBL",            "weight": "moderate",
@@ -138,6 +156,34 @@ IP_DNSBLS = [
      "info": "Redhawk access list. Used in academic and research networks."},
     {"zone": "rbl.schulte.org",        "name": "Schulte RBL",        "weight": "moderate",
      "info": "Independent RBL based on spam trap data."},
+    {"zone": "dnsbl.kempt.net",        "name": "Kempt DNSBL",        "weight": "moderate",
+     "info": "Kempt.net blocklist — spam trap driven, popular in Europe."},
+    {"zone": "orvedb.aupads.org",      "name": "AUPADS ORVE",        "weight": "moderate",
+     "info": "Australian ORVE blocklist. Tracks open relays and spam sources."},
+    {"zone": "spam.dnsbl.anonmails.de","name": "AnonMails Spam",     "weight": "moderate",
+     "info": "German spam blocklist focusing on anonymous/throwaway mail abuse."},
+    {"zone": "dnsbl.calivent.com.pe",  "name": "Calivent DNSBL",     "weight": "moderate",
+     "info": "South American blocklist. Tracks spam across Latin American networks."},
+    {"zone": "rbl.efnetrbl.org",       "name": "EFnet RBL",          "weight": "moderate",
+     "info": "EFnet IRC network blocklist. Tracks IPs engaged in network abuse."},
+    {"zone": "bl.konstant.no",         "name": "Konstant BL",        "weight": "moderate",
+     "info": "Norwegian blocklist. Tracks spam and abuse targeting Nordic infrastructure."},
+    {"zone": "dnsbl.net.ua",           "name": "DNSBL Ukraine",      "weight": "moderate",
+     "info": "Ukrainian blocklist. Tracks spam sources across CIS networks."},
+    {"zone": "rbl.dns-servicios.com",  "name": "DNS-Servicios RBL",  "weight": "moderate",
+     "info": "Spanish blocklist. Tracks spam targeting Spanish-language networks."},
+    {"zone": "bl.scientificspam.net",  "name": "ScientificSpam",     "weight": "moderate",
+     "info": "Scientific approach to spam detection using statistical analysis."},
+    {"zone": "bl.suomispam.net",       "name": "SuomiSpam BL",       "weight": "moderate",
+     "info": "Finnish blocklist. Tracks spam targeting Finnish networks."},
+    {"zone": "dnsbl.openresolvers.org", "name": "OpenResolvers",      "weight": "moderate",
+     "info": "Lists open DNS resolvers often exploited for DNS amplification attacks."},
+    {"zone": "dnsbl.abyan.es",         "name": "Abyan DNSBL",        "weight": "moderate",
+     "info": "Spanish blocklist. Trap-based spam detection."},
+    {"zone": "rbl.lugh.ch",            "name": "Lugh RBL",           "weight": "moderate",
+     "info": "Swiss blocklist. Independent spam trap network."},
+    {"zone": "rbl.talkactive.net",     "name": "TalkActive RBL",     "weight": "moderate",
+     "info": "Community-driven blocklist for spam and abuse."},
     # ── Minor ──
     {"zone": "noptr.spamrats.com",     "name": "SPAMRATS NoPtr",     "weight": "minor",
      "info": "Flags IPs with no valid PTR record."},
@@ -145,6 +191,8 @@ IP_DNSBLS = [
      "info": "Flags IPs with dynamic/generic PTR records."},
     {"zone": "spam.spamrats.com",      "name": "SPAMRATS Spam",      "weight": "minor",
      "info": "IPs observed sending spam to SPAMRATS traps."},
+    {"zone": "auth.spamrats.com",      "name": "SPAMRATS Auth",      "weight": "minor",
+     "info": "IPs attempting AUTH brute-force attacks on mail servers."},
     {"zone": "backscatter.spameatingmonkey.net","name":"SEM Backscatter","weight":"minor",
      "info": "Detects IPs sending backscatter (bounces from forged senders)."},
     {"zone": "bl.spameatingmonkey.net","name": "SEM BL",             "weight": "minor",
@@ -169,30 +217,78 @@ IP_DNSBLS = [
      "info": "Hungarian blocklist from TTK network."},
     {"zone": "dnsbl.rv-soft.info",     "name": "RV-Soft DNSBL",      "weight": "minor",
      "info": "RV-Soft DNS blocklist."},
+    {"zone": "rbl.fasthosts.co.uk",    "name": "Fasthosts RBL",      "weight": "minor",
+     "info": "UK hosting provider blocklist."},
+    {"zone": "dnsbl.anticaptcha.net",  "name": "AntiCaptcha DNSBL",  "weight": "minor",
+     "info": "Blocklist targeting CAPTCHA-solving services used for spam automation."},
+    {"zone": "rbl.zenon.net",          "name": "Zenon RBL",          "weight": "minor",
+     "info": "Russian provider blocklist. Tracks abuse on Zenon network."},
+    {"zone": "spam.pedantic.org",      "name": "Pedantic Spam",      "weight": "minor",
+     "info": "Long-running independent spam blocklist."},
+    {"zone": "bl.technovision.dk",     "name": "TechnoVision BL",    "weight": "minor",
+     "info": "Danish blocklist from TechnoVision hosting."},
+    {"zone": "rbl.abuse.ro",           "name": "Abuse.ro RBL",       "weight": "minor",
+     "info": "Romanian abuse blocklist."},
+    {"zone": "dnsbl.tornevall.org",    "name": "Tornevall DNSBL",    "weight": "minor",
+     "info": "Swedish blocklist. Tracks Tor exit nodes and proxy abuse."},
+    {"zone": "bl.drmx.org",            "name": "DrMX BL",            "weight": "minor",
+     "info": "DrMX spam blocklist. Trap-based detection."},
+    {"zone": "rbl.polspam.pl",         "name": "PolSpam RBL",        "weight": "minor",
+     "info": "Polish blocklist. Tracks spam targeting Polish networks."},
+    {"zone": "bl.ipv6.spameatingmonkey.net","name":"SEM IPv6 BL",    "weight": "minor",
+     "info": "IPv6 spam blocklist from Spam Eating Monkey."},
+    {"zone": "exitnodes.tor.dnsbl.sectoor.de","name":"Sectoor Tor",  "weight": "minor",
+     "info": "Lists known Tor exit nodes. Mail from Tor is often blocked."},
+    {"zone": "multi.rbl.dns-servicios.com","name":"DNS-Servicios Multi","weight":"minor",
+     "info": "Multi-zone Spanish blocklist aggregation."},
 ]
 
 # ── Domain-based DNSBL zones ─────────────────────────
 DOMAIN_DNSBLS = [
+    # ── Critical ──
     {"zone": "dbl.spamhaus.org",        "name": "Spamhaus DBL",      "weight": "critical",
      "info": "Domain blocklist. Listed domains appear in spam campaigns."},
+    # ── Major ──
     {"zone": "multi.surbl.org",         "name": "SURBL Multi",       "weight": "major",
      "info": "URI blocklist used by many spam filters to check links."},
     {"zone": "dbl.invaluement.com",     "name": "ivmSIP/24 DBL",    "weight": "major",
      "info": "Invaluement domain reputation list."},
-    {"zone": "rhsbl.sorbs.net",         "name": "SORBS RHSBL",      "weight": "moderate",
-     "info": "SORBS right-hand-side blocklist for sending domains."},
     {"zone": "black.uribl.com",         "name": "URIBL Black",      "weight": "major",
      "info": "URI-based blocklist. Checks domains found in spam message bodies."},
+    {"zone": "0spam-killlist.fusionzero.com","name":"0Spam Kill DBL", "weight": "major",
+     "info": "Zero Spam domain kill list. Domains confirmed in active spam campaigns."},
+    # ── Moderate ──
+    {"zone": "rhsbl.sorbs.net",         "name": "SORBS RHSBL",      "weight": "moderate",
+     "info": "SORBS right-hand-side blocklist for sending domains."},
     {"zone": "grey.uribl.com",          "name": "URIBL Grey",       "weight": "moderate",
      "info": "URI blocklist grey zone — domains seen in spam but not yet confirmed."},
+    {"zone": "red.uribl.com",           "name": "URIBL Red",        "weight": "moderate",
+     "info": "Domains found in confirmed phishing or malware campaigns."},
     {"zone": "uri.blacklist.woody.ch",  "name": "Woody URI BL",     "weight": "moderate",
      "info": "Swiss URI blocklist. Tracks domains used in spam campaigns."},
+    {"zone": "dbl.nordspam.com",        "name": "NordSpam DBL",     "weight": "moderate",
+     "info": "Nordic domain blocklist. Tracks domains in spam targeting Scandinavia."},
+    {"zone": "rhsbl.zapbl.net",         "name": "ZapBL RHSBL",      "weight": "moderate",
+     "info": "ZapBL right-hand-side blocklist for sending domains."},
+    {"zone": "nomail.rhsbl.sorbs.net",  "name": "SORBS NoMail",     "weight": "moderate",
+     "info": "Domains that explicitly declare they do not send email."},
+    {"zone": "badconf.rhsbl.sorbs.net", "name": "SORBS BadConf",    "weight": "moderate",
+     "info": "Domains with misconfigured DNS that cannot receive bounce messages."},
+    # ── Minor ──
     {"zone": "uribl.spameatingmonkey.net","name":"SEM URIBL",       "weight": "minor",
      "info": "Spam Eating Monkey URI blocklist. Domain-level spam detection."},
     {"zone": "fresh.spameatingmonkey.net","name":"SEM Fresh",        "weight": "minor",
      "info": "Recently registered domains — often used for spam. 5-day window."},
+    {"zone": "fresh15.spameatingmonkey.net","name":"SEM Fresh15",    "weight": "minor",
+     "info": "Domains registered in the last 15 days — higher spam probability."},
+    {"zone": "fresh30.spameatingmonkey.net","name":"SEM Fresh30",    "weight": "minor",
+     "info": "Domains registered in the last 30 days."},
     {"zone": "dnsbl.invaluement.com",   "name": "ivmURI",           "weight": "minor",
      "info": "Invaluement URI blocklist. Tracks domains in spam URIs."},
+    {"zone": "dbl.tiopan.com",          "name": "Tiopan DBL",       "weight": "minor",
+     "info": "Tiopan domain blocklist. Independent spam domain tracking."},
+    {"zone": "dbl.suomispam.net",       "name": "SuomiSpam DBL",    "weight": "minor",
+     "info": "Finnish domain blocklist for spam campaigns."},
 ]
 
 # ── Scoring penalties ─────────────────────────────────
@@ -447,6 +543,131 @@ class ReputationChecker:
         return {
             "status": "pass", "score": score, "max": 20,
             "record": bimi, "has_logo": has_logo, "has_vmc": has_vmc, "issues": [],
+        }
+
+    def _check_mta_sts(self) -> dict:
+        """Check MTA-STS DNS record and policy file."""
+        issues = []
+
+        # 1. Check _mta-sts TXT record
+        records, err = _get_txt(self.resolver, f"_mta-sts.{self.domain}")
+        sts_record = next((r for r in records if r.startswith("v=STSv1")), None)
+
+        if not sts_record:
+            return {"status": "missing", "score": 0, "max": 10,
+                    "record": None, "policy": None,
+                    "issues": ["No MTA-STS record found (optional — enforces TLS for inbound mail)"]}
+
+        # 2. Parse id from record
+        id_match = re.search(r'\bid=(\S+)', sts_record)
+        sts_id = id_match.group(1).rstrip(";") if id_match else None
+        if not sts_id:
+            issues.append("MTA-STS record missing id= tag")
+
+        # 3. Try to fetch the policy file
+        policy_result = self._fetch_mta_sts_policy()
+
+        score = 5  # record exists
+        if policy_result.get("fetched"):
+            mode = policy_result.get("mode")
+            if mode == "enforce":
+                score = 10
+            elif mode == "testing":
+                score = 7
+                issues.append("MTA-STS policy mode is 'testing' — upgrade to 'enforce' when ready")
+            elif mode == "none":
+                score = 3
+                issues.append("MTA-STS policy mode is 'none' — no TLS enforcement active")
+
+            mx_patterns = policy_result.get("mx", [])
+            max_age = policy_result.get("max_age")
+            if max_age and int(max_age) < 86400:
+                issues.append(f"max_age={max_age}s is very short (recommended: 604800 or higher)")
+        else:
+            issues.append("Could not fetch policy file at https://mta-sts." + self.domain + "/.well-known/mta-sts.txt")
+            policy_result = None
+
+        status = "pass" if score >= 8 and not issues else ("warning" if score >= 3 else "missing")
+
+        return {
+            "status": status, "score": score, "max": 10,
+            "record": sts_record, "sts_id": sts_id,
+            "policy": policy_result, "issues": issues,
+        }
+
+    def _fetch_mta_sts_policy(self) -> dict:
+        """Fetch and parse MTA-STS policy file over HTTPS."""
+        import ssl
+        from http.client import HTTPSConnection
+        try:
+            ctx = ssl.create_default_context()
+            conn = HTTPSConnection(f"mta-sts.{self.domain}", 443, timeout=8, context=ctx)
+            conn.request("GET", "/.well-known/mta-sts.txt", headers={
+                "Host": f"mta-sts.{self.domain}",
+                "User-Agent": "INBXR-MTA-STS-Checker/1.0",
+            })
+            resp = conn.getresponse()
+            if resp.status != 200:
+                return {"fetched": False, "error": f"HTTP {resp.status}"}
+            body = resp.read(16384).decode("utf-8", errors="replace")
+            conn.close()
+
+            # Parse key: value lines
+            mode = None
+            mx_patterns = []
+            max_age = None
+            for line in body.strip().splitlines():
+                line = line.strip()
+                if ":" not in line:
+                    continue
+                key, _, val = line.partition(":")
+                key, val = key.strip().lower(), val.strip()
+                if key == "mode":
+                    mode = val.lower()
+                elif key == "mx":
+                    mx_patterns.append(val)
+                elif key == "max_age":
+                    max_age = val
+
+            return {"fetched": True, "mode": mode, "mx": mx_patterns,
+                    "max_age": max_age, "raw": body[:500]}
+        except Exception as e:
+            return {"fetched": False, "error": str(e)[:100]}
+
+    def _check_tls_rpt(self) -> dict:
+        """Check TLS-RPT DNS record."""
+        records, err = _get_txt(self.resolver, f"_smtp._tls.{self.domain}")
+        tls_rpt = next((r for r in records if "v=TLSRPTv1" in r), None)
+
+        if not tls_rpt:
+            return {"status": "missing", "score": 0, "max": 10,
+                    "record": None,
+                    "issues": ["No TLS-RPT record found (optional — enables TLS failure reporting)"]}
+
+        issues = []
+        score = 5
+
+        # Extract rua
+        rua_match = re.search(r'\brua=(\S+)', tls_rpt)
+        rua = rua_match.group(1).rstrip(";") if rua_match else None
+
+        if not rua:
+            issues.append("TLS-RPT record missing rua= reporting address")
+        else:
+            score = 10
+            # Check reporting destinations
+            destinations = [d.strip() for d in rua.split(",")]
+            has_mailto = any(d.startswith("mailto:") for d in destinations)
+            has_https = any(d.startswith("https://") for d in destinations)
+            if not has_mailto and not has_https:
+                issues.append("rua= should use mailto: or https:// reporting endpoints")
+                score = 7
+
+        status = "pass" if score >= 8 and not issues else ("warning" if score >= 3 else "missing")
+
+        return {
+            "status": status, "score": score, "max": 10,
+            "record": tls_rpt, "rua": rua, "issues": issues,
         }
 
     # ════════════════════════════════════════════════════
@@ -871,17 +1092,19 @@ class ReputationChecker:
         t0 = time.monotonic()
 
         # ── Auth checks (sequential — build on each other) ──
-        spf   = self._check_spf()
-        dkim  = self._check_dkim()
-        dmarc = self._check_dmarc()
-        bimi  = self._check_bimi()
+        spf     = self._check_spf()
+        dkim    = self._check_dkim()
+        dmarc   = self._check_dmarc()
+        bimi    = self._check_bimi()
+        mta_sts = self._check_mta_sts()
+        tls_rpt = self._check_tls_rpt()
 
-        auth_score = spf["score"] + dkim["score"] + dmarc["score"] + bimi["score"]
+        auth_score = spf["score"] + dkim["score"] + dmarc["score"] + bimi["score"] + mta_sts["score"] + tls_rpt["score"]
         auth_score = min(100, auth_score)
         auth_label, auth_color = self._auth_label(auth_score)
 
         auth_summary_parts = []
-        for name, rec in [("SPF", spf), ("DKIM", dkim), ("DMARC", dmarc), ("BIMI", bimi)]:
+        for name, rec in [("SPF", spf), ("DKIM", dkim), ("DMARC", dmarc), ("BIMI", bimi), ("MTA-STS", mta_sts), ("TLS-RPT", tls_rpt)]:
             st = rec["status"]
             if st == "pass":
                 auth_summary_parts.append(f"✓ {name}")
@@ -982,10 +1205,12 @@ class ReputationChecker:
                 "color":   auth_color,
                 "summary": "  ".join(auth_summary_parts),
                 "categories": [
-                    {**spf,   "label": "SPF"},
-                    {**dkim,  "label": "DKIM"},
-                    {**dmarc, "label": "DMARC"},
-                    {**bimi,  "label": "BIMI"},
+                    {**spf,     "label": "SPF"},
+                    {**dkim,    "label": "DKIM"},
+                    {**dmarc,   "label": "DMARC"},
+                    {**bimi,    "label": "BIMI"},
+                    {**mta_sts, "label": "MTA-STS"},
+                    {**tls_rpt, "label": "TLS-RPT"},
                 ],
             },
             "reputation": {

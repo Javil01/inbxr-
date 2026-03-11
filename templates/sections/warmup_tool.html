@@ -1,0 +1,183 @@
+<div class="warmup-views">
+  <!-- Campaign list view -->
+  <div id="warmupListView">
+    <div class="sender-form-card" id="warmupFormCard">
+      <h3 class="warmup-form-title">Start New Warm-up Campaign</h3>
+      <form id="warmupCreateForm" novalidate>
+        <div class="sender-fields">
+          <div class="field sender-field--primary">
+            <label for="warmupDomain">Sending Domain <span class="required">*</span></label>
+            <div class="domain-input-wrap">
+              <span class="domain-input-at">@</span>
+              <input type="text" id="warmupDomain" name="domain" placeholder="yourdomain.com" autocomplete="off" spellcheck="false" />
+            </div>
+          </div>
+          <div class="field">
+            <label for="warmupEsp">Email Service Provider</label>
+            <select id="warmupEsp" name="esp" class="esp-selector__dropdown">
+              <option value="">Select your platform...</option>
+              <option value="mailchimp">Mailchimp</option>
+              <option value="klaviyo">Klaviyo</option>
+              <option value="activecampaign">ActiveCampaign</option>
+              <option value="convertkit">Kit (ConvertKit)</option>
+              <option value="hubspot">HubSpot</option>
+              <option value="sendgrid">SendGrid</option>
+              <option value="constantcontact">Constant Contact</option>
+              <option value="mailerlite">MailerLite</option>
+              <option value="brevo">Brevo (Sendinblue)</option>
+              <option value="aweber">AWeber</option>
+              <option value="getresponse">GetResponse</option>
+              <option value="drip">Drip</option>
+              <option value="beehiiv">Beehiiv</option>
+              <option value="campaignmonitor">Campaign Monitor</option>
+              <option value="flodesk">Flodesk</option>
+              <option value="gohighlevel">GoHighLevel</option>
+              <option value="gmail">Gmail / Google Workspace</option>
+              <option value="outlook">Outlook / Microsoft 365</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="warmupTarget">Daily Volume Target</label>
+            <input type="number" id="warmupTarget" name="daily_target" value="500" min="50" max="100000" />
+            <span class="field-hint">Your goal daily send volume after warm-up is complete</span>
+          </div>
+        </div>
+        <button type="submit" class="btn-analyze sender-submit" id="warmupCreateBtn">
+          <span class="btn-text">Start Warm-up</span>
+          <span class="btn-spinner hidden"></span>
+        </button>
+      </form>
+    </div>
+
+    <!-- Active campaigns -->
+    <div class="warmup-campaigns hidden" id="warmupCampaigns">
+      <h2 class="sender-section__title">Your Campaigns</h2>
+      <div class="warmup-campaign-list" id="warmupCampaignList">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Campaign detail view -->
+  <div class="hidden" id="warmupDetailView">
+    <button type="button" class="blm-detail__back" id="warmupBack">&larr; Back to campaigns</button>
+    <div class="warmup-detail-header" id="warmupDetailHeader">
+      <!-- Populated by JS -->
+    </div>
+
+    <!-- Warm-up schedule guide -->
+    <section class="sender-section">
+      <h3 class="sender-section__title">Recommended Warm-up Schedule</h3>
+      <div class="warmup-schedule" id="warmupSchedule">
+        <div class="warmup-schedule__row">
+          <span class="warmup-schedule__label">Day 1-3</span>
+          <span class="warmup-schedule__vol">20 / day</span>
+        </div>
+        <div class="warmup-schedule__row">
+          <span class="warmup-schedule__label">Day 4-7</span>
+          <span class="warmup-schedule__vol">50 / day</span>
+        </div>
+        <div class="warmup-schedule__row">
+          <span class="warmup-schedule__label">Day 8-14</span>
+          <span class="warmup-schedule__vol">100 / day</span>
+        </div>
+        <div class="warmup-schedule__row">
+          <span class="warmup-schedule__label">Day 15-21</span>
+          <span class="warmup-schedule__vol">250 / day</span>
+        </div>
+        <div class="warmup-schedule__row">
+          <span class="warmup-schedule__label">Day 22-30</span>
+          <span class="warmup-schedule__vol">500 / day</span>
+        </div>
+        <div class="warmup-schedule__row">
+          <span class="warmup-schedule__label">Day 30+</span>
+          <span class="warmup-schedule__vol">Full volume</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Health indicator -->
+    <div class="warmup-health" id="warmupHealth">
+      <!-- Populated by JS -->
+    </div>
+
+    <!-- Daily log form -->
+    <section class="sender-section">
+      <h3 class="sender-section__title">Log Today's Activity</h3>
+      <div class="sender-form-card">
+        <form id="warmupLogForm" novalidate>
+          <div class="sender-fields">
+            <div class="field sender-field--primary">
+              <label for="warmupSentCount">Emails Sent Today <span class="required">*</span></label>
+              <input type="number" id="warmupSentCount" name="sent_count" placeholder="0" min="0" />
+            </div>
+            <div class="field">
+              <label for="warmupNotes">Notes <span class="optional">(optional)</span></label>
+              <input type="text" id="warmupNotes" name="notes" placeholder="e.g. Sent to engaged segment only" autocomplete="off" />
+            </div>
+          </div>
+          <button type="submit" class="btn-analyze sender-submit" id="warmupLogBtn">
+            <span class="btn-text">Log Day</span>
+            <span class="btn-spinner hidden"></span>
+          </button>
+        </form>
+      </div>
+    </section>
+
+    <!-- Volume chart (pure CSS bars) -->
+    <section class="sender-section">
+      <h3 class="sender-section__title">Daily Send Volume</h3>
+      <div class="warmup-chart" id="warmupChart">
+        <!-- CSS bar chart rendered by JS -->
+      </div>
+    </section>
+
+    <!-- History table -->
+    <section class="sender-section">
+      <h3 class="sender-section__title">Warm-up Log</h3>
+      <div class="dnsbl-table-wrap">
+        <table class="dnsbl-table" id="warmupHistoryTable">
+          <thead>
+            <tr>
+              <th>Day</th>
+              <th>Date</th>
+              <th>Sent</th>
+              <th>Cumulative</th>
+              <th>Placement</th>
+              <th>Notes</th>
+            </tr>
+          </thead>
+          <tbody id="warmupHistoryBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Best practices -->
+    <section class="sender-section warmup-tips">
+      <h3 class="sender-section__title">Warm-up Best Practices</h3>
+      <div class="warmup-tips__list">
+        <div class="warmup-tip">
+          <strong>Start with your most engaged contacts.</strong>
+          Sending to people who open and click signals positive engagement to mailbox providers.
+        </div>
+        <div class="warmup-tip">
+          <strong>Increase volume gradually.</strong>
+          Sudden spikes in volume are a red flag. Follow the schedule above or adjust based on your domain age.
+        </div>
+        <div class="warmup-tip">
+          <strong>Monitor bounces and complaints.</strong>
+          Keep bounce rates under 2% and spam complaints under 0.1%. Pause and clean your list if you exceed these.
+        </div>
+        <div class="warmup-tip">
+          <strong>Be consistent.</strong>
+          Send every day during warm-up. Gaps in sending can reset your reputation progress with some providers.
+        </div>
+        <div class="warmup-tip">
+          <strong>Authenticate everything first.</strong>
+          Make sure SPF, DKIM, and DMARC are properly configured before you start. Use INBXR's Sender Check tool to verify.
+        </div>
+      </div>
+    </section>
+  </div>
+</div>

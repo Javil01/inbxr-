@@ -240,14 +240,25 @@ def admin_toggle_visibility():
 @app.route("/")
 def index():
     from modules.page_config import get_page_sections
-    sections = get_page_sections("index")
-    # For non-admin visitors, filter out hidden sections
+    sections = get_page_sections("email_test")
+    if not _is_admin():
+        sections = [s for s in sections if s.get("visible", True)]
+    return render_template("email_test.html",
+                           sections=sections,
+                           is_admin=_is_admin(),
+                           active_page="index")
+
+
+@app.route("/analyzer")
+def analyzer():
+    from modules.page_config import get_page_sections
+    sections = get_page_sections("analyzer")
     if not _is_admin():
         sections = [s for s in sections if s.get("visible", True)]
     return render_template("index.html",
                            sections=sections,
                            is_admin=_is_admin(),
-                           active_page="index")
+                           active_page="analyzer")
 
 
 @app.route("/sender")
@@ -304,6 +315,85 @@ def score_subjects():
     from modules.subject_scorer import score_subjects as do_score
     result = do_score(subjects, industry=industry)
     return jsonify(result)
+
+
+@app.route("/email-test")
+def email_test():
+    return redirect("/", code=302)
+
+
+@app.route("/email-test/start", methods=["POST"])
+def email_test_start():
+    from modules.inbox_placement import generate_token, get_seed_info
+
+    seeds = get_seed_info()
+    if not seeds:
+        return jsonify({"error": "No seed accounts configured."}), 503
+
+    # Use the first seed (primary Gmail account)
+    seed = seeds[0]
+    token = generate_token()
+    return jsonify({"token": token, "seed_email": seed["email"], "provider": seed["provider"]})
+
+
+@app.route("/email-test/check", methods=["POST"])
+def email_test_check():
+    from modules.inbox_placement import check_rate_limit
+    from modules.email_test import EmailTestFetcher, run_full_analysis
+
+    if not check_rate_limit():
+        return jsonify({"error": "Rate limit exceeded. Please wait a minute."}), 429
+
+    data = request.get_json(force=True, silent=True)
+    if not data:
+        return jsonify({"error": "Invalid JSON payload"}), 400
+
+    token = (data.get("token") or "").strip()
+    if not token or not re.match(r'^INBXR-[A-F0-9]{8}$', token):
+        return jsonify({"error": "Invalid or missing test token."}), 400
+
+    fetcher = EmailTestFetcher(token=token)
+    fetch_result = fetcher.fetch()
+
+    if fetch_result["status"] == "error":
+        return jsonify({"error": fetch_result.get("error", "Fetch failed.")}), 500
+
+    if fetch_result["status"] == "not_found":
+        return jsonify({"status": "not_found", "elapsed_ms": fetch_result.get("elapsed_ms", 0)})
+
+    # Run full analysis
+    try:
+        analysis = run_full_analysis(
+            raw_bytes=fetch_result["raw_bytes"],
+            placement=fetch_result["placement"],
+            folder=fetch_result["folder"],
+            tab=fetch_result["tab"],
+            provider=fetch_result["provider"],
+            seed_email=fetch_result["seed_email"],
+        )
+    except Exception as e:
+        return jsonify({"error": f"Analysis failed: {str(e)[:200]}"}), 500
+
+    analysis["status"] = "found"
+    return jsonify(analysis)
+
+
+@app.route("/dns-generator")
+def dns_generator():
+    """Redirect to Domain Health which now generates fix records automatically."""
+    return redirect("/domain-health", code=302)
+
+
+@app.route("/bimi")
+def bimi():
+    from modules.page_config import get_page_sections
+    sections = get_page_sections("bimi")
+    if not _is_admin():
+        sections = [s for s in sections if s.get("visible", True)]
+    return render_template("bimi_checker.html",
+                           sections=sections,
+                           is_admin=_is_admin(),
+                           active_page="bimi")
 
 
 @app.route("/placement")
@@ -398,8 +488,1059 @@ def placement_cleanup():
     return jsonify(result)
 
 
+# ══════════════════════════════════════════════════════
+#  HEADER ANALYZER PAGE + API
+# ══════════════════════════════════════════════════════
+
+@app.route("/header-analyzer")
+def header_analyzer():
+    from modules.page_config import get_page_sections
+    sections = get_page_sections("header_analyzer")
+    if not _is_admin():
+        sections = [s for s in sections if s.get("visible", True)]
+    return render_template("header_analyzer.html",
+                           sections=sections,
+                           is_admin=_is_admin(),
+                           active_page="header_analyzer")
+
+
+@app.route("/analyze-headers", methods=["POST"])
+def analyze_headers():
+    """Parse raw email headers and return structured analysis."""
+    from email.parser import HeaderParser
+    from email.utils import parsedate_to_datetime
+
+    data = request.get_json(force=True, silent=True)
+    if not data:
+        return jsonify({"error": "Invalid JSON payload"}), 400
+
+    raw_headers = (data.get("headers") or "").strip()
+    if not raw_headers:
+        return jsonify({"error": "No headers provided."}), 400
+
+    try:
+        parser = HeaderParser()
+        msg = parser.parsestr(raw_headers)
+    except Exception as e:
+        return jsonify({"error": f"Failed to parse headers: {str(e)[:200]}"}), 400
+
+    # ── Envelope ──
+    envelope = {
+        "from": msg.get("From", ""),
+        "to": msg.get("To", ""),
+        "subject": msg.get("Subject", ""),
+        "date": msg.get("Date", ""),
+        "message_id": msg.get("Message-ID", ""),
+        "reply_to": msg.get("Reply-To", ""),
+    }
+
+    # ── Authentication-Results ──
+    auth_results = {"spf": None, "dkim": None, "dmarc": None}
+    auth_header = msg.get("Authentication-Results", "")
+    if auth_header:
+        auth_lower = auth_header.lower()
+        for proto in ("spf", "dkim", "dmarc"):
+            # Match patterns like "spf=pass", "dkim=fail", "dmarc=none"
+            match = re.search(rf'{proto}\s*=\s*(\w+)', auth_lower)
+            if match:
+                auth_results[proto] = match.group(1)
+
+    # ── Received chain ──
+    received_headers = msg.get_all("Received") or []
+    received_chain = []
+    timestamps = []
+
+    for rh in received_headers:
+        hop = {"from_server": "", "by_server": "", "protocol": "", "timestamp": "", "encrypted": False, "delay_seconds": None}
+
+        # Extract "from X"
+        from_match = re.search(r'from\s+([\w.\-]+(?:\s*\([^)]*\))?)', rh, re.IGNORECASE)
+        if from_match:
+            hop["from_server"] = from_match.group(1).strip()
+
+        # Extract "by X"
+        by_match = re.search(r'by\s+([\w.\-]+)', rh, re.IGNORECASE)
+        if by_match:
+            hop["by_server"] = by_match.group(1).strip()
+
+        # Extract protocol
+        proto_match = re.search(r'with\s+(E?SMTPS?A?)', rh, re.IGNORECASE)
+        if proto_match:
+            hop["protocol"] = proto_match.group(1).upper()
+
+        # Check encryption
+        if re.search(r'ESMTPS|TLS|tls\s*v?\d|STARTTLS', rh, re.IGNORECASE):
+            hop["encrypted"] = True
+
+        # Extract timestamp (after semicolon)
+        ts_match = re.search(r';\s*(.+)$', rh.strip())
+        if ts_match:
+            ts_str = ts_match.group(1).strip()
+            hop["timestamp"] = ts_str
+            try:
+                dt = parsedate_to_datetime(ts_str)
+                timestamps.append(dt)
+            except Exception:
+                timestamps.append(None)
+        else:
+            timestamps.append(None)
+
+        received_chain.append(hop)
+
+    # Compute delays between hops (Received headers are in reverse order)
+    total_delay = 0
+    for i in range(len(timestamps) - 1):
+        newer = timestamps[i]
+        older = timestamps[i + 1]
+        if newer and older:
+            delay = (newer - older).total_seconds()
+            if delay < 0:
+                delay = 0
+            received_chain[i]["delay_seconds"] = round(delay, 1)
+            total_delay += delay
+
+    # ── TLS info ──
+    tls_info = {
+        "any_encrypted": any(h["encrypted"] for h in received_chain),
+        "all_encrypted": all(h["encrypted"] for h in received_chain) if received_chain else False,
+    }
+
+    # ── DKIM-Signature ──
+    dkim_sig = {"domain": None, "selector": None, "algorithm": None, "header_fields": None, "body_hash": None}
+    dkim_header = msg.get("DKIM-Signature", "")
+    if dkim_header:
+        d_match = re.search(r'd\s*=\s*([^;\s]+)', dkim_header)
+        s_match = re.search(r's\s*=\s*([^;\s]+)', dkim_header)
+        a_match = re.search(r'a\s*=\s*([^;\s]+)', dkim_header)
+        h_match = re.search(r'h\s*=\s*([^;]+)', dkim_header)
+        bh_match = re.search(r'bh\s*=\s*([^;\s]+)', dkim_header)
+        if d_match: dkim_sig["domain"] = d_match.group(1).strip()
+        if s_match: dkim_sig["selector"] = s_match.group(1).strip()
+        if a_match: dkim_sig["algorithm"] = a_match.group(1).strip()
+        if h_match: dkim_sig["header_fields"] = h_match.group(1).strip()
+        if bh_match: dkim_sig["body_hash"] = bh_match.group(1).strip()
+
+    # ── X-Headers ──
+    x_headers = {}
+    for key in msg.keys():
+        if key.lower().startswith("x-"):
+            val = msg.get(key, "")
+            x_headers[key] = val
+
+    # ── All headers (for raw display) ──
+    all_headers = [(k, v) for k, v in msg.items()]
+
+    # ── Summary ──
+    auth_pass_count = sum(1 for v in auth_results.values() if v == "pass")
+    auth_fail_count = sum(1 for v in auth_results.values() if v and v != "pass" and v != "none")
+
+    summary = {
+        "total_hops": len(received_chain),
+        "all_encrypted": tls_info["all_encrypted"],
+        "auth_pass_count": auth_pass_count,
+        "auth_fail_count": auth_fail_count,
+        "total_delay_seconds": round(total_delay, 1),
+    }
+
+    return jsonify({
+        "authentication_results": auth_results,
+        "received_chain": received_chain,
+        "tls_info": tls_info,
+        "dkim_signature": dkim_sig,
+        "envelope": envelope,
+        "x_headers": x_headers,
+        "all_headers": all_headers,
+        "summary": summary,
+    })
+
+
+# ══════════════════════════════════════════════════════
+#  DOMAIN HEALTH REPORT PAGE + API
+# ══════════════════════════════════════════════════════
+
+@app.route("/domain-health")
+def domain_health():
+    """Domain Health now redirects to Sender Check (consolidated)."""
+    qs = request.query_string.decode()
+    target = "/sender"
+    if qs:
+        target += f"?{qs}"
+    return redirect(target, code=302)
+
+
+@app.route("/domain-health-check", methods=["POST"])
+def domain_health_check():
+    """Comprehensive domain health assessment with letter grade."""
+    import concurrent.futures
+    import ssl
+    import socket
+
+    data = request.get_json(force=True, silent=True)
+    if data is None:
+        return jsonify({"error": "Invalid JSON payload"}), 400
+
+    domain = (data.get("domain") or "").strip().lower().rstrip(".")
+    dkim_selector = (data.get("dkim_selector") or "").strip() or None
+
+    if not domain:
+        return jsonify({"error": "Domain is required."}), 400
+    if not re.match(r'^[a-z0-9][a-z0-9.\-]{0,251}[a-z0-9]$', domain):
+        return jsonify({"error": "Invalid domain format."}), 400
+
+    results = {}
+    errors = []
+
+    def run_reputation():
+        from modules.reputation_checker import ReputationChecker
+        checker = ReputationChecker(domain=domain, dkim_selector=dkim_selector)
+        return checker.analyze()
+
+    def run_bimi():
+        from modules.bimi_validator import validate_bimi
+        return validate_bimi(domain)
+
+    def run_dns_suggestions():
+        from modules.dns_generators import generate_from_auth_results
+        # We need auth results first, so this will be run after reputation
+        return None
+
+    def run_mx():
+        try:
+            import dns.resolver
+            answers = dns.resolver.resolve(domain, 'MX')
+            records = []
+            for rdata in sorted(answers, key=lambda x: x.preference):
+                records.append({"priority": rdata.preference, "host": str(rdata.exchange).rstrip('.')})
+            return {"found": True, "records": records}
+        except Exception as e:
+            return {"found": False, "records": [], "error": str(e)[:100]}
+
+    def run_ssl():
+        try:
+            ctx = ssl.create_default_context()
+            with ctx.wrap_socket(socket.socket(), server_hostname=domain) as s:
+                s.settimeout(5)
+                s.connect((domain, 443))
+                cert = s.getpeercert()
+                not_after = cert.get("notAfter", "")
+                return {"connected": True, "cert_expiry": not_after, "error": None}
+        except Exception as e:
+            return {"connected": False, "cert_expiry": None, "error": str(e)[:100]}
+
+    # Run all checks in parallel
+    with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+        future_rep = executor.submit(run_reputation)
+        future_bimi = executor.submit(run_bimi)
+        future_mx = executor.submit(run_mx)
+        future_ssl = executor.submit(run_ssl)
+
+        try:
+            results["reputation"] = future_rep.result(timeout=30)
+        except Exception as e:
+            results["reputation"] = None
+            errors.append(f"Reputation check failed: {str(e)[:100]}")
+
+        try:
+            results["bimi"] = future_bimi.result(timeout=15)
+        except Exception as e:
+            results["bimi"] = None
+            errors.append(f"BIMI check failed: {str(e)[:100]}")
+
+        try:
+            results["mx"] = future_mx.result(timeout=10)
+        except Exception as e:
+            results["mx"] = {"found": False, "records": []}
+
+        try:
+            results["ssl"] = future_ssl.result(timeout=10)
+        except Exception as e:
+            results["ssl"] = {"connected": False, "error": str(e)[:100]}
+
+    # Run DNS suggestions after reputation data is available
+    if results["reputation"]:
+        try:
+            from modules.dns_generators import generate_from_auth_results
+            auth_cats = results["reputation"].get("auth", {}).get("categories", [])
+            results["dns_suggestions"] = generate_from_auth_results(
+                domain=domain, auth_categories=auth_cats
+            )
+        except Exception:
+            results["dns_suggestions"] = None
+
+    # ── Compute scores ──
+    rep = results.get("reputation") or {}
+    auth_data = rep.get("auth", {})
+    rep_data = rep.get("reputation", {})
+    bimi_data = results.get("bimi") or {}
+    mx_data = results.get("mx") or {}
+    ssl_data = results.get("ssl") or {}
+
+    # Auth score (up to 40 points)
+    auth_cats = auth_data.get("categories", [])
+    auth_score = 0
+    auth_details = []
+    for cat in auth_cats:
+        label = cat.get("label", "")
+        status = cat.get("status", "missing")
+        if label in ("SPF", "DKIM", "DMARC"):
+            if status == "pass":
+                auth_score += 13
+                auth_details.append(f"{label}: pass")
+            elif status == "warning":
+                auth_score += 7
+                auth_details.append(f"{label}: warning")
+            else:
+                auth_details.append(f"{label}: {status}")
+    auth_score = min(auth_score, 40)
+    # Add 1 point if all 3 pass (bonus)
+    spf_pass = any(c.get("label") == "SPF" and c.get("status") == "pass" for c in auth_cats)
+    dkim_pass = any(c.get("label") == "DKIM" and c.get("status") == "pass" for c in auth_cats)
+    dmarc_pass = any(c.get("label") == "DMARC" and c.get("status") == "pass" for c in auth_cats)
+    if spf_pass and dkim_pass and dmarc_pass:
+        auth_score = 40
+
+    # Blocklist score (up to 25 points)
+    listed_count = rep_data.get("listed_count", 0)
+    dnsbl_list = rep_data.get("dnsbl", [])
+    blocklist_score = 25
+    blocklist_details = []
+    if listed_count > 0:
+        # Deduct based on severity
+        for entry in dnsbl_list:
+            if entry.get("listed"):
+                weight = entry.get("weight", "minor")
+                if weight == "critical":
+                    blocklist_score -= 10
+                elif weight == "major":
+                    blocklist_score -= 6
+                elif weight == "moderate":
+                    blocklist_score -= 3
+                else:
+                    blocklist_score -= 1
+        blocklist_score = max(blocklist_score, 0)
+        blocklist_details.append(f"Listed on {listed_count} blocklist(s)")
+    else:
+        blocklist_details.append("Clean on all checked blocklists")
+
+    # BIMI score (up to 10 points)
+    bimi_score = 0
+    bimi_details = []
+    if bimi_data.get("found"):
+        bimi_score += 5
+        bimi_details.append("BIMI record found")
+        if bimi_data.get("logo_url") or bimi_data.get("logo_valid"):
+            bimi_score += 3
+            bimi_details.append("Logo configured")
+        if bimi_data.get("vmc_url") or bimi_data.get("vmc_valid"):
+            bimi_score += 2
+            bimi_details.append("VMC certificate present")
+    else:
+        bimi_details.append("No BIMI record")
+
+    # Transport security score (up to 10 points): MTA-STS, TLS-RPT, SSL
+    transport_score = 0
+    transport_details = []
+    mta_sts_cat = next((c for c in auth_cats if c.get("label") == "MTA-STS"), None)
+    tls_rpt_cat = next((c for c in auth_cats if c.get("label") == "TLS-RPT"), None)
+    if mta_sts_cat and mta_sts_cat.get("status") == "pass":
+        transport_score += 4
+        transport_details.append("MTA-STS configured")
+    else:
+        transport_details.append("MTA-STS not configured")
+    if tls_rpt_cat and tls_rpt_cat.get("status") == "pass":
+        transport_score += 3
+        transport_details.append("TLS-RPT configured")
+    else:
+        transport_details.append("TLS-RPT not configured")
+    if ssl_data.get("connected"):
+        transport_score += 3
+        transport_details.append("HTTPS/SSL valid")
+    else:
+        transport_details.append("No HTTPS or SSL issue")
+
+    # DNS health score (up to 15 points): rDNS, FCrDNS, MX, domain setup
+    dns_score = 0
+    dns_details = []
+    if mx_data.get("found") or (rep_data.get("mx", {}).get("found")):
+        dns_score += 5
+        dns_details.append("MX records found")
+    else:
+        dns_details.append("No MX records")
+
+    ptr_data = rep_data.get("ptr", {})
+    fcrdns_data = rep_data.get("fcrdns", {})
+    if ptr_data.get("found"):
+        dns_score += 5
+        dns_details.append("PTR record found")
+    elif ptr_data.get("checked"):
+        dns_details.append("No PTR record")
+    else:
+        dns_score += 3  # Not checked (no IP given), partial credit
+        dns_details.append("PTR not checked (no IP)")
+
+    if fcrdns_data.get("valid"):
+        dns_score += 5
+        dns_details.append("FCrDNS verified")
+    elif fcrdns_data.get("checked"):
+        dns_details.append("FCrDNS failed")
+    else:
+        dns_score += 2  # Not checked, partial
+        dns_details.append("FCrDNS not checked")
+
+    dns_score = min(dns_score, 15)
+
+    # Overall score
+    overall_score = auth_score + blocklist_score + bimi_score + transport_score + dns_score
+    overall_score = min(overall_score, 100)
+
+    # Letter grade
+    if overall_score >= 90:
+        grade = "A"
+    elif overall_score >= 80:
+        grade = "B"
+    elif overall_score >= 65:
+        grade = "C"
+    elif overall_score >= 50:
+        grade = "D"
+    else:
+        grade = "F"
+
+    # Category scores for display
+    category_scores = {
+        "auth": {"label": "Authentication", "score": auth_score, "max": 40, "details": auth_details},
+        "blocklists": {"label": "Blocklists", "score": blocklist_score, "max": 25, "details": blocklist_details},
+        "bimi": {"label": "BIMI", "score": bimi_score, "max": 10, "details": bimi_details},
+        "transport": {"label": "Transport Security", "score": transport_score, "max": 10, "details": transport_details},
+        "dns": {"label": "DNS Health", "score": dns_score, "max": 15, "details": dns_details},
+    }
+
+    # Build recommendations from reputation data
+    recommendations = []
+    if rep.get("recommendations"):
+        recommendations = rep["recommendations"]
+
+    # Add BIMI recommendation if missing
+    if not bimi_data.get("found"):
+        recommendations.append({
+            "category": "BIMI",
+            "item": "No BIMI record configured",
+            "recommendation": f"Add a BIMI DNS record at default._bimi.{domain} to display your brand logo in supporting email clients like Gmail, Yahoo, and Apple Mail.",
+        })
+
+    # Add transport recommendations
+    if not (mta_sts_cat and mta_sts_cat.get("status") == "pass"):
+        recommendations.append({
+            "category": "Transport Security",
+            "item": "MTA-STS not configured",
+            "recommendation": f"Configure MTA-STS for {domain} to enforce TLS encryption for inbound mail delivery.",
+        })
+    if not (tls_rpt_cat and tls_rpt_cat.get("status") == "pass"):
+        recommendations.append({
+            "category": "Transport Security",
+            "item": "TLS-RPT not configured",
+            "recommendation": f"Add a TLS-RPT DNS record for {domain} to receive reports about TLS delivery failures.",
+        })
+
+    return jsonify({
+        "domain": domain,
+        "grade": grade,
+        "score": overall_score,
+        "category_scores": category_scores,
+        "reputation": rep,
+        "bimi": bimi_data,
+        "mx": mx_data,
+        "ssl": ssl_data,
+        "dns_suggestions": results.get("dns_suggestions"),
+        "recommendations": recommendations,
+        "errors": errors if errors else None,
+    })
+
+
+# ══════════════════════════════════════════════════════
+#  FULL AUDIT PAGE + API
+# ══════════════════════════════════════════════════════
+
+@app.route("/full-audit")
+def full_audit():
+    """Redirect to consolidated Sender Check page."""
+    qs = request.query_string.decode()
+    target = "/sender"
+    if qs:
+        target += f"?{qs}"
+    return redirect(target, code=302)
+
+
+@app.route("/api/full-audit", methods=["POST"])
+def full_audit_check():
+    """Unified domain audit: runs ALL checks in parallel, returns one comprehensive report."""
+    import concurrent.futures
+    import ssl
+    import socket
+
+    data = request.get_json(force=True, silent=True)
+    if data is None:
+        return jsonify({"error": "Invalid JSON payload"}), 400
+
+    domain = (data.get("domain") or "").strip().lower().rstrip(".")
+    dkim_selector = (data.get("dkim_selector") or "").strip() or None
+
+    if not domain:
+        return jsonify({"error": "Domain is required."}), 400
+    if not re.match(r'^[a-z0-9][a-z0-9.\-]{0,251}[a-z0-9]$', domain):
+        return jsonify({"error": "Invalid domain format."}), 400
+
+    results = {}
+    errors = []
+
+    def run_reputation():
+        from modules.reputation_checker import ReputationChecker
+        checker = ReputationChecker(domain=domain, dkim_selector=dkim_selector)
+        return checker.analyze()
+
+    def run_bimi():
+        from modules.bimi_validator import validate_bimi
+        return validate_bimi(domain)
+
+    def run_mx():
+        try:
+            import dns.resolver
+            answers = dns.resolver.resolve(domain, 'MX')
+            records = []
+            for rdata in sorted(answers, key=lambda x: x.preference):
+                records.append({"priority": rdata.preference, "host": str(rdata.exchange).rstrip('.')})
+            return {"found": True, "records": records}
+        except Exception as e:
+            return {"found": False, "records": [], "error": str(e)[:100]}
+
+    def run_ssl():
+        try:
+            ctx = ssl.create_default_context()
+            with ctx.wrap_socket(socket.socket(), server_hostname=domain) as s:
+                s.settimeout(5)
+                s.connect((domain, 443))
+                cert = s.getpeercert()
+                not_after = cert.get("notAfter", "")
+                return {"connected": True, "cert_expiry": not_after, "error": None}
+        except Exception as e:
+            return {"connected": False, "cert_expiry": None, "error": str(e)[:100]}
+
+    # Run all checks in parallel
+    with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+        future_rep = executor.submit(run_reputation)
+        future_bimi = executor.submit(run_bimi)
+        future_mx = executor.submit(run_mx)
+        future_ssl = executor.submit(run_ssl)
+
+        try:
+            results["reputation"] = future_rep.result(timeout=30)
+        except Exception as e:
+            results["reputation"] = None
+            errors.append(f"Reputation check failed: {str(e)[:100]}")
+
+        try:
+            results["bimi"] = future_bimi.result(timeout=15)
+        except Exception as e:
+            results["bimi"] = None
+            errors.append(f"BIMI check failed: {str(e)[:100]}")
+
+        try:
+            results["mx"] = future_mx.result(timeout=10)
+        except Exception as e:
+            results["mx"] = {"found": False, "records": []}
+
+        try:
+            results["ssl"] = future_ssl.result(timeout=10)
+        except Exception as e:
+            results["ssl"] = {"connected": False, "error": str(e)[:100]}
+
+    # ── ESP Auto-Detection ──
+    esp_info = {"detected": False}
+    mx_data = results.get("mx") or {}
+    if mx_data.get("records"):
+        from modules.dns_generators import detect_esp_from_mx
+        esp_info = detect_esp_from_mx(mx_data["records"])
+
+    # ── DNS fix suggestions ──
+    dns_suggestions = None
+    if results["reputation"]:
+        try:
+            from modules.dns_generators import generate_from_auth_results
+            auth_cats = results["reputation"].get("auth", {}).get("categories", [])
+            dns_suggestions = generate_from_auth_results(
+                domain=domain, auth_categories=auth_cats
+            )
+        except Exception:
+            dns_suggestions = None
+
+    # ── BIMI fix record ──
+    bimi_data = results.get("bimi") or {}
+    if not bimi_data.get("found") and dns_suggestions:
+        dns_suggestions["suggestions"].append({
+            "type": "bimi",
+            "_action": "create",
+            "_title": "Create BIMI Record",
+            "_description": (
+                "No BIMI record found. Add a BIMI DNS record to display your brand logo "
+                "in Gmail, Yahoo, and Apple Mail."
+            ),
+            "host": f"default._bimi.{domain}",
+            "dns_name": f"default._bimi.{domain}",
+            "dns_type": "TXT",
+            "record": f"v=BIMI1; l=https://yourdomain.com/logo.svg; a=",
+            "warnings": [
+                "Replace the logo URL with your actual SVG logo hosted over HTTPS.",
+                "BIMI requires DMARC with p=quarantine or p=reject to work in Gmail.",
+                "For the Gmail blue checkmark, you also need a VMC certificate from DigiCert or Entrust.",
+            ],
+        })
+
+    # ── Compute scores (same logic as domain-health-check) ──
+    rep = results.get("reputation") or {}
+    auth_data = rep.get("auth", {})
+    rep_data = rep.get("reputation", {})
+    ssl_data = results.get("ssl") or {}
+
+    auth_cats = auth_data.get("categories", [])
+    auth_score = 0
+    auth_details = []
+    for cat in auth_cats:
+        label = cat.get("label", "")
+        status = cat.get("status", "missing")
+        if label in ("SPF", "DKIM", "DMARC"):
+            if status == "pass":
+                auth_score += 13
+                auth_details.append(f"{label}: pass")
+            elif status == "warning":
+                auth_score += 7
+                auth_details.append(f"{label}: warning")
+            else:
+                auth_details.append(f"{label}: {status}")
+    auth_score = min(auth_score, 40)
+    spf_pass = any(c.get("label") == "SPF" and c.get("status") == "pass" for c in auth_cats)
+    dkim_pass = any(c.get("label") == "DKIM" and c.get("status") == "pass" for c in auth_cats)
+    dmarc_pass = any(c.get("label") == "DMARC" and c.get("status") == "pass" for c in auth_cats)
+    if spf_pass and dkim_pass and dmarc_pass:
+        auth_score = 40
+
+    listed_count = rep_data.get("listed_count", 0)
+    dnsbl_list = rep_data.get("dnsbl", [])
+    blocklist_score = 25
+    blocklist_details = []
+    if listed_count > 0:
+        for entry in dnsbl_list:
+            if entry.get("listed"):
+                weight = entry.get("weight", "minor")
+                if weight == "critical":
+                    blocklist_score -= 10
+                elif weight == "major":
+                    blocklist_score -= 6
+                elif weight == "moderate":
+                    blocklist_score -= 3
+                else:
+                    blocklist_score -= 1
+        blocklist_score = max(blocklist_score, 0)
+        blocklist_details.append(f"Listed on {listed_count} blocklist(s)")
+    else:
+        blocklist_details.append("Clean on all checked blocklists")
+
+    bimi_score = 0
+    bimi_details = []
+    if bimi_data.get("found"):
+        bimi_score += 5
+        bimi_details.append("BIMI record found")
+        if bimi_data.get("logo_url") or bimi_data.get("logo_valid"):
+            bimi_score += 3
+            bimi_details.append("Logo configured")
+        if bimi_data.get("vmc_url") or bimi_data.get("vmc_valid"):
+            bimi_score += 2
+            bimi_details.append("VMC certificate present")
+    else:
+        bimi_details.append("No BIMI record")
+
+    transport_score = 0
+    transport_details = []
+    mta_sts_cat = next((c for c in auth_cats if c.get("label") == "MTA-STS"), None)
+    tls_rpt_cat = next((c for c in auth_cats if c.get("label") == "TLS-RPT"), None)
+    if mta_sts_cat and mta_sts_cat.get("status") == "pass":
+        transport_score += 4
+        transport_details.append("MTA-STS configured")
+    else:
+        transport_details.append("MTA-STS not configured")
+    if tls_rpt_cat and tls_rpt_cat.get("status") == "pass":
+        transport_score += 3
+        transport_details.append("TLS-RPT configured")
+    else:
+        transport_details.append("TLS-RPT not configured")
+    if ssl_data.get("connected"):
+        transport_score += 3
+        transport_details.append("HTTPS/SSL valid")
+    else:
+        transport_details.append("No HTTPS or SSL issue")
+
+    dns_score = 0
+    dns_details = []
+    if mx_data.get("found") or (rep_data.get("mx", {}).get("found")):
+        dns_score += 5
+        dns_details.append("MX records found")
+    else:
+        dns_details.append("No MX records")
+    ptr_data = rep_data.get("ptr", {})
+    fcrdns_data = rep_data.get("fcrdns", {})
+    if ptr_data.get("found"):
+        dns_score += 5
+        dns_details.append("PTR record found")
+    elif ptr_data.get("checked"):
+        dns_details.append("No PTR record")
+    else:
+        dns_score += 3
+        dns_details.append("PTR not checked (no IP)")
+    if fcrdns_data.get("valid"):
+        dns_score += 5
+        dns_details.append("FCrDNS verified")
+    elif fcrdns_data.get("checked"):
+        dns_details.append("FCrDNS failed")
+    else:
+        dns_score += 2
+        dns_details.append("FCrDNS not checked")
+    dns_score = min(dns_score, 15)
+
+    overall_score = auth_score + blocklist_score + bimi_score + transport_score + dns_score
+    overall_score = min(overall_score, 100)
+
+    if overall_score >= 90:
+        grade = "A"
+    elif overall_score >= 80:
+        grade = "B"
+    elif overall_score >= 65:
+        grade = "C"
+    elif overall_score >= 50:
+        grade = "D"
+    else:
+        grade = "F"
+
+    category_scores = {
+        "auth": {"label": "Authentication", "score": auth_score, "max": 40, "details": auth_details},
+        "blocklists": {"label": "Blocklists", "score": blocklist_score, "max": 25, "details": blocklist_details},
+        "bimi": {"label": "BIMI", "score": bimi_score, "max": 10, "details": bimi_details},
+        "transport": {"label": "Transport Security", "score": transport_score, "max": 10, "details": transport_details},
+        "dns": {"label": "DNS Health", "score": dns_score, "max": 15, "details": dns_details},
+    }
+
+    # ── Recommendations ──
+    recommendations = []
+    if rep.get("recommendations"):
+        recommendations = rep["recommendations"]
+    if not bimi_data.get("found"):
+        recommendations.append({
+            "category": "BIMI",
+            "item": "No BIMI record configured",
+            "recommendation": f"Add a BIMI DNS record at default._bimi.{domain} to display your brand logo in supporting email clients.",
+        })
+    if not (mta_sts_cat and mta_sts_cat.get("status") == "pass"):
+        recommendations.append({
+            "category": "Transport Security",
+            "item": "MTA-STS not configured",
+            "recommendation": f"Configure MTA-STS for {domain} to enforce TLS encryption for inbound mail delivery.",
+        })
+    if not (tls_rpt_cat and tls_rpt_cat.get("status") == "pass"):
+        recommendations.append({
+            "category": "Transport Security",
+            "item": "TLS-RPT not configured",
+            "recommendation": f"Add a TLS-RPT DNS record for {domain} to receive reports about TLS delivery failures.",
+        })
+
+    # ── Build fix records with ESP-specific instructions ──
+    fix_records = []
+    if dns_suggestions and dns_suggestions.get("suggestions"):
+        for sug in dns_suggestions["suggestions"]:
+            fix = {
+                "type": sug.get("type", ""),
+                "action": sug.get("_action", "create"),
+                "title": sug.get("_title", ""),
+                "description": sug.get("_description", ""),
+            }
+            # Standard DNS record fixes
+            if sug.get("record"):
+                fix["host"] = sug.get("host") or sug.get("dns_name", "")
+                fix["dns_type"] = sug.get("dns_type", "TXT")
+                fix["record"] = sug.get("record", "")
+            elif sug.get("dns_record"):
+                fix["host"] = sug.get("dns_host", "")
+                fix["dns_type"] = sug.get("dns_type", "TXT")
+                fix["record"] = sug.get("dns_record", "")
+            # DKIM instructions
+            if sug.get("instructions"):
+                fix["instructions"] = sug["instructions"]
+                fix["host"] = sug.get("host_example", "")
+                fix["record"] = sug.get("record_example", "")
+                fix["dns_type"] = sug.get("dns_type", "TXT")
+            # MTA-STS policy file
+            if sug.get("policy_text"):
+                fix["policy_text"] = sug["policy_text"]
+                fix["policy_url"] = sug.get("policy_url", "")
+                fix["setup_steps"] = sug.get("setup_steps", [])
+            fix["warnings"] = sug.get("warnings", [])
+
+            # Add ESP-specific context
+            if esp_info.get("detected") and sug.get("type") in ("spf", "dkim"):
+                fix["esp_detected"] = esp_info["esp_name"]
+                if sug.get("type") == "dkim" and esp_info.get("esp_key"):
+                    from modules.dns_generators import generate_dkim_instructions
+                    esp_dkim = generate_dkim_instructions(domain, esp=esp_info["esp_key"])
+                    fix["instructions"] = esp_dkim.get("instructions", [])
+                    fix["host"] = esp_dkim.get("host_example", fix.get("host", ""))
+                    fix["record"] = esp_dkim.get("record_example", fix.get("record", ""))
+
+            fix_records.append(fix)
+
+    # ── Severity summary counts ──
+    severity_summary = {"critical": 0, "warning": 0, "pass": 0, "info": 0}
+    for cat in auth_cats:
+        st = cat.get("status", "missing")
+        if st == "pass":
+            severity_summary["pass"] += 1
+        elif st in ("fail", "missing"):
+            severity_summary["critical"] += 1
+        elif st == "warning":
+            severity_summary["warning"] += 1
+
+    if listed_count > 0:
+        severity_summary["critical"] += 1
+    else:
+        severity_summary["pass"] += 1
+
+    if bimi_data.get("found"):
+        severity_summary["pass"] += 1
+    else:
+        severity_summary["info"] += 1
+
+    if ssl_data.get("connected"):
+        severity_summary["pass"] += 1
+    else:
+        severity_summary["warning"] += 1
+
+    return jsonify({
+        "domain": domain,
+        "grade": grade,
+        "score": overall_score,
+        "category_scores": category_scores,
+        "severity_summary": severity_summary,
+        "esp": esp_info,
+        "reputation": rep,
+        "bimi": bimi_data,
+        "mx": mx_data,
+        "ssl": ssl_data,
+        "fix_records": fix_records,
+        "recommendations": recommendations,
+        "errors": errors if errors else None,
+    })
+
+
+# ══════════════════════════════════════════════════════
+#  BLACKLIST MONITOR PAGE + API
+# ══════════════════════════════════════════════════════
+
+@app.route("/blacklist-monitor")
+def blacklist_monitor():
+    from modules.page_config import get_page_sections
+    sections = get_page_sections("blacklist_monitor")
+    if not _is_admin():
+        sections = [s for s in sections if s.get("visible", True)]
+    return render_template("blacklist_monitor.html",
+                           sections=sections,
+                           is_admin=_is_admin(),
+                           active_page="blacklist_monitor")
+
+
+@app.route("/blacklist-monitor/add", methods=["POST"])
+def blm_add():
+    data = request.get_json(force=True, silent=True)
+    if not data:
+        return jsonify({"ok": False, "error": "Invalid payload"}), 400
+
+    domain = (data.get("domain") or "").strip().lower().rstrip(".")
+    ip = (data.get("ip") or "").strip() or None
+
+    if not domain:
+        return jsonify({"ok": False, "error": "Domain is required."}), 400
+    if not re.match(r'^[a-z0-9][a-z0-9.\-]{0,251}[a-z0-9]$', domain):
+        return jsonify({"ok": False, "error": "Invalid domain format."}), 400
+    if ip:
+        try:
+            ipaddress.ip_address(ip)
+        except ValueError:
+            return jsonify({"ok": False, "error": f"Invalid IP address: {ip}"}), 400
+
+    from modules.blacklist_monitor import add_domain
+    return jsonify(add_domain(domain, ip=ip))
+
+
+@app.route("/blacklist-monitor/remove", methods=["POST"])
+def blm_remove():
+    data = request.get_json(force=True, silent=True)
+    if not data:
+        return jsonify({"ok": False, "error": "Invalid payload"}), 400
+
+    domain = (data.get("domain") or "").strip().lower()
+    if not domain:
+        return jsonify({"ok": False, "error": "Domain is required."}), 400
+
+    from modules.blacklist_monitor import remove_domain
+    return jsonify(remove_domain(domain))
+
+
+@app.route("/blacklist-monitor/scan", methods=["POST"])
+def blm_scan():
+    data = request.get_json(force=True, silent=True)
+    if not data:
+        return jsonify({"ok": False, "error": "Invalid payload"}), 400
+
+    domain = (data.get("domain") or "").strip().lower()
+    if not domain:
+        return jsonify({"ok": False, "error": "Domain is required."}), 400
+
+    from modules.blacklist_monitor import scan_domain
+    result = scan_domain(domain)
+    return jsonify(result)
+
+
+@app.route("/blacklist-monitor/domains", methods=["GET"])
+def blm_domains():
+    from modules.blacklist_monitor import get_monitored_domains
+    return jsonify(get_monitored_domains())
+
+
+@app.route("/blacklist-monitor/history/<domain>", methods=["GET"])
+def blm_history(domain):
+    from modules.blacklist_monitor import get_domain_history
+    return jsonify(get_domain_history(domain))
+
+
+# ══════════════════════════════════════════════════════
+#  WARM-UP TRACKER PAGE + API
+# ══════════════════════════════════════════════════════
+
+@app.route("/warmup")
+def warmup():
+    from modules.page_config import get_page_sections
+    sections = get_page_sections("warmup")
+    if not _is_admin():
+        sections = [s for s in sections if s.get("visible", True)]
+    return render_template("warmup.html",
+                           sections=sections,
+                           is_admin=_is_admin(),
+                           active_page="warmup")
+
+
+@app.route("/warmup/create", methods=["POST"])
+def warmup_create():
+    data = request.get_json(force=True, silent=True)
+    if not data:
+        return jsonify({"ok": False, "error": "Invalid payload"}), 400
+
+    domain = (data.get("domain") or "").strip().lower().rstrip(".")
+    esp = (data.get("esp") or "other").strip()
+    daily_target = data.get("daily_target", 500)
+
+    if not domain:
+        return jsonify({"ok": False, "error": "Domain is required."}), 400
+    if not re.match(r'^[a-z0-9][a-z0-9.\-]{0,251}[a-z0-9]$', domain):
+        return jsonify({"ok": False, "error": "Invalid domain format."}), 400
+
+    from modules.warmup_tracker import create_campaign
+    return jsonify(create_campaign(domain, esp, daily_target))
+
+
+@app.route("/warmup/campaigns", methods=["GET"])
+def warmup_campaigns():
+    from modules.warmup_tracker import get_campaigns
+    return jsonify(get_campaigns())
+
+
+@app.route("/warmup/campaign/<int:campaign_id>", methods=["GET"])
+def warmup_campaign(campaign_id):
+    from modules.warmup_tracker import get_campaign
+    result = get_campaign(campaign_id)
+    if not result:
+        return jsonify({"error": "Campaign not found."}), 404
+    return jsonify(result)
+
+
+@app.route("/warmup/log", methods=["POST"])
+def warmup_log():
+    data = request.get_json(force=True, silent=True)
+    if not data:
+        return jsonify({"ok": False, "error": "Invalid payload"}), 400
+
+    campaign_id = data.get("campaign_id")
+    sent_count = data.get("sent_count", 0)
+    placement_result = data.get("placement_result")
+    notes = data.get("notes")
+
+    if not campaign_id:
+        return jsonify({"ok": False, "error": "campaign_id is required."}), 400
+
+    from modules.warmup_tracker import log_day
+    return jsonify(log_day(campaign_id, sent_count, placement_result, notes))
+
+
+@app.route("/warmup/status", methods=["POST"])
+def warmup_status():
+    data = request.get_json(force=True, silent=True)
+    if not data:
+        return jsonify({"ok": False, "error": "Invalid payload"}), 400
+
+    campaign_id = data.get("campaign_id")
+    status = data.get("status")
+
+    if not campaign_id or not status:
+        return jsonify({"ok": False, "error": "campaign_id and status are required."}), 400
+
+    from modules.warmup_tracker import update_campaign_status
+    return jsonify(update_campaign_status(campaign_id, status))
+
+
+@app.route("/warmup/campaign/<int:campaign_id>", methods=["DELETE"])
+def warmup_delete(campaign_id):
+    from modules.warmup_tracker import delete_campaign
+    return jsonify(delete_campaign(campaign_id))
+
+
+# ══════════════════════════════════════════════════════
+#  EMAIL VERIFIER PAGE + API
+# ══════════════════════════════════════════════════════
+
+@app.route("/email-verifier")
+def email_verifier():
+    from modules.page_config import get_page_sections
+    sections = get_page_sections("email_verifier")
+    if not _is_admin():
+        sections = [s for s in sections if s.get("visible", True)]
+    return render_template("email_verifier.html",
+                           sections=sections,
+                           is_admin=_is_admin(),
+                           active_page="email_verifier")
+
+
+@app.route("/api/verify-email", methods=["POST"])
+def api_verify_email():
+    from modules.email_verifier import verify_email
+    data = request.get_json(force=True, silent=True)
+    if not data or not data.get("email"):
+        return jsonify({"error": "Email address is required"}), 400
+    email = data["email"].strip()
+    if len(email) > 320:
+        return jsonify({"error": "Email address too long"}), 400
+    result = verify_email(email)
+    return jsonify(result)
+
+
 @app.route("/check-reputation", methods=["POST"])
 def check_reputation():
+    import concurrent.futures
+    import ssl
+    import socket
+
     data = request.get_json(force=True, silent=True)
     if data is None:
         return jsonify({"error": "Invalid JSON payload"}), 400
@@ -420,15 +1561,230 @@ def check_reputation():
         except ValueError:
             return jsonify({"error": f"Invalid IP address: {sender_ip}"}), 400
 
-    from modules.reputation_checker import ReputationChecker
+    # Run reputation + BIMI + MX + SSL in parallel
+    rep_result = None
+    bimi_data = {}
+    mx_data = {}
+    ssl_data = {}
 
-    checker = ReputationChecker(domain=domain, sender_ip=sender_ip, dkim_selector=dkim_selector)
+    def run_reputation():
+        from modules.reputation_checker import ReputationChecker
+        checker = ReputationChecker(domain=domain, sender_ip=sender_ip, dkim_selector=dkim_selector)
+        return checker.analyze()
+
+    def run_bimi():
+        from modules.bimi_validator import validate_bimi
+        return validate_bimi(domain)
+
+    def run_mx():
+        try:
+            import dns.resolver
+            answers = dns.resolver.resolve(domain, 'MX')
+            records = []
+            for rdata in sorted(answers, key=lambda x: x.preference):
+                records.append({"priority": rdata.preference, "host": str(rdata.exchange).rstrip('.')})
+            return {"found": True, "records": records}
+        except Exception as e:
+            return {"found": False, "records": [], "error": str(e)[:100]}
+
+    def run_ssl():
+        try:
+            ctx = ssl.create_default_context()
+            with ctx.wrap_socket(socket.socket(), server_hostname=domain) as s:
+                s.settimeout(5)
+                s.connect((domain, 443))
+                cert = s.getpeercert()
+                not_after = cert.get("notAfter", "")
+                return {"connected": True, "cert_expiry": not_after, "error": None}
+        except Exception as e:
+            return {"connected": False, "cert_expiry": None, "error": str(e)[:100]}
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+        future_rep = executor.submit(run_reputation)
+        future_bimi = executor.submit(run_bimi)
+        future_mx = executor.submit(run_mx)
+        future_ssl = executor.submit(run_ssl)
+
+        try:
+            rep_result = future_rep.result(timeout=30)
+        except Exception as e:
+            return jsonify({"error": f"Check failed: {e}"}), 500
+
+        try:
+            bimi_data = future_bimi.result(timeout=15) or {}
+        except Exception:
+            bimi_data = {}
+
+        try:
+            mx_data = future_mx.result(timeout=10)
+        except Exception:
+            mx_data = {"found": False, "records": []}
+
+        try:
+            ssl_data = future_ssl.result(timeout=10)
+        except Exception:
+            ssl_data = {"connected": False}
+
+    # ── ESP Auto-Detection ──
+    esp_info = {"detected": False}
+    if mx_data.get("records"):
+        from modules.dns_generators import detect_esp_from_mx
+        esp_info = detect_esp_from_mx(mx_data["records"])
+
+    # ── DNS fix suggestions ──
+    dns_suggestions = None
+    auth_cats = rep_result.get("auth", {}).get("categories", [])
     try:
-        result = checker.analyze()
-    except Exception as e:
-        return jsonify({"error": f"Check failed: {e}"}), 500
+        from modules.dns_generators import generate_from_auth_results
+        dns_suggestions = generate_from_auth_results(
+            domain=domain, auth_categories=auth_cats
+        )
+    except Exception:
+        dns_suggestions = None
 
-    return jsonify(result)
+    # ── BIMI fix ──
+    if not bimi_data.get("found") and dns_suggestions:
+        dns_suggestions["suggestions"].append({
+            "type": "bimi",
+            "_action": "create",
+            "_title": "Create BIMI Record",
+            "_description": "No BIMI record found. Add a BIMI DNS record to display your brand logo in Gmail, Yahoo, and Apple Mail.",
+            "host": f"default._bimi.{domain}",
+            "dns_type": "TXT",
+            "record": "v=BIMI1; l=https://yourdomain.com/logo.svg; a=",
+            "warnings": [
+                "Replace the logo URL with your actual SVG logo hosted over HTTPS.",
+                "BIMI requires DMARC with p=quarantine or p=reject to work in Gmail.",
+            ],
+        })
+
+    # ── Compute A-F grade ──
+    rep_data = rep_result.get("reputation", {})
+    auth_score = 0
+    for cat in auth_cats:
+        label = cat.get("label", "")
+        status = cat.get("status", "missing")
+        if label in ("SPF", "DKIM", "DMARC"):
+            if status == "pass":
+                auth_score += 13
+            elif status == "warning":
+                auth_score += 7
+    auth_score = min(auth_score, 40)
+    if all(any(c.get("label") == l and c.get("status") == "pass" for c in auth_cats) for l in ("SPF", "DKIM", "DMARC")):
+        auth_score = 40
+
+    listed_count = rep_data.get("listed_count", 0)
+    dnsbl_list = rep_data.get("dnsbl", [])
+    blocklist_score = 25
+    if listed_count > 0:
+        for entry in dnsbl_list:
+            if entry.get("listed"):
+                w = entry.get("weight", "minor")
+                blocklist_score -= {"critical": 10, "major": 6, "moderate": 3}.get(w, 1)
+        blocklist_score = max(blocklist_score, 0)
+
+    bimi_score = 0
+    if bimi_data.get("found"):
+        bimi_score += 5
+        if bimi_data.get("logo_url") or bimi_data.get("logo_valid"):
+            bimi_score += 3
+        if bimi_data.get("vmc_url") or bimi_data.get("vmc_valid"):
+            bimi_score += 2
+
+    transport_score = 0
+    mta_sts_cat = next((c for c in auth_cats if c.get("label") == "MTA-STS"), None)
+    tls_rpt_cat = next((c for c in auth_cats if c.get("label") == "TLS-RPT"), None)
+    if mta_sts_cat and mta_sts_cat.get("status") == "pass":
+        transport_score += 4
+    if tls_rpt_cat and tls_rpt_cat.get("status") == "pass":
+        transport_score += 3
+    if ssl_data.get("connected"):
+        transport_score += 3
+
+    dns_score = 0
+    if mx_data.get("found") or rep_data.get("mx", {}).get("found"):
+        dns_score += 5
+    ptr_data = rep_data.get("ptr", {})
+    fcrdns_data = rep_data.get("fcrdns", {})
+    if ptr_data.get("found"):
+        dns_score += 5
+    elif not ptr_data.get("checked"):
+        dns_score += 3
+    if fcrdns_data.get("valid"):
+        dns_score += 5
+    elif not fcrdns_data.get("checked"):
+        dns_score += 2
+    dns_score = min(dns_score, 15)
+
+    overall_score = min(auth_score + blocklist_score + bimi_score + transport_score + dns_score, 100)
+
+    if overall_score >= 90:
+        grade = "A"
+    elif overall_score >= 80:
+        grade = "B"
+    elif overall_score >= 65:
+        grade = "C"
+    elif overall_score >= 50:
+        grade = "D"
+    else:
+        grade = "F"
+
+    category_scores = {
+        "auth": {"label": "Authentication", "score": auth_score, "max": 40},
+        "blocklists": {"label": "Blocklists", "score": blocklist_score, "max": 25},
+        "bimi": {"label": "BIMI", "score": bimi_score, "max": 10},
+        "transport": {"label": "Transport Security", "score": transport_score, "max": 10},
+        "dns": {"label": "DNS Health", "score": dns_score, "max": 15},
+    }
+
+    # ── Build fix records ──
+    fix_records = []
+    if dns_suggestions and dns_suggestions.get("suggestions"):
+        for sug in dns_suggestions["suggestions"]:
+            fix = {
+                "type": sug.get("type", ""),
+                "action": sug.get("_action", "create"),
+                "title": sug.get("_title", ""),
+                "description": sug.get("_description", ""),
+                "warnings": sug.get("warnings", []),
+            }
+            if sug.get("record"):
+                fix["host"] = sug.get("host") or sug.get("dns_name", "")
+                fix["dns_type"] = sug.get("dns_type", "TXT")
+                fix["record"] = sug.get("record", "")
+            elif sug.get("dns_record"):
+                fix["host"] = sug.get("dns_host", "")
+                fix["dns_type"] = sug.get("dns_type", "TXT")
+                fix["record"] = sug.get("dns_record", "")
+            if sug.get("instructions"):
+                fix["instructions"] = sug["instructions"]
+                fix["host"] = sug.get("host_example", fix.get("host", ""))
+                fix["record"] = sug.get("record_example", fix.get("record", ""))
+                fix["dns_type"] = sug.get("dns_type", "TXT")
+            if sug.get("policy_text"):
+                fix["policy_text"] = sug["policy_text"]
+                fix["policy_url"] = sug.get("policy_url", "")
+                fix["setup_steps"] = sug.get("setup_steps", [])
+            if esp_info.get("detected") and sug.get("type") in ("spf", "dkim"):
+                fix["esp_detected"] = esp_info["esp_name"]
+                if sug.get("type") == "dkim" and esp_info.get("esp_key"):
+                    from modules.dns_generators import generate_dkim_instructions
+                    esp_dkim = generate_dkim_instructions(domain, esp=esp_info["esp_key"])
+                    fix["instructions"] = esp_dkim.get("instructions", [])
+                    fix["host"] = esp_dkim.get("host_example", fix.get("host", ""))
+                    fix["record"] = esp_dkim.get("record_example", fix.get("record", ""))
+            fix_records.append(fix)
+
+    # Merge extra data into the existing result format
+    rep_result["grade"] = grade
+    rep_result["score"] = overall_score
+    rep_result["category_scores"] = category_scores
+    rep_result["esp"] = esp_info
+    rep_result["bimi"] = bimi_data
+    rep_result["ssl"] = ssl_data
+    rep_result["fix_records"] = fix_records
+
+    return jsonify(rep_result)
 
 
 @app.route("/ai-rewrite", methods=["POST"])
@@ -563,7 +1919,70 @@ def generate_dns():
             pct=data.get("dmarc_pct", 100),
         )
 
+    if record_type in ("mta_sts", "all"):
+        from modules.dns_generators import generate_mta_sts
+        results["mta_sts"] = generate_mta_sts(
+            domain,
+            mode=data.get("mta_sts_mode", "testing"),
+            mx_patterns=data.get("mx_patterns"),
+            max_age=data.get("mta_sts_max_age", 604800),
+        )
+
+    if record_type in ("tls_rpt", "all"):
+        from modules.dns_generators import generate_tls_rpt
+        results["tls_rpt"] = generate_tls_rpt(
+            domain,
+            rua_email=data.get("tls_rpt_email"),
+            rua_https=data.get("tls_rpt_https"),
+        )
+
     return jsonify({"domain": domain, "records": results})
+
+
+@app.route("/lookup-mta-sts", methods=["POST"])
+def lookup_mta_sts():
+    """Standalone MTA-STS lookup for a domain."""
+    data = request.get_json(force=True, silent=True)
+    if data is None:
+        return jsonify({"error": "Invalid JSON payload"}), 400
+
+    domain = (data.get("domain") or "").strip().lower().rstrip(".")
+    if not domain:
+        return jsonify({"error": "Domain is required."}), 400
+    if not re.match(r'^[a-z0-9][a-z0-9.\-]{0,251}[a-z0-9]$', domain):
+        return jsonify({"error": "Invalid domain format."}), 400
+
+    from modules.reputation_checker import ReputationChecker
+    checker = ReputationChecker(domain=domain)
+    try:
+        result = checker._check_mta_sts()
+    except Exception as e:
+        return jsonify({"error": f"MTA-STS lookup failed: {e}"}), 500
+
+    return jsonify({"domain": domain, **result})
+
+
+@app.route("/lookup-tls-rpt", methods=["POST"])
+def lookup_tls_rpt():
+    """Standalone TLS-RPT lookup for a domain."""
+    data = request.get_json(force=True, silent=True)
+    if data is None:
+        return jsonify({"error": "Invalid JSON payload"}), 400
+
+    domain = (data.get("domain") or "").strip().lower().rstrip(".")
+    if not domain:
+        return jsonify({"error": "Domain is required."}), 400
+    if not re.match(r'^[a-z0-9][a-z0-9.\-]{0,251}[a-z0-9]$', domain):
+        return jsonify({"error": "Invalid domain format."}), 400
+
+    from modules.reputation_checker import ReputationChecker
+    checker = ReputationChecker(domain=domain)
+    try:
+        result = checker._check_tls_rpt()
+    except Exception as e:
+        return jsonify({"error": f"TLS-RPT lookup failed: {e}"}), 500
+
+    return jsonify({"domain": domain, **result})
 
 
 @app.route("/analyze", methods=["POST"])

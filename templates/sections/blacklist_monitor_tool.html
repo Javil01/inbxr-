@@ -1,0 +1,89 @@
+<div class="sender-form-card" id="blmFormCard">
+  <form id="blmAddForm" novalidate>
+    <div class="sender-fields">
+      <div class="field sender-field--primary">
+        <label for="blmDomain">Domain to Monitor <span class="required">*</span></label>
+        <div class="domain-input-wrap">
+          <span class="domain-input-at">@</span>
+          <input type="text" id="blmDomain" name="domain" placeholder="yourdomain.com" autocomplete="off" spellcheck="false" />
+        </div>
+        <span class="field-hint">Add up to 5 domains to monitor against 60+ blocklists</span>
+      </div>
+      <div class="field">
+        <label for="blmIp">Sending IP <span class="optional">(optional)</span></label>
+        <input type="text" id="blmIp" name="ip" placeholder="203.0.113.42" autocomplete="off" spellcheck="false" />
+        <span class="field-hint">Enables IP-based blocklist checks in addition to domain checks</span>
+      </div>
+    </div>
+    <button type="submit" class="btn-analyze sender-submit" id="blmAddBtn">
+      <span class="btn-text">Add Domain</span>
+      <span class="btn-spinner hidden"></span>
+    </button>
+  </form>
+</div>
+
+<!-- Domain count indicator -->
+<div class="blm-domain-count hidden" id="blmDomainCount">
+  <span id="blmCountText">0 / 5 domains monitored</span>
+</div>
+
+<!-- Loading state -->
+<div class="sender-loading hidden" id="blmLoading">
+  <div class="loading-ring"></div>
+  <p class="loading-msg" id="blmLoadingMsg">Scanning blocklists...</p>
+  <p class="loading-sub">This usually takes 10-20 seconds</p>
+</div>
+
+<!-- Monitored domains list -->
+<div class="blm-domains hidden" id="blmDomains">
+  <div class="blm-domains__header">
+    <h2 class="sender-section__title">Monitored Domains</h2>
+    <button type="button" class="btn-analyze blm-scan-all" id="blmScanAll">
+      <span class="btn-text">Scan All</span>
+      <span class="btn-spinner hidden"></span>
+    </button>
+  </div>
+
+  <div class="blm-domain-list" id="blmDomainList">
+    <!-- Populated by JS -->
+  </div>
+</div>
+
+<!-- Expanded domain detail -->
+<div class="blm-detail hidden" id="blmDetail">
+  <button type="button" class="blm-detail__back" id="blmDetailBack">&larr; Back to domains</button>
+  <h2 class="sender-section__title" id="blmDetailTitle">domain.com</h2>
+
+  <div class="blm-detail__summary" id="blmDetailSummary">
+    <!-- Status summary populated by JS -->
+  </div>
+
+  <section class="sender-section">
+    <h3 class="sender-section__title">Blocklist Results</h3>
+    <div class="dnsbl-table-wrap">
+      <table class="dnsbl-table" id="blmResultsTable">
+        <thead><tr><th>Status</th><th>List</th><th>Type</th><th>Severity</th><th>Info</th></tr></thead>
+        <tbody id="blmResultsBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="sender-section">
+    <h3 class="sender-section__title">Scan History (Last 30)</h3>
+    <div class="blm-history" id="blmHistory">
+      <!-- History dots rendered by JS -->
+    </div>
+    <div class="blm-history-legend">
+      <span class="blm-legend-dot blm-legend-dot--clean"></span> Clean
+      <span class="blm-legend-dot blm-legend-dot--listed"></span> Listed
+    </div>
+  </section>
+</div>
+
+<!-- Pro upsell banner -->
+<div class="blm-pro-banner">
+  <div class="blm-pro-banner__inner">
+    <span class="blm-pro-banner__icon">&#9993;</span>
+    <span class="blm-pro-banner__text">Want email alerts when you get blocklisted? Coming soon on INBXR Pro.</span>
+  </div>
+</div>

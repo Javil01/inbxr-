@@ -1,0 +1,25 @@
+<div class="sender-hero et-homepage-hero">
+  <div class="sender-hero__inner">
+    <span class="sender-hero__eyebrow"
+      {% if is_admin %}contenteditable="true" data-field="eyebrow"{% endif %}>{{ section.editable_fields.eyebrow }}</span>
+    <h1 class="sender-hero__title"
+      {% if is_admin %}contenteditable="true" data-field="heading"{% endif %}>{{ section.editable_fields.heading }}</h1>
+    <p class="sender-hero__sub"
+      {% if is_admin %}contenteditable="true" data-field="description"{% endif %}>{{ section.editable_fields.description }}</p>
+
+    <!-- Comparison banner -->
+    <div class="hero-compare">
+      <span class="hero-compare__vs">What others charge for, INBXR does free</span>
+      <div class="hero-compare__items">
+        <div class="hero-compare__item hero-compare__item--them">
+          <span class="hero-compare__label">GlockApps / Mail-Tester</span>
+          <span class="hero-compare__price">$45–$99/mo</span>
+        </div>
+        <div class="hero-compare__item hero-compare__item--us">
+          <span class="hero-compare__label">INBXR Email Test</span>
+          <span class="hero-compare__price">Free</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

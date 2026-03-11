@@ -21,7 +21,7 @@
       </div>
     </div>
     <button type="submit" class="btn-analyze sender-submit" id="submitBtn">
-      <span class="btn-text">Run Reputation Check</span>
+      <span class="btn-text">Run Full Check</span>
       <span class="btn-spinner hidden"></span>
     </button>
   </form>
@@ -34,6 +34,22 @@
 </div>
 
 <div class="sender-results hidden" id="senderResults">
+
+  <!-- Severity / Grade Bar -->
+  <div class="fa-severity-bar" id="senderSevBar" style="margin-bottom:12px"></div>
+
+  <!-- Overall Grade -->
+  <div class="et-assessment-grade" id="senderGrade" style="margin-bottom:16px">
+    <div class="et-assessment-grade__letter" id="senderGradeLetter">-</div>
+    <div class="et-assessment-grade__body">
+      <span class="et-assessment-grade__label" id="senderGradeLabel">Domain Health Score</span>
+      <div class="et-assessment-grade__counts" id="senderGradeCounts"></div>
+    </div>
+  </div>
+
+  <!-- ESP Detection Badge -->
+  <div class="fa-esp-badge hidden" id="senderEspBadge" style="margin-bottom:16px"></div>
+
   <div class="combined-card" id="combinedCard">
     <div class="combined-card__left">
       <div class="combined-meta" id="combinedMeta"></div>
@@ -84,12 +100,22 @@
     <div class="rep-signals" id="repSignals"></div>
   </section>
 
+  <!-- Fix Records -->
+  <section class="sender-section hidden" id="senderFixSection">
+    <h2 class="sender-section__title">Fix Records</h2>
+    <p class="sender-section__sub">Copy-paste these DNS records to fix the issues found above.</p>
+    <div id="senderFixRecords"></div>
+  </section>
+
   <section class="sender-section" id="recsSection">
     <h2 class="sender-section__title">Recommendations</h2>
     <div class="rec-list" id="senderRecList"></div>
   </section>
 
-  <div style="text-align:center;padding:12px 0 24px">
-    <button type="button" class="run-again-btn" id="runAgainBtn">&#8592; Run another check</button>
+  <section class="sender-section hidden" id="senderNextSteps"></section>
+
+  <div style="text-align:center;padding:12px 0 24px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+    <button type="button" class="run-again-btn" id="recheckBtn" style="display:none">I made changes — re-check now</button>
+    <button type="button" class="run-again-btn" id="runAgainBtn">&#8592; Check another domain</button>
   </div>
 </div>

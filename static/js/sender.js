@@ -11,6 +11,7 @@ const $$ = (sel, ctx = document) => [...ctx.querySelectorAll(sel)];
 const LOADING_MSGS = [
   'Checking authentication records…',
   'Looking up SPF, DKIM, and DMARC…',
+  'Checking MTA-STS and TLS-RPT…',
   'Scanning IP against blocklists…',
   'Checking domain reputation lists…',
   'Verifying reverse DNS and FCrDNS…',
@@ -57,6 +58,10 @@ $('#senderForm').addEventListener('submit', async e => {
   }
   $('#domain').style.borderColor = '';
 
+  lastDomain = domain;
+  lastIp = ip;
+  lastSelector = selector;
+
   const submitBtn = $('#submitBtn');
   submitBtn.disabled = true;
   $('.btn-text', submitBtn).textContent = 'Checking…';
@@ -90,7 +95,7 @@ $('#senderForm').addEventListener('submit', async e => {
     showError('Network error. Check your connection and try again.');
   } finally {
     submitBtn.disabled = false;
-    $('.btn-text', submitBtn).textContent = 'Run Reputation Check';
+    $('.btn-text', submitBtn).textContent = 'Run Full Check';
     $('.btn-spinner', submitBtn).classList.add('hidden');
   }
 });
@@ -100,11 +105,20 @@ $('#runAgainBtn').addEventListener('click', () => {
   $('#domain').focus();
 });
 
+// Track domain for re-check
+let lastDomain = '';
+let lastIp = '';
+let lastSelector = '';
+
 // ══════════════════════════════════════════════════════
 //  RENDER RESULTS
 // ══════════════════════════════════════════════════════
 function renderResults(data) {
   const { auth, reputation, combined, recommendations, meta } = data;
+
+  // ── Grade + severity bar ──
+  renderGrade(data);
+  renderEspBadge(data.esp);
 
   // ── Combined card ──
   const combinedColor = COLOR_VAR[combined.color] || 'var(--color-blue)';
@@ -147,8 +161,20 @@ function renderResults(data) {
   // ── Reputation signals ──
   renderRepSignals(reputation, meta);
 
+  // ── Fix Records ──
+  renderFixRecords(data.fix_records, data.esp);
+
   // ── Recommendations ──
   renderRecommendations(recommendations);
+  renderNextSteps(data);
+
+  // Re-check button
+  const recheckBtn = $('#recheckBtn');
+  if (data.fix_records && data.fix_records.length > 0) {
+    recheckBtn.style.display = '';
+  } else {
+    recheckBtn.style.display = 'none';
+  }
 
   $('#senderResults').classList.remove('hidden');
   $('#senderResults').scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -159,10 +185,12 @@ function buildCombinedSummary(auth, rep) {
   const parts = [];
   const cats  = auth.categories || [];
 
-  const spf   = cats.find(c => c.label === 'SPF');
-  const dkim  = cats.find(c => c.label === 'DKIM');
-  const dmarc = cats.find(c => c.label === 'DMARC');
-  const bimi  = cats.find(c => c.label === 'BIMI');
+  const spf     = cats.find(c => c.label === 'SPF');
+  const dkim    = cats.find(c => c.label === 'DKIM');
+  const dmarc   = cats.find(c => c.label === 'DMARC');
+  const bimi    = cats.find(c => c.label === 'BIMI');
+  const mtaSts  = cats.find(c => c.label === 'MTA-STS');
+  const tlsRpt  = cats.find(c => c.label === 'TLS-RPT');
 
   const missing = [spf, dkim, dmarc].filter(c => c && c.status === 'missing').map(c => c.label);
   if (missing.length) parts.push(`Missing: ${missing.join(', ')}.`);
@@ -190,6 +218,18 @@ function buildCombinedSummary(auth, rep) {
     parts.push('Domain setup is incomplete.');
   } else if (rep.domain_setup?.status === 'fail') {
     parts.push('Domain has no DNS records.');
+  }
+
+  // MTA-STS & TLS-RPT summary
+  const mtaStsStatus = mtaSts?.status;
+  const tlsRptStatus = tlsRpt?.status;
+  if (mtaStsStatus === 'pass' && tlsRptStatus === 'pass') {
+    parts.push('MTA-STS and TLS-RPT configured.');
+  } else {
+    const missingTransport = [];
+    if (mtaStsStatus === 'missing')  missingTransport.push('MTA-STS');
+    if (tlsRptStatus === 'missing')  missingTransport.push('TLS-RPT');
+    if (missingTransport.length) parts.push(`${missingTransport.join(' & ')} not configured.`);
   }
 
   return parts.join(' ') || 'Authentication and reputation check complete.';
@@ -241,6 +281,18 @@ function renderAuthGrid(categories) {
 
         ${!record && cat.label === 'BIMI' ? `
           <p class="auth-bimi-note">Requires p=quarantine or p=reject DMARC policy. Optional but shows your logo in supported inboxes (Gmail, Yahoo, Apple Mail).</p>` : ''}
+
+        ${!record && cat.label === 'MTA-STS' ? `
+          <p class="auth-bimi-note">Enforces TLS encryption for inbound mail. Requires a DNS TXT record and a policy file hosted over HTTPS.</p>` : ''}
+
+        ${!record && cat.label === 'TLS-RPT' ? `
+          <p class="auth-bimi-note">Enables reporting of TLS delivery failures. Helps detect encryption issues before they cause bounces.</p>` : ''}
+
+        ${cat.label === 'MTA-STS' && cat.policy?.fetched ? `
+          <div class="auth-mta-sts-policy">
+            <span class="auth-selector-note">Mode: ${escHtml(cat.policy.mode || 'unknown')}${cat.policy.max_age ? ' · max_age=' + escHtml(cat.policy.max_age) + 's' : ''}</span>
+            ${cat.policy.mx?.length ? '<span class="auth-selector-note">MX: ' + cat.policy.mx.map(m => escHtml(m)).join(', ') + '</span>' : ''}
+          </div>` : ''}
       </div>`;
   }).join('');
 
@@ -436,10 +488,19 @@ function renderRepSignals(reputation, meta) {
 function renderRecommendations(recs) {
   const container = $('#senderRecList');
   if (!recs?.length) {
-    container.innerHTML = '<p style="font-size:0.85rem;color:var(--color-green);padding:8px 0">✓ No issues found. Your sender configuration looks healthy.</p>';
+    container.innerHTML = '<p style="font-size:0.85rem;color:var(--color-green);padding:8px 0">&#10003; No issues found. Your sender configuration looks healthy.</p>';
     return;
   }
-  container.innerHTML = recs.map(rec => `
+  container.innerHTML = recs.map(rec => {
+    // Add contextual tool link based on category
+    let toolLink = '';
+    const cat = (rec.category || '').toLowerCase();
+    if (cat.includes('spf') || cat.includes('dkim') || cat.includes('dmarc') || cat.includes('bimi') || cat.includes('mta-sts') || cat.includes('tls')) {
+      toolLink = `<a href="/sender?domain=${encodeURIComponent(lastDomain)}" class="rec-item__tool-link">Re-check after fixing &rarr;</a>`;
+    } else if (cat.includes('blocklist')) {
+      toolLink = `<a href="/blacklist-monitor" class="rec-item__tool-link">Monitor this domain &rarr;</a>`;
+    }
+    return `
     <div class="rec-item">
       <div class="rec-item__header">
         <span class="rec-item__cat">${escHtml(rec.category)}</span>
@@ -447,7 +508,9 @@ function renderRecommendations(recs) {
       </div>
       <div class="rec-item__issue">${escHtml(rec.item)}</div>
       <div class="rec-item__text">${escHtml(rec.recommendation)}</div>
-    </div>`).join('');
+      ${toolLink}
+    </div>`;
+  }).join('');
 }
 
 // ── Gauge animator ────────────────────────────────────
@@ -499,5 +562,267 @@ function escHtml(str) {
     .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 function escAttr(str) {
-  return String(str ?? '').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  return String(str ?? '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ══════════════════════════════════════════════════════
+//  DOMAIN HEALTH: Grade, ESP Badge, Fix Records
+// ══════════════════════════════════════════════════════
+
+function renderGrade(data) {
+  const grade = data.grade;
+  const score = data.score;
+  const cats = data.category_scores;
+  if (!grade) return;
+
+  const gColor = grade === 'A' ? 'green' : grade === 'B' ? 'blue' : grade === 'C' ? 'yellow' : grade === 'D' ? 'orange' : 'red';
+
+  // Grade card
+  const gradeEl = $('#senderGrade');
+  gradeEl.style.borderLeftColor = `var(--color-${gColor})`;
+  $('#senderGradeLetter').textContent = grade;
+  $('#senderGradeLetter').style.color = `var(--color-${gColor})`;
+  $('#senderGradeLabel').textContent = `Domain Health Score: ${score}/100`;
+
+  // Category counts
+  const countsEl = $('#senderGradeCounts');
+  if (cats) {
+    countsEl.innerHTML = Object.entries(cats).map(([key, val]) => {
+      const c = val.score >= val.max * 0.8 ? 'green' : (val.score >= val.max * 0.5 ? 'yellow' : 'red');
+      return `<span class="et-count" style="background:rgba(var(--color-${c}-rgb, 99,102,241),0.1);color:var(--color-${c})">${escHtml(val.label)}: ${val.score}/${val.max}</span>`;
+    }).join('');
+  }
+
+  // Severity bar
+  const bar = $('#senderSevBar');
+  const items = [];
+  const authCats = data.auth?.categories || [];
+  let critical = 0, warning = 0, pass = 0;
+  authCats.forEach(c => {
+    const st = c.status || 'missing';
+    if (st === 'pass') pass++;
+    else if (st === 'warning') warning++;
+    else critical++;
+  });
+  if ((data.reputation?.listed_count || 0) > 0) critical++; else pass++;
+  if (data.bimi?.found) pass++; else warning++;
+
+  if (critical > 0) items.push(`<span class="fa-sev fa-sev--critical">${critical} Critical</span>`);
+  if (warning > 0) items.push(`<span class="fa-sev fa-sev--warning">${warning} Warning${warning !== 1 ? 's' : ''}</span>`);
+  if (pass > 0) items.push(`<span class="fa-sev fa-sev--pass">${pass} Passing</span>`);
+  bar.innerHTML = items.join('');
+}
+
+function renderEspBadge(esp) {
+  const badge = $('#senderEspBadge');
+  if (!esp || !esp.detected) {
+    badge.classList.add('hidden');
+    return;
+  }
+  badge.classList.remove('hidden');
+  badge.innerHTML = `
+    <span class="fa-esp-icon">&#9993;</span>
+    <span class="fa-esp-text">
+      <strong>Detected ESP:</strong> ${escHtml(esp.esp_name)}
+      <small>via ${escHtml(esp.mx_host)}</small>
+    </span>`;
+}
+
+function renderFixRecords(fixRecords, esp) {
+  const container = $('#senderFixRecords');
+  const section = $('#senderFixSection');
+
+  if (!fixRecords || !fixRecords.length) {
+    section.classList.add('hidden');
+    return;
+  }
+
+  section.classList.remove('hidden');
+
+  container.innerHTML = fixRecords.map((fix, i) => {
+    const actionColors = { create: 'red', fix: 'orange', upgrade: 'yellow' };
+    const actionColor = actionColors[fix.action] || 'blue';
+    const actionLabel = (fix.action || 'create').charAt(0).toUpperCase() + (fix.action || 'create').slice(1);
+
+    let html = `
+      <div class="fa-fix-card" style="animation-delay:${i * 80}ms">
+        <div class="fa-fix-header">
+          <span class="fa-fix-action fa-fix-action--${actionColor}">${actionLabel}</span>
+          <h3 class="fa-fix-title">${escHtml(fix.title)}</h3>
+          ${fix.esp_detected ? `<span class="fa-fix-esp">${escHtml(fix.esp_detected)}</span>` : ''}
+        </div>
+        <p class="fa-fix-desc">${escHtml(fix.description)}</p>`;
+
+    if (fix.record && fix.host) {
+      html += `
+        <div class="fa-fix-record">
+          <div class="fa-fix-record-meta">
+            <span class="fa-fix-label">Host:</span>
+            <code class="fa-fix-host">${escHtml(fix.host)}</code>
+            <span class="fa-fix-label">Type:</span>
+            <code class="fa-fix-type">${escHtml(fix.dns_type || 'TXT')}</code>
+          </div>
+          <div class="fa-fix-record-value">
+            <pre class="fa-fix-code"><code>${escHtml(fix.record)}</code></pre>
+            <button class="fa-copy-btn" data-copy="${escAttr(fix.record)}">Copy</button>
+          </div>
+        </div>`;
+    }
+
+    if (fix.instructions && fix.instructions.length) {
+      html += `
+        <div class="fa-fix-instructions">
+          <strong>Setup Steps:</strong>
+          <ol>${fix.instructions.map(s => `<li>${escHtml(s)}</li>`).join('')}</ol>
+        </div>`;
+    }
+
+    if (fix.policy_text) {
+      html += `
+        <div class="fa-fix-record" style="margin-top:12px">
+          <div class="fa-fix-record-meta">
+            <span class="fa-fix-label">Policy File:</span>
+            <code class="fa-fix-host">${escHtml(fix.policy_url || '')}</code>
+          </div>
+          <div class="fa-fix-record-value">
+            <pre class="fa-fix-code"><code>${escHtml(fix.policy_text)}</code></pre>
+            <button class="fa-copy-btn" data-copy="${escAttr(fix.policy_text)}">Copy</button>
+          </div>
+        </div>`;
+      if (fix.setup_steps && fix.setup_steps.length) {
+        html += `<div class="fa-fix-instructions"><strong>How to deploy:</strong>
+          <ol>${fix.setup_steps.map(s => `<li>${escHtml(s)}</li>`).join('')}</ol></div>`;
+      }
+    }
+
+    if (fix.warnings && fix.warnings.length) {
+      html += `<div class="fa-fix-warnings">${fix.warnings.map(w => `<p class="fa-fix-warning">\u26A0 ${escHtml(w)}</p>`).join('')}</div>`;
+    }
+
+    html += '</div>';
+    return html;
+  }).join('');
+
+  // Copy button handlers
+  $$('.fa-copy-btn', container).forEach(btn => {
+    btn.addEventListener('click', () => {
+      const text = btn.dataset.copy;
+      navigator.clipboard.writeText(text).then(() => {
+        btn.textContent = 'Copied!';
+        btn.classList.add('fa-copy-btn--copied');
+        setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('fa-copy-btn--copied'); }, 1500);
+      }).catch(() => {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.cssText = 'position:fixed;opacity:0';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        btn.textContent = 'Copied!';
+        setTimeout(() => { btn.textContent = 'Copy'; }, 1500);
+      });
+    });
+  });
+}
+
+// ══════════════════════════════════════════════════════
+//  NEXT STEPS — Contextual CTAs linking to other tools
+// ══════════════════════════════════════════════════════
+function renderNextSteps(data) {
+  const el = $('#senderNextSteps');
+  if (!el) return;
+
+  const actions = [];
+  const domain = lastDomain;
+  const { auth, reputation } = data;
+
+  // 1. Fix records exist → suggest verification via Email Test
+  if (data.fix_records && data.fix_records.length > 0) {
+    actions.push({
+      icon: '&#9993;',
+      title: 'Verify Fixes with a Real Email',
+      desc: `After adding ${data.fix_records.length} DNS record${data.fix_records.length > 1 ? 's' : ''}, send a test email to confirm SPF, DKIM, and DMARC pass in actual delivery.`,
+      href: '/',
+      btn: 'Run Email Test',
+      color: 'green',
+    });
+  }
+
+  // 2. Blocklist listings → monitor
+  const listedCount = reputation?.listed_count || 0;
+  if (listedCount > 0) {
+    actions.push({
+      icon: '&#128308;',
+      title: `Listed on ${listedCount} Blocklist${listedCount > 1 ? 's' : ''}`,
+      desc: 'Set up ongoing monitoring to track your delisting progress and catch new listings before they hurt delivery.',
+      href: '/blacklist-monitor',
+      btn: 'Monitor This Domain',
+      color: 'red',
+    });
+  }
+
+  // 3. All auth passing → suggest placement test
+  const authFails = (auth?.categories || []).filter(c => c.status === 'fail' || c.status === 'missing');
+  if (authFails.length === 0 && listedCount === 0) {
+    actions.push({
+      icon: '&#10003;',
+      title: 'Authentication Looks Good',
+      desc: 'Your sender config is healthy. Run a multi-seed placement test to verify emails actually land in the inbox across providers.',
+      href: '/placement',
+      btn: 'Run Placement Test',
+      color: 'green',
+    });
+  }
+
+  // 4. Always offer email verification
+  if (domain) {
+    actions.push({
+      icon: '&#128269;',
+      title: 'Verify Email Addresses',
+      desc: `Check if specific email addresses on ${domain} are valid and deliverable before sending.`,
+      href: `/email-verifier`,
+      btn: 'Open Email Verifier',
+      color: 'blue',
+    });
+  }
+
+  if (!actions.length) { el.classList.add('hidden'); return; }
+
+  el.classList.remove('hidden');
+  el.innerHTML = `
+    <h2 class="sender-section__title">What to Do Next</h2>
+    <div class="et-next-steps">
+      ${actions.map(a => `
+        <a href="${a.href}" class="et-next-step et-next-step--${a.color}">
+          <span class="et-next-step__icon">${a.icon}</span>
+          <div class="et-next-step__body">
+            <strong class="et-next-step__title">${escHtml(a.title)}</strong>
+            <p class="et-next-step__desc">${escHtml(a.desc)}</p>
+          </div>
+          <span class="et-next-step__btn">${escHtml(a.btn)} &rarr;</span>
+        </a>`).join('')}
+    </div>`;
+}
+
+// ── Re-check button ──
+$('#recheckBtn').addEventListener('click', () => {
+  if (lastDomain) {
+    $('#domain').value = lastDomain;
+    if (lastIp) $('#sender_ip').value = lastIp;
+    if (lastSelector) $('#dkim_selector').value = lastSelector;
+    $('#senderForm').dispatchEvent(new Event('submit'));
+  }
+});
+
+// ── Auto-run from URL params ──────────────────────────
+const _params = new URLSearchParams(window.location.search);
+const _autoDomain = _params.get('domain');
+if (_autoDomain) {
+  $('#domain').value = _autoDomain;
+  const _autoSelector = _params.get('dkim_selector') || _params.get('selector');
+  if (_autoSelector) $('#dkim_selector').value = _autoSelector;
+  const _autoIp = _params.get('ip') || _params.get('sender_ip');
+  if (_autoIp) $('#sender_ip').value = _autoIp;
+  $('#senderForm').dispatchEvent(new Event('submit'));
 }

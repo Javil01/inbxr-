@@ -513,8 +513,97 @@ function renderResults(data, payload) {
 
   rc.classList.add('fade-in');
 
+  renderNextSteps(data, payload);
+
   // Init results nav (after modules are shown/hidden)
   setTimeout(() => initResultsNav(), 50);
+}
+
+// ══════════════════════════════════════════════════════
+//  NEXT STEPS — Contextual CTAs linking to other tools
+// ══════════════════════════════════════════════════════
+function renderNextSteps(data, payload) {
+  const el = $('#analyzerNextSteps');
+  if (!el) return;
+
+  const actions = [];
+  const spam = data.spam;
+  const reputation = data.reputation;
+  const domain = reputation?.meta?.domain || '';
+
+  // 1. High spam score → specific content guidance
+  if (spam && spam.score >= 50) {
+    const topFlags = (spam.high_risk_elements || []).slice(0, 3).map(f => f.item || f).join(', ');
+    actions.push({
+      icon: '\u26A0',
+      title: 'High Spam Risk: ' + spam.score + '/100',
+      desc: topFlags ? 'Top triggers: ' + topFlags + '. Use the AI Rewriter above for instant fixes.' : 'Multiple spam signals detected. Use the AI Rewriter above to fix flagged content.',
+      href: null,
+      btn: null,
+      color: 'red',
+    });
+  }
+
+  // 2. Auth/reputation issues → Sender Check
+  if (reputation?.combined?.score < 70 && domain) {
+    actions.push({
+      icon: '\uD83D\uDD12',
+      title: 'Sender Reputation Needs Work',
+      desc: 'Your domain scored ' + reputation.combined.score + '/100 on reputation. Run a full Sender Check for copy-paste DNS fixes.',
+      href: '/sender?domain=' + encodeURIComponent(domain),
+      btn: 'Open Sender Check',
+      color: 'orange',
+    });
+  }
+
+  // 3. Always suggest real-world test
+  actions.push({
+    icon: '\u2709',
+    title: 'Test with a Real Email',
+    desc: 'Analyzing copy is step one. Send your email through the Email Test to see actual SPF, DKIM, and DMARC verdicts from a real mail server.',
+    href: '/',
+    btn: 'Run Email Test',
+    color: 'blue',
+  });
+
+  // 4. Subject line refinement
+  if (payload?.subject) {
+    actions.push({
+      icon: '\uD83C\uDFAF',
+      title: 'Optimize Your Subject Line',
+      desc: 'Compare "' + (payload.subject.length > 40 ? payload.subject.slice(0, 37) + '...' : payload.subject) + '" against alternatives across 7 scoring dimensions.',
+      href: '/subject-scorer',
+      btn: 'Open Subject Scorer',
+      color: 'blue',
+    });
+  }
+
+  if (!actions.length) { el.style.display = 'none'; return; }
+
+  el.style.display = '';
+  el.innerHTML = `
+    <div class="module-header">
+      <h2 class="module-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20" style="vertical-align:middle;margin-right:6px"><path d="M13 17l5-5-5-5M6 17l5-5-5-5"/></svg> What to Do Next</h2>
+    </div>
+    <div class="et-next-steps">
+      ${actions.map(a => {
+        if (!a.href) {
+          return `<div class="et-next-step et-next-step--${a.color}">
+            <span class="et-next-step__icon">${a.icon}</span>
+            <div class="et-next-step__body">
+              <strong class="et-next-step__title">${escHtml(a.title)}</strong>
+              <p class="et-next-step__desc">${escHtml(a.desc)}</p>
+            </div></div>`;
+        }
+        return `<a href="${a.href}" class="et-next-step et-next-step--${a.color}">
+          <span class="et-next-step__icon">${a.icon}</span>
+          <div class="et-next-step__body">
+            <strong class="et-next-step__title">${escHtml(a.title)}</strong>
+            <p class="et-next-step__desc">${escHtml(a.desc)}</p>
+          </div>
+          <span class="et-next-step__btn">${escHtml(a.btn)} &rarr;</span></a>`;
+      }).join('')}
+    </div>`;
 }
 
 function renderMetaBar(meta) {
@@ -2465,3 +2554,33 @@ function exportReport(data, payload) {
 }
 
 function esc(s) { return escHtml(s); }
+
+/* ── Typewriter effect for hero headings ── */
+(function() {
+  document.addEventListener('DOMContentLoaded', function() {
+    var el = document.querySelector('.tool-hero__h1, .sender-hero__title');
+    if (!el || el.getAttribute('contenteditable') === 'true') return;
+
+    var fullText = el.textContent.trim();
+    el.textContent = '';
+    el.classList.add('typewriter');
+    el.style.visibility = 'visible';
+
+    var i = 0;
+    var speed = 45;
+
+    function type() {
+      if (i < fullText.length) {
+        el.textContent += fullText.charAt(i);
+        i++;
+        setTimeout(type, speed);
+      } else {
+        setTimeout(function() {
+          el.classList.add('typewriter--done');
+        }, 600);
+      }
+    }
+
+    type();
+  });
+})();

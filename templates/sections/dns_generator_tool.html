@@ -1,0 +1,156 @@
+<div class="sender-form-card" id="dnsFormCard">
+  <form id="dnsForm" novalidate>
+    <div class="sender-fields">
+
+      <!-- Domain -->
+      <div class="field sender-field--primary">
+        <label for="dnsDomain">Domain <span class="required">*</span></label>
+        <div class="domain-input-wrap">
+          <span class="domain-input-at">@</span>
+          <input type="text" id="dnsDomain" name="domain" placeholder="yourdomain.com" autocomplete="off" spellcheck="false" />
+        </div>
+        <span class="field-hint">The domain you send email from</span>
+      </div>
+
+      <!-- ESP Multi-Select -->
+      <div class="field">
+        <label>Email Service Providers <span class="optional">(select all that apply)</span></label>
+        <div class="dns-esp-grid" id="espGrid">
+          <label class="dns-esp-chip"><input type="checkbox" name="esps" value="google" /><span>Google Workspace</span></label>
+          <label class="dns-esp-chip"><input type="checkbox" name="esps" value="microsoft365" /><span>Microsoft 365</span></label>
+          <label class="dns-esp-chip"><input type="checkbox" name="esps" value="sendgrid" /><span>SendGrid</span></label>
+          <label class="dns-esp-chip"><input type="checkbox" name="esps" value="mailchimp" /><span>Mailchimp</span></label>
+          <label class="dns-esp-chip"><input type="checkbox" name="esps" value="mailgun" /><span>Mailgun</span></label>
+          <label class="dns-esp-chip"><input type="checkbox" name="esps" value="ses" /><span>Amazon SES</span></label>
+          <label class="dns-esp-chip"><input type="checkbox" name="esps" value="postmark" /><span>Postmark</span></label>
+          <label class="dns-esp-chip"><input type="checkbox" name="esps" value="sparkpost" /><span>SparkPost</span></label>
+          <label class="dns-esp-chip"><input type="checkbox" name="esps" value="klaviyo" /><span>Klaviyo</span></label>
+          <label class="dns-esp-chip"><input type="checkbox" name="esps" value="hubspot" /><span>HubSpot</span></label>
+          <label class="dns-esp-chip"><input type="checkbox" name="esps" value="convertkit" /><span>ConvertKit</span></label>
+          <label class="dns-esp-chip"><input type="checkbox" name="esps" value="activecampaign" /><span>ActiveCampaign</span></label>
+          <label class="dns-esp-chip"><input type="checkbox" name="esps" value="brevo" /><span>Brevo</span></label>
+          <label class="dns-esp-chip"><input type="checkbox" name="esps" value="aweber" /><span>AWeber</span></label>
+          <label class="dns-esp-chip"><input type="checkbox" name="esps" value="zoho" /><span>Zoho</span></label>
+          <label class="dns-esp-chip"><input type="checkbox" name="esps" value="constantcontact" /><span>Constant Contact</span></label>
+          <label class="dns-esp-chip"><input type="checkbox" name="esps" value="campaignmonitor" /><span>Campaign Monitor</span></label>
+          <label class="dns-esp-chip"><input type="checkbox" name="esps" value="drip" /><span>Drip</span></label>
+          <label class="dns-esp-chip"><input type="checkbox" name="esps" value="godaddy" /><span>GoDaddy</span></label>
+          <label class="dns-esp-chip"><input type="checkbox" name="esps" value="bluehost" /><span>Bluehost</span></label>
+          <label class="dns-esp-chip"><input type="checkbox" name="esps" value="namecheap" /><span>Namecheap</span></label>
+        </div>
+      </div>
+
+      <!-- DMARC Policy -->
+      <div class="field">
+        <label for="dmarcPolicy">DMARC Policy</label>
+        <select id="dmarcPolicy" name="dmarc_policy">
+          <option value="none">none — monitor only</option>
+          <option value="quarantine">quarantine — send failures to spam</option>
+          <option value="reject" selected>reject — block failures entirely</option>
+        </select>
+        <span class="field-hint">Start with "none" if you're setting up DMARC for the first time</span>
+      </div>
+
+      <!-- SPF Enforcement -->
+      <div class="field">
+        <label for="spfMechanism">SPF Enforcement</label>
+        <select id="spfMechanism" name="spf_mechanism">
+          <option value="-all" selected>-all (hard fail — recommended)</option>
+          <option value="~all">~all (soft fail — more lenient)</option>
+        </select>
+      </div>
+
+      <!-- Optional Fields Row -->
+      <div class="dns-optional-row">
+        <div class="field">
+          <label for="ruaEmail">RUA Email <span class="optional">(optional)</span></label>
+          <input type="email" id="ruaEmail" name="rua_email" placeholder="dmarc-reports@yourdomain.com" autocomplete="off" />
+          <span class="field-hint">Where to receive aggregate DMARC reports</span>
+        </div>
+        <div class="field">
+          <label for="extraIps">Extra IPs <span class="optional">(optional)</span></label>
+          <input type="text" id="extraIps" name="ips" placeholder="203.0.113.42, 198.51.100.5" autocomplete="off" />
+          <span class="field-hint">Comma-separated sending IPs to include in SPF</span>
+        </div>
+        <div class="field">
+          <label for="dkimSelector">DKIM Selector <span class="optional">(optional)</span></label>
+          <input type="text" id="dkimSelector" name="dkim_selector" placeholder="default" autocomplete="off" />
+        </div>
+      </div>
+
+    </div>
+
+    <button type="submit" class="btn-analyze sender-submit" id="dnsSubmitBtn">
+      <span class="btn-text">Generate Records</span>
+      <span class="btn-spinner hidden"></span>
+    </button>
+  </form>
+</div>
+
+<!-- Results -->
+<div class="dns-results hidden" id="dnsResults">
+
+  <h2 class="sender-section__title">Generated DNS Records</h2>
+
+  <!-- SPF -->
+  <div class="dns-record-card" id="spfCard">
+    <div class="dns-record-card__header">
+      <span class="dns-record-card__type">TXT</span>
+      <span class="dns-record-card__host" id="spfHost">@</span>
+      <span class="dns-record-card__label">SPF Record</span>
+      <button type="button" class="dns-copy-btn" data-target="spfValue" title="Copy to clipboard">Copy</button>
+    </div>
+    <pre class="dns-record-card__value" id="spfValue"></pre>
+    <p class="dns-record-card__note" id="spfNote"></p>
+  </div>
+
+  <!-- DKIM -->
+  <div class="dns-record-card" id="dkimCard">
+    <div class="dns-record-card__header">
+      <span class="dns-record-card__type">CNAME / TXT</span>
+      <span class="dns-record-card__host" id="dkimHost"></span>
+      <span class="dns-record-card__label">DKIM Setup</span>
+    </div>
+    <div class="dns-record-card__body" id="dkimBody"></div>
+  </div>
+
+  <!-- DMARC -->
+  <div class="dns-record-card" id="dmarcCard">
+    <div class="dns-record-card__header">
+      <span class="dns-record-card__type">TXT</span>
+      <span class="dns-record-card__host" id="dmarcHost">_dmarc</span>
+      <span class="dns-record-card__label">DMARC Record</span>
+      <button type="button" class="dns-copy-btn" data-target="dmarcValue" title="Copy to clipboard">Copy</button>
+    </div>
+    <pre class="dns-record-card__value" id="dmarcValue"></pre>
+    <p class="dns-record-card__note" id="dmarcNote"></p>
+  </div>
+
+  <!-- MTA-STS -->
+  <div class="dns-record-card" id="mtaStsCard">
+    <div class="dns-record-card__header">
+      <span class="dns-record-card__type">TXT</span>
+      <span class="dns-record-card__host" id="mtaStsHost">_mta-sts</span>
+      <span class="dns-record-card__label">MTA-STS Record</span>
+      <button type="button" class="dns-copy-btn" data-target="mtaStsValue" title="Copy to clipboard">Copy</button>
+    </div>
+    <pre class="dns-record-card__value" id="mtaStsValue"></pre>
+    <p class="dns-record-card__note" id="mtaStsNote"></p>
+  </div>
+
+  <!-- TLS-RPT -->
+  <div class="dns-record-card" id="tlsRptCard">
+    <div class="dns-record-card__header">
+      <span class="dns-record-card__type">TXT</span>
+      <span class="dns-record-card__host" id="tlsRptHost">_smtp._tls</span>
+      <span class="dns-record-card__label">TLS-RPT Record</span>
+      <button type="button" class="dns-copy-btn" data-target="tlsRptValue" title="Copy to clipboard">Copy</button>
+    </div>
+    <pre class="dns-record-card__value" id="tlsRptValue"></pre>
+    <p class="dns-record-card__note" id="tlsRptNote"></p>
+  </div>
+
+  <div style="text-align:center;padding:12px 0 24px">
+    <button type="button" class="run-again-btn" id="dnsRunAgainBtn">&#8592; Generate new records</button>
+  </div>
+</div>

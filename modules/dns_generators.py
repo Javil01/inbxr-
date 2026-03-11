@@ -60,6 +60,92 @@ DMARC_POLICIES = {
 }
 
 
+# ── MX hostname → ESP mapping for auto-detection ──────
+MX_ESP_MAP = {
+    "google.com":              "Google Workspace",
+    "googlemail.com":          "Google Workspace",
+    "aspmx.l.google.com":      "Google Workspace",
+    "protection.outlook.com":  "Microsoft 365",
+    "outlook.com":             "Microsoft 365",
+    "pphosted.com":            "Proofpoint",
+    "mimecast.com":            "Mimecast",
+    "barracudanetworks.com":   "Barracuda",
+    "messagelabs.com":         "Broadcom (Symantec)",
+    "secureserver.net":        "GoDaddy",
+    "zoho.com":                "Zoho Mail",
+    "mailgun.org":             "Mailgun",
+    "sendgrid.net":            "SendGrid",
+    "amazonaws.com":           "Amazon SES",
+    "mcsv.net":                "Mailchimp",
+    "mandrillapp.com":         "Mailchimp / Mandrill",
+    "mtasv.net":               "Postmark",
+    "sparkpostmail.com":       "SparkPost",
+    "hover.com":               "Hover",
+    "emailsrvr.com":           "Rackspace",
+    "hostgator.com":           "HostGator",
+    "bluehost.com":            "Bluehost",
+    "namecheap.com":           "Namecheap",
+    "privateemail.com":        "Namecheap",
+    "protonmail.ch":           "Proton Mail",
+    "tutanota.de":             "Tuta",
+    "fastmail.com":            "Fastmail",
+    "icloud.com":              "Apple iCloud",
+    "yahoodns.net":            "Yahoo",
+}
+
+# Map ESP display names to ESP_INCLUDES keys for fix generation
+ESP_NAME_TO_KEY = {
+    "Google Workspace": "google",
+    "Microsoft 365":    "microsoft365",
+    "Mailgun":          "mailgun",
+    "SendGrid":         "sendgrid",
+    "Amazon SES":       "ses",
+    "Mailchimp":        "mailchimp",
+    "Mailchimp / Mandrill": "mailchimp",
+    "Postmark":         "postmark",
+    "SparkPost":        "sparkpost",
+    "Zoho Mail":        "zoho",
+    "GoDaddy":          "godaddy",
+    "Bluehost":         "bluehost",
+    "Namecheap":        "namecheap",
+    "HostGator":        "hostgator",
+}
+
+
+def detect_esp_from_mx(mx_records):
+    """Detect the Email Service Provider from MX records.
+
+    Args:
+        mx_records: List of dicts with 'host' key, or list of (priority, host) tuples.
+
+    Returns dict with detected, esp_name, esp_key, mx_host.
+    """
+    if not mx_records:
+        return {"detected": False}
+
+    for rec in mx_records:
+        # Handle both dict format and tuple format
+        if isinstance(rec, dict):
+            host = (rec.get("host") or rec.get("exchange") or "").lower().rstrip(".")
+        elif isinstance(rec, (list, tuple)) and len(rec) >= 2:
+            host = str(rec[1]).lower().rstrip(".")
+        else:
+            continue
+
+        # Try exact match first, then suffix match
+        for pattern, esp_name in MX_ESP_MAP.items():
+            if host == pattern or host.endswith("." + pattern):
+                esp_key = ESP_NAME_TO_KEY.get(esp_name)
+                return {
+                    "detected": True,
+                    "esp_name": esp_name,
+                    "esp_key": esp_key,
+                    "mx_host": host,
+                }
+
+    return {"detected": False}
+
+
 def generate_spf(domain: str, esps: list = None, extra_ips: list = None,
                  extra_includes: list = None, mechanism: str = "-all") -> dict:
     """Generate an SPF TXT record.
@@ -328,6 +414,117 @@ def generate_dkim_instructions(domain: str, esp: str = None, selector: str = Non
     }
 
 
+def generate_mta_sts(domain: str, mode: str = "testing",
+                     mx_patterns: list = None, max_age: int = 604800) -> dict:
+    """Generate MTA-STS DNS record and policy file content.
+
+    Args:
+        domain: The domain name
+        mode: "testing", "enforce", or "none"
+        mx_patterns: MX hostname patterns (e.g. ["mail.example.com", "*.example.com"])
+        max_age: Policy cache lifetime in seconds (default 7 days)
+    """
+    import time
+
+    if mode not in ("testing", "enforce", "none"):
+        mode = "testing"
+
+    # Generate a unique policy ID based on timestamp
+    sts_id = str(int(time.time()))
+
+    dns_record = f"v=STSv1; id={sts_id}"
+    warnings = []
+
+    if not mx_patterns:
+        mx_patterns = [f"*.{domain}"]
+        warnings.append("Using wildcard MX pattern — replace with your actual MX hostnames for tighter security.")
+
+    # Build the policy file content
+    policy_lines = [f"version: STSv1", f"mode: {mode}"]
+    for mx in mx_patterns:
+        policy_lines.append(f"mx: {mx}")
+    policy_lines.append(f"max_age: {max_age}")
+    policy_text = "\n".join(policy_lines)
+
+    if mode == "testing":
+        warnings.append("mode: testing will report failures but not reject mail. Switch to 'enforce' once confirmed working.")
+
+    if max_age < 86400:
+        warnings.append(f"max_age={max_age}s is very short. Recommended minimum: 86400 (1 day), ideal: 604800 (1 week).")
+
+    return {
+        "dns_record": dns_record,
+        "dns_host": f"_mta-sts.{domain}",
+        "dns_type": "TXT",
+        "policy_text": policy_text,
+        "policy_url": f"https://mta-sts.{domain}/.well-known/mta-sts.txt",
+        "policy_host": f"mta-sts.{domain}",
+        "mode": mode,
+        "sts_id": sts_id,
+        "mx_patterns": mx_patterns,
+        "max_age": max_age,
+        "warnings": warnings,
+        "explanation": ("MTA-STS enforces TLS encryption for inbound email. "
+                        "Receiving servers that support MTA-STS will refuse to deliver mail over unencrypted connections. "
+                        "Requires both a DNS TXT record AND a policy file hosted at the policy URL."),
+        "setup_steps": [
+            f"1. Add a TXT record at _mta-sts.{domain} with value: {dns_record}",
+            f"2. Create a web server at mta-sts.{domain} (can be a subdomain with an A/CNAME record)",
+            f"3. Host the policy file at https://mta-sts.{domain}/.well-known/mta-sts.txt",
+            "4. The policy file must be served over HTTPS with a valid certificate",
+            "5. Start with mode: testing, then switch to mode: enforce after confirming no issues",
+        ],
+    }
+
+
+def generate_tls_rpt(domain: str, rua_email: str = None,
+                     rua_https: str = None) -> dict:
+    """Generate a TLS-RPT DNS record.
+
+    Args:
+        domain: The domain name
+        rua_email: Email address for TLS failure reports (mailto:)
+        rua_https: HTTPS endpoint for TLS failure reports (optional)
+    """
+    warnings = []
+    destinations = []
+
+    if rua_email:
+        email = rua_email.strip()
+        if not email.startswith("mailto:"):
+            email = f"mailto:{email}"
+        destinations.append(email)
+    if rua_https:
+        url = rua_https.strip()
+        if not url.startswith("https://"):
+            warnings.append("HTTPS reporting endpoint must use https://")
+        destinations.append(url)
+
+    if not destinations:
+        destinations.append(f"mailto:tls-reports@{domain}")
+        warnings.append(f"Using default report address tls-reports@{domain} — ensure this mailbox exists.")
+
+    rua_value = ",".join(destinations)
+    record = f"v=TLSRPTv1; rua={rua_value}"
+
+    if rua_email and not rua_email.endswith(f"@{domain}"):
+        ext_domain = rua_email.split("@")[-1] if "@" in rua_email else ""
+        if ext_domain:
+            warnings.append(f"External report address ({ext_domain}) — the receiving domain must accept reports for {domain}.")
+
+    return {
+        "record": record,
+        "host": f"_smtp._tls.{domain}",
+        "dns_name": f"_smtp._tls.{domain}",
+        "dns_type": "TXT",
+        "rua": rua_value,
+        "warnings": warnings,
+        "explanation": ("TLS-RPT enables receiving servers to send you reports when TLS connections to your domain fail. "
+                        "This helps you detect and fix encryption issues before they cause delivery failures. "
+                        "Works best alongside MTA-STS."),
+    }
+
+
 def generate_from_auth_results(domain: str, auth_categories: list,
                                sender_email: str = None) -> dict:
     """Smart generator: analyze existing auth results and suggest fixes.
@@ -433,6 +630,39 @@ def generate_from_auth_results(domain: str, auth_categories: list,
             result["_description"] = "Your DMARC record has no report address (rua). Add one to receive aggregate reports."
             result["current_record"] = dmarc.get("record", "")
             suggestions.append({"type": "dmarc", **result})
+
+    # ── MTA-STS ────────────────────────────────────────
+    mta_sts = cats.get("MTA-STS", {})
+    mta_sts_status = mta_sts.get("status", "missing")
+
+    if mta_sts_status == "missing":
+        result = generate_mta_sts(domain, mode="testing")
+        result["_action"] = "create"
+        result["_title"] = "Set Up MTA-STS"
+        result["_description"] = ("No MTA-STS record found. MTA-STS enforces TLS encryption for inbound mail, "
+                                  "preventing downgrade attacks.")
+        suggestions.append({"type": "mta_sts", **result})
+    elif mta_sts_status == "warning":
+        policy = mta_sts.get("policy", {})
+        if policy and policy.get("mode") == "testing":
+            result = generate_mta_sts(domain, mode="enforce")
+            result["_action"] = "upgrade"
+            result["_title"] = "Upgrade MTA-STS to Enforce"
+            result["_description"] = ("MTA-STS is in testing mode. Upgrade to enforce mode "
+                                      "to actively require TLS for inbound mail.")
+            suggestions.append({"type": "mta_sts", **result})
+
+    # ── TLS-RPT ───────────────────────────────────────
+    tls_rpt = cats.get("TLS-RPT", {})
+    tls_rpt_status = tls_rpt.get("status", "missing")
+
+    if tls_rpt_status == "missing":
+        result = generate_tls_rpt(domain, rua_email=report_email)
+        result["_action"] = "create"
+        result["_title"] = "Set Up TLS-RPT"
+        result["_description"] = ("No TLS-RPT record found. TLS-RPT lets you receive reports about "
+                                  "TLS delivery failures, helping you detect encryption issues.")
+        suggestions.append({"type": "tls_rpt", **result})
 
     return {
         "domain": domain,

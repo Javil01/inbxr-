@@ -11,7 +11,7 @@ CONFIG_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "page_config
 
 def _default_config():
     return {
-        "index": {
+        "analyzer": {
             "sections": [
                 {
                     "id": "header",
@@ -27,9 +27,9 @@ def _default_config():
                     "draggable": True,
                     "editable_fields": {
                         "eyebrow": "Free Email Intelligence Tool",
-                        "heading": "Know Before You Send.",
-                        "description": "Spam filters evaluate over 200 signals before deciding where your email lands. INBXR scans your subject line, body copy, links, and CTAs against the same heuristics used by Gmail, Outlook, and Yahoo \u2014 then scores your copy for conversion effectiveness and delivers actionable rewrites.",
-                        "chips": ["Spam Risk Scoring", "Copy Effectiveness", "Rewrite Suggestions", "Subject Line Analysis"]
+                        "heading": "Analyze Your Email Before You Send.",
+                        "description": "Paste your email copy and get instant scoring on spam risk, copy effectiveness, readability, link safety, and deliverability \u2014 with AI-powered rewrite suggestions. No sending required.",
+                        "chips": ["Spam Risk Scoring", "Copy Effectiveness", "Rewrite Suggestions", "Readability Analysis", "Link Validation", "Inbox Preview"]
                     }
                 },
                 {
@@ -65,9 +65,9 @@ def _default_config():
                     "order": 1,
                     "draggable": True,
                     "editable_fields": {
-                        "eyebrow": "Real-Time DNS Intelligence",
-                        "heading": "Diagnose Your Email Infrastructure",
-                        "description": "Misconfigured authentication is the #1 reason emails land in spam. INBXR performs live DNS lookups to verify your SPF, DKIM, DMARC, and BIMI records, scans your sending IP and domain against 62 blocklists including Spamhaus, SpamCop, Barracuda, SORBS, UCEPROTECT, and SURBL, and checks your reverse DNS and forward-confirmed rDNS \u2014 giving you a complete sender health report in seconds.",
+                        "eyebrow": "Complete Domain & Sender Intelligence",
+                        "heading": "Full Sender Health Check",
+                        "description": "Enter your domain and INBXR runs every check in parallel \u2014 SPF, DKIM, DMARC, BIMI, MTA-STS, TLS-RPT, 62+ blocklists, reverse DNS, SMTP diagnostics, and more. Add your sending IP for PTR, open relay, and STARTTLS checks. You get a single report with your overall grade, detected email provider, and copy-paste DNS records to fix every issue found.",
                         "detail_1_title": "Authentication Protocols",
                         "detail_1_text": "SPF validates which servers can send on your behalf. DKIM cryptographically signs your messages to prove they haven\u2019t been altered. DMARC ties them together with an enforcement policy. BIMI displays your brand logo in supported inboxes like Gmail, Yahoo, and Apple Mail.",
                         "detail_2_title": "Blocklist Scanning",
@@ -161,6 +161,155 @@ def _default_config():
                 }
             ]
         },
+        "email_test": {
+            "sections": [
+                {
+                    "id": "header",
+                    "type": "header",
+                    "order": 0,
+                    "draggable": False,
+                    "editable_fields": {}
+                },
+                {
+                    "id": "email_test_hero",
+                    "type": "email_test_hero",
+                    "order": 1,
+                    "draggable": True,
+                    "editable_fields": {
+                        "eyebrow": "The Most Complete Free Email Test",
+                        "heading": "One Email. Full Diagnosis.",
+                        "description": "Send from your actual email system \u2014 ESP, mail server, or client \u2014 and we\u2019ll pull the real received message from our mailbox. You get SPF, DKIM, and DMARC pass/fail as the receiving server sees it, TLS encryption details, spam content analysis, copy scoring, readability, DNS reputation, blocklist scan, and a prioritized action plan. Everything GlockApps, Mail-Tester, and MXToolbox charge for \u2014 combined into one free test."
+                    }
+                },
+                {
+                    "id": "et_value_strip",
+                    "type": "et_value_strip",
+                    "order": 2,
+                    "draggable": True,
+                    "editable_fields": {}
+                },
+                {
+                    "id": "et_how_it_works",
+                    "type": "et_how_it_works",
+                    "order": 3,
+                    "draggable": True,
+                    "editable_fields": {}
+                },
+                {
+                    "id": "email_test_tool",
+                    "type": "email_test_tool",
+                    "order": 4,
+                    "draggable": False,
+                    "editable_fields": {}
+                },
+                {
+                    "id": "et_comparison",
+                    "type": "et_comparison",
+                    "order": 5,
+                    "draggable": True,
+                    "editable_fields": {}
+                },
+                {
+                    "id": "et_other_tools",
+                    "type": "et_other_tools",
+                    "order": 6,
+                    "draggable": True,
+                    "editable_fields": {}
+                },
+                {
+                    "id": "et_final_cta",
+                    "type": "et_final_cta",
+                    "order": 7,
+                    "draggable": True,
+                    "editable_fields": {}
+                },
+                {
+                    "id": "footer",
+                    "type": "email_test_footer",
+                    "order": 8,
+                    "draggable": True,
+                    "editable_fields": {
+                        "text": "INBXR \u2014 Email test analysis uses real received headers from the mail server. Authentication verdicts reflect actual server-side verification at the time of delivery."
+                    }
+                }
+            ]
+        },
+        "dns_generator": {
+            "sections": [
+                {
+                    "id": "header",
+                    "type": "header",
+                    "order": 0,
+                    "draggable": False,
+                    "editable_fields": {}
+                },
+                {
+                    "id": "dns_generator_hero",
+                    "type": "dns_generator_hero",
+                    "order": 1,
+                    "draggable": True,
+                    "editable_fields": {
+                        "eyebrow": "Email Authentication Made Easy",
+                        "heading": "Generate Your DNS Records",
+                        "description": "Select your email service providers, set your policies, and instantly generate production-ready SPF, DKIM, DMARC, MTA-STS, and TLS-RPT records. Copy and paste them into your DNS provider \u2014 no manual formatting required."
+                    }
+                },
+                {
+                    "id": "dns_generator_tool",
+                    "type": "dns_generator_tool",
+                    "order": 2,
+                    "draggable": False,
+                    "editable_fields": {}
+                },
+                {
+                    "id": "footer",
+                    "type": "dns_generator_footer",
+                    "order": 3,
+                    "draggable": True,
+                    "editable_fields": {
+                        "text": "INBXR \u2014 Generated records are based on known ESP include mechanisms and best-practice defaults. Always verify records in your DNS provider after adding them."
+                    }
+                }
+            ]
+        },
+        "bimi": {
+            "sections": [
+                {
+                    "id": "header",
+                    "type": "header",
+                    "order": 0,
+                    "draggable": False,
+                    "editable_fields": {}
+                },
+                {
+                    "id": "bimi_hero",
+                    "type": "bimi_hero",
+                    "order": 1,
+                    "draggable": True,
+                    "editable_fields": {
+                        "eyebrow": "Brand Indicators for Message Identification",
+                        "heading": "Check Your BIMI Setup",
+                        "description": "BIMI lets your brand logo appear next to your emails in Gmail, Yahoo, Apple Mail, and other supporting clients. Enter your domain to validate your BIMI DNS record, logo format, VMC certificate, and DMARC prerequisites \u2014 or generate a new BIMI record from scratch."
+                    }
+                },
+                {
+                    "id": "bimi_tool",
+                    "type": "bimi_tool",
+                    "order": 2,
+                    "draggable": False,
+                    "editable_fields": {}
+                },
+                {
+                    "id": "footer",
+                    "type": "bimi_footer",
+                    "order": 3,
+                    "draggable": True,
+                    "editable_fields": {
+                        "text": "INBXR \u2014 BIMI validation checks DNS records, logo availability, and DMARC policy. VMC verification requires a certificate from a supported Certificate Authority (DigiCert or Entrust)."
+                    }
+                }
+            ]
+        },
         "placement": {
             "sections": [
                 {
@@ -195,6 +344,234 @@ def _default_config():
                     "draggable": True,
                     "editable_fields": {
                         "text": "INBXR \u2014 Inbox placement results reflect real mailbox checks at the time of scan. Placement may vary by sender reputation, content, and ISP filtering rules."
+                    }
+                }
+            ]
+        },
+        "blacklist_monitor": {
+            "sections": [
+                {
+                    "id": "header",
+                    "type": "header",
+                    "order": 0,
+                    "draggable": False,
+                    "editable_fields": {}
+                },
+                {
+                    "id": "blacklist_monitor_hero",
+                    "type": "blacklist_monitor_hero",
+                    "order": 1,
+                    "draggable": True,
+                    "editable_fields": {
+                        "eyebrow": "Ongoing Blocklist Surveillance",
+                        "heading": "Monitor Your Blacklist Status",
+                        "description": "Add up to 5 domains and track their status across 60+ email blocklists including Spamhaus, SpamCop, Barracuda, SORBS, and UCEPROTECT. Scan on demand, review history, and catch listings before they tank your deliverability."
+                    }
+                },
+                {
+                    "id": "blacklist_monitor_tool",
+                    "type": "blacklist_monitor_tool",
+                    "order": 2,
+                    "draggable": False,
+                    "editable_fields": {}
+                },
+                {
+                    "id": "footer",
+                    "type": "blacklist_monitor_footer",
+                    "order": 3,
+                    "draggable": True,
+                    "editable_fields": {
+                        "text": "INBXR \u2014 Blocklist data is checked in real time via DNS queries. Listing status may change between scans. Delisting procedures vary by blocklist operator."
+                    }
+                }
+            ]
+        },
+        "header_analyzer": {
+            "sections": [
+                {
+                    "id": "header",
+                    "type": "header",
+                    "order": 0,
+                    "draggable": False,
+                    "editable_fields": {}
+                },
+                {
+                    "id": "header_analyzer_hero",
+                    "type": "header_analyzer_hero",
+                    "order": 1,
+                    "draggable": True,
+                    "editable_fields": {
+                        "eyebrow": "Email Forensics Tool",
+                        "heading": "Decode Your Email Headers",
+                        "description": "Paste raw email headers and instantly see the full routing path, authentication verdicts, encryption status, DKIM signature details, and every hop your message took from sender to inbox. Understand exactly what happened to your email in transit."
+                    }
+                },
+                {
+                    "id": "header_analyzer_tool",
+                    "type": "header_analyzer_tool",
+                    "order": 2,
+                    "draggable": False,
+                    "editable_fields": {}
+                },
+                {
+                    "id": "footer",
+                    "type": "header_analyzer_footer",
+                    "order": 3,
+                    "draggable": True,
+                    "editable_fields": {
+                        "text": "INBXR \u2014 Header analysis is performed locally on the server. No email content is stored or shared. Results reflect the headers as parsed at the time of analysis."
+                    }
+                }
+            ]
+        },
+        "domain_health": {
+            "sections": [
+                {
+                    "id": "header",
+                    "type": "header",
+                    "order": 0,
+                    "draggable": False,
+                    "editable_fields": {}
+                },
+                {
+                    "id": "domain_health_hero",
+                    "type": "domain_health_hero",
+                    "order": 1,
+                    "draggable": True,
+                    "editable_fields": {
+                        "eyebrow": "Comprehensive Domain Assessment",
+                        "heading": "Your Domain Health Report Card",
+                        "description": "Get a complete health assessment for any sending domain. INBXR checks authentication records, scans blocklists, validates BIMI, verifies transport security, and inspects DNS health \u2014 then gives you a single letter grade with prioritized recommendations to fix what matters most."
+                    }
+                },
+                {
+                    "id": "domain_health_tool",
+                    "type": "domain_health_tool",
+                    "order": 2,
+                    "draggable": False,
+                    "editable_fields": {}
+                },
+                {
+                    "id": "footer",
+                    "type": "domain_health_footer",
+                    "order": 3,
+                    "draggable": True,
+                    "editable_fields": {
+                        "text": "INBXR \u2014 Domain health scores are computed from live DNS lookups, blocklist scans, and protocol checks at the time of analysis. Results may change as your configuration evolves."
+                    }
+                }
+            ]
+        },
+        "full_audit": {
+            "sections": [
+                {
+                    "id": "header",
+                    "type": "header",
+                    "order": 0,
+                    "draggable": False,
+                    "editable_fields": {}
+                },
+                {
+                    "id": "full_audit_hero",
+                    "type": "full_audit_hero",
+                    "order": 1,
+                    "draggable": True,
+                    "editable_fields": {
+                        "eyebrow": "One Domain. Every Check. Every Fix.",
+                        "heading": "Domain Health Report",
+                        "description": "Enter your domain and INBXR runs every check in parallel \u2014 SPF, DKIM, DMARC, BIMI, MTA-STS, TLS-RPT, blocklists, SSL, reverse DNS, and more. You get a single report with your overall grade, detected email provider, and copy-paste DNS records to fix every issue found."
+                    }
+                },
+                {
+                    "id": "full_audit_tool",
+                    "type": "full_audit_tool",
+                    "order": 2,
+                    "draggable": False,
+                    "editable_fields": {}
+                },
+                {
+                    "id": "footer",
+                    "type": "full_audit_footer",
+                    "order": 3,
+                    "draggable": True,
+                    "editable_fields": {
+                        "text": "INBXR \u2014 Full audit results are computed from live DNS lookups, blocklist scans, BIMI validation, and protocol checks. Fix records are generated based on detected issues and your email service provider."
+                    }
+                }
+            ]
+        },
+        "email_verifier": {
+            "sections": [
+                {
+                    "id": "header",
+                    "type": "header",
+                    "order": 0,
+                    "draggable": False,
+                    "editable_fields": {}
+                },
+                {
+                    "id": "email_verifier_hero",
+                    "type": "email_verifier_hero",
+                    "order": 1,
+                    "draggable": True,
+                    "editable_fields": {
+                        "eyebrow": "Email Address Intelligence",
+                        "heading": "Verify Any Email Address Instantly",
+                        "description": "Enter an email address and INBXR checks syntax, DNS records, disposable domain status, catch-all detection, and mailbox existence via SMTP — all in one click. Know if an address is valid, risky, or fake before you hit send."
+                    }
+                },
+                {
+                    "id": "email_verifier_tool",
+                    "type": "email_verifier_tool",
+                    "order": 2,
+                    "draggable": False,
+                    "editable_fields": {}
+                },
+                {
+                    "id": "footer",
+                    "type": "email_verifier_footer",
+                    "order": 3,
+                    "draggable": True,
+                    "editable_fields": {
+                        "text": "INBXR \u2014 Email verification uses live DNS lookups and SMTP mailbox probing. Results reflect server responses at the time of check. Some servers may block verification attempts via greylisting or rate limiting."
+                    }
+                }
+            ]
+        },
+        "warmup": {
+            "sections": [
+                {
+                    "id": "header",
+                    "type": "header",
+                    "order": 0,
+                    "draggable": False,
+                    "editable_fields": {}
+                },
+                {
+                    "id": "warmup_hero",
+                    "type": "warmup_hero",
+                    "order": 1,
+                    "draggable": True,
+                    "editable_fields": {
+                        "eyebrow": "IP & Domain Warm-up Tracking",
+                        "heading": "Warm Up Your Sending Reputation",
+                        "description": "New domain or IP? Track your warm-up progress day by day. Follow a proven volume ramp schedule, log daily sends, monitor placement health, and know exactly when you\u2019re ready to send at full volume."
+                    }
+                },
+                {
+                    "id": "warmup_tool",
+                    "type": "warmup_tool",
+                    "order": 2,
+                    "draggable": False,
+                    "editable_fields": {}
+                },
+                {
+                    "id": "footer",
+                    "type": "warmup_footer",
+                    "order": 3,
+                    "draggable": True,
+                    "editable_fields": {
+                        "text": "INBXR \u2014 Warm-up schedules are general guidelines. Actual ramp speed depends on your domain age, list quality, and ESP policies. Monitor bounces and complaints throughout."
                     }
                 }
             ]

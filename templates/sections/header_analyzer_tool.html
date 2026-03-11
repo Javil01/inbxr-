@@ -1,0 +1,89 @@
+<div class="sender-form-card" id="formCard">
+  <form id="headerForm" novalidate>
+    <div class="sender-fields">
+      <div class="field sender-field--primary" style="grid-column: 1 / -1">
+        <label for="rawHeaders">Raw Email Headers <span class="required">*</span></label>
+        <textarea id="rawHeaders" name="rawHeaders" rows="12" placeholder="Paste your full raw email headers here...&#10;&#10;Received: from mail-yw1-f169.google.com ...&#10;Authentication-Results: mx.google.com; ...&#10;DKIM-Signature: v=1; a=rsa-sha256; ..." spellcheck="false" style="font-family:'SF Mono','Fira Code',monospace;font-size:0.8rem;resize:vertical;width:100%;padding:12px;border:1px solid var(--border);border-radius:8px;background:var(--bg-input,var(--bg-card));color:var(--text-primary);min-height:200px"></textarea>
+        <span class="field-hint">Copy headers from your email client (View Source / Show Original) and paste them above</span>
+      </div>
+    </div>
+    <button type="submit" class="btn-analyze sender-submit" id="submitBtn">
+      <span class="btn-text">Analyze Headers</span>
+      <span class="btn-spinner hidden"></span>
+    </button>
+  </form>
+</div>
+
+<div class="sender-loading hidden" id="haLoading">
+  <div class="loading-ring"></div>
+  <p class="loading-msg" id="loadingMsg">Parsing email headers...</p>
+  <p class="loading-sub">This usually takes a few seconds</p>
+</div>
+
+<div class="sender-results hidden" id="haResults">
+
+  <!-- Summary card -->
+  <div class="combined-card" id="summaryCard">
+    <div class="combined-card__left">
+      <div class="combined-meta" id="summaryMeta"></div>
+      <div class="combined-badge" id="summaryBadge">--</div>
+      <p class="combined-summary" id="summarySummary"></p>
+    </div>
+  </div>
+
+  <!-- Envelope section -->
+  <section class="sender-section">
+    <h2 class="sender-section__title">Envelope</h2>
+    <div class="rep-signals" id="envelopeInfo"></div>
+  </section>
+
+  <!-- Authentication Results -->
+  <section class="sender-section">
+    <h2 class="sender-section__title">Authentication Results</h2>
+    <div class="auth-grid" id="authResults"></div>
+  </section>
+
+  <!-- DKIM Signature Details -->
+  <section class="sender-section hidden" id="dkimSection">
+    <h2 class="sender-section__title">DKIM Signature Details</h2>
+    <div class="rep-signals" id="dkimDetails"></div>
+  </section>
+
+  <!-- Routing Path -->
+  <section class="sender-section">
+    <h2 class="sender-section__title">Routing Path</h2>
+    <div class="et-hops" id="routingPath"></div>
+  </section>
+
+  <!-- X-Headers -->
+  <section class="sender-section hidden" id="xHeadersSection">
+    <h2 class="sender-section__title">X-Headers</h2>
+    <div class="dnsbl-table-wrap">
+      <table class="dnsbl-table" id="xHeadersTable">
+        <thead><tr><th>Header</th><th>Value</th></tr></thead>
+        <tbody id="xHeadersBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Raw Parsed Headers -->
+  <section class="sender-section">
+    <h2 class="sender-section__title">
+      <button class="auth-detail-toggle" id="rawToggle" style="background:none;border:none;color:var(--text-primary);font:inherit;cursor:pointer;padding:0;display:inline-flex;align-items:center;gap:6px">
+        All Parsed Headers <span class="accordion-arrow" style="font-size:0.7em">&#9660;</span>
+      </button>
+    </h2>
+    <div class="hidden" id="rawParsedSection">
+      <div class="dnsbl-table-wrap">
+        <table class="dnsbl-table" id="rawHeadersTable">
+          <thead><tr><th>Header</th><th>Value</th></tr></thead>
+          <tbody id="rawHeadersBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <div style="text-align:center;padding:12px 0 24px">
+    <button type="button" class="run-again-btn" id="runAgainBtn">&#8592; Analyze another header</button>
+  </div>
+</div>

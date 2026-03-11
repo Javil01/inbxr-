@@ -1,0 +1,326 @@
+<div class="placement-container">
+
+  <!-- ── STEP INDICATOR ── -->
+  <div class="placement-steps">
+    <div class="placement-step active" id="stepIndicator1">
+      <span class="placement-step__num">1</span>
+      <span class="placement-step__label">Get Address</span>
+    </div>
+    <div class="placement-step__line"></div>
+    <div class="placement-step" id="stepIndicator2">
+      <span class="placement-step__num">2</span>
+      <span class="placement-step__label">Send Email</span>
+    </div>
+    <div class="placement-step__line"></div>
+    <div class="placement-step" id="stepIndicator3">
+      <span class="placement-step__num">3</span>
+      <span class="placement-step__label">Full Report</span>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════ -->
+  <!--  STEP 1: START TEST                             -->
+  <!-- ════════════════════════════════════════════════ -->
+  <div class="placement-panel" id="step1">
+    <div class="placement-card">
+      <div class="placement-card__icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+        </svg>
+      </div>
+      <h2 class="placement-card__title">Full Email Test Analysis</h2>
+      <p class="placement-card__desc">Send a real email from your system to our test address. We'll pull the actual received message and analyze everything: authentication results, TLS encryption, spam headers, content quality, and deliverability — all from the receiver's perspective.</p>
+      <div class="placement-how">
+        <div class="placement-how__item">
+          <span class="placement-how__num">1</span>
+          <span>Click below to get your test token and seed address</span>
+        </div>
+        <div class="placement-how__item">
+          <span class="placement-how__num">2</span>
+          <span>Send your email with the token in the subject line</span>
+        </div>
+        <div class="placement-how__item">
+          <span class="placement-how__num">3</span>
+          <span>Get a comprehensive report with real authentication verdicts, transport security, and content analysis</span>
+        </div>
+      </div>
+
+      <div class="et-what-you-get">
+        <h3 class="et-what-you-get__title">What You Get</h3>
+        <div class="et-features-grid">
+          <div class="et-feature">
+            <span class="et-feature__icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            </span>
+            <div>
+              <strong>Real Auth Verdicts</strong>
+              <span>SPF, DKIM, DMARC pass/fail as seen by the receiving server</span>
+            </div>
+          </div>
+          <div class="et-feature">
+            <span class="et-feature__icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+            </span>
+            <div>
+              <strong>Transport Security</strong>
+              <span>TLS version, cipher, routing chain, sender IP extraction</span>
+            </div>
+          </div>
+          <div class="et-feature">
+            <span class="et-feature__icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+            </span>
+            <div>
+              <strong>Content Analysis</strong>
+              <span>Spam risk, copy effectiveness, readability, links — all modules</span>
+            </div>
+          </div>
+          <div class="et-feature">
+            <span class="et-feature__icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+            </span>
+            <div>
+              <strong>Compliance Check</strong>
+              <span>List-Unsubscribe, MIME structure, header alignment</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button type="button" class="btn-analyze" id="startTestBtn">
+        <span class="btn-text">Start Email Test — It's Free</span>
+        <span class="btn-spinner hidden"></span>
+      </button>
+
+      <div class="et-differentiator">
+        <h3 class="et-differentiator__title">Why This Is Different</h3>
+        <div class="et-diff-grid">
+          <div class="et-diff-item et-diff-item--other">
+            <span class="et-diff-item__head">Other tools</span>
+            <ul>
+              <li>DNS lookups only — check if records <em>exist</em></li>
+              <li>Content scanning without real delivery context</li>
+              <li>Separate tools for auth, spam, and placement</li>
+              <li>$45–99/month for full testing</li>
+            </ul>
+          </div>
+          <div class="et-diff-item et-diff-item--inbxr">
+            <span class="et-diff-item__head">INBXR Email Test</span>
+            <ul>
+              <li>Real server verdicts — SPF/DKIM/DMARC as the receiver sees it</li>
+              <li>Content analysis on the actual delivered email</li>
+              <li>Auth + spam + copy + transport + reputation in one report</li>
+              <li>Free — no account, no credit card, no limits</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════ -->
+  <!--  STEP 2: SEND EMAIL                            -->
+  <!-- ════════════════════════════════════════════════ -->
+  <div class="placement-panel hidden" id="step2">
+    <div class="placement-card et-step2-card">
+
+      <!-- ── Primary action area: token + seed, compact ── -->
+      <div class="et-send-pair">
+        <div class="et-send-pair__col">
+          <span class="et-send-pair__label">1. Add token to subject line</span>
+          <div class="et-send-pair__box">
+            <code class="et-send-pair__value" id="tokenDisplay"></code>
+            <button type="button" class="et-send-pair__copy" id="copyTokenBtn">Copy</button>
+          </div>
+        </div>
+        <div class="et-send-pair__col">
+          <span class="et-send-pair__label">2. Send your email to</span>
+          <div class="et-send-pair__box">
+            <code class="et-send-pair__value" id="seedEmail"></code>
+            <button type="button" class="et-send-pair__copy" id="copySeedBtn">Copy</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="et-example">
+        <span class="et-example__label">Example subject:</span>
+        <code class="et-example__text" id="exampleSubject">Your subject line here INBXR-XXXXXXXX</code>
+      </div>
+
+      <div class="placement-tip" style="margin-top:6px">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        <span>Send from your <strong>actual</strong> email system (ESP, mail server, or client) so we can analyze real authentication headers. Wait 30–60 seconds after sending.</span>
+      </div>
+
+      <button type="button" class="btn-analyze" id="checkResultsBtn">
+        <span class="btn-text">Analyze Received Email</span>
+        <span class="btn-spinner hidden"></span>
+      </button>
+
+      <!-- ── Collapsible help section ── -->
+      <div class="et-step2-help">
+        <button type="button" class="et-step2-help__toggle" id="step2HelpToggle">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          <span>Token placement tips &amp; FAQ</span>
+          <span class="et-step2-help__arrow">&#9660;</span>
+        </button>
+        <div class="et-step2-help__body" id="step2HelpBody" style="display:none">
+          <div class="et-token-guide">
+            <h3 class="et-token-guide__title">Where to put the token</h3>
+            <p class="et-token-guide__text">Add the token to the <strong>very end</strong> of your subject line. This keeps your real subject intact for accurate analysis.</p>
+            <div class="et-token-examples">
+              <div class="et-token-example et-token-example--good">
+                <span class="et-token-example__badge">Recommended</span>
+                <code>Your Exclusive 40% Off Deal Ends Tonight <span class="et-token-highlight">INBXR-XXXXXXXX</span></code>
+              </div>
+              <div class="et-token-example et-token-example--ok">
+                <span class="et-token-example__badge">Also fine</span>
+                <code><span class="et-token-highlight">INBXR-XXXXXXXX</span> Your Exclusive 40% Off Deal Ends Tonight</code>
+              </div>
+            </div>
+            <div class="et-token-note">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+              <div>
+                <strong>Will the token affect my results?</strong>
+                <span>No. We automatically strip the token before analyzing your subject line, so your spam score, copy score, and all other results reflect your real email exactly as your subscribers would receive it.</span>
+              </div>
+            </div>
+            <div class="et-token-note">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+              <div>
+                <strong>What about my live send?</strong>
+                <span>Just remove the token. Your authentication (SPF, DKIM, DMARC), sender reputation, and content are tied to your domain — not the token. Results here are exactly what subscribers will experience.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button type="button" class="placement-back-btn" id="backToStep1">&larr; Start Over</button>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════ -->
+  <!--  STEP 3: RESULTS                               -->
+  <!-- ════════════════════════════════════════════════ -->
+  <div class="placement-panel hidden" id="step3">
+    <!-- Placement summary -->
+    <div id="etPlacementSummary"></div>
+
+    <!-- Assessment summary -->
+    <div class="et-section" id="etAssessment" style="display:none">
+      <h3 class="et-section__title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        Assessment Summary
+      </h3>
+      <p class="et-section__sub">Overall health of your email based on authentication, content, and deliverability best practices.</p>
+      <div id="etAssessmentContent"></div>
+    </div>
+
+    <!-- Header grades -->
+    <div class="et-section" id="etHeaderGrades">
+      <h3 class="et-section__title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        Authentication &amp; Header Analysis
+      </h3>
+      <p class="et-section__sub">Real verdicts from the receiving mail server — not DNS lookups, but actual pass/fail results.</p>
+      <div class="et-grades-grid" id="etGradesGrid"></div>
+    </div>
+
+    <!-- Transport details -->
+    <div class="et-section" id="etTransport">
+      <h3 class="et-section__title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+        Transport &amp; Routing
+      </h3>
+      <div id="etTransportContent"></div>
+    </div>
+
+    <!-- Identity / compliance -->
+    <div class="et-section" id="etIdentity">
+      <h3 class="et-section__title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        Sender Identity &amp; Compliance
+      </h3>
+      <div id="etIdentityContent"></div>
+    </div>
+
+    <!-- Spam + Copy scores -->
+    <div class="et-section" id="etScores" style="display:none">
+      <h3 class="et-section__title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+        Content Analysis
+      </h3>
+      <div class="et-scores-row" id="etScoresRow"></div>
+    </div>
+
+    <!-- Readability -->
+    <div class="et-section" id="etReadability" style="display:none">
+      <h3 class="et-section__title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+        Readability
+      </h3>
+      <div id="etReadabilityContent"></div>
+    </div>
+
+    <!-- Reputation (DNS-based) -->
+    <div class="et-section" id="etReputation" style="display:none">
+      <h3 class="et-section__title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+        DNS Reputation &amp; Blocklists
+      </h3>
+      <div id="etReputationContent"></div>
+    </div>
+
+    <!-- Audit -->
+    <div class="et-section" id="etAudit" style="display:none">
+      <h3 class="et-section__title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+        Pre-Send Audit
+      </h3>
+      <div id="etAuditContent"></div>
+    </div>
+
+    <!-- Full Audit CTA -->
+    <div class="et-section et-full-audit-cta hidden" id="etFullAuditCta">
+      <div class="fa-cta-card">
+        <div class="fa-cta-body">
+          <h3 class="fa-cta-title">Want to fix what's wrong?</h3>
+          <p class="fa-cta-desc">Run a full audit on <strong id="faCTADomain">your domain</strong> — we'll check everything and give you copy-paste DNS records to fix every issue.</p>
+        </div>
+        <button type="button" class="btn-analyze fa-cta-btn" id="runFullAuditBtn">
+          <span class="btn-text">Run Full Audit</span>
+          <span class="btn-spinner hidden"></span>
+        </button>
+      </div>
+      <div class="fa-cta-inline-results hidden" id="faCTAResults">
+        <div class="fa-cta-loading hidden" id="faCTALoading">
+          <div class="loading-ring"></div>
+          <p class="loading-msg" id="faCTALoadingMsg">Running full audit...</p>
+        </div>
+        <div id="faCTAReport"></div>
+      </div>
+    </div>
+
+    <!-- Next Steps CTAs -->
+    <div class="et-section" id="etNextSteps" style="display:none"></div>
+
+    <!-- All headers (collapsible) -->
+    <div class="et-section" id="etRawHeaders">
+      <div class="accordion-section">
+        <button class="accordion-trigger" data-target="etRawHeadersList"><span>Raw Headers Present</span><span class="badge-count" id="etHeaderCount">0</span><span class="accordion-arrow">&#9660;</span></button>
+        <div class="accordion-body" id="etRawHeadersList"></div>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="placement-actions">
+      <button type="button" class="btn-analyze placement-recheck-btn" id="recheckBtn">
+        <span class="btn-text">Re-check (email may still be arriving)</span>
+        <span class="btn-spinner hidden"></span>
+      </button>
+      <button type="button" class="placement-back-btn" id="newTestBtn">&larr; Run New Test</button>
+    </div>
+  </div>
+
+</div>

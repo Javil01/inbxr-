@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>INBXR — Email Spam Risk & Copy Effectiveness Analyzer</title>
+  <title>INBXR — Email Copy Analyzer & Spam Risk Scorer</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/static/css/style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/style.css?v={{ range(1000,9999) | random }}" />
   {% if is_admin %}<link rel="stylesheet" href="/static/css/admin.css" />{% endif %}
 </head>
-<body{% if is_admin %} class="admin-mode" data-page="index"{% endif %}>
+<body{% if is_admin %} class="admin-mode" data-page="analyzer"{% endif %}>
 
 {% if is_admin %}
 <div class="admin-toolbar">

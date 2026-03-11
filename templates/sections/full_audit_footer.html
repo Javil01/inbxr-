@@ -1,0 +1,6 @@
+<footer class="site-footer">
+  <div class="footer-inner">
+    <p class="footer-text"
+      {% if is_admin %}contenteditable="true" data-field="text"{% endif %}>{{ section.editable_fields.text }}</p>
+  </div>
+</footer>

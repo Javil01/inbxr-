@@ -1,0 +1,70 @@
+<div class="sender-form-card" id="formCard">
+  <form id="verifyForm" novalidate>
+    <div class="sender-fields">
+      <div class="field sender-field--primary">
+        <label for="verifyEmail">Email Address <span class="required">*</span></label>
+        <input type="email" id="verifyEmail" name="email" placeholder="user@example.com" autocomplete="off" spellcheck="false" />
+        <span class="field-hint">Enter any email address to verify if it's valid and deliverable</span>
+      </div>
+    </div>
+    <button type="submit" class="btn-analyze sender-submit" id="verifyBtn">
+      <span class="btn-text">Verify Email</span>
+      <span class="btn-spinner hidden"></span>
+    </button>
+  </form>
+</div>
+
+<div class="sender-loading hidden" id="verifyLoading">
+  <div class="loading-ring"></div>
+  <p class="loading-msg" id="loadingMsg">Verifying email address...</p>
+  <p class="loading-sub">Checking syntax, DNS, and mailbox — usually takes 5-10 seconds</p>
+</div>
+
+<div class="ev-results hidden" id="verifyResults">
+
+  <!-- Verdict Banner -->
+  <div class="ev-verdict" id="evVerdict">
+    <div class="ev-verdict__icon" id="evVerdictIcon"></div>
+    <div class="ev-verdict__body">
+      <span class="ev-verdict__label" id="evVerdictLabel">—</span>
+      <p class="ev-verdict__detail" id="evVerdictDetail"></p>
+    </div>
+    <div class="ev-verdict__score" id="evVerdictScore">
+      <span class="ev-verdict__score-num">—</span>
+      <span class="ev-verdict__score-label">/ 100</span>
+    </div>
+  </div>
+
+  <!-- Email Meta -->
+  <div class="ev-meta" id="evMeta"></div>
+
+  <!-- Check Results Grid -->
+  <section class="sender-section">
+    <h2 class="sender-section__title">Verification Checks</h2>
+    <div class="ev-checks" id="evChecks"></div>
+  </section>
+
+  <!-- Risk Factors -->
+  <section class="sender-section hidden" id="evRiskSection">
+    <h2 class="sender-section__title">Risk Factors</h2>
+    <div class="ev-risks" id="evRisks"></div>
+  </section>
+
+  <!-- MX Records -->
+  <section class="sender-section hidden" id="evMxSection">
+    <h2 class="sender-section__title">MX Records</h2>
+    <div class="dnsbl-table-wrap">
+      <table class="dnsbl-table">
+        <thead><tr><th>Priority</th><th>Mail Server</th></tr></thead>
+        <tbody id="evMxBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Next Steps CTAs -->
+  <div class="hidden" id="evNextSteps" style="margin-bottom:16px"></div>
+
+  <div style="text-align:center;padding:12px 0 24px">
+    <button type="button" class="run-again-btn" id="verifyAgainBtn">&#8592; Verify another email</button>
+  </div>
+</div>
