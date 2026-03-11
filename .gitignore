@@ -3,4 +3,7 @@ __pycache__/
 *.pyo
 .env
 data/page_config.json
+data/*.db
+data/*.db-shm
+data/*.db-wal
 config/seed_accounts.json

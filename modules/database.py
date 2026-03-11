@@ -1,0 +1,235 @@
+"""
+INBXR — Centralized Database Manager
+SQLite with WAL mode. Handles schema creation and migrations.
+"""
+
+import os
+import sqlite3
+import threading
+
+_DB_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data")
+_DB_PATH = os.path.join(_DB_DIR, "inbxr.db")
+_local = threading.local()
+
+
+def _get_conn():
+    """Get a thread-local SQLite connection with WAL mode."""
+    if not hasattr(_local, "conn") or _local.conn is None:
+        os.makedirs(_DB_DIR, exist_ok=True)
+        conn = sqlite3.connect(_DB_PATH, check_same_thread=False)
+        conn.execute("PRAGMA journal_mode=WAL")
+        conn.execute("PRAGMA foreign_keys=ON")
+        conn.row_factory = sqlite3.Row
+        _local.conn = conn
+    return _local.conn
+
+
+def execute(sql, params=(), commit=True):
+    """Execute a single SQL statement. Returns cursor."""
+    conn = _get_conn()
+    cur = conn.execute(sql, params)
+    if commit:
+        conn.commit()
+    return cur
+
+
+def fetchone(sql, params=()):
+    """Execute and fetch one row as dict (or None)."""
+    cur = execute(sql, params, commit=False)
+    row = cur.fetchone()
+    return dict(row) if row else None
+
+
+def fetchall(sql, params=()):
+    """Execute and fetch all rows as list of dicts."""
+    cur = execute(sql, params, commit=False)
+    return [dict(r) for r in cur.fetchall()]
+
+
+def init_db():
+    """Create all tables if they don't exist. Safe to call on every startup."""
+    conn = _get_conn()
+    conn.executescript(_SCHEMA)
+    conn.commit()
+    _run_migrations(conn)
+
+
+def _run_migrations(conn):
+    """Run any pending schema migrations."""
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS _migrations (
+            id INTEGER PRIMARY KEY,
+            name TEXT UNIQUE NOT NULL,
+            applied_at TEXT DEFAULT (datetime('now'))
+        )
+    """)
+    conn.commit()
+
+    applied = {r["name"] for r in fetchall("SELECT name FROM _migrations")}
+
+    for name, sql in _MIGRATIONS:
+        if name not in applied:
+            conn.executescript(sql)
+            conn.execute("INSERT INTO _migrations (name) VALUES (?)", (name,))
+            conn.commit()
+
+
+# ── Schema ──────────────────────────────────────────────
+
+_SCHEMA = """
+CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    email TEXT UNIQUE NOT NULL COLLATE NOCASE,
+    password_hash TEXT NOT NULL,
+    display_name TEXT DEFAULT '',
+    tier TEXT DEFAULT 'free' CHECK(tier IN ('free', 'pro', 'agency', 'api')),
+    stripe_customer_id TEXT,
+    stripe_subscription_id TEXT,
+    api_key TEXT UNIQUE,
+    email_verified INTEGER DEFAULT 0,
+    verification_token TEXT,
+    reset_token TEXT,
+    reset_token_expires TEXT,
+    created_at TEXT DEFAULT (datetime('now')),
+    updated_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+CREATE INDEX IF NOT EXISTS idx_users_api_key ON users(api_key);
+CREATE INDEX IF NOT EXISTS idx_users_stripe_customer ON users(stripe_customer_id);
+
+CREATE TABLE IF NOT EXISTS usage_log (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER,
+    ip_address TEXT,
+    action TEXT NOT NULL,
+    created_at TEXT DEFAULT (datetime('now')),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_usage_log_user_action ON usage_log(user_id, action, created_at);
+CREATE INDEX IF NOT EXISTS idx_usage_log_ip_action ON usage_log(ip_address, action, created_at);
+
+CREATE TABLE IF NOT EXISTS check_history (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    tool TEXT NOT NULL,
+    input_summary TEXT,
+    result_json TEXT,
+    grade TEXT,
+    score INTEGER,
+    created_at TEXT DEFAULT (datetime('now')),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_check_history_user_tool ON check_history(user_id, tool, created_at);
+
+CREATE TABLE IF NOT EXISTS teams (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    owner_id INTEGER NOT NULL,
+    created_at TEXT DEFAULT (datetime('now')),
+    FOREIGN KEY (owner_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS team_members (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    team_id INTEGER NOT NULL,
+    user_id INTEGER NOT NULL,
+    role TEXT DEFAULT 'member' CHECK(role IN ('owner', 'admin', 'member')),
+    joined_at TEXT DEFAULT (datetime('now')),
+    FOREIGN KEY (team_id) REFERENCES teams(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    UNIQUE(team_id, user_id)
+);
+
+CREATE TABLE IF NOT EXISTS sessions (
+    id TEXT PRIMARY KEY,
+    user_id INTEGER NOT NULL,
+    ip_address TEXT,
+    user_agent TEXT,
+    created_at TEXT DEFAULT (datetime('now')),
+    expires_at TEXT NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions(user_id);
+CREATE INDEX IF NOT EXISTS idx_sessions_expires ON sessions(expires_at);
+
+CREATE TABLE IF NOT EXISTS bulk_jobs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    filename TEXT,
+    total_emails INTEGER DEFAULT 0,
+    processed INTEGER DEFAULT 0,
+    status TEXT DEFAULT 'pending' CHECK(status IN ('pending', 'processing', 'completed', 'failed')),
+    summary_json TEXT,
+    created_at TEXT DEFAULT (datetime('now')),
+    completed_at TEXT,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS bulk_results (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    job_id INTEGER NOT NULL,
+    email TEXT NOT NULL,
+    verdict TEXT,
+    score INTEGER,
+    result_json TEXT,
+    FOREIGN KEY (job_id) REFERENCES bulk_jobs(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_bulk_jobs_user ON bulk_jobs(user_id);
+CREATE INDEX IF NOT EXISTS idx_bulk_results_job ON bulk_results(job_id);
+
+CREATE TABLE IF NOT EXISTS user_monitors (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    domain TEXT NOT NULL,
+    ip TEXT,
+    scan_interval_hours INTEGER DEFAULT 6,
+    last_scanned_at TEXT,
+    last_listed_count INTEGER DEFAULT 0,
+    alert_on_change INTEGER DEFAULT 1,
+    created_at TEXT DEFAULT (datetime('now')),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    UNIQUE(user_id, domain)
+);
+
+CREATE INDEX IF NOT EXISTS idx_user_monitors_user ON user_monitors(user_id);
+
+CREATE TABLE IF NOT EXISTS monitor_scans (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    monitor_id INTEGER NOT NULL,
+    total_lists INTEGER DEFAULT 0,
+    listed_count INTEGER DEFAULT 0,
+    listed_on TEXT,
+    clean INTEGER DEFAULT 1,
+    scanned_at TEXT DEFAULT (datetime('now')),
+    FOREIGN KEY (monitor_id) REFERENCES user_monitors(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_monitor_scans_monitor ON monitor_scans(monitor_id, scanned_at DESC);
+
+CREATE TABLE IF NOT EXISTS alerts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    alert_type TEXT NOT NULL,
+    title TEXT NOT NULL,
+    message TEXT,
+    data_json TEXT,
+    is_read INTEGER DEFAULT 0,
+    created_at TEXT DEFAULT (datetime('now')),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_alerts_user ON alerts(user_id, is_read, created_at DESC);
+"""
+
+# ── Migrations (append-only list) ───────────────────────
+
+_MIGRATIONS = [
+    # Add future migrations here as tuples: ("migration_name", "SQL")
+    # Example:
+    # ("001_add_webhooks_table", "CREATE TABLE IF NOT EXISTS webhooks (...)"),
+]

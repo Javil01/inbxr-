@@ -1,0 +1,160 @@
+{% extends "auth/base_auth.html" %}
+{% block title %}Domain Monitors{% endblock %}
+
+{% block content %}
+<div class="monitors-page">
+  <h2 style="margin:0 0 4px;">Blocklist Monitors</h2>
+  <p class="monitor-limit" id="monitorLimit">Loading...</p>
+
+  <!-- Add domain form -->
+  <form class="monitor-add-form" id="addMonitorForm" onsubmit="return addMonitor(event)">
+    <input type="text" id="monDomain" placeholder="example.com" required class="input" />
+    <input type="text" id="monIP" placeholder="IP (optional)" class="input" style="max-width:160px;" />
+    <button type="submit" class="btn btn--primary" id="addBtn">Add Domain</button>
+  </form>
+
+  <!-- Monitor list -->
+  <div id="monitorList" class="monitor-list">
+    <p style="color:var(--text-3);text-align:center;padding:32px 0;">Loading monitors...</p>
+  </div>
+</div>
+
+<style>
+.auth-card:has(.monitors-page) { max-width: 800px; }
+</style>
+
+<script>
+(function(){
+  const tierLimit = {{ tier_limit }};
+  let monitors = [];
+
+  function fmt(dt) {
+    if (!dt) return 'Never';
+    const d = new Date(dt + 'Z');
+    return d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+  }
+
+  function loadMonitors() {
+    fetch('/api/monitors').then(r => r.json()).then(data => {
+      if (!data.ok) return;
+      monitors = data.monitors;
+      renderLimit(data.count, data.limit);
+      renderList(monitors);
+    });
+  }
+
+  function renderLimit(count, limit) {
+    document.getElementById('monitorLimit').textContent = count + ' of ' + limit + ' domains';
+    const addBtn = document.getElementById('addBtn');
+    if (count >= limit) {
+      addBtn.disabled = true;
+      addBtn.textContent = 'Limit reached';
+    } else {
+      addBtn.disabled = false;
+      addBtn.textContent = 'Add Domain';
+    }
+  }
+
+  function renderList(items) {
+    const el = document.getElementById('monitorList');
+    if (!items.length) {
+      el.innerHTML = '<p style="color:var(--text-3);text-align:center;padding:32px 0;">No domains being monitored yet. Add one above.</p>';
+      return;
+    }
+    el.innerHTML = items.map(m => {
+      const scan = m.last_scan;
+      const statusDot = scan ? (scan.clean ? 'monitor-card__status--clean' : 'monitor-card__status--listed') : 'monitor-card__status--unknown';
+      const statusText = scan ? (scan.clean ? 'Clean' : scan.listed_count + ' listing(s)') : 'Not scanned';
+      const lastScan = scan ? fmt(scan.scanned_at) : 'Never';
+      const ipText = m.ip ? ' &middot; ' + m.ip : '';
+      return `
+        <div class="monitor-card" data-id="${m.id}">
+          <div class="monitor-card__info">
+            <div class="monitor-card__status ${statusDot}"></div>
+            <div>
+              <strong class="monitor-card__domain">${m.domain}</strong>
+              <span class="monitor-card__meta">${ipText}</span>
+              <div class="monitor-card__sub">${statusText} &middot; Last scan: ${lastScan}</div>
+            </div>
+          </div>
+          <div class="monitor-card__actions">
+            <button class="btn btn--small btn--outline" onclick="toggleHistory(${m.id})">History</button>
+            <button class="btn btn--small btn--primary" onclick="scanDomain(${m.id}, this)">Scan Now</button>
+            <button class="btn btn--small btn--danger" onclick="removeDomain(${m.id})">Remove</button>
+          </div>
+          <div class="monitor-card__history" id="history-${m.id}" style="display:none;"></div>
+        </div>`;
+    }).join('');
+  }
+
+  window.addMonitor = function(e) {
+    e.preventDefault();
+    const domain = document.getElementById('monDomain').value.trim();
+    const ip = document.getElementById('monIP').value.trim();
+    if (!domain) return;
+    const btn = document.getElementById('addBtn');
+    btn.disabled = true; btn.textContent = 'Adding...';
+    fetch('/api/monitors', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({domain, ip: ip || null})
+    }).then(r => r.json()).then(data => {
+      if (data.ok) {
+        document.getElementById('monDomain').value = '';
+        document.getElementById('monIP').value = '';
+        loadMonitors();
+      } else {
+        alert(data.error || 'Failed to add domain.');
+        btn.disabled = false; btn.textContent = 'Add Domain';
+      }
+    }).catch(() => { btn.disabled = false; btn.textContent = 'Add Domain'; });
+  };
+
+  window.removeDomain = function(id) {
+    if (!confirm('Remove this domain from monitoring?')) return;
+    fetch('/api/monitors/' + id, {method: 'DELETE'}).then(r => r.json()).then(data => {
+      if (data.ok) loadMonitors();
+      else alert(data.error || 'Failed to remove.');
+    });
+  };
+
+  window.scanDomain = function(id, btn) {
+    btn.disabled = true; btn.textContent = 'Scanning...';
+    fetch('/api/monitors/' + id + '/scan', {method: 'POST'}).then(r => r.json()).then(data => {
+      btn.disabled = false; btn.textContent = 'Scan Now';
+      if (data.ok) loadMonitors();
+      else alert(data.error || 'Scan failed.');
+    }).catch(() => { btn.disabled = false; btn.textContent = 'Scan Now'; });
+  };
+
+  window.toggleHistory = function(id) {
+    const el = document.getElementById('history-' + id);
+    if (el.style.display !== 'none') { el.style.display = 'none'; return; }
+    el.innerHTML = '<p style="padding:8px;color:var(--text-3);">Loading...</p>';
+    el.style.display = 'block';
+    fetch('/api/monitors/' + id + '/history?limit=10').then(r => r.json()).then(data => {
+      if (!data.ok || !data.history.length) {
+        el.innerHTML = '<p style="padding:8px;color:var(--text-3);">No scan history yet.</p>';
+        return;
+      }
+      let html = '<table class="history-table" style="width:100%;font-size:0.85rem;margin-top:8px;"><thead><tr><th>Date</th><th>Lists</th><th>Listed</th><th>Status</th></tr></thead><tbody>';
+      data.history.forEach(s => {
+        const cls = s.clean ? 'badge--green' : 'badge--red';
+        const label = s.clean ? 'Clean' : s.listed_count + ' listed';
+        html += `<tr>
+          <td>${fmt(s.scanned_at)}</td>
+          <td>${s.total_lists}</td>
+          <td>${s.listed_count}</td>
+          <td><span class="badge ${cls}">${label}</span></td>
+        </tr>`;
+      });
+      html += '</tbody></table>';
+      el.innerHTML = html;
+    });
+  };
+
+  loadMonitors();
+  setInterval(loadMonitors, 60000);
+})();
+</script>
+{% endblock %}

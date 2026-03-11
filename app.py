@@ -1,6 +1,6 @@
 """
-INBXR — Email Copy Assessment Tool
-Flask backend: analysis API + file parsing + admin editor.
+INBXR — Email Intelligence Platform
+Flask backend: analysis API + file parsing + admin editor + user auth.
 """
 
 import re
@@ -20,6 +20,7 @@ import mailbox
 import email as email_lib
 from email import policy as email_policy
 import ipaddress
+from datetime import timedelta
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for
 
 app = Flask(__name__)
@@ -30,14 +31,65 @@ app.secret_key = os.environ.get("SECRET_KEY", "inbxr-dev-secret-change-in-produc
 # ── Max upload size: 10 MB ──────────────────────────────
 app.config["MAX_CONTENT_LENGTH"] = 10 * 1024 * 1024
 
+# ── Permanent session lifetime ───────────────────────────
+app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(days=30)
+
+# ── Initialize database and register blueprints ─────────
+from modules.database import init_db
+init_db()
+
+from blueprints.auth_routes import auth_bp
+app.register_blueprint(auth_bp)
+
+from blueprints.history_routes import history_bp
+app.register_blueprint(history_bp)
+
+from blueprints.bulk_routes import bulk_bp
+app.register_blueprint(bulk_bp)
+
+from blueprints.pdf_routes import pdf_bp
+app.register_blueprint(pdf_bp)
+
+from blueprints.monitor_routes import monitor_bp
+app.register_blueprint(monitor_bp)
+
+from modules.scheduler import init_scheduler
+init_scheduler(app)
+
 # ── Admin credentials (set via env vars in production) ──
 ADMIN_USER = os.environ.get("ADMIN_USER", "admin")
 ADMIN_PASS = os.environ.get("ADMIN_PASS", "inbxr2026")
 
 
+# ── Inject user context into all templates ───────────────
+@app.context_processor
+def inject_user_context():
+    """Make user session data available in all templates."""
+    return {
+        "current_user_id": session.get("user_id"),
+        "current_user_email": session.get("user_email"),
+        "current_user_tier": session.get("user_tier", "free"),
+        "current_user_name": session.get("user_name"),
+    }
+
+
 # ══════════════════════════════════════════════════════
 #  HELPERS
 # ══════════════════════════════════════════════════════
+
+def _rate_limit_response(info):
+    """Build a 429 JSON response with signup prompt for anon users."""
+    if info.get("anonymous"):
+        return jsonify({
+            "error": "You've used your 3 free checks for today. Create a free account to keep going — it takes 10 seconds.",
+            "limit_info": info,
+            "signup_url": "/signup",
+        }), 429
+    return jsonify({
+        "error": f"Rate limit exceeded ({info.get('blocked_by', 'daily')} limit). Upgrade your plan for higher limits.",
+        "limit_info": info,
+        "upgrade_url": "/pricing",
+    }), 429
 
 def _is_admin():
     return session.get("is_admin", False)
@@ -275,6 +327,9 @@ def sender():
 
 @app.route("/dashboard")
 def dashboard():
+    if not session.get("user_id"):
+        return redirect(url_for("auth.login", next="/dashboard"))
+
     from modules.page_config import get_page_sections
     sections = get_page_sections("dashboard")
     if not _is_admin():
@@ -299,6 +354,11 @@ def subject_scorer():
 
 @app.route("/score-subjects", methods=["POST"])
 def score_subjects():
+    from modules.rate_limiter import check_rate_limit, log_usage
+    allowed, info = check_rate_limit("subject_test", limit_key="subject_tests_per_day")
+    if not allowed:
+        return _rate_limit_response(info)
+
     data = request.get_json(force=True, silent=True)
     if data is None:
         return jsonify({"error": "Invalid JSON payload"}), 400
@@ -314,6 +374,19 @@ def score_subjects():
 
     from modules.subject_scorer import score_subjects as do_score
     result = do_score(subjects, industry=industry)
+    log_usage("subject_test")
+
+    if session.get("user_id"):
+        from modules.tiers import has_feature
+        if has_feature(session.get("user_tier", "free"), "cloud_history"):
+            from modules.history import save_result
+            summary = "; ".join(subjects[:3])
+            if len(subjects) > 3:
+                summary += " ..."
+            best = result.get("results", [{}])[0] if result.get("results") else {}
+            save_result(session["user_id"], "subject_test", summary, result,
+                        grade=best.get("grade"), score=best.get("score"))
+
     return jsonify(result)
 
 
@@ -338,10 +411,10 @@ def email_test_start():
 
 @app.route("/email-test/check", methods=["POST"])
 def email_test_check():
-    from modules.inbox_placement import check_rate_limit
+    from modules.inbox_placement import check_rate_limit as imap_rate_limit
     from modules.email_test import EmailTestFetcher, run_full_analysis
 
-    if not check_rate_limit():
+    if not imap_rate_limit():
         return jsonify({"error": "Rate limit exceeded. Please wait a minute."}), 429
 
     data = request.get_json(force=True, silent=True)
@@ -671,6 +744,11 @@ def domain_health():
 @app.route("/domain-health-check", methods=["POST"])
 def domain_health_check():
     """Comprehensive domain health assessment with letter grade."""
+    from modules.rate_limiter import check_rate_limit, log_usage
+    allowed, info = check_rate_limit("domain_check")
+    if not allowed:
+        return _rate_limit_response(info)
+
     import concurrent.futures
     import ssl
     import socket
@@ -941,7 +1019,9 @@ def domain_health_check():
             "recommendation": f"Add a TLS-RPT DNS record for {domain} to receive reports about TLS delivery failures.",
         })
 
-    return jsonify({
+    log_usage("domain_check")
+
+    domain_result = {
         "domain": domain,
         "grade": grade,
         "score": overall_score,
@@ -953,7 +1033,16 @@ def domain_health_check():
         "dns_suggestions": results.get("dns_suggestions"),
         "recommendations": recommendations,
         "errors": errors if errors else None,
-    })
+    }
+
+    if session.get("user_id"):
+        from modules.tiers import has_feature
+        if has_feature(session.get("user_tier", "free"), "cloud_history"):
+            from modules.history import save_result
+            save_result(session["user_id"], "domain_check", domain, domain_result,
+                        grade=grade, score=overall_score)
+
+    return jsonify(domain_result)
 
 
 # ══════════════════════════════════════════════════════
@@ -1524,19 +1613,38 @@ def email_verifier():
 
 @app.route("/api/verify-email", methods=["POST"])
 def api_verify_email():
+    from modules.rate_limiter import check_rate_limit, log_usage
+    allowed, info = check_rate_limit("email_verify", limit_key="email_verifications_per_day")
+    if not allowed:
+        return _rate_limit_response(info)
+
     from modules.email_verifier import verify_email
     data = request.get_json(force=True, silent=True)
     if not data or not data.get("email"):
         return jsonify({"error": "Email address is required"}), 400
-    email = data["email"].strip()
-    if len(email) > 320:
+    email_addr = data["email"].strip()
+    if len(email_addr) > 320:
         return jsonify({"error": "Email address too long"}), 400
-    result = verify_email(email)
+    result = verify_email(email_addr)
+    log_usage("email_verify")
+
+    if session.get("user_id"):
+        from modules.tiers import has_feature
+        if has_feature(session.get("user_tier", "free"), "cloud_history"):
+            from modules.history import save_result
+            save_result(session["user_id"], "email_verify", email_addr, result,
+                        grade=result.get("grade"), score=result.get("score"))
+
     return jsonify(result)
 
 
 @app.route("/check-reputation", methods=["POST"])
 def check_reputation():
+    from modules.rate_limiter import check_rate_limit, log_usage
+    allowed, info = check_rate_limit("domain_check")
+    if not allowed:
+        return _rate_limit_response(info)
+
     import concurrent.futures
     import ssl
     import socket
@@ -1784,6 +1892,15 @@ def check_reputation():
     rep_result["ssl"] = ssl_data
     rep_result["fix_records"] = fix_records
 
+    log_usage("domain_check")
+
+    if session.get("user_id"):
+        from modules.tiers import has_feature
+        if has_feature(session.get("user_tier", "free"), "cloud_history"):
+            from modules.history import save_result
+            save_result(session["user_id"], "domain_check", domain, rep_result,
+                        grade=grade, score=overall_score)
+
     return jsonify(rep_result)
 
 
@@ -1987,6 +2104,11 @@ def lookup_tls_rpt():
 
 @app.route("/analyze", methods=["POST"])
 def analyze():
+    from modules.rate_limiter import check_rate_limit, log_usage
+    allowed, info = check_rate_limit("copy_analysis")
+    if not allowed:
+        return _rate_limit_response(info)
+
     data = request.get_json(force=True, silent=True)
     if data is None:
         return jsonify({"error": "Invalid JSON payload"}), 400
@@ -2116,6 +2238,18 @@ def analyze():
         result["audit"] = generate_audit(result)
     except Exception:
         pass
+
+    log_usage("copy_analysis")
+
+    if session.get("user_id"):
+        from modules.tiers import has_feature
+        if has_feature(session.get("user_tier", "free"), "cloud_history"):
+            from modules.history import save_result
+            summary = sender_email or subject[:60] or "Analysis"
+            spam_score = result.get("spam", {}).get("score")
+            spam_grade = result.get("spam", {}).get("grade")
+            save_result(session["user_id"], "copy_analysis", summary, result,
+                        grade=spam_grade, score=spam_score)
 
     return jsonify(result)
 

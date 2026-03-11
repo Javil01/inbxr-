@@ -1,0 +1,310 @@
+{% extends "auth/base_auth.html" %}
+{% block title %}Bulk Email Verification{% endblock %}
+
+{% block content %}
+<div class="bulk-verify">
+  <h2 style="margin:0 0 4px;">Bulk Email Verification</h2>
+  <p style="color:var(--text-3);font-size:0.85rem;margin:0 0 24px;">
+    Verify up to 10,000 emails at once.
+    <strong>{{ remaining | default(0) }}</strong> verifications remaining today.
+  </p>
+
+  <!-- Upload / Paste Section -->
+  <div id="bulkInput">
+    <div
+      class="bulk-upload-zone"
+      id="dropZone"
+      tabindex="0"
+      role="button"
+      aria-label="Upload CSV or TXT file"
+    >
+      <input type="file" id="fileInput" accept=".csv,.txt" hidden />
+      <p style="margin:0;font-weight:600;color:var(--text-1);">
+        Drag & drop a CSV or TXT file here
+      </p>
+      <p style="margin:4px 0 0;font-size:0.82rem;color:var(--text-3);">
+        or click to browse &middot; one email per line or CSV with &ldquo;email&rdquo; column
+      </p>
+    </div>
+
+    <div style="text-align:center;padding:12px 0;font-size:0.82rem;color:var(--text-3);">
+      &mdash; or paste emails below &mdash;
+    </div>
+
+    <textarea
+      id="emailPaste"
+      class="form-input"
+      rows="5"
+      placeholder="one@example.com&#10;two@example.com&#10;three@example.com"
+      style="resize:vertical;font-family:monospace;font-size:0.82rem;"
+    ></textarea>
+
+    <div style="margin-top:16px;display:flex;align-items:center;gap:12px;">
+      <button class="btn btn--primary" id="startBtn" onclick="startBulkVerify()">
+        Verify Emails
+      </button>
+      <span id="inputCount" style="font-size:0.82rem;color:var(--text-3);"></span>
+    </div>
+  </div>
+
+  <!-- Progress Section (hidden initially) -->
+  <div id="bulkProgress" style="display:none;margin-top:24px;">
+    <h3 style="margin:0 0 12px;font-size:0.95rem;">Processing...</h3>
+    <div class="bulk-progress">
+      <div class="bulk-progress__bar" id="progressBar" style="width:0%;"></div>
+    </div>
+    <p id="progressText" style="margin:8px 0 0;font-size:0.82rem;color:var(--text-3);">
+      0 / 0 verified
+    </p>
+  </div>
+
+  <!-- Summary Section (hidden initially) -->
+  <div id="bulkSummary" style="display:none;margin-top:24px;">
+    <h3 style="margin:0 0 12px;font-size:0.95rem;">Results</h3>
+    <div class="bulk-summary" id="summaryGrid"></div>
+    <div style="margin-top:16px;display:flex;gap:12px;">
+      <button class="btn btn--primary" id="downloadBtn" onclick="downloadCSV()">
+        Download CSV
+      </button>
+      <button class="btn btn--outline" onclick="resetForm()">
+        New Verification
+      </button>
+    </div>
+  </div>
+
+  <!-- Past Jobs -->
+  {% if jobs %}
+  <div style="margin-top:40px;">
+    <h3 style="margin:0 0 12px;font-size:0.95rem;">Past Jobs</h3>
+    <div class="bulk-jobs-list">
+      <table>
+        <thead>
+          <tr>
+            <th>File</th>
+            <th>Emails</th>
+            <th>Status</th>
+            <th>Results</th>
+            <th>Date</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for job in jobs %}
+          <tr>
+            <td>{{ job.filename or 'Pasted list' }}</td>
+            <td>{{ job.total_emails }}</td>
+            <td>
+              <span class="badge badge--{{ 'green' if job.status == 'completed' else ('yellow' if job.status == 'processing' else ('red' if job.status == 'failed' else 'muted')) }}">
+                {{ job.status }}
+              </span>
+            </td>
+            <td>
+              {% if job.summary %}
+                {{ job.summary.valid or 0 }} valid, {{ job.summary.invalid or 0 }} invalid, {{ job.summary.risky or 0 }} risky
+              {% else %}
+                &mdash;
+              {% endif %}
+            </td>
+            <td style="font-size:0.8rem;color:var(--text-3);">{{ job.created_at[:16] }}</td>
+            <td>
+              {% if job.status == 'completed' %}
+                <a href="/api/bulk-verify/{{ job.id }}/csv" class="btn btn--small btn--outline">CSV</a>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+<script>
+(function() {
+  var dropZone = document.getElementById('dropZone');
+  var fileInput = document.getElementById('fileInput');
+  var emailPaste = document.getElementById('emailPaste');
+  var startBtn = document.getElementById('startBtn');
+  var inputCount = document.getElementById('inputCount');
+  var selectedFile = null;
+  var currentJobId = null;
+  var pollTimer = null;
+
+  // ── Drag & Drop ──
+  dropZone.addEventListener('click', function() { fileInput.click(); });
+  dropZone.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileInput.click(); }
+  });
+
+  dropZone.addEventListener('dragover', function(e) {
+    e.preventDefault();
+    dropZone.classList.add('bulk-upload-zone--hover');
+  });
+  dropZone.addEventListener('dragleave', function() {
+    dropZone.classList.remove('bulk-upload-zone--hover');
+  });
+  dropZone.addEventListener('drop', function(e) {
+    e.preventDefault();
+    dropZone.classList.remove('bulk-upload-zone--hover');
+    if (e.dataTransfer.files.length) {
+      fileInput.files = e.dataTransfer.files;
+      handleFileSelect();
+    }
+  });
+
+  fileInput.addEventListener('change', handleFileSelect);
+
+  function handleFileSelect() {
+    var file = fileInput.files[0];
+    if (!file) return;
+    selectedFile = file;
+    dropZone.querySelector('p').textContent = file.name;
+    inputCount.textContent = 'File selected: ' + file.name;
+    emailPaste.value = '';
+  }
+
+  // ── Count pasted emails ──
+  emailPaste.addEventListener('input', function() {
+    var lines = emailPaste.value.split('\n').filter(function(l) {
+      return l.trim() && l.trim().indexOf('@') !== -1;
+    });
+    inputCount.textContent = lines.length ? lines.length + ' email' + (lines.length !== 1 ? 's' : '') : '';
+    if (lines.length) selectedFile = null;
+  });
+
+  // ── Start verification ──
+  window.startBulkVerify = function() {
+    startBtn.disabled = true;
+    startBtn.textContent = 'Uploading...';
+
+    if (selectedFile) {
+      var fd = new FormData();
+      fd.append('file', selectedFile);
+      fetch('/api/bulk-verify', { method: 'POST', body: fd })
+        .then(handleResponse)
+        .catch(handleError);
+    } else {
+      var lines = emailPaste.value.split('\n')
+        .map(function(l) { return l.trim(); })
+        .filter(function(l) { return l && l.indexOf('@') !== -1; });
+
+      if (!lines.length) {
+        alert('No emails provided. Upload a file or paste emails.');
+        startBtn.disabled = false;
+        startBtn.textContent = 'Verify Emails';
+        return;
+      }
+
+      fetch('/api/bulk-verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ emails: lines })
+      })
+        .then(handleResponse)
+        .catch(handleError);
+    }
+  };
+
+  function handleResponse(resp) {
+    return resp.json().then(function(data) {
+      if (!resp.ok) {
+        alert(data.error || 'Something went wrong.');
+        startBtn.disabled = false;
+        startBtn.textContent = 'Verify Emails';
+        return;
+      }
+      currentJobId = data.job_id;
+      showProgress(0, data.total_emails);
+      pollStatus();
+    });
+  }
+
+  function handleError(err) {
+    alert('Upload failed: ' + err.message);
+    startBtn.disabled = false;
+    startBtn.textContent = 'Verify Emails';
+  }
+
+  function showProgress(processed, total) {
+    document.getElementById('bulkInput').style.display = 'none';
+    var prog = document.getElementById('bulkProgress');
+    prog.style.display = 'block';
+    updateProgress(processed, total);
+  }
+
+  function updateProgress(processed, total) {
+    var pct = total > 0 ? Math.round((processed / total) * 100) : 0;
+    document.getElementById('progressBar').style.width = pct + '%';
+    document.getElementById('progressText').textContent =
+      processed + ' / ' + total + ' verified (' + pct + '%)';
+  }
+
+  function pollStatus() {
+    if (!currentJobId) return;
+    fetch('/api/bulk-verify/' + currentJobId)
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        updateProgress(data.processed, data.total_emails);
+
+        if (data.status === 'completed') {
+          document.getElementById('bulkProgress').querySelector('h3').textContent = 'Complete!';
+          showSummary(data);
+        } else if (data.status === 'failed') {
+          document.getElementById('bulkProgress').querySelector('h3').textContent = 'Job failed.';
+        } else {
+          pollTimer = setTimeout(pollStatus, 2000);
+        }
+      })
+      .catch(function() {
+        pollTimer = setTimeout(pollStatus, 3000);
+      });
+  }
+
+  function showSummary(data) {
+    var summary = data.summary || {};
+    var grid = document.getElementById('summaryGrid');
+    grid.innerHTML = '';
+
+    var items = [
+      { label: 'Valid',   count: summary.valid   || 0, cls: 'green'  },
+      { label: 'Invalid', count: summary.invalid || 0, cls: 'red'    },
+      { label: 'Risky',   count: summary.risky   || 0, cls: 'yellow' },
+      { label: 'Unknown', count: summary.unknown || 0, cls: 'muted'  }
+    ];
+
+    items.forEach(function(item) {
+      var card = document.createElement('div');
+      card.className = 'bulk-summary__card bulk-summary__card--' + item.cls;
+      card.innerHTML =
+        '<span class="bulk-summary__count">' + item.count + '</span>' +
+        '<span class="bulk-summary__label">' + item.label + '</span>';
+      grid.appendChild(card);
+    });
+
+    document.getElementById('bulkSummary').style.display = 'block';
+  }
+
+  window.downloadCSV = function() {
+    if (currentJobId) {
+      window.location.href = '/api/bulk-verify/' + currentJobId + '/csv';
+    }
+  };
+
+  window.resetForm = function() {
+    document.getElementById('bulkInput').style.display = 'block';
+    document.getElementById('bulkProgress').style.display = 'none';
+    document.getElementById('bulkSummary').style.display = 'none';
+    startBtn.disabled = false;
+    startBtn.textContent = 'Verify Emails';
+    emailPaste.value = '';
+    fileInput.value = '';
+    selectedFile = null;
+    currentJobId = null;
+    inputCount.textContent = '';
+    dropZone.querySelector('p').textContent = 'Drag & drop a CSV or TXT file here';
+    if (pollTimer) clearTimeout(pollTimer);
+  };
+})();
+</script>
+{% endblock %}

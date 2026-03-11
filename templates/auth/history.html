@@ -1,0 +1,375 @@
+{% extends "auth/base_auth.html" %}
+{% block title %}History{% endblock %}
+{% block content %}
+
+<h1 class="auth-card__title">Check History</h1>
+<p class="auth-card__sub">Your saved results across all tools.</p>
+
+<!-- Stats bar -->
+{% if stats and stats.total_checks > 0 %}
+<div class="history-stats">
+  <div class="history-stat">
+    <span class="history-stat__val">{{ stats.total_checks }}</span>
+    <span class="history-stat__lbl">Total Checks</span>
+  </div>
+  <div class="history-stat">
+    <span class="history-stat__val">{{ stats.checks_this_week }}</span>
+    <span class="history-stat__lbl">This Week</span>
+  </div>
+  {% if stats.avg_score is not none %}
+  <div class="history-stat">
+    <span class="history-stat__val">{{ stats.avg_score }}</span>
+    <span class="history-stat__lbl">Avg Score</span>
+  </div>
+  {% endif %}
+  {% if stats.best_grade %}
+  <div class="history-stat">
+    <span class="history-stat__val">{{ stats.best_grade }}</span>
+    <span class="history-stat__lbl">Best Grade</span>
+  </div>
+  {% endif %}
+</div>
+{% endif %}
+
+<!-- Filter -->
+<div class="history-filter">
+  <label for="tool-filter" class="history-filter__lbl">Filter by tool:</label>
+  <select id="tool-filter" class="history-filter__sel">
+    <option value="">All Tools</option>
+    <option value="copy_analysis">Copy Analysis</option>
+    <option value="domain_check">Domain Check</option>
+    <option value="email_verify">Email Verify</option>
+    <option value="subject_test">Subject Test</option>
+  </select>
+</div>
+
+<!-- Table -->
+<div class="history-table-wrap">
+  <table class="history-table" id="history-table">
+    <thead>
+      <tr>
+        <th>Tool</th>
+        <th>Input</th>
+        <th>Grade</th>
+        <th>Score</th>
+        <th>Date</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody id="history-tbody">
+      <tr class="history-loading"><td colspan="6">Loading...</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- Empty state (hidden by default) -->
+<div class="history-empty" id="history-empty" style="display:none;">
+  <div class="history-empty__icon">&#128202;</div>
+  <h3>No results yet</h3>
+  <p>Run a check on the <a href="/">home page</a> and your results will be saved here automatically.</p>
+</div>
+
+<!-- Load more -->
+<div class="history-more" id="history-more" style="display:none;">
+  <button class="btn btn--outline" id="load-more-btn">Load More</button>
+</div>
+
+<!-- Detail modal -->
+<div class="history-modal" id="history-modal" style="display:none;">
+  <div class="history-modal__backdrop" id="modal-backdrop"></div>
+  <div class="history-modal__content">
+    <div class="history-modal__header">
+      <h3 id="modal-title">Result Details</h3>
+      <button class="history-modal__close" id="modal-close">&times;</button>
+    </div>
+    <pre class="history-modal__json" id="modal-json"></pre>
+  </div>
+</div>
+
+<style>
+  /* Widen the auth card for history table */
+  .auth-page .auth-card:has(.history-table) { max-width: 900px; }
+
+  .history-stats {
+    display: flex; gap: 16px; justify-content: center;
+    flex-wrap: wrap; margin: 0 0 24px; padding: 16px;
+    background: var(--bg-1, #f8fafc); border-radius: var(--r-lg, 12px);
+  }
+  .history-stat {
+    display: flex; flex-direction: column; align-items: center; min-width: 70px;
+  }
+  .history-stat__val {
+    font-size: 1.3rem; font-weight: 700; color: var(--brand, #22c55e);
+  }
+  .history-stat__lbl {
+    font-size: 0.75rem; color: var(--text-3, #888); margin-top: 2px;
+  }
+
+  .history-filter {
+    display: flex; align-items: center; gap: 10px; margin: 0 0 16px;
+  }
+  .history-filter__lbl { font-size: 0.85rem; color: var(--text-2, #555); }
+  .history-filter__sel {
+    padding: 6px 12px; border: 1px solid var(--border, #e2e8f0);
+    border-radius: var(--r-md, 8px); font-size: 0.85rem;
+    background: var(--surface-1, #fff); color: var(--text-1, #111);
+  }
+
+  .history-table-wrap { overflow-x: auto; }
+  .history-table {
+    width: 100%; border-collapse: collapse; font-size: 0.85rem;
+  }
+  .history-table th {
+    text-align: left; padding: 10px 12px; font-weight: 600;
+    color: var(--text-3, #888); border-bottom: 2px solid var(--border, #e2e8f0);
+    font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em;
+  }
+  .history-table td {
+    padding: 10px 12px; border-bottom: 1px solid var(--border, #e2e8f0);
+    color: var(--text-1, #111); vertical-align: middle;
+  }
+  .history-table tbody tr:hover { background: var(--bg-1, #f8fafc); }
+  .history-loading td { text-align: center; color: var(--text-3, #888); padding: 32px; }
+
+  .history-table .tool-badge {
+    display: inline-block; padding: 3px 8px; border-radius: 4px;
+    font-size: 0.75rem; font-weight: 600; white-space: nowrap;
+    background: var(--brand-muted, rgba(34,197,94,0.07));
+    color: var(--brand-dark, #16a34a);
+  }
+  .history-table .grade-badge {
+    display: inline-block; padding: 2px 8px; border-radius: 4px;
+    font-size: 0.8rem; font-weight: 700;
+  }
+  .grade-A, .grade-A\+ { background: var(--green-muted); color: var(--green); }
+  .grade-B, .grade-B\+ { background: var(--brand-muted); color: var(--brand-dark); }
+  .grade-C, .grade-C\+ { background: var(--yellow-muted); color: var(--yellow); }
+  .grade-D, .grade-F   { background: var(--red-muted); color: var(--red); }
+
+  .history-table .input-text {
+    max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .history-table .date-text { white-space: nowrap; color: var(--text-3, #888); font-size: 0.8rem; }
+
+  .history-table .btn-sm {
+    padding: 4px 10px; font-size: 0.78rem; border-radius: 4px;
+    cursor: pointer; border: 1px solid var(--border, #e2e8f0);
+    background: var(--surface-1, #fff); color: var(--text-2, #555);
+    transition: background 0.15s;
+  }
+  .history-table .btn-sm:hover { background: var(--bg-1, #f8fafc); }
+  .history-table .btn-del {
+    color: var(--red, #dc2626); border-color: var(--red-muted);
+    margin-left: 4px;
+  }
+  .history-table .btn-del:hover { background: var(--red-muted); }
+
+  .history-empty {
+    text-align: center; padding: 48px 20px; color: var(--text-3, #888);
+  }
+  .history-empty__icon { font-size: 2.5rem; margin-bottom: 12px; }
+  .history-empty h3 { font-size: 1.1rem; color: var(--text-1, #111); margin: 0 0 8px; }
+  .history-empty p { font-size: 0.9rem; margin: 0; }
+  .history-empty a { color: var(--brand, #22c55e); text-decoration: underline; }
+
+  .history-more { text-align: center; margin: 20px 0 0; }
+
+  /* Modal */
+  .history-modal {
+    position: fixed; inset: 0; z-index: 9999;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .history-modal__backdrop {
+    position: absolute; inset: 0; background: rgba(0,0,0,0.45);
+  }
+  .history-modal__content {
+    position: relative; z-index: 1; width: 90%; max-width: 700px;
+    max-height: 80vh; background: var(--surface-1, #fff);
+    border-radius: var(--r-xl, 16px); overflow: hidden;
+    display: flex; flex-direction: column;
+    box-shadow: 0 12px 48px rgba(0,0,0,0.2);
+  }
+  .history-modal__header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 18px 24px; border-bottom: 1px solid var(--border, #e2e8f0);
+  }
+  .history-modal__header h3 { margin: 0; font-size: 1rem; color: var(--text-1, #111); }
+  .history-modal__close {
+    background: none; border: none; font-size: 1.5rem; cursor: pointer;
+    color: var(--text-3, #888); padding: 0 4px; line-height: 1;
+  }
+  .history-modal__close:hover { color: var(--text-1, #111); }
+  .history-modal__json {
+    flex: 1; overflow: auto; padding: 20px 24px; margin: 0;
+    font-size: 0.8rem; line-height: 1.5; white-space: pre-wrap;
+    word-break: break-word; color: var(--text-2, #555);
+    background: var(--bg-1, #f8fafc);
+  }
+
+  @media (max-width: 600px) {
+    .auth-page .auth-card:has(.history-table) { max-width: 100%; }
+    .history-stats { gap: 10px; }
+    .history-table th:nth-child(4),
+    .history-table td:nth-child(4) { display: none; }
+  }
+</style>
+
+<script>
+(function() {
+  const LIMIT = 50;
+  let offset = 0;
+  let currentTool = "";
+
+  const tbody = document.getElementById("history-tbody");
+  const emptyEl = document.getElementById("history-empty");
+  const moreEl = document.getElementById("history-more");
+  const loadMoreBtn = document.getElementById("load-more-btn");
+  const filterSel = document.getElementById("tool-filter");
+  const modal = document.getElementById("history-modal");
+  const modalBackdrop = document.getElementById("modal-backdrop");
+  const modalClose = document.getElementById("modal-close");
+  const modalTitle = document.getElementById("modal-title");
+  const modalJson = document.getElementById("modal-json");
+
+  const TOOL_LABELS = {
+    "copy_analysis": "Copy Analysis",
+    "domain_check": "Domain Check",
+    "email_verify": "Email Verify",
+    "subject_test": "Subject Test"
+  };
+
+  function toolLabel(t) { return TOOL_LABELS[t] || t; }
+
+  function gradeClass(g) {
+    if (!g) return "";
+    var base = g.replace("+", "\\+").replace("-", "\\-");
+    return "grade-" + g.replace("+", "\\+");
+  }
+
+  function formatDate(iso) {
+    if (!iso) return "";
+    var d = new Date(iso + "Z");
+    var now = new Date();
+    var diff = now - d;
+    if (diff < 60000) return "Just now";
+    if (diff < 3600000) return Math.floor(diff / 60000) + "m ago";
+    if (diff < 86400000) return Math.floor(diff / 3600000) + "h ago";
+    if (diff < 604800000) return Math.floor(diff / 86400000) + "d ago";
+    return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  }
+
+  function loadHistory(append) {
+    if (!append) {
+      offset = 0;
+      tbody.innerHTML = '<tr class="history-loading"><td colspan="6">Loading...</td></tr>';
+    }
+    var url = "/api/history?limit=" + LIMIT + "&offset=" + offset;
+    if (currentTool) url += "&tool=" + encodeURIComponent(currentTool);
+
+    fetch(url)
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (!append) tbody.innerHTML = "";
+
+        var rows = data.results || [];
+        if (rows.length === 0 && offset === 0) {
+          document.querySelector(".history-table-wrap").style.display = "none";
+          emptyEl.style.display = "block";
+          moreEl.style.display = "none";
+          return;
+        }
+
+        document.querySelector(".history-table-wrap").style.display = "";
+        emptyEl.style.display = "none";
+
+        rows.forEach(function(r) {
+          var tr = document.createElement("tr");
+          var gradeHtml = r.grade
+            ? '<span class="grade-badge grade-' + r.grade.replace("+", "\\+") + '">' + r.grade + '</span>'
+            : '<span style="color:var(--text-4,#aaa)">--</span>';
+          var scoreHtml = r.score !== null && r.score !== undefined
+            ? r.score
+            : '<span style="color:var(--text-4,#aaa)">--</span>';
+
+          tr.innerHTML =
+            '<td><span class="tool-badge">' + toolLabel(r.tool) + '</span></td>' +
+            '<td class="input-text" title="' + (r.input_summary || "").replace(/"/g, "&quot;") + '">' + (r.input_summary || "--") + '</td>' +
+            '<td>' + gradeHtml + '</td>' +
+            '<td>' + scoreHtml + '</td>' +
+            '<td class="date-text">' + formatDate(r.created_at) + '</td>' +
+            '<td>' +
+              '<button class="btn-sm" data-view="' + r.id + '">View</button>' +
+              '<button class="btn-sm btn-del" data-del="' + r.id + '">Del</button>' +
+            '</td>';
+          tbody.appendChild(tr);
+        });
+
+        offset += rows.length;
+        moreEl.style.display = rows.length >= LIMIT ? "" : "none";
+      })
+      .catch(function(err) {
+        tbody.innerHTML = '<tr><td colspan="6" style="color:var(--red)">Failed to load history.</td></tr>';
+      });
+  }
+
+  filterSel.addEventListener("change", function() {
+    currentTool = this.value;
+    loadHistory(false);
+  });
+
+  loadMoreBtn.addEventListener("click", function() {
+    loadHistory(true);
+  });
+
+  // Delegated click handlers for view/delete
+  tbody.addEventListener("click", function(e) {
+    var viewBtn = e.target.closest("[data-view]");
+    var delBtn = e.target.closest("[data-del]");
+
+    if (viewBtn) {
+      var id = viewBtn.getAttribute("data-view");
+      fetch("/api/history/" + id)
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (data.error) { alert(data.error); return; }
+          modalTitle.textContent = toolLabel(data.tool) + " — " + (data.input_summary || "Result #" + data.id);
+          modalJson.textContent = JSON.stringify(data.result_json, null, 2);
+          modal.style.display = "flex";
+        })
+        .catch(function() { alert("Failed to load result."); });
+    }
+
+    if (delBtn) {
+      if (!confirm("Delete this result?")) return;
+      var id = delBtn.getAttribute("data-del");
+      fetch("/api/history/" + id, { method: "DELETE" })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (data.ok) {
+            var row = delBtn.closest("tr");
+            if (row) row.remove();
+            if (tbody.children.length === 0) {
+              document.querySelector(".history-table-wrap").style.display = "none";
+              emptyEl.style.display = "block";
+            }
+          } else {
+            alert(data.error || "Delete failed.");
+          }
+        })
+        .catch(function() { alert("Delete failed."); });
+    }
+  });
+
+  // Modal close
+  modalClose.addEventListener("click", function() { modal.style.display = "none"; });
+  modalBackdrop.addEventListener("click", function() { modal.style.display = "none"; });
+  document.addEventListener("keydown", function(e) {
+    if (e.key === "Escape" && modal.style.display !== "none") modal.style.display = "none";
+  });
+
+  // Initial load
+  loadHistory(false);
+})();
+</script>
+
+{% endblock %}

@@ -1,0 +1,58 @@
+{% extends "auth/base_auth.html" %}
+{% block title %}Pricing{% endblock %}
+{% block content %}
+<h1 class="auth-card__title pricing-title">Simple, Transparent Pricing</h1>
+<p class="auth-card__sub">Every tool is free. Upgrade when you need more.</p>
+
+<div class="pricing-grid">
+  {% for key, t in tiers.items() %}
+  <div class="pricing-card{% if user and user.tier == key %} pricing-card--current{% endif %}{% if key == 'pro' %} pricing-card--featured{% endif %}">
+    {% if key == 'pro' %}<span class="pricing-card__badge">Most Popular</span>{% endif %}
+    <h2 class="pricing-card__name">{{ t.name }}</h2>
+    <div class="pricing-card__price">
+      {% if t.price_monthly == 0 %}
+        <span class="pricing-card__amount">$0</span>
+        <span class="pricing-card__period">forever</span>
+      {% else %}
+        <span class="pricing-card__amount">${{ t.price_monthly }}</span>
+        <span class="pricing-card__period">/month</span>
+      {% endif %}
+    </div>
+    <ul class="pricing-card__features">
+      <li>{{ t.limits.checks_per_day }} checks/day</li>
+      <li>{{ t.limits.email_verifications_per_day }} email verifications/day</li>
+      <li>{{ t.limits.blocklist_domains }} monitored domains</li>
+      <li>{{ t.limits.warmup_campaigns }} warmup campaign{{ 's' if t.limits.warmup_campaigns != 1 }}</li>
+      {% if t.features.cloud_history %}<li>Cloud history</li>{% endif %}
+      {% if t.features.pdf_reports %}<li>PDF reports</li>{% endif %}
+      {% if t.features.bulk_verify %}<li>Bulk email verification</li>{% endif %}
+      {% if t.features.scheduled_monitoring %}<li>Scheduled monitoring</li>{% endif %}
+      {% if t.features.email_alerts %}<li>Email alerts</li>{% endif %}
+      {% if t.features.api_access %}<li>API access</li>{% endif %}
+      {% if t.features.teams %}<li>Teams & workspaces</li>{% endif %}
+      {% if t.features.webhooks %}<li>Webhooks</li>{% endif %}
+      {% if t.features.priority_support %}<li>Priority support</li>{% endif %}
+    </ul>
+    <div class="pricing-card__action">
+      {% if user and user.tier == key %}
+        <span class="pricing-card__current-label">Current Plan</span>
+      {% elif key == 'free' %}
+        {% if user %}
+          <span class="pricing-card__current-label">Included</span>
+        {% else %}
+          <a href="{{ url_for('auth.signup') }}" class="auth-btn auth-btn--outline">Get Started</a>
+        {% endif %}
+      {% else %}
+        <a href="#" class="auth-btn{% if key == 'pro' %} auth-btn--featured{% endif %}" data-tier="{{ key }}">Upgrade to {{ t.name }}</a>
+      {% endif %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<div class="pricing-api-note">
+  <h3>Need API access?</h3>
+  <p>Usage-based pricing starting at $0.005/verification. Included with Agency, or available standalone.</p>
+  <a href="{{ url_for('auth.signup') }}" class="auth-btn auth-btn--outline">Contact Us</a>
+</div>
+{% endblock %}

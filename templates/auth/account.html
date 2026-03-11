@@ -1,0 +1,115 @@
+{% extends "auth/base_auth.html" %}
+{% block title %}Account{% endblock %}
+{% block content %}
+<h1 class="auth-card__title">Your Account</h1>
+
+{% if not user.email_verified %}
+<div class="auth-alert auth-alert--warning" style="background:rgba(234,179,8,0.08);color:#ca8a04;border:1px solid rgba(234,179,8,0.2);margin-bottom:20px;">
+  <strong>Verify your email</strong> — check your inbox for a verification link.
+  <form method="post" action="{{ url_for('auth.resend_verification') }}" style="display:inline;margin-left:8px;">
+    <button type="submit" style="background:none;border:none;color:#ca8a04;text-decoration:underline;cursor:pointer;font-size:inherit;font-family:inherit;">Resend</button>
+  </form>
+</div>
+{% endif %}
+
+<div class="account-section">
+  <div class="account-row">
+    <span class="account-label">Email</span>
+    <span class="account-value">{{ user.email }}</span>
+  </div>
+  <div class="account-row">
+    <span class="account-label">Name</span>
+    <span class="account-value">{{ user.display_name or '—' }}</span>
+  </div>
+  <div class="account-row">
+    <span class="account-label">Plan</span>
+    <span class="account-value account-tier account-tier--{{ user.tier }}">{{ tier.name }}</span>
+  </div>
+  <div class="account-row">
+    <span class="account-label">Member Since</span>
+    <span class="account-value">{{ user.created_at[:10] }}</span>
+  </div>
+</div>
+
+<div class="account-section">
+  <h2 class="account-section__title">Today's Usage</h2>
+  <div class="account-row">
+    <span class="account-label">Total checks</span>
+    <span class="account-value">{{ usage.total_today }} / {{ tier.limits.checks_per_day }}</span>
+  </div>
+</div>
+
+{% if user.tier in ('agency', 'api') %}
+<div class="account-section">
+  <h2 class="account-section__title">API Key</h2>
+  {% if user.api_key %}
+  <div class="account-api-key">
+    <code id="apiKeyDisplay">{{ user.api_key[:8] }}...{{ user.api_key[-4:] }}</code>
+    <button class="auth-btn auth-btn--sm" onclick="toggleApiKey()">Show</button>
+    <button class="auth-btn auth-btn--sm auth-btn--outline" id="regenBtn" onclick="regenApiKey()">Regenerate</button>
+  </div>
+  {% else %}
+  <button class="auth-btn auth-btn--sm" id="regenBtn" onclick="regenApiKey()">Generate API Key</button>
+  {% endif %}
+</div>
+{% endif %}
+
+{% if user.tier == 'free' %}
+<div class="account-upgrade">
+  <p>Upgrade to <strong>Pro</strong> for cloud history, PDF reports, bulk verification, and more.</p>
+  <a href="{{ url_for('auth.pricing') }}" class="auth-btn">View Plans</a>
+</div>
+{% endif %}
+
+<div class="account-section">
+  <h2 class="account-section__title">Change Password</h2>
+  <form id="changePassForm" class="auth-form">
+    <label class="auth-label">
+      <span>Current Password</span>
+      <input type="password" id="currentPass" required />
+    </label>
+    <label class="auth-label">
+      <span>New Password</span>
+      <input type="password" id="newPass" required minlength="8" />
+    </label>
+    <button type="submit" class="auth-btn auth-btn--outline">Update Password</button>
+    <div id="passMsg" class="auth-alert" style="display:none"></div>
+  </form>
+</div>
+
+<div class="account-section">
+  <a href="{{ url_for('auth.logout') }}" class="auth-btn auth-btn--outline auth-btn--danger">Log Out</a>
+</div>
+
+<script>
+const fullKey = {{ (user.api_key or '')|tojson }};
+let keyVisible = false;
+function toggleApiKey() {
+  const el = document.getElementById('apiKeyDisplay');
+  if (!el) return;
+  keyVisible = !keyVisible;
+  el.textContent = keyVisible ? fullKey : fullKey.slice(0,8) + '...' + fullKey.slice(-4);
+}
+function regenApiKey() {
+  if (!confirm('Generate a new API key? The old key will stop working immediately.')) return;
+  fetch('{{ url_for("auth.regenerate_api_key") }}', {method:'POST',headers:{'Content-Type':'application/json'}})
+    .then(r=>r.json()).then(d=>{
+      if(d.ok) location.reload();
+      else alert(d.error||'Failed');
+    });
+}
+document.getElementById('changePassForm')?.addEventListener('submit', function(e) {
+  e.preventDefault();
+  const msg = document.getElementById('passMsg');
+  fetch('{{ url_for("auth.change_password") }}', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({current_password:document.getElementById('currentPass').value,new_password:document.getElementById('newPass').value})
+  }).then(r=>r.json()).then(d=>{
+    msg.style.display='block';
+    if(d.ok){msg.className='auth-alert auth-alert--success';msg.textContent='Password updated.';}
+    else{msg.className='auth-alert auth-alert--error';msg.textContent=d.error||'Failed';}
+  });
+});
+</script>
+{% endblock %}

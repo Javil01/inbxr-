@@ -99,6 +99,96 @@ DISPOSABLE_DOMAINS = {
     "fixmail.tk", "flyspam.com",
 }
 
+# ---------------------------------------------------------------------------
+# Spamtrap & honeypot patterns
+# ---------------------------------------------------------------------------
+# Known spamtrap local parts used by major blocklist operators and ISPs.
+# These are addresses that were either never real or were recycled after
+# prolonged inactivity.  Sending to them signals list-buying or poor hygiene.
+
+SPAMTRAP_LOCAL_PARTS = {
+    # Generic honeypot patterns
+    "abuse", "spam", "spamtrap", "spam-trap", "honeypot", "honey-pot",
+    "trap", "antispam", "anti-spam", "nospam", "no-spam", "junk",
+    "spambox", "spamfighter", "spamkiller",
+    # Postmaster / role addresses repurposed as traps
+    "postmaster", "mailer-daemon", "noreply", "no-reply", "donotreply",
+    "do-not-reply", "nobody", "devnull", "null", "void", "blackhole",
+    # Common recycled-address patterns
+    "test", "test1", "test123", "testing", "asdf", "qwerty",
+    "aaa", "aaaa", "abc", "abcd", "1234", "123456",
+    "sample", "example", "demo", "default", "temp", "tmp",
+    "foo", "bar", "baz", "user", "admin", "root", "info",
+    # Patterns used by Spamhaus, SURBL, Abusix, and ISP traps
+    "spamhaus", "lashback", "spamcop",
+}
+
+# Domain-level spamtrap indicators — domains operated entirely as traps
+SPAMTRAP_DOMAINS = {
+    "spamtrap.email", "spamtraps.net", "trapmail.net", "honeypot.email",
+    "trap.email", "spamtrap.io", "honeypots.email", "blackhole.email",
+    "spamtrap.com", "trapzone.com", "project-honeypot.org",
+    "lashback.com",  # Unsubscribe spamtrap operator
+}
+
+# Suspicious patterns in local part that suggest a spamtrap or seeded address
+_SPAMTRAP_PATTERNS = [
+    re.compile(r"^trap[.\-_]", re.IGNORECASE),
+    re.compile(r"[.\-_]trap$", re.IGNORECASE),
+    re.compile(r"^honey[.\-_]?pot", re.IGNORECASE),
+    re.compile(r"^spam[.\-_]?trap", re.IGNORECASE),
+    re.compile(r"^seed[.\-_]?\d", re.IGNORECASE),      # seed1, seed-2, etc.
+    re.compile(r"^(?:test|fake|junk)[.\-_]\d+$", re.IGNORECASE),  # test.1, fake-23
+]
+
+
+def _check_spamtrap(local_part: str, domain: str) -> dict:
+    """Check if an email looks like a spamtrap or honeypot.
+
+    Returns dict with: is_spamtrap (bool), confidence (high/medium/low), detail (str).
+    """
+    local_lower = local_part.lower()
+
+    # Domain-level traps — highest confidence
+    if domain in SPAMTRAP_DOMAINS:
+        return {
+            "is_spamtrap": True,
+            "confidence": "high",
+            "detail": "Known spamtrap domain",
+        }
+
+    # Exact local part match
+    if local_lower in SPAMTRAP_LOCAL_PARTS:
+        return {
+            "is_spamtrap": True,
+            "confidence": "high",
+            "detail": f"Known spamtrap address pattern: {local_lower}",
+        }
+
+    # Regex pattern match
+    for pattern in _SPAMTRAP_PATTERNS:
+        if pattern.search(local_lower):
+            return {
+                "is_spamtrap": True,
+                "confidence": "medium",
+                "detail": f"Address matches spamtrap pattern: {local_lower}",
+            }
+
+    # All-numeric local parts (common recycled traps)
+    if re.match(r"^\d{5,}$", local_lower):
+        return {
+            "is_spamtrap": True,
+            "confidence": "low",
+            "detail": "All-numeric address — commonly recycled as spamtrap",
+        }
+
+    return {
+        "is_spamtrap": False,
+        "confidence": "none",
+        "detail": "No spamtrap indicators detected",
+    }
+
+
 EHLO_HOSTNAME = "inbxr.com"
 SMTP_TIMEOUT = 10  # seconds
 VERIFY_FROM = "verify@inbxr.com"
@@ -193,6 +283,7 @@ def verify_email(email: str) -> dict:
             "domain": {"pass": False, "detail": ""},
             "mx_records": [],
             "disposable": {"pass": True, "is_disposable": False, "detail": ""},
+            "spamtrap": {"is_spamtrap": False, "confidence": "none", "detail": "Not checked"},
             "free_provider": {"is_free": False, "detail": ""},
             "catch_all": {"is_catch_all": False, "detail": "Not checked"},
             "mailbox": {"exists": None, "detail": "Not checked", "smtp_code": None},
@@ -259,7 +350,23 @@ def verify_email(email: str) -> dict:
         }
 
     # ------------------------------------------------------------------
-    # 5. MX record lookup
+    # 5. Spamtrap detection
+    # ------------------------------------------------------------------
+    local_part = email.rsplit("@", 1)[0]
+    spamtrap = _check_spamtrap(local_part, domain)
+    result["checks"]["spamtrap"] = spamtrap
+
+    if spamtrap["is_spamtrap"]:
+        result["risk_factors"].append("spamtrap")
+        if spamtrap["confidence"] == "high":
+            result["score"] -= 50
+        elif spamtrap["confidence"] == "medium":
+            result["score"] -= 30
+        else:
+            result["score"] -= 15
+
+    # ------------------------------------------------------------------
+    # 6. MX record lookup
     # ------------------------------------------------------------------
     mx_hosts: list[tuple[int, str]] = []  # (priority, host)
 
@@ -303,7 +410,7 @@ def verify_email(email: str) -> dict:
         return result
 
     # ------------------------------------------------------------------
-    # 6 & 7. Catch-all detection + Mailbox verification (single session)
+    # 7 & 8. Catch-all detection + Mailbox verification (single session)
     # ------------------------------------------------------------------
     mx_host = mx_hosts[0][1]
     sock = None
@@ -429,15 +536,23 @@ def verify_email(email: str) -> dict:
     # ------------------------------------------------------------------
     mailbox = result["checks"]["mailbox"]
     disposable = result["checks"]["disposable"]["is_disposable"]
+    spamtrap_hit = result["checks"]["spamtrap"]["is_spamtrap"]
+    spamtrap_conf = result["checks"]["spamtrap"]["confidence"]
     catch_all = result["checks"]["catch_all"]["is_catch_all"]
     greylisted = "greylisted" in result.get("risk_factors", [])
 
     if mailbox.get("smtp_code") in (550, 551, 552, 553):
         result["verdict"] = "invalid"
         result["verdict_detail"] = "Mailbox does not exist on the server"
+    elif spamtrap_hit and spamtrap_conf == "high":
+        result["verdict"] = "risky"
+        result["verdict_detail"] = f"Likely spamtrap — {result['checks']['spamtrap']['detail']}"
     elif disposable:
         result["verdict"] = "risky"
         result["verdict_detail"] = "Disposable / temporary email domain"
+    elif spamtrap_hit:
+        result["verdict"] = "risky"
+        result["verdict_detail"] = f"Possible spamtrap — {result['checks']['spamtrap']['detail']}"
     elif catch_all and mailbox.get("exists") is not False:
         result["verdict"] = "risky"
         result["verdict_detail"] = (

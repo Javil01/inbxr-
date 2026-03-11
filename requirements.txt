@@ -3,3 +3,5 @@ beautifulsoup4>=4.12.0
 lxml>=4.9.0
 extract-msg>=0.28.0
 dnspython>=2.4.0
+reportlab>=4.0.0
+apscheduler>=3.10.0

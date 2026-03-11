@@ -26,10 +26,10 @@ def _default_config():
                     "order": 1,
                     "draggable": True,
                     "editable_fields": {
-                        "eyebrow": "Free Email Intelligence Tool",
-                        "heading": "Analyze Your Email Before You Send.",
-                        "description": "Paste your email copy and get instant scoring on spam risk, copy effectiveness, readability, link safety, and deliverability \u2014 with AI-powered rewrite suggestions. No sending required.",
-                        "chips": ["Spam Risk Scoring", "Copy Effectiveness", "Rewrite Suggestions", "Readability Analysis", "Link Validation", "Inbox Preview"]
+                        "eyebrow": "The Inbox Checkup",
+                        "heading": "Will This Email Land?",
+                        "description": "Paste your copy. Get a spam risk score, copy effectiveness grade, readability check, and AI-powered rewrites \u2014 before you hit send. No account. No cost. No sending required.",
+                        "chips": ["Spam Risk Score", "Copy Effectiveness", "AI Rewrites", "Readability Check", "Link Safety", "Inbox Preview"]
                     }
                 },
                 {
@@ -45,7 +45,7 @@ def _default_config():
                     "order": 3,
                     "draggable": True,
                     "editable_fields": {
-                        "text": "INBXR \u2014 Free email copy intelligence. Heuristic-based analysis does not guarantee inbox placement. Results are advisory and intended to help you improve your email deliverability."
+                        "text": "INBXR \u2014 Free email intelligence. Results are advisory \u2014 actual deliverability depends on sender reputation, content, and provider filtering."
                     }
                 }
             ]
@@ -65,15 +65,15 @@ def _default_config():
                     "order": 1,
                     "draggable": True,
                     "editable_fields": {
-                        "eyebrow": "Complete Domain & Sender Intelligence",
-                        "heading": "Full Sender Health Check",
-                        "description": "Enter your domain and INBXR runs every check in parallel \u2014 SPF, DKIM, DMARC, BIMI, MTA-STS, TLS-RPT, 62+ blocklists, reverse DNS, SMTP diagnostics, and more. Add your sending IP for PTR, open relay, and STARTTLS checks. You get a single report with your overall grade, detected email provider, and copy-paste DNS records to fix every issue found.",
-                        "detail_1_title": "Authentication Protocols",
-                        "detail_1_text": "SPF validates which servers can send on your behalf. DKIM cryptographically signs your messages to prove they haven\u2019t been altered. DMARC ties them together with an enforcement policy. BIMI displays your brand logo in supported inboxes like Gmail, Yahoo, and Apple Mail.",
-                        "detail_2_title": "Blocklist Scanning",
-                        "detail_2_text": "Your sending IP and domain are checked against Spamhaus ZEN, SpamCop, Barracuda BRBL, CBL, SORBS, UCEPROTECT, Invaluement, SURBL, and more. A single listing on a major blocklist can cause widespread delivery failures across mailbox providers.",
-                        "detail_3_title": "Reputation Signals",
-                        "detail_3_text": "Beyond authentication, we verify your PTR (reverse DNS) record and forward-confirmed rDNS \u2014 checks that major providers like Gmail and Microsoft use to evaluate sender trustworthiness before accepting your mail."
+                        "eyebrow": "Domain Checkup",
+                        "heading": "Will Your Domain Land?",
+                        "description": "6 auth protocols. 110 blocklists. One report with an A\u2013F grade and copy-paste DNS records to fix every issue. Other tools charge for this \u2014 or only check half.",
+                        "detail_1_title": "6 Auth Protocols",
+                        "detail_1_text": "SPF, DKIM, DMARC, BIMI, MTA-STS, and TLS-RPT \u2014 checked in parallel. MXToolbox covers 3. GlockApps charges $45/mo.",
+                        "detail_2_title": "110 Blocklists",
+                        "detail_2_text": "Spamhaus, Barracuda, Abusix, Sender Score, and 100+ more. One listing can block your email overnight.",
+                        "detail_3_title": "Fix It, Don\u2019t Just Find It",
+                        "detail_3_text": "Every issue comes with a ready-to-paste DNS record. Copy, paste, re-check \u2014 ready to land."
                     }
                 },
                 {
@@ -89,7 +89,7 @@ def _default_config():
                     "order": 3,
                     "draggable": True,
                     "editable_fields": {
-                        "text": "INBXR \u2014 Real-time DNS-based checks. Blocklist data refreshes on every scan. Results may vary from ESP-specific reputation systems."
+                        "text": "INBXR \u2014 Live DNS checks. 110 blocklists scanned per request. Results may differ from ESP-specific reputation systems."
                     }
                 }
             ]
@@ -109,9 +109,9 @@ def _default_config():
                     "order": 1,
                     "draggable": True,
                     "editable_fields": {
-                        "eyebrow": "Your Email Intelligence",
-                        "heading": "Score History & Trends",
-                        "description": "Track your email quality over time. Every analysis is automatically saved to your browser \u2014 no account needed. See how your spam risk and copy scores improve as you iterate."
+                        "eyebrow": "Your Inbox Scorecard",
+                        "heading": "Watch Your Scores Improve.",
+                        "description": "Every checkup auto-saves. Track your spam risk, copy scores, and domain health over time \u2014 no account needed."
                     }
                 },
                 {
@@ -138,9 +138,9 @@ def _default_config():
                     "order": 1,
                     "draggable": True,
                     "editable_fields": {
-                        "eyebrow": "Subject Line Intelligence",
-                        "heading": "Which Subject Line Wins?",
-                        "description": "Enter 2-5 subject line variations and instantly see which one scores highest on deliverability, emotional pull, clarity, and engagement. Pick your winner before you hit send."
+                        "eyebrow": "Subject Line Checkup",
+                        "heading": "Which Subject Line Lands?",
+                        "description": "Test up to 5 variations. INBXR ranks them on deliverability, spam safety, clarity, and emotional pull \u2014 send the winner, not a guess."
                     }
                 },
                 {
@@ -156,7 +156,7 @@ def _default_config():
                     "order": 3,
                     "draggable": True,
                     "editable_fields": {
-                        "text": "INBXR \u2014 Subject line scoring is based on deliverability heuristics and engagement best practices. Actual open rates depend on sender reputation, audience, and timing."
+                        "text": "INBXR \u2014 Scores reflect deliverability heuristics and engagement best practices. Actual open rates vary by audience and timing."
                     }
                 }
             ]
@@ -176,9 +176,9 @@ def _default_config():
                     "order": 1,
                     "draggable": True,
                     "editable_fields": {
-                        "eyebrow": "The Most Complete Free Email Test",
-                        "heading": "One Email. Full Diagnosis.",
-                        "description": "Send from your actual email system \u2014 ESP, mail server, or client \u2014 and we\u2019ll pull the real received message from our mailbox. You get SPF, DKIM, and DMARC pass/fail as the receiving server sees it, TLS encryption details, spam content analysis, copy scoring, readability, DNS reputation, blocklist scan, and a prioritized action plan. Everything GlockApps, Mail-Tester, and MXToolbox charge for \u2014 combined into one free test."
+                        "eyebrow": "The Complete Inbox Checkup",
+                        "heading": "Break Into The Inbox.",
+                        "description": "One send. Full checkup. Get back real auth verdicts, spam scoring, copy analysis, AI rewrites, and a 110-blocklist scan \u2014 with a prioritized fix plan to land. Other tools charge $30\u2013129/mo. INBXR is free."
                     }
                 },
                 {
@@ -229,7 +229,7 @@ def _default_config():
                     "order": 8,
                     "draggable": True,
                     "editable_fields": {
-                        "text": "INBXR \u2014 Email test analysis uses real received headers from the mail server. Authentication verdicts reflect actual server-side verification at the time of delivery."
+                        "text": "INBXR \u2014 Auth verdicts come from real received headers, not DNS record checks. Results reflect what the mail server actually evaluated."
                     }
                 }
             ]
@@ -249,9 +249,9 @@ def _default_config():
                     "order": 1,
                     "draggable": True,
                     "editable_fields": {
-                        "eyebrow": "Email Authentication Made Easy",
-                        "heading": "Generate Your DNS Records",
-                        "description": "Select your email service providers, set your policies, and instantly generate production-ready SPF, DKIM, DMARC, MTA-STS, and TLS-RPT records. Copy and paste them into your DNS provider \u2014 no manual formatting required."
+                        "eyebrow": "Land-Ready in Minutes",
+                        "heading": "Generate All 5 DNS Records.",
+                        "description": "Pick your ESP, set your policy, copy-paste. SPF, DKIM, DMARC, MTA-STS, and TLS-RPT \u2014 no other free tool generates all five."
                     }
                 },
                 {
@@ -267,7 +267,7 @@ def _default_config():
                     "order": 3,
                     "draggable": True,
                     "editable_fields": {
-                        "text": "INBXR \u2014 Generated records are based on known ESP include mechanisms and best-practice defaults. Always verify records in your DNS provider after adding them."
+                        "text": "INBXR \u2014 Records are generated from known ESP include mechanisms. Always verify in your DNS provider after adding."
                     }
                 }
             ]
@@ -287,9 +287,9 @@ def _default_config():
                     "order": 1,
                     "draggable": True,
                     "editable_fields": {
-                        "eyebrow": "Brand Indicators for Message Identification",
-                        "heading": "Check Your BIMI Setup",
-                        "description": "BIMI lets your brand logo appear next to your emails in Gmail, Yahoo, Apple Mail, and other supporting clients. Enter your domain to validate your BIMI DNS record, logo format, VMC certificate, and DMARC prerequisites \u2014 or generate a new BIMI record from scratch."
+                        "eyebrow": "Brand Checkup",
+                        "heading": "Land With Your Logo Showing.",
+                        "description": "Validate your BIMI record, SVG logo, VMC certificate, and DMARC prerequisites in one scan. Most tools only check DNS \u2014 INBXR validates the full chain."
                     }
                 },
                 {
@@ -305,7 +305,7 @@ def _default_config():
                     "order": 3,
                     "draggable": True,
                     "editable_fields": {
-                        "text": "INBXR \u2014 BIMI validation checks DNS records, logo availability, and DMARC policy. VMC verification requires a certificate from a supported Certificate Authority (DigiCert or Entrust)."
+                        "text": "INBXR \u2014 Full-chain BIMI validation: DNS, SVG logo, VMC certificate, and DMARC policy. VMC requires DigiCert or Entrust."
                     }
                 }
             ]
@@ -325,9 +325,9 @@ def _default_config():
                     "order": 1,
                     "draggable": True,
                     "editable_fields": {
-                        "eyebrow": "Real Inbox Placement Testing",
-                        "heading": "See Where Your Email Actually Lands",
-                        "description": "Send your email to our seed accounts across Gmail, Outlook, Yahoo, and more \u2014 then see exactly whether it hit the inbox, spam folder, or promotions tab. No guesswork, no predictions \u2014 real placement results from real mailboxes."
+                        "eyebrow": "Placement Checkup",
+                        "heading": "Did Your Email Land?",
+                        "description": "Inbox, spam, or promotions? See exactly where your email lands across Gmail, Outlook, Yahoo, iCloud, AOL, and Zoho. GlockApps charges $79/mo. INBXR is free."
                     }
                 },
                 {
@@ -343,7 +343,7 @@ def _default_config():
                     "order": 3,
                     "draggable": True,
                     "editable_fields": {
-                        "text": "INBXR \u2014 Inbox placement results reflect real mailbox checks at the time of scan. Placement may vary by sender reputation, content, and ISP filtering rules."
+                        "text": "INBXR \u2014 Real mailbox results at scan time. Placement varies by reputation, content, and ISP filtering."
                     }
                 }
             ]
@@ -363,9 +363,9 @@ def _default_config():
                     "order": 1,
                     "draggable": True,
                     "editable_fields": {
-                        "eyebrow": "Ongoing Blocklist Surveillance",
-                        "heading": "Monitor Your Blacklist Status",
-                        "description": "Add up to 5 domains and track their status across 60+ email blocklists including Spamhaus, SpamCop, Barracuda, SORBS, and UCEPROTECT. Scan on demand, review history, and catch listings before they tank your deliverability."
+                        "eyebrow": "Blocklist Checkup",
+                        "heading": "Is Something Blocking You?",
+                        "description": "Scan up to 5 domains against 110 blocklists. Track your listing history over time. MXToolbox charges $129/mo \u2014 INBXR gives you on-demand scans with history, free."
                     }
                 },
                 {
@@ -381,7 +381,7 @@ def _default_config():
                     "order": 3,
                     "draggable": True,
                     "editable_fields": {
-                        "text": "INBXR \u2014 Blocklist data is checked in real time via DNS queries. Listing status may change between scans. Delisting procedures vary by blocklist operator."
+                        "text": "INBXR \u2014 110 blocklists checked via live DNS. Listings may change between scans. Delisting steps vary by operator."
                     }
                 }
             ]
@@ -401,9 +401,9 @@ def _default_config():
                     "order": 1,
                     "draggable": True,
                     "editable_fields": {
-                        "eyebrow": "Email Forensics Tool",
-                        "heading": "Decode Your Email Headers",
-                        "description": "Paste raw email headers and instantly see the full routing path, authentication verdicts, encryption status, DKIM signature details, and every hop your message took from sender to inbox. Understand exactly what happened to your email in transit."
+                        "eyebrow": "Header Checkup",
+                        "heading": "What Happened to Your Email in Transit?",
+                        "description": "Paste raw headers. Get auth verdicts, TLS status, routing hops, delay analysis, and DKIM details \u2014 decoded into plain English."
                     }
                 },
                 {
@@ -419,7 +419,7 @@ def _default_config():
                     "order": 3,
                     "draggable": True,
                     "editable_fields": {
-                        "text": "INBXR \u2014 Header analysis is performed locally on the server. No email content is stored or shared. Results reflect the headers as parsed at the time of analysis."
+                        "text": "INBXR \u2014 Headers parsed server-side. No content stored or shared."
                     }
                 }
             ]
@@ -439,9 +439,9 @@ def _default_config():
                     "order": 1,
                     "draggable": True,
                     "editable_fields": {
-                        "eyebrow": "Comprehensive Domain Assessment",
-                        "heading": "Your Domain Health Report Card",
-                        "description": "Get a complete health assessment for any sending domain. INBXR checks authentication records, scans blocklists, validates BIMI, verifies transport security, and inspects DNS health \u2014 then gives you a single letter grade with prioritized recommendations to fix what matters most."
+                        "eyebrow": "Redirects to Sender Check",
+                        "heading": "Domain Health Report",
+                        "description": "This tool has been merged into Sender Check for a single, comprehensive report."
                     }
                 },
                 {
@@ -477,9 +477,9 @@ def _default_config():
                     "order": 1,
                     "draggable": True,
                     "editable_fields": {
-                        "eyebrow": "One Domain. Every Check. Every Fix.",
-                        "heading": "Domain Health Report",
-                        "description": "Enter your domain and INBXR runs every check in parallel \u2014 SPF, DKIM, DMARC, BIMI, MTA-STS, TLS-RPT, blocklists, SSL, reverse DNS, and more. You get a single report with your overall grade, detected email provider, and copy-paste DNS records to fix every issue found."
+                        "eyebrow": "Redirects to Sender Check",
+                        "heading": "Full Audit",
+                        "description": "This tool has been merged into Sender Check for a single, comprehensive report."
                     }
                 },
                 {
@@ -515,9 +515,9 @@ def _default_config():
                     "order": 1,
                     "draggable": True,
                     "editable_fields": {
-                        "eyebrow": "Email Address Intelligence",
-                        "heading": "Verify Any Email Address Instantly",
-                        "description": "Enter an email address and INBXR checks syntax, DNS records, disposable domain status, catch-all detection, and mailbox existence via SMTP — all in one click. Know if an address is valid, risky, or fake before you hit send."
+                        "eyebrow": "Address Checkup",
+                        "heading": "Is That Address Even Real?",
+                        "description": "Syntax, MX, disposable detection (150+), catch-all, and live SMTP mailbox check \u2014 in one click. ZeroBounce charges per verification. INBXR is free."
                     }
                 },
                 {
@@ -533,7 +533,7 @@ def _default_config():
                     "order": 3,
                     "draggable": True,
                     "editable_fields": {
-                        "text": "INBXR \u2014 Email verification uses live DNS lookups and SMTP mailbox probing. Results reflect server responses at the time of check. Some servers may block verification attempts via greylisting or rate limiting."
+                        "text": "INBXR \u2014 Live DNS + SMTP mailbox probing. Some servers may block verification via greylisting."
                     }
                 }
             ]
@@ -553,9 +553,9 @@ def _default_config():
                     "order": 1,
                     "draggable": True,
                     "editable_fields": {
-                        "eyebrow": "IP & Domain Warm-up Tracking",
-                        "heading": "Warm Up Your Sending Reputation",
-                        "description": "New domain or IP? Track your warm-up progress day by day. Follow a proven volume ramp schedule, log daily sends, monitor placement health, and know exactly when you\u2019re ready to send at full volume."
+                        "eyebrow": "Warm-Up Checkup",
+                        "heading": "Build Your Reputation Before You Blast.",
+                        "description": "30-day volume ramp, daily send logging, and placement health tracking. Know exactly when you\u2019re ready to land at full volume."
                     }
                 },
                 {
@@ -571,7 +571,7 @@ def _default_config():
                     "order": 3,
                     "draggable": True,
                     "editable_fields": {
-                        "text": "INBXR \u2014 Warm-up schedules are general guidelines. Actual ramp speed depends on your domain age, list quality, and ESP policies. Monitor bounces and complaints throughout."
+                        "text": "INBXR \u2014 Warm-up schedules are guidelines. Actual ramp depends on domain age, list quality, and ESP policies."
                     }
                 }
             ]

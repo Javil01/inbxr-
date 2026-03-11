@@ -1,0 +1,12 @@
+{% extends "auth/base_auth.html" %}
+{% block title %}Email Verified{% endblock %}
+{% block content %}
+{% if error %}
+<h1 class="auth-card__title">Verification Failed</h1>
+<div class="auth-alert auth-alert--error">{{ error }}</div>
+{% else %}
+<h1 class="auth-card__title">Email Verified</h1>
+<div class="auth-alert auth-alert--success">Your email has been verified. You're all set.</div>
+{% endif %}
+<p class="auth-card__footer"><a href="/">Go to INBXR</a></p>
+{% endblock %}
