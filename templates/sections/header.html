@@ -14,6 +14,7 @@
         {% if current_team_id or current_user_tier == 'agency' %}
         <a href="/team" class="nav-link{% if active_page == 'team' %} nav-link--active{% endif %}">Team{% if current_team_name %}: {{ current_team_name }}{% endif %}</a>
         {% endif %}
+        <a href="/support" class="nav-link{% if active_page == 'support' %} nav-link--active{% endif %}">Help</a>
         <span class="nav-spacer"></span>
         <a href="/monitors" class="nav-link alert-bell" id="alertBell" title="Alerts">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
@@ -46,6 +47,7 @@
             <a href="/warmup"            class="nav-dropdown__link{% if active_page == 'warmup' %} nav-dropdown__link--active{% endif %}">Warm-up Tracker</a>
           </div>
         </div>
+        <a href="/support" class="nav-link{% if active_page == 'support' %} nav-link--active{% endif %}">Help</a>
         <span class="nav-spacer"></span>
         <a href="/login" class="nav-link{% if active_page == 'login' %} nav-link--active{% endif %}">Log in</a>
         <a href="/signup" class="nav-link nav-link--cta">Sign Up Free</a>

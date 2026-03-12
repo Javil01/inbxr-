@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>INBXR — Help &amp; Support</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body>
+
+{% include 'sections/header.html' %}
+
+<div class="support-page">
+  <div class="support-container">
+
+    <div class="support-header">
+      <h1 class="support-header__title">Help &amp; Support</h1>
+      <p class="support-header__sub">Find answers to common questions or chat with our AI assistants.</p>
+    </div>
+
+    <!-- ════════════════════════════════════════════════ -->
+    <!--  FAQ SECTIONS                                   -->
+    <!-- ════════════════════════════════════════════════ -->
+
+    <div class="faq-section">
+      <h2 class="faq-section__title">Getting Started</h2>
+
+      <div class="faq-item">
+        <button class="faq-item__q">What is INBXR?</button>
+        <div class="faq-item__a">
+          <p>INBXR is a free email deliverability suite with 10 tools in one platform. Test your emails against real mail servers, check authentication records, score subject lines, monitor blocklists, and more &mdash; all without paying a cent.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-item__q">Do I need an account to use INBXR?</button>
+        <div class="faq-item__a">
+          <p>No. Most tools work without an account. Creating a free account gives you higher daily limits (50 checks/day vs. 3) and access to your Dashboard. Paid plans unlock cloud history, bulk features, and more.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-item__q">How do I run my first email test?</button>
+        <div class="faq-item__a">
+          <p>Go to the <a href="/">Email Tester</a>, click "Start Email Test", copy the token and seed address, send a real email with the token in the subject line, then click "Analyze". You'll get a full report in under 60 seconds.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="faq-section">
+      <h2 class="faq-section__title">Email Testing</h2>
+
+      <div class="faq-item">
+        <button class="faq-item__q">Why does it say "email not found"?</button>
+        <div class="faq-item__a">
+          <p>Your email may still be in transit. The tool automatically retries every 45 seconds up to 4 times. Make sure: (1) the token is in your subject line exactly as shown, (2) you sent to the correct seed address, and (3) the email actually left your outbox.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-item__q">What does the Email Tester check?</button>
+        <div class="faq-item__a">
+          <p>It checks real SPF/DKIM/DMARC verdicts (not just DNS lookups), TLS encryption, spam headers, content quality, readability, sender reputation, and inbox placement &mdash; all from the receiver's perspective.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-item__q">What's the difference between Email Tester and Inbox Placement?</button>
+        <div class="faq-item__a">
+          <p><strong>Email Tester</strong> analyzes one email in depth (headers, auth, content, spam risk). <strong>Inbox Placement</strong> sends to multiple providers (Gmail, Outlook, Yahoo, iCloud) to show where your emails land across all of them.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="faq-section">
+      <h2 class="faq-section__title">Authentication &amp; Deliverability</h2>
+
+      <div class="faq-item">
+        <button class="faq-item__q">My SPF/DKIM/DMARC is failing. What do I do?</button>
+        <div class="faq-item__a">
+          <p>Use the <a href="/sender">Sender Check</a> tool &mdash; enter your domain and it will show exactly which records are missing or misconfigured, along with the correct records to add to your DNS.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-item__q">What is a good spam risk score?</button>
+        <div class="faq-item__a">
+          <p>Below 25 is excellent, 25-50 is acceptable, and above 50 means you likely have issues to fix. Common causes: spam trigger words, too many links, missing List-Unsubscribe header, or poor text-to-HTML ratio.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-item__q">I'm on a blocklist. What should I do?</button>
+        <div class="faq-item__a">
+          <p>Use the <a href="/blacklist-monitor">Blacklist Monitor</a> to see which lists you're on. Most blocklists have a delisting process on their website. Fix the underlying issue first (compromised account, spam complaints, etc.) before requesting removal.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="faq-section">
+      <h2 class="faq-section__title">Account &amp; Billing</h2>
+
+      <div class="faq-item">
+        <button class="faq-item__q">What are the plan limits?</button>
+        <div class="faq-item__a">
+          <p><strong>Free:</strong> 50 checks/day, 25 email verifications, 3 placement tests.<br>
+          <strong>Pro ($29/mo):</strong> 500 checks/day, 500 verifications, 20 placement tests, cloud history, bulk verify.<br>
+          <strong>Agency ($79/mo):</strong> 2,000 checks/day, 5,000 verifications, 100 placement tests, teams, API access.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-item__q">How do I upgrade or cancel my plan?</button>
+        <div class="faq-item__a">
+          <p>Go to your <a href="/account">Account</a> page to manage your subscription. You can upgrade, downgrade, or cancel at any time. Cancellation takes effect at the end of your billing period.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════ -->
+    <!--  AI ASSISTANTS                                  -->
+    <!-- ════════════════════════════════════════════════ -->
+
+    <div class="support-agents">
+      <h2 class="support-agents__title">Still need help?</h2>
+      <p class="support-agents__sub">Chat with one of our AI assistants. They know INBXR inside and out.</p>
+
+      <div class="support-agents__grid">
+        {% if session.get('user_id') and session.get('tier', 'free') in ('pro', 'agency', 'api') %}
+        <button class="support-agent-card" id="openSupportAgent">
+          <div class="support-agent-card__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="28" height="28"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+          </div>
+          <strong>Technical Support</strong>
+          <span>Help with tools, troubleshooting, authentication issues, and how-to questions.</span>
+        </button>
+        {% else %}
+        <div class="support-agent-card support-agent-card--locked">
+          <div class="support-agent-card__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="28" height="28"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+          </div>
+          <strong>Technical Support</strong>
+          <span>Available on Pro &amp; Agency plans.</span>
+          {% if session.get('user_id') %}
+          <a href="/account" class="support-agent-card__upgrade">Upgrade</a>
+          {% else %}
+          <a href="/signup" class="support-agent-card__upgrade">Sign Up</a>
+          {% endif %}
+        </div>
+        {% endif %}
+
+        <button class="support-agent-card" id="openSalesAgent">
+          <div class="support-agent-card__icon support-agent-card__icon--sales">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="28" height="28"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+          </div>
+          <strong>Sales &amp; Plans</strong>
+          <span>Questions about pricing, plan comparisons, features, and which plan is right for you.</span>
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════ -->
+<!--  CHAT PANEL (hidden until activated)           -->
+<!-- ════════════════════════════════════════════════ -->
+<div class="sc-panel" id="scPanel">
+  <div class="sc-panel__header">
+    <div class="sc-panel__header-info">
+      <span class="sc-panel__agent-dot"></span>
+      <span class="sc-panel__agent-name" id="scAgentName">Support</span>
+    </div>
+    <button class="sc-panel__close" id="scClose">&times;</button>
+  </div>
+  <div class="sc-panel__messages" id="scMessages"></div>
+  <div class="sc-panel__input">
+    <input type="text" id="scInput" placeholder="Type your question..." autocomplete="off" />
+    <button class="sc-panel__send" id="scSend">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+    </button>
+  </div>
+</div>
+
+<script src="/static/js/support.js"></script>
+</body>
+</html>

@@ -533,6 +533,40 @@ def sender():
                            active_page="sender")
 
 
+@app.route("/support")
+def support_page():
+    return render_template("support.html",
+                           is_admin=_is_admin(),
+                           active_page="support")
+
+
+@app.route("/api/support/chat", methods=["POST"])
+def support_chat_api():
+    from modules.support_chat import chat, is_available
+    if not is_available():
+        return jsonify({"error": "Support chat is not available right now."}), 503
+
+    data = request.get_json(silent=True) or {}
+    agent_type = data.get("agent", "support")
+
+    # Sales agent is free for everyone; Technical Support requires Pro+
+    if agent_type != "sales":
+        if not session.get("user_id"):
+            return jsonify({"error": "Please log in to use the support chat.", "signup_url": "/signup"}), 429
+        tier = session.get("tier", "free")
+        if tier not in ("pro", "agency", "api"):
+            return jsonify({"error": "AI technical support is available on Pro and Agency plans.", "upgrade_url": "/account"}), 403
+    messages = data.get("messages", [])
+
+    if not messages:
+        return jsonify({"error": "No message provided."}), 400
+
+    result = chat(agent_type, messages)
+    if "error" in result:
+        return jsonify(result), 500
+    return jsonify(result)
+
+
 @app.route("/dashboard")
 def dashboard():
     if not session.get("user_id"):
@@ -2171,7 +2205,13 @@ def check_reputation():
 
 @app.route("/ai-rewrite", methods=["POST"])
 def ai_rewrite():
-    """AI-powered email rewrite using Groq API."""
+    """AI-powered email rewrite using Groq API (Pro+ only)."""
+    if not session.get("user_id"):
+        return jsonify({"error": "Please log in to use AI rewrite.", "signup_url": "/signup"}), 429
+    tier = session.get("tier", "free")
+    if tier not in ("pro", "agency", "api"):
+        return jsonify({"error": "AI rewrite is available on Pro and Agency plans.", "upgrade_url": "/account"}), 403
+
     data = request.get_json(force=True, silent=True)
     if data is None:
         return jsonify({"error": "Invalid JSON payload"}), 400
@@ -2206,9 +2246,16 @@ def ai_rewrite():
 
 @app.route("/ai-rewrite/status", methods=["GET"])
 def ai_rewrite_status():
-    """Check if AI rewrite is available."""
+    """Check if AI rewrite is available (requires Pro+ tier)."""
     from modules.ai_rewriter import is_available
-    return jsonify({"available": is_available()})
+    tier = session.get("tier", "free") if session.get("user_id") else "visitor"
+    api_available = is_available()
+    tier_ok = tier in ("pro", "agency", "api")
+    return jsonify({
+        "available": api_available and tier_ok,
+        "reason": None if (api_available and tier_ok) else
+                  "pro_required" if not tier_ok else "unavailable",
+    })
 
 
 @app.route("/validate-bimi", methods=["POST"])
