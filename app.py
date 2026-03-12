@@ -538,12 +538,30 @@ def dashboard():
     if not session.get("user_id"):
         return redirect(url_for("auth.login", next="/dashboard"))
 
-    from modules.page_config import get_page_sections
-    sections = get_page_sections("dashboard")
-    if not _is_admin():
-        sections = [s for s in sections if s.get("visible", True)]
+    from modules.history import get_history_stats
+    from modules.rate_limiter import get_usage_summary
+    from modules.tiers import get_tier, get_tier_limit
+
+    user_id = session["user_id"]
+    tier_name = session.get("user_tier", "free")
+    tier = get_tier(tier_name)
+    stats = get_history_stats(user_id, team_id=session.get("team_id"))
+    usage = get_usage_summary(user_id)
+
+    credits = {
+        "tier": tier_name,
+        "tier_label": tier["name"] if tier else tier_name.title(),
+        "daily_limit": get_tier_limit(tier_name, "checks_per_day"),
+        "used_today": usage.get("total_today", 0),
+        "remaining": max(0, get_tier_limit(tier_name, "checks_per_day") - usage.get("total_today", 0)),
+        "verify_limit": get_tier_limit(tier_name, "email_verifications_per_day"),
+        "placement_limit": get_tier_limit(tier_name, "placement_tests_per_day"),
+        "subject_limit": get_tier_limit(tier_name, "subject_tests_per_day"),
+    }
+
     return render_template("dashboard.html",
-                           sections=sections,
+                           stats=stats,
+                           credits=credits,
                            is_admin=_is_admin(),
                            active_page="dashboard")
 
@@ -656,6 +674,20 @@ def email_test_check():
         return jsonify({"error": f"Analysis failed: {str(e)[:200]}"}), 500
 
     analysis["status"] = "found"
+
+    # Save to history
+    if session.get("user_id"):
+        from modules.tiers import has_feature
+        if has_feature(session.get("user_tier", "free"), "cloud_history"):
+            from modules.history import save_result
+            placement = analysis.get("placement", {})
+            grade_map = {"inbox": "A", "spam": "F", "trash": "F", "not_found": "D"}
+            score_map = {"inbox": 100, "spam": 10, "trash": 5, "not_found": 40}
+            p = placement.get("placement", "not_found")
+            summary = analysis.get("content", {}).get("clean_subject") or token[:20]
+            save_result(session["user_id"], "email_test", summary, analysis,
+                        grade=grade_map.get(p, "C"), score=score_map.get(p, 50))
+
     return jsonify(analysis)
 
 
@@ -737,12 +769,24 @@ def placement_check():
         "not_found": not_found,
     }
 
-    return jsonify({
+    response = {
         "token": token,
         "results": results,
         "summary": summary,
         "recommendations": generate_recommendations(results, summary),
-    })
+    }
+
+    # Save to history
+    if session.get("user_id"):
+        from modules.tiers import has_feature
+        if has_feature(session.get("user_tier", "free"), "cloud_history"):
+            from modules.history import save_result
+            inbox_pct = round(inbox_count / total * 100) if total > 0 else 0
+            grade = "A" if inbox_pct >= 90 else "B" if inbox_pct >= 70 else "C" if inbox_pct >= 50 else "F"
+            save_result(session["user_id"], "placement_test", token, response,
+                        grade=grade, score=inbox_pct)
+
+    return jsonify(response)
 
 
 @app.route("/placement/health", methods=["POST"])
@@ -923,7 +967,7 @@ def analyze_headers():
         "total_delay_seconds": round(total_delay, 1),
     }
 
-    return jsonify({
+    header_response = {
         "authentication_results": auth_results,
         "received_chain": received_chain,
         "tls_info": tls_info,
@@ -932,7 +976,20 @@ def analyze_headers():
         "x_headers": x_headers,
         "all_headers": all_headers,
         "summary": summary,
-    })
+    }
+
+    # Save to history
+    if session.get("user_id"):
+        from modules.tiers import has_feature
+        if has_feature(session.get("user_tier", "free"), "cloud_history"):
+            from modules.history import save_result
+            h_summary = envelope.get("subject", envelope.get("from", "Header Analysis"))[:80]
+            h_score = round(auth_pass_count / 3 * 100) if auth_pass_count else 0
+            h_grade = "A" if h_score >= 90 else "B" if h_score >= 60 else "C" if h_score >= 30 else "F"
+            save_result(session["user_id"], "header_analysis", h_summary, header_response,
+                        grade=h_grade, score=h_score)
+
+    return jsonify(header_response)
 
 
 # ══════════════════════════════════════════════════════

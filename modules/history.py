@@ -138,3 +138,38 @@ def get_history_stats(user_id, team_id=None):
         "best_grade": best_grade,
         "checks_this_week": checks_this_week,
     }
+
+
+def get_tool_breakdown(user_id, team_id=None):
+    """Return count and avg score per tool."""
+    clause = "team_id = ?" if team_id else "user_id = ?"
+    param = team_id if team_id else user_id
+    rows = fetchall(
+        f"""SELECT tool, COUNT(*) AS cnt, AVG(score) AS avg_score
+           FROM check_history WHERE {clause}
+           GROUP BY tool ORDER BY cnt DESC""",
+        (param,),
+    )
+    return [{"tool": r["tool"], "count": r["cnt"],
+             "avg_score": round(r["avg_score"], 1) if r["avg_score"] is not None else None}
+            for r in rows]
+
+
+def get_score_trend(user_id, tool=None, days=30, team_id=None):
+    """Return daily average scores for the trend chart."""
+    clause = "team_id = ?" if team_id else "user_id = ?"
+    param = team_id if team_id else user_id
+    params = [param, days]
+    tool_filter = ""
+    if tool:
+        tool_filter = " AND tool = ?"
+        params.append(tool)
+    rows = fetchall(
+        f"""SELECT DATE(created_at) AS day, AVG(score) AS avg_score, COUNT(*) AS cnt
+           FROM check_history
+           WHERE {clause} AND created_at >= datetime('now', '-' || ? || ' days'){tool_filter}
+           GROUP BY DATE(created_at) ORDER BY day""",
+        tuple(params),
+    )
+    return [{"day": r["day"], "avg_score": round(r["avg_score"], 1) if r["avg_score"] is not None else None,
+             "count": r["cnt"]} for r in rows]

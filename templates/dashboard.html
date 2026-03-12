@@ -9,28 +9,78 @@
   <link rel="stylesheet" href="/static/css/style.css" />
   {% if is_admin %}<link rel="stylesheet" href="/static/css/admin.css" />{% endif %}
 </head>
-<body class="dashboard-page{% if is_admin %} admin-mode{% endif %}"{% if is_admin %} data-page="dashboard"{% endif %}>
+<body class="dashboard-page{% if is_admin %} admin-mode{% endif %}">
 
-{% if is_admin %}
-<div class="admin-toolbar">
-  <span class="admin-toolbar__label"><span class="admin-toolbar__dot"></span>Editing Mode</span>
-  <span class="admin-toolbar__sep"></span>
-  <a href="/admin/logout">Exit Editor</a>
+{% include 'sections/header.html' %}
+
+<div class="dash">
+  <!-- ── Sidebar ── -->
+  <aside class="dash-sidebar" id="dashSidebar">
+    <nav class="dash-nav">
+      <span class="dash-nav__heading">Dashboard</span>
+      <a class="dash-nav__item dash-nav__item--active" data-view="overview" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        Overview
+      </a>
+      <span class="dash-nav__heading">Tools</span>
+      <a class="dash-nav__item" data-view="email_test" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+        Email Tests
+      </a>
+      <a class="dash-nav__item" data-view="domain_check" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        Sender Checks
+      </a>
+      <a class="dash-nav__item" data-view="subject_test" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="17" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="17" y1="18" x2="3" y2="18"/></svg>
+        Subject Scores
+      </a>
+      <a class="dash-nav__item" data-view="placement_test" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/></svg>
+        Placement Tests
+      </a>
+      <a class="dash-nav__item" data-view="header_analysis" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        Header Analysis
+      </a>
+      <a class="dash-nav__item" data-view="copy_analysis" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+        Copy Analysis
+      </a>
+      <a class="dash-nav__item" data-view="email_verify" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        Email Verifications
+      </a>
+      <span class="dash-nav__heading">Monitors</span>
+      <a class="dash-nav__item" data-view="blacklist" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+        Blacklist Monitor
+      </a>
+      <a class="dash-nav__item" data-view="warmup" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        Warmup Tracker
+      </a>
+    </nav>
+  </aside>
+
+  <!-- ── Main Content ── -->
+  <main class="dash-main" id="dashMain">
+    <!-- JS populates this -->
+    <div class="dash-loading" id="dashLoading">
+      <div class="loading-ring"></div>
+    </div>
+  </main>
 </div>
-{% endif %}
 
-<div id="page-sections">
-{% for section in sections %}
-  <div class="page-section{% if is_admin %} editable-section{% endif %}{% if not section.draggable and is_admin %} page-section--locked{% endif %}"
-       data-section-id="{{ section.id }}" data-section-type="{{ section.type }}">
-    {% if is_admin and section.draggable %}
-    <div class="section-drag-handle" title="Drag to reorder">&#9776;</div>
-    {% endif %}
-    {% include 'sections/' ~ section.type ~ '.html' %}
-  </div>
-{% endfor %}
-</div>
+<!-- Mobile sidebar toggle -->
+<button class="dash-sidebar-toggle" id="dashSidebarToggle" aria-label="Toggle sidebar">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+</button>
 
+<script>
+  window.__dashStats = {{ stats | tojson }};
+  window.__dashCredits = {{ credits | tojson }};
+</script>
 <script src="/static/js/dashboard.js"></script>
 </body>
 </html>

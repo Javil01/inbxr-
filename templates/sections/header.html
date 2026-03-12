@@ -7,7 +7,10 @@
       <span></span><span></span><span></span>
     </button>
     <nav class="site-nav">
-      <a href="/"               class="nav-link nav-link--featured{% if active_page == 'index' %} nav-link--active{% endif %}">Home</a>
+      {% if session.get('user_id') %}
+      <a href="/dashboard"      class="nav-link nav-link--featured{% if active_page == 'dashboard' %} nav-link--active{% endif %}">Dashboard</a>
+      {% endif %}
+      <a href="/"               class="nav-link{% if not session.get('user_id') %} nav-link--featured{% endif %}{% if active_page == 'index' %} nav-link--active{% endif %}">Home</a>
       <a href="/analyzer"       class="nav-link{% if active_page == 'analyzer' %} nav-link--active{% endif %}">Email Analyzer</a>
       <a href="/sender"         class="nav-link{% if active_page == 'sender' %} nav-link--active{% endif %}">Sender Check</a>
       <a href="/placement"      class="nav-link{% if active_page == 'placement' %} nav-link--active{% endif %}">Inbox Placement</a>
@@ -25,9 +28,6 @@
           <a href="/warmup"            class="nav-dropdown__link{% if active_page == 'warmup' %} nav-dropdown__link--active{% endif %}">Warm-up Tracker</a>
         </div>
       </div>
-      {% if session.get('user_id') %}
-      <a href="/dashboard"      class="nav-link{% if active_page == 'dashboard' %} nav-link--active{% endif %}">Dashboard</a>
-      {% endif %}
       {% if current_team_id or current_user_tier == 'agency' %}
       <a href="/team"           class="nav-link{% if active_page == 'team' %} nav-link--active{% endif %}">Team{% if current_team_name %}: {{ current_team_name }}{% endif %}</a>
       {% endif %}
