@@ -549,13 +549,7 @@ def support_chat_api():
     data = request.get_json(silent=True) or {}
     agent_type = data.get("agent", "support")
 
-    # Sales agent is free for everyone; Technical Support requires Pro+
-    if agent_type != "sales":
-        if not session.get("user_id"):
-            return jsonify({"error": "Please log in to use the support chat.", "signup_url": "/signup"}), 429
-        tier = session.get("tier", "free")
-        if tier not in ("pro", "agency", "api"):
-            return jsonify({"error": "AI technical support is available on Pro and Agency plans.", "upgrade_url": "/account"}), 403
+    # Both support agents are free for everyone
     messages = data.get("messages", [])
 
     if not messages:

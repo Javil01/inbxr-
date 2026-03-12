@@ -27,7 +27,7 @@ TIERS = {
             "teams": False,
             "webhooks": False,
             "ai_rewrite": False,
-            "ai_support_chat": False,
+            "ai_support_chat": True,
             "priority_support": False,
         },
     },

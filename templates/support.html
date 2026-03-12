@@ -128,7 +128,6 @@
       <p class="support-agents__sub">Chat with one of our AI assistants. They know INBXR inside and out.</p>
 
       <div class="support-agents__grid">
-        {% if session.get('user_id') and session.get('tier', 'free') in ('pro', 'agency', 'api') %}
         <button class="support-agent-card" id="openSupportAgent">
           <div class="support-agent-card__icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="28" height="28"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
@@ -136,20 +135,6 @@
           <strong>Technical Support</strong>
           <span>Help with tools, troubleshooting, authentication issues, and how-to questions.</span>
         </button>
-        {% else %}
-        <div class="support-agent-card support-agent-card--locked">
-          <div class="support-agent-card__icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="28" height="28"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-          </div>
-          <strong>Technical Support</strong>
-          <span>Available on Pro &amp; Agency plans.</span>
-          {% if session.get('user_id') %}
-          <a href="/account" class="support-agent-card__upgrade">Upgrade</a>
-          {% else %}
-          <a href="/signup" class="support-agent-card__upgrade">Sign Up</a>
-          {% endif %}
-        </div>
-        {% endif %}
 
         <button class="support-agent-card" id="openSalesAgent">
           <div class="support-agent-card__icon support-agent-card__icon--sales">
