@@ -50,7 +50,7 @@ def signup():
         send_verification_email(email, user["verification_token"])
 
     login_user(user)
-    next_url = request.args.get("next", "/")
+    next_url = request.args.get("next", "/dashboard")
     return redirect(next_url)
 
 
@@ -70,7 +70,7 @@ def login():
         return render_template("auth/login.html", error="Invalid email or password.", active_page="login")
 
     login_user(user)
-    next_url = request.args.get("next") or request.form.get("next") or "/"
+    next_url = request.args.get("next") or request.form.get("next") or "/dashboard"
     return redirect(next_url)
 
 

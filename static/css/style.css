@@ -6228,6 +6228,29 @@ select {
 }
 
 /* ── Upgrade gate ────────────────────────────────────── */
+/* ── Inline upgrade hint (for gated sections) ────────── */
+.dash-upgrade-inline {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 18px;
+  background: var(--brand-muted);
+  border: 1px solid var(--brand-border);
+  border-radius: var(--r-3);
+  font-size: 0.82rem;
+  color: var(--text-2);
+}
+.dash-upgrade-inline svg { color: var(--brand); flex-shrink: 0; }
+.dash-upgrade-inline strong { color: var(--brand); }
+.dash-upgrade-inline a {
+  margin-left: auto;
+  font-weight: 700;
+  color: var(--brand);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.dash-upgrade-inline a:hover { text-decoration: underline; }
+
 .dash-upgrade {
   display: flex;
   flex-direction: column;

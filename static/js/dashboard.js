@@ -76,26 +76,33 @@ function renderOverview() {
   main.innerHTML = buildOverviewShell(stats);
 
   apiFetch('/api/history/stats').then(function(data) {
-    if (!data) return;
+    if (!data || data.__gated) {
+      // Free tier — show upgrade hints in chart/breakdown areas
+      var chart = document.getElementById('overviewChart');
+      if (chart) chart.innerHTML = PRO_UPGRADE_HTML;
+      var bd = document.getElementById('overviewBreakdown');
+      if (bd) bd.innerHTML = '<p class="dash-empty-hint">Run tests to see breakdown</p>';
+      return;
+    }
     var s = data.stats || {};
     window.__dashStats = s;
 
-    // Update stat cards
     setStatCard('statTotal', s.total_checks || 0, 'Total Tests');
     setStatCard('statWeek', s.checks_this_week || 0, 'This Week');
     setStatCard('statAvg', s.avg_score != null ? s.avg_score : '--', 'Avg Score');
     setStatCard('statGrade', s.best_grade || '--', 'Best Grade');
 
-    // Tool breakdown
     renderBreakdown(data.breakdown || []);
-
-    // Trend chart
     renderTrendChart(data.trend || [], 'overviewChart');
   });
 
   // Recent activity
   apiFetch('/api/history?limit=15').then(function(data) {
-    if (!data) return;
+    if (!data || data.__gated) {
+      var recent = document.getElementById('overviewRecent');
+      if (recent) recent.innerHTML = PRO_UPGRADE_HTML;
+      return;
+    }
     renderRecentList(data.results || [], 'overviewRecent');
   });
 }
@@ -266,13 +273,21 @@ function renderToolView(toolName) {
 
   // Fetch trend
   apiFetch('/api/history/trend?tool=' + toolName).then(function(data) {
-    if (!data) return;
+    if (!data || data.__gated) {
+      var tc = document.getElementById('toolChart');
+      if (tc) tc.innerHTML = PRO_UPGRADE_HTML;
+      return;
+    }
     renderTrendChart(data.trend || [], 'toolChart');
   });
 
   // Fetch results
   apiFetch('/api/history?tool=' + toolName + '&limit=50').then(function(data) {
-    if (!data) return;
+    if (!data || data.__gated) {
+      var tr = document.getElementById('toolResults');
+      if (tr) tr.innerHTML = PRO_UPGRADE_HTML;
+      return;
+    }
     var results = data.results || [];
 
     // Stats
@@ -596,20 +611,15 @@ function renderRecentList(results, containerId) {
 // ══════════════════════════════════════════════════════
 //  API HELPER
 // ══════════════════════════════════════════════════════
+var PRO_UPGRADE_HTML = '<div class="dash-upgrade-inline">' +
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>' +
+  '<span>Upgrade to <strong>Pro</strong> to save test history and track trends.</span>' +
+  '<a href="/pricing">View Plans &rarr;</a>' +
+'</div>';
+
 function apiFetch(url) {
   return fetch(url).then(function(res) {
-    if (res.status === 403) {
-      var main = $('#dashMain');
-      if (main) {
-        main.innerHTML = '<div class="dash-view dash-upgrade">' +
-          '<div class="dash-upgrade__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="48" height="48"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>' +
-          '<h2>Cloud History requires Pro</h2>' +
-          '<p>Upgrade to Pro to save all your test results and track trends across tools.</p>' +
-          '<a href="/pricing" class="btn-analyze">View Plans</a>' +
-        '</div>';
-      }
-      return null;
-    }
+    if (res.status === 403) return { __gated: true };
     if (!res.ok) return null;
     return res.json();
   }).catch(function() { return null; });
