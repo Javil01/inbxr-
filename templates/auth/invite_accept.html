@@ -1,0 +1,47 @@
+{% extends "auth/base_auth.html" %}
+{% block title %}Team Invite{% endblock %}
+{% block content %}
+<div style="text-align:center;padding:24px 0;">
+  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" style="margin-bottom:12px;">
+    <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/>
+    <path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/>
+  </svg>
+  <h1 class="auth-card__title">You're Invited!</h1>
+  <p class="auth-card__sub">
+    <strong>{{ invite.invited_by_name or 'A team member' }}</strong> invited you to join
+    <strong>{{ invite.team_name }}</strong> as {{ invite.role }}.
+  </p>
+
+  {% if session.get('user_id') %}
+  <div style="margin-top:24px;display:flex;gap:12px;justify-content:center;">
+    <button onclick="acceptInvite()" class="auth-btn">Accept Invite</button>
+    <button onclick="declineInvite()" class="auth-btn auth-btn--outline">Decline</button>
+  </div>
+  <div id="msg" class="auth-alert" style="display:none;margin-top:12px;"></div>
+  <script>
+  function acceptInvite() {
+    fetch('/api/team/invite/{{ token }}/accept', {method:'POST'})
+      .then(function(r){return r.json();}).then(function(d){
+        if (d.ok) { window.location.href = '/team'; }
+        else { var m=document.getElementById('msg'); m.style.display='block'; m.className='auth-alert auth-alert--error'; m.textContent=d.error; }
+      });
+  }
+  function declineInvite() {
+    fetch('/api/team/invite/{{ token }}/decline', {method:'POST'})
+      .then(function(r){return r.json();}).then(function(d){
+        if (d.ok) { window.location.href = '/'; }
+        else { alert(d.error); }
+      });
+  }
+  </script>
+  {% else %}
+  <p style="margin-top:20px;color:rgba(255,255,255,0.6);font-size:0.9rem;">
+    You need an account to join this team.
+  </p>
+  <div style="margin-top:16px;display:flex;gap:12px;justify-content:center;">
+    <a href="/signup?next=/team/invite/{{ token }}" class="auth-btn">Sign Up</a>
+    <a href="/login?next=/team/invite/{{ token }}" class="auth-btn auth-btn--outline">Log In</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

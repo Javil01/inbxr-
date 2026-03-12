@@ -140,3 +140,38 @@ def send_welcome_email(to_email, display_name=None):
     """
     text = f"Hey {name},\n\nYour INBXR account is ready.\n\nRun your first checkup: {BASE_URL}/\n\nINBXR — Free email deliverability tools."
     return _send(to_email, subject, html, text)
+
+
+def send_team_invite_email(to_email, team_name, inviter_name, token):
+    """Send a team invite email with accept link."""
+    accept_url = f"{BASE_URL}/team/invite/{token}"
+    subject = f"{inviter_name} invited you to join {team_name} on INBXR"
+    html = f"""
+    <div style="font-family:Inter,sans-serif;max-width:480px;margin:0 auto;padding:32px 24px;">
+      <h2 style="color:#0c1a3a;margin:0 0 8px;">Team Invite</h2>
+      <p style="color:#334155;font-size:15px;line-height:1.6;">
+        <strong>{inviter_name}</strong> has invited you to join
+        <strong>{team_name}</strong> on INBXR.
+      </p>
+      <p style="color:#334155;font-size:14px;line-height:1.6;">
+        As a team member you'll share monitored domains, check history,
+        bulk verification jobs, and alerts.
+      </p>
+      <a href="{accept_url}"
+         style="display:inline-block;background:#16a34a;color:#fff;padding:12px 28px;
+                border-radius:999px;text-decoration:none;font-weight:600;font-size:15px;
+                margin:20px 0;">
+        Accept Invite
+      </a>
+      <p style="color:#64748b;font-size:13px;line-height:1.5;margin-top:24px;">
+        Or copy this link:<br>
+        <a href="{accept_url}" style="color:#16a34a;word-break:break-all;">{accept_url}</a>
+      </p>
+      <p style="color:#94a3b8;font-size:12px;margin-top:32px;">
+        This invite expires in 7 days. If you don't have an INBXR account,
+        you'll be asked to sign up first.
+      </p>
+    </div>
+    """
+    text = f"{inviter_name} invited you to join {team_name} on INBXR.\n\nAccept: {accept_url}\n\nThis invite expires in 7 days."
+    return _send(to_email, subject, html, text)

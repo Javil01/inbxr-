@@ -55,4 +55,33 @@
   <p>Usage-based pricing starting at $0.005/verification. Included with Agency, or available standalone.</p>
   <a href="{{ url_for('auth.signup') }}" class="auth-btn auth-btn--outline">Contact Us</a>
 </div>
+
+<script>
+(function(){
+  var isLoggedIn = {{ 'true' if user else 'false' }};
+  document.querySelectorAll('[data-tier]').forEach(function(btn) {
+    btn.addEventListener('click', function(e) {
+      e.preventDefault();
+      if (!isLoggedIn) {
+        window.location.href = '/login?next=/pricing';
+        return;
+      }
+      var tier = this.dataset.tier;
+      this.textContent = 'Redirecting\u2026';
+      this.style.pointerEvents = 'none';
+      fetch('/billing/create-checkout-session', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({tier: tier})
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(d) {
+        if (d.url) window.location.href = d.url;
+        else { alert(d.error || 'Something went wrong.'); location.reload(); }
+      })
+      .catch(function() { alert('Network error. Please try again.'); location.reload(); });
+    });
+  });
+})();
+</script>
 {% endblock %}

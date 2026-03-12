@@ -14,7 +14,7 @@ from modules.email_verifier import verify_email
 MAX_EMAILS_PER_JOB = 10_000
 
 
-def create_bulk_job(user_id, emails, filename=None):
+def create_bulk_job(user_id, emails, filename=None, team_id=None):
     """Create a bulk verification job.
 
     Parameters
@@ -25,6 +25,8 @@ def create_bulk_job(user_id, emails, filename=None):
         List of email addresses to verify.
     filename : str, optional
         Original filename if uploaded from a file.
+    team_id : int, optional
+        Team ID if this is a team job.
 
     Returns
     -------
@@ -54,9 +56,9 @@ def create_bulk_job(user_id, emails, filename=None):
         raise ValueError("No valid emails after cleaning.")
 
     cur = execute(
-        """INSERT INTO bulk_jobs (user_id, filename, total_emails, status)
-           VALUES (?, ?, ?, 'pending')""",
-        (user_id, filename, len(clean)),
+        """INSERT INTO bulk_jobs (user_id, filename, total_emails, status, team_id)
+           VALUES (?, ?, ?, 'pending', ?)""",
+        (user_id, filename, len(clean), team_id),
     )
     job_id = cur.lastrowid
 
@@ -141,7 +143,7 @@ def process_bulk_job(job_id):
     )
 
 
-def get_job_status(job_id, user_id):
+def get_job_status(job_id, user_id, team_id=None):
     """Get job status, verifying ownership.
 
     Returns
@@ -149,10 +151,16 @@ def get_job_status(job_id, user_id):
     dict or None
         Job info with status, counts, and summary. None if not found or not owned.
     """
-    job = fetchone(
-        "SELECT * FROM bulk_jobs WHERE id = ? AND user_id = ?",
-        (job_id, user_id),
-    )
+    if team_id:
+        job = fetchone(
+            "SELECT * FROM bulk_jobs WHERE id = ? AND team_id = ?",
+            (job_id, team_id),
+        )
+    else:
+        job = fetchone(
+            "SELECT * FROM bulk_jobs WHERE id = ? AND user_id = ?",
+            (job_id, user_id),
+        )
     if not job:
         return None
 
@@ -176,7 +184,7 @@ def get_job_status(job_id, user_id):
     return result
 
 
-def get_job_results(job_id, user_id, limit=100, offset=0):
+def get_job_results(job_id, user_id, limit=100, offset=0, team_id=None):
     """Get paginated results for a job, verifying ownership.
 
     Returns
@@ -184,10 +192,16 @@ def get_job_results(job_id, user_id, limit=100, offset=0):
     list[dict] or None
         List of result dicts. None if job not found or not owned.
     """
-    job = fetchone(
-        "SELECT id FROM bulk_jobs WHERE id = ? AND user_id = ?",
-        (job_id, user_id),
-    )
+    if team_id:
+        job = fetchone(
+            "SELECT id FROM bulk_jobs WHERE id = ? AND team_id = ?",
+            (job_id, team_id),
+        )
+    else:
+        job = fetchone(
+            "SELECT id FROM bulk_jobs WHERE id = ? AND user_id = ?",
+            (job_id, user_id),
+        )
     if not job:
         return None
 
@@ -235,22 +249,32 @@ def get_job_results(job_id, user_id, limit=100, offset=0):
     return results
 
 
-def get_user_jobs(user_id):
-    """List all bulk jobs for a user, newest first.
+def get_user_jobs(user_id, team_id=None):
+    """List all bulk jobs for a user (or team), newest first.
 
     Returns
     -------
     list[dict]
         List of job summary dicts.
     """
-    rows = fetchall(
-        """SELECT id, filename, total_emails, processed, status,
-                  summary_json, created_at, completed_at
-           FROM bulk_jobs
-           WHERE user_id = ?
-           ORDER BY created_at DESC""",
-        (user_id,),
-    )
+    if team_id:
+        rows = fetchall(
+            """SELECT id, filename, total_emails, processed, status,
+                      summary_json, created_at, completed_at
+               FROM bulk_jobs
+               WHERE team_id = ?
+               ORDER BY created_at DESC""",
+            (team_id,),
+        )
+    else:
+        rows = fetchall(
+            """SELECT id, filename, total_emails, processed, status,
+                      summary_json, created_at, completed_at
+               FROM bulk_jobs
+               WHERE user_id = ?
+               ORDER BY created_at DESC""",
+            (user_id,),
+        )
 
     jobs = []
     for row in rows:
@@ -268,7 +292,7 @@ def get_user_jobs(user_id):
     return jobs
 
 
-def generate_csv(job_id, user_id):
+def generate_csv(job_id, user_id, team_id=None):
     """Generate a CSV string of results for a completed job.
 
     Returns
@@ -276,10 +300,16 @@ def generate_csv(job_id, user_id):
     str or None
         CSV content as a string. None if job not found or not owned.
     """
-    job = fetchone(
-        "SELECT id FROM bulk_jobs WHERE id = ? AND user_id = ?",
-        (job_id, user_id),
-    )
+    if team_id:
+        job = fetchone(
+            "SELECT id FROM bulk_jobs WHERE id = ? AND team_id = ?",
+            (job_id, team_id),
+        )
+    else:
+        job = fetchone(
+            "SELECT id FROM bulk_jobs WHERE id = ? AND user_id = ?",
+            (job_id, user_id),
+        )
     if not job:
         return None
 

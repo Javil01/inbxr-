@@ -7,55 +7,66 @@ import json
 from modules.database import execute, fetchone, fetchall
 
 
-def save_result(user_id, tool, input_summary, result_dict, grade=None, score=None):
+def save_result(user_id, tool, input_summary, result_dict, grade=None, score=None, team_id=None):
     """Save a check result to history. Returns the new row ID."""
     result_json = json.dumps(result_dict, default=str)
     cur = execute(
-        """INSERT INTO check_history (user_id, tool, input_summary, result_json, grade, score)
-           VALUES (?, ?, ?, ?, ?, ?)""",
-        (user_id, tool, input_summary, result_json, grade, score),
+        """INSERT INTO check_history (user_id, tool, input_summary, result_json, grade, score, team_id)
+           VALUES (?, ?, ?, ?, ?, ?, ?)""",
+        (user_id, tool, input_summary, result_json, grade, score, team_id),
     )
     return cur.lastrowid
 
 
-def get_history(user_id, tool=None, limit=50, offset=0):
+def get_history(user_id, tool=None, limit=50, offset=0, team_id=None):
     """Fetch user's history list (without full result_json for performance).
-    Returns list of dicts with id, tool, input_summary, grade, score, created_at.
+    When team_id is set, returns team-wide history instead of personal.
     """
     limit = min(max(int(limit), 1), 200)
     offset = max(int(offset), 0)
 
+    owner_clause = "team_id = ?" if team_id else "user_id = ?"
+    owner_param = team_id if team_id else user_id
+
     if tool:
         rows = fetchall(
-            """SELECT id, tool, input_summary, grade, score, created_at
+            f"""SELECT id, tool, input_summary, grade, score, created_at
                FROM check_history
-               WHERE user_id = ? AND tool = ?
+               WHERE {owner_clause} AND tool = ?
                ORDER BY created_at DESC
                LIMIT ? OFFSET ?""",
-            (user_id, tool, limit, offset),
+            (owner_param, tool, limit, offset),
         )
     else:
         rows = fetchall(
-            """SELECT id, tool, input_summary, grade, score, created_at
+            f"""SELECT id, tool, input_summary, grade, score, created_at
                FROM check_history
-               WHERE user_id = ?
+               WHERE {owner_clause}
                ORDER BY created_at DESC
                LIMIT ? OFFSET ?""",
-            (user_id, limit, offset),
+            (owner_param, limit, offset),
         )
     return rows
 
 
-def get_result(history_id, user_id):
+def get_result(history_id, user_id, team_id=None):
     """Fetch a single full result including deserialized result_json.
-    Verifies user_id ownership for security. Returns dict or None.
+    Verifies ownership (personal or team). Returns dict or None.
     """
-    row = fetchone(
-        """SELECT id, tool, input_summary, result_json, grade, score, created_at
-           FROM check_history
-           WHERE id = ? AND user_id = ?""",
-        (history_id, user_id),
-    )
+    if team_id:
+        row = fetchone(
+            """SELECT id, tool, input_summary, result_json, grade, score, created_at
+               FROM check_history
+               WHERE id = ? AND team_id = ?""",
+            (history_id, team_id),
+        )
+    else:
+        row = fetchone(
+            """SELECT id, tool, input_summary, result_json, grade, score, created_at
+               FROM check_history
+               WHERE id = ? AND user_id = ?""",
+            (history_id, user_id),
+        )
     if not row:
         return None
 
@@ -67,47 +78,56 @@ def get_result(history_id, user_id):
     return result
 
 
-def delete_result(history_id, user_id):
+def delete_result(history_id, user_id, team_id=None):
     """Delete a history result, verifying ownership. Returns True if deleted."""
-    cur = execute(
-        "DELETE FROM check_history WHERE id = ? AND user_id = ?",
-        (history_id, user_id),
-    )
+    if team_id:
+        cur = execute(
+            "DELETE FROM check_history WHERE id = ? AND team_id = ?",
+            (history_id, team_id),
+        )
+    else:
+        cur = execute(
+            "DELETE FROM check_history WHERE id = ? AND user_id = ?",
+            (history_id, user_id),
+        )
     return cur.rowcount > 0
 
 
-def get_history_stats(user_id):
-    """Return summary stats for a user's history."""
+def get_history_stats(user_id, team_id=None):
+    """Return summary stats for a user's (or team's) history."""
+    clause = "team_id = ?" if team_id else "user_id = ?"
+    param = team_id if team_id else user_id
+
     total = fetchone(
-        "SELECT COUNT(*) AS cnt FROM check_history WHERE user_id = ?",
-        (user_id,),
+        f"SELECT COUNT(*) AS cnt FROM check_history WHERE {clause}",
+        (param,),
     )
     total_checks = total["cnt"] if total else 0
 
     tools = fetchall(
-        "SELECT DISTINCT tool FROM check_history WHERE user_id = ?",
-        (user_id,),
+        f"SELECT DISTINCT tool FROM check_history WHERE {clause}",
+        (param,),
     )
     tools_used = [r["tool"] for r in tools]
 
     avg = fetchone(
-        "SELECT AVG(score) AS avg_score FROM check_history WHERE user_id = ? AND score IS NOT NULL",
-        (user_id,),
+        f"SELECT AVG(score) AS avg_score FROM check_history WHERE {clause} AND score IS NOT NULL",
+        (param,),
     )
     avg_score = round(avg["avg_score"], 1) if avg and avg["avg_score"] is not None else None
 
     best = fetchone(
-        """SELECT grade FROM check_history
-           WHERE user_id = ? AND grade IS NOT NULL
+        f"""SELECT grade FROM check_history
+           WHERE {clause} AND grade IS NOT NULL
            ORDER BY score DESC LIMIT 1""",
-        (user_id,),
+        (param,),
     )
     best_grade = best["grade"] if best else None
 
     week = fetchone(
-        """SELECT COUNT(*) AS cnt FROM check_history
-           WHERE user_id = ? AND created_at >= datetime('now', '-7 days')""",
-        (user_id,),
+        f"""SELECT COUNT(*) AS cnt FROM check_history
+           WHERE {clause} AND created_at >= datetime('now', '-7 days')""",
+        (param,),
     )
     checks_this_week = week["cnt"] if week else 0
 

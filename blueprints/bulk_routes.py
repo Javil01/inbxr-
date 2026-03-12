@@ -99,7 +99,8 @@ def bulk_verify_page():
     daily_limit = get_tier_limit(tier, "email_verifications_per_day")
     used_today = _get_daily_verify_usage(user["id"])
     remaining = max(0, daily_limit - used_today)
-    jobs = get_user_jobs(user["id"])
+    team_id = session.get("team_id")
+    jobs = get_user_jobs(user["id"], team_id=team_id)
 
     return render_template(
         "auth/bulk_verify.html",
@@ -173,8 +174,9 @@ def create_bulk():
         }), 429
 
     # Create the job
+    team_id = session.get("team_id")
     try:
-        job_id = create_bulk_job(user_id, emails, filename=filename)
+        job_id = create_bulk_job(user_id, emails, filename=filename, team_id=team_id)
     except ValueError as e:
         return jsonify({"error": str(e)}), 400
 
@@ -202,7 +204,8 @@ def create_bulk():
 def job_status(job_id):
     """Get job status and summary."""
     user = get_current_user()
-    status = get_job_status(job_id, user["id"])
+    team_id = session.get("team_id")
+    status = get_job_status(job_id, user["id"], team_id=team_id)
 
     if not status:
         return jsonify({"error": "Job not found."}), 404
@@ -224,7 +227,8 @@ def job_results(job_id):
         limit = 100
         offset = 0
 
-    results = get_job_results(job_id, user["id"], limit=limit, offset=offset)
+    team_id = session.get("team_id")
+    results = get_job_results(job_id, user["id"], limit=limit, offset=offset, team_id=team_id)
     if results is None:
         return jsonify({"error": "Job not found."}), 404
 
@@ -243,7 +247,8 @@ def job_results(job_id):
 def job_csv(job_id):
     """Download results as CSV file."""
     user = get_current_user()
-    csv_content = generate_csv(job_id, user["id"])
+    team_id = session.get("team_id")
+    csv_content = generate_csv(job_id, user["id"], team_id=team_id)
 
     if csv_content is None:
         return jsonify({"error": "Job not found."}), 404
@@ -263,5 +268,6 @@ def job_csv(job_id):
 def list_jobs():
     """List all bulk jobs for the current user."""
     user = get_current_user()
-    jobs = get_user_jobs(user["id"])
+    team_id = session.get("team_id")
+    jobs = get_user_jobs(user["id"], team_id=team_id)
     return jsonify({"jobs": jobs})

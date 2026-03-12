@@ -26,7 +26,12 @@
           <a href="/warmup"            class="nav-dropdown__link{% if active_page == 'warmup' %} nav-dropdown__link--active{% endif %}">Warm-up Tracker</a>
         </div>
       </div>
+      {% if session.get('user_id') %}
       <a href="/dashboard"      class="nav-link{% if active_page == 'dashboard' %} nav-link--active{% endif %}">Dashboard</a>
+      {% endif %}
+      {% if current_team_id or current_user_tier == 'agency' %}
+      <a href="/team"           class="nav-link{% if active_page == 'team' %} nav-link--active{% endif %}">Team{% if current_team_name %}: {{ current_team_name }}{% endif %}</a>
+      {% endif %}
       <span class="nav-spacer"></span>
       {% if session.get('user_id') %}
       <a href="/monitors" class="nav-link alert-bell" id="alertBell" title="Alerts">
@@ -47,6 +52,47 @@
     </nav>
   </div>
 </header>
+<script>
+(function(){
+  /* ── Global 429 interceptor: styled signup/upgrade prompt ── */
+  var _origFetch = window.fetch;
+  window.fetch = function() {
+    return _origFetch.apply(this, arguments).then(function(res) {
+      if (res.status === 429) {
+        var clone = res.clone();
+        clone.json().then(function(d) {
+          if (d.signup_url || d.upgrade_url) { showRateLimitModal(d); }
+        }).catch(function(){});
+      }
+      return res;
+    });
+  };
+  function showRateLimitModal(d) {
+    if (document.getElementById('rlModal')) return;
+    var isSignup = !!d.signup_url;
+    var overlay = document.createElement('div');
+    overlay.id = 'rlModal';
+    overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.6);';
+    overlay.innerHTML =
+      '<div style="background:var(--card-bg,#0f172a);border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:32px;max-width:420px;width:90%;text-align:center;color:#fff;position:relative;">' +
+        '<button onclick="this.closest(\'#rlModal\').remove()" style="position:absolute;top:12px;right:14px;background:none;border:none;color:rgba(255,255,255,0.5);font-size:1.2rem;cursor:pointer;">&times;</button>' +
+        (isSignup
+          ? '<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" style="margin-bottom:12px;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>' +
+            '<h3 style="font-size:1.15rem;font-weight:700;margin:0 0 8px;">Daily Limit Reached</h3>' +
+            '<p style="font-size:0.9rem;color:rgba(255,255,255,0.7);margin:0 0 20px;line-height:1.6;">' + (d.error || 'You\'ve used your 3 free checks for today.') + '</p>' +
+            '<a href="' + d.signup_url + '" style="display:inline-block;padding:12px 28px;background:#22c55e;color:#fff;font-weight:700;border-radius:999px;text-decoration:none;font-size:0.95rem;">Create Free Account</a>' +
+            '<p style="font-size:0.78rem;color:rgba(255,255,255,0.45);margin-top:12px;">Free accounts get 50 checks/day</p>'
+          : '<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" style="margin-bottom:12px;"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>' +
+            '<h3 style="font-size:1.15rem;font-weight:700;margin:0 0 8px;">Plan Limit Reached</h3>' +
+            '<p style="font-size:0.9rem;color:rgba(255,255,255,0.7);margin:0 0 20px;line-height:1.6;">' + (d.error || 'You\'ve hit your rate limit for today.') + '</p>' +
+            '<a href="' + d.upgrade_url + '" style="display:inline-block;padding:12px 28px;background:#f59e0b;color:#000;font-weight:700;border-radius:999px;text-decoration:none;font-size:0.95rem;">View Plans</a>'
+        ) +
+      '</div>';
+    document.body.appendChild(overlay);
+    overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
+  }
+})();
+</script>
 {% if session.get('user_id') %}
 <script>
 (function(){

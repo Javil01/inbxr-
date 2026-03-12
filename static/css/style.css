@@ -340,7 +340,9 @@ img { display: block; max-width: 100%; }
 }
 
 .tool-hero__eyebrow {
-  display: inline-block;
+  display: block;
+  width: fit-content;
+  margin: 0 auto 24px;
   font-size: 0.7rem;
   font-weight: 600;
   letter-spacing: 0.12em;
@@ -350,7 +352,6 @@ img { display: block; max-width: 100%; }
   border: 1px solid rgba(34,197,94,0.25);
   border-radius: var(--r-full);
   padding: 6px 16px;
-  margin-bottom: 24px;
 }
 
 .tool-hero__h1 {
@@ -442,7 +443,7 @@ img { display: block; max-width: 100%; }
   grid-template-columns: 1fr 1fr;
   gap: 14px 24px;
   max-width: 580px;
-  margin: 28px auto 0;
+  margin: 16px auto 0;
   text-align: left;
 }
 .hero-checks__item {
@@ -480,8 +481,32 @@ img { display: block; max-width: 100%; }
   grid-column: 1 / -1;
   justify-self: center;
 }
+.hero-cta-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 20px auto 0;
+  padding: 14px 32px;
+  background: var(--brand);
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 700;
+  font-family: inherit;
+  border: none;
+  border-radius: var(--r-full);
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(22,163,74,0.35);
+  transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
+}
+.hero-cta-btn:hover {
+  background: var(--brand-dark, #15803d);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 28px rgba(22,163,74,0.45);
+}
+.hero-cta-btn svg { flex-shrink: 0; }
 .hero-price-anchor {
-  margin: 28px auto 0;
+  margin: 16px auto 0;
   font-size: 0.9rem;
   color: rgba(255,255,255,0.7);
   text-align: center;
@@ -607,7 +632,7 @@ img { display: block; max-width: 100%; }
 
 /* Upgraded homepage hero */
 .et-homepage-hero {
-  padding: 88px 24px 64px;
+  padding: 48px 24px 40px;
   background: var(--navy);
 }
 .et-homepage-hero .sender-hero__inner {
@@ -615,6 +640,12 @@ img { display: block; max-width: 100%; }
 }
 .et-homepage-hero .sender-hero__title {
   font-size: 2.8rem;
+  margin-bottom: 12px;
+}
+.et-homepage-hero .sender-hero__eyebrow {
+  margin-bottom: 16px;
+}
+.et-homepage-hero .sender-hero__sub {
   margin-bottom: 20px;
 }
 @media (max-width: 600px) {

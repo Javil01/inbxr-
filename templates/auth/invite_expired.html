@@ -1,0 +1,12 @@
+{% extends "auth/base_auth.html" %}
+{% block title %}Invite Expired{% endblock %}
+{% block content %}
+<div style="text-align:center;padding:24px 0;">
+  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="2" style="margin-bottom:12px;">
+    <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
+  </svg>
+  <h1 class="auth-card__title">Invite Not Available</h1>
+  <p class="auth-card__sub">This invite has expired, been used, or doesn't exist. Ask your team admin to send a new one.</p>
+  <a href="/" class="auth-btn auth-btn--outline" style="margin-top:16px;">Go to INBXR</a>
+</div>
+{% endblock %}

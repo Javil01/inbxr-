@@ -35,7 +35,8 @@ def history_page():
         return gate
 
     user_id = session["user_id"]
-    stats = get_history_stats(user_id)
+    team_id = session.get("team_id")
+    stats = get_history_stats(user_id, team_id=team_id)
     return render_template("auth/history.html", stats=stats)
 
 
@@ -48,11 +49,12 @@ def api_history_list():
         return gate
 
     user_id = session["user_id"]
+    team_id = session.get("team_id")
     tool = request.args.get("tool", "").strip() or None
     limit = request.args.get("limit", 50, type=int)
     offset = request.args.get("offset", 0, type=int)
 
-    rows = get_history(user_id, tool=tool, limit=limit, offset=offset)
+    rows = get_history(user_id, tool=tool, limit=limit, offset=offset, team_id=team_id)
     return jsonify({"results": rows, "count": len(rows)})
 
 
@@ -65,7 +67,8 @@ def api_history_detail(history_id):
         return gate
 
     user_id = session["user_id"]
-    result = get_result(history_id, user_id)
+    team_id = session.get("team_id")
+    result = get_result(history_id, user_id, team_id=team_id)
     if not result:
         return jsonify({"error": "Result not found."}), 404
     return jsonify(result)
@@ -80,7 +83,8 @@ def api_history_delete(history_id):
         return gate
 
     user_id = session["user_id"]
-    deleted = delete_result(history_id, user_id)
+    team_id = session.get("team_id")
+    deleted = delete_result(history_id, user_id, team_id=team_id)
     if not deleted:
         return jsonify({"error": "Result not found."}), 404
     return jsonify({"ok": True})

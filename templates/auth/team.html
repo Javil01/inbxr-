@@ -1,0 +1,258 @@
+{% extends "auth/base_auth.html" %}
+{% block title %}Team{% endblock %}
+{% block content %}
+
+{% if can_create and not team %}
+<div id="createTeamView">
+  <h1 class="auth-card__title">Create Your Team</h1>
+  <p class="auth-card__sub">Invite team members to share domains, history, and alerts.</p>
+  <form id="createTeamForm" class="auth-form" style="max-width:400px;margin:24px auto 0;">
+    <label class="auth-label">
+      <span>Team Name</span>
+      <input type="text" id="teamNameInput" required maxlength="100" placeholder="e.g. Acme Marketing" />
+    </label>
+    <button type="submit" class="auth-btn">Create Team</button>
+    <div id="createMsg" class="auth-alert" style="display:none"></div>
+  </form>
+</div>
+{% endif %}
+
+<div id="teamView" style="{% if not team %}display:none{% endif %}">
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:24px;">
+    <div>
+      <h1 class="auth-card__title" style="margin-bottom:4px;" id="teamTitle">{{ team.name if team else '' }}</h1>
+      <span style="font-size:0.8rem;color:rgba(255,255,255,0.5);">Your role: <strong id="teamRole">{{ team.role if team else '' }}</strong></span>
+    </div>
+  </div>
+
+  <!-- Members -->
+  <div class="account-section">
+    <h2 class="account-section__title">Members</h2>
+    <div id="membersList"></div>
+  </div>
+
+  <!-- Invite -->
+  <div class="account-section" id="inviteSection">
+    <h2 class="account-section__title">Invite a Member</h2>
+    <form id="inviteForm" class="auth-form" style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;">
+      <label class="auth-label" style="flex:1;min-width:200px;">
+        <span>Email</span>
+        <input type="email" id="inviteEmail" required placeholder="colleague@company.com" />
+      </label>
+      <label class="auth-label" style="width:120px;">
+        <span>Role</span>
+        <select id="inviteRole" style="width:100%;padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.05);color:#fff;font-size:0.9rem;">
+          <option value="member">Member</option>
+          <option value="admin">Admin</option>
+        </select>
+      </label>
+      <button type="submit" class="auth-btn auth-btn--sm" style="margin-bottom:2px;">Send Invite</button>
+    </form>
+    <div id="inviteMsg" class="auth-alert" style="display:none;margin-top:8px;"></div>
+  </div>
+
+  <!-- Pending Invites -->
+  <div class="account-section" id="pendingSection" style="display:none;">
+    <h2 class="account-section__title">Pending Invites</h2>
+    <div id="pendingList"></div>
+  </div>
+
+  <!-- Danger Zone -->
+  <div class="account-section" style="margin-top:32px;">
+    <div id="dangerZone"></div>
+  </div>
+</div>
+
+<!-- Incoming invites for current user -->
+<div id="myInvites" style="display:none;margin-top:24px;">
+  <div class="account-section">
+    <h2 class="account-section__title">You've Been Invited</h2>
+    <div id="myInvitesList"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var teamView = document.getElementById('teamView');
+  var myRole = '{{ team.role if team else "" }}';
+
+  // ── Create Team ──
+  var createForm = document.getElementById('createTeamForm');
+  if (createForm) {
+    createForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      var name = document.getElementById('teamNameInput').value.trim();
+      if (!name) return;
+      fetch('/api/team', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({name:name})})
+        .then(function(r){return r.json();})
+        .then(function(d){
+          if (d.ok) { location.reload(); }
+          else { showMsg('createMsg', d.error, true); }
+        });
+    });
+  }
+
+  // ── Load team data ──
+  function loadTeam() {
+    fetch('/api/team').then(function(r){return r.json();}).then(function(d) {
+      if (!d.ok || !d.team) return;
+      myRole = d.team.role;
+      renderMembers(d.members || []);
+      renderPending(d.invites || []);
+      renderDanger(d.team);
+      // Hide invite section for regular members
+      if (myRole === 'member') {
+        var inv = document.getElementById('inviteSection');
+        if (inv) inv.style.display = 'none';
+      }
+    });
+  }
+
+  function renderMembers(members) {
+    var el = document.getElementById('membersList');
+    if (!members.length) { el.innerHTML = '<p style="color:rgba(255,255,255,0.5);">No members yet.</p>'; return; }
+    var html = '<table style="width:100%;border-collapse:collapse;">';
+    html += '<thead><tr style="border-bottom:1px solid rgba(255,255,255,0.1);">' +
+      '<th style="text-align:left;padding:8px 0;font-size:0.8rem;color:rgba(255,255,255,0.5);">Member</th>' +
+      '<th style="text-align:left;padding:8px 0;font-size:0.8rem;color:rgba(255,255,255,0.5);">Role</th>' +
+      '<th style="text-align:left;padding:8px 0;font-size:0.8rem;color:rgba(255,255,255,0.5);">Joined</th>' +
+      '<th style="padding:8px 0;"></th></tr></thead><tbody>';
+    members.forEach(function(m) {
+      var name = m.display_name || m.email.split('@')[0];
+      var roleBadge = m.role === 'owner' ? '<span style="background:rgba(22,163,74,0.15);color:#22c55e;padding:2px 8px;border-radius:99px;font-size:0.75rem;font-weight:600;">Owner</span>'
+        : m.role === 'admin' ? '<span style="background:rgba(59,130,246,0.15);color:#60a5fa;padding:2px 8px;border-radius:99px;font-size:0.75rem;font-weight:600;">Admin</span>'
+        : '<span style="color:rgba(255,255,255,0.5);font-size:0.8rem;">Member</span>';
+      var actions = '';
+      if (m.role !== 'owner' && (myRole === 'owner' || (myRole === 'admin' && m.role === 'member'))) {
+        actions += '<button onclick="removeMember('+m.user_id+')" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:0.8rem;">Remove</button>';
+      }
+      if (myRole === 'owner' && m.role !== 'owner') {
+        var toggleRole = m.role === 'admin' ? 'member' : 'admin';
+        actions += ' <button onclick="changeRole('+m.user_id+\',\\\''+toggleRole+'\\\')" style="background:none;border:none;color:#60a5fa;cursor:pointer;font-size:0.8rem;">' +
+          (m.role === 'admin' ? 'Demote' : 'Promote') + '</button>';
+      }
+      html += '<tr style="border-bottom:1px solid rgba(255,255,255,0.06);">' +
+        '<td style="padding:10px 0;"><strong style="color:#fff;font-size:0.9rem;">' + name + '</strong><br><span style="font-size:0.8rem;color:rgba(255,255,255,0.5);">' + m.email + '</span></td>' +
+        '<td style="padding:10px 0;">' + roleBadge + '</td>' +
+        '<td style="padding:10px 0;font-size:0.8rem;color:rgba(255,255,255,0.5);">' + (m.joined_at||'').slice(0,10) + '</td>' +
+        '<td style="padding:10px 0;text-align:right;">' + actions + '</td></tr>';
+    });
+    html += '</tbody></table>';
+    el.innerHTML = html;
+  }
+
+  function renderPending(invites) {
+    var section = document.getElementById('pendingSection');
+    var el = document.getElementById('pendingList');
+    if (!invites.length) { section.style.display = 'none'; return; }
+    section.style.display = '';
+    var html = '';
+    invites.forEach(function(inv) {
+      html += '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.06);">' +
+        '<div><span style="color:#fff;font-size:0.9rem;">' + inv.email + '</span> <span style="font-size:0.75rem;color:rgba(255,255,255,0.4);">(' + inv.role + ')</span></div>' +
+        '<button onclick="cancelInvite('+inv.id+')" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:0.8rem;">Cancel</button>' +
+      '</div>';
+    });
+    el.innerHTML = html;
+  }
+
+  function renderDanger(team) {
+    var el = document.getElementById('dangerZone');
+    if (myRole === 'owner') {
+      el.innerHTML = '<button onclick="deleteTeam()" class="auth-btn auth-btn--outline auth-btn--danger">Delete Team</button>';
+    } else {
+      el.innerHTML = '<button onclick="leaveTeam()" class="auth-btn auth-btn--outline auth-btn--danger">Leave Team</button>';
+    }
+  }
+
+  // ── Actions ──
+  window.removeMember = function(uid) {
+    if (!confirm('Remove this member?')) return;
+    fetch('/api/team/members/'+uid, {method:'DELETE'}).then(function(r){return r.json();}).then(function(d){
+      if (d.ok) loadTeam(); else alert(d.error);
+    });
+  };
+  window.changeRole = function(uid, role) {
+    fetch('/api/team/members/'+uid, {method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({role:role})})
+      .then(function(r){return r.json();}).then(function(d){ if (d.ok) loadTeam(); else alert(d.error); });
+  };
+  window.cancelInvite = function(id) {
+    fetch('/api/team/invite/'+id, {method:'DELETE'}).then(function(r){return r.json();}).then(function(d){
+      if (d.ok) loadTeam(); else alert(d.error);
+    });
+  };
+  window.deleteTeam = function() {
+    if (!confirm('Delete this team? All members will be removed. This cannot be undone.')) return;
+    fetch('/api/team', {method:'DELETE'}).then(function(r){return r.json();}).then(function(d){
+      if (d.ok) location.reload(); else alert(d.error);
+    });
+  };
+  window.leaveTeam = function() {
+    if (!confirm('Leave this team?')) return;
+    fetch('/api/team/leave', {method:'POST'}).then(function(r){return r.json();}).then(function(d){
+      if (d.ok) location.reload(); else alert(d.error);
+    });
+  };
+
+  // ── Invite form ──
+  var inviteForm = document.getElementById('inviteForm');
+  if (inviteForm) {
+    inviteForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      var email = document.getElementById('inviteEmail').value.trim();
+      var role = document.getElementById('inviteRole').value;
+      if (!email) return;
+      fetch('/api/team/invite', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({email:email, role:role})})
+        .then(function(r){return r.json();}).then(function(d){
+          if (d.ok) { showMsg('inviteMsg', 'Invite sent to ' + email, false); document.getElementById('inviteEmail').value=''; loadTeam(); }
+          else { showMsg('inviteMsg', d.error, true); }
+        });
+    });
+  }
+
+  function showMsg(id, text, isError) {
+    var el = document.getElementById(id);
+    el.style.display = 'block';
+    el.className = 'auth-alert ' + (isError ? 'auth-alert--error' : 'auth-alert--success');
+    el.textContent = text;
+    setTimeout(function(){ el.style.display='none'; }, 5000);
+  }
+
+  // ── Load pending invites for current user (if no team) ──
+  {% if not team %}
+  fetch('/api/team/my-invites').then(function(r){return r.json();}).then(function(d) {
+    if (!d.ok || !d.invites || !d.invites.length) return;
+    var wrap = document.getElementById('myInvites');
+    var el = document.getElementById('myInvitesList');
+    wrap.style.display = '';
+    var html = '';
+    d.invites.forEach(function(inv) {
+      html += '<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.06);">' +
+        '<div><strong style="color:#fff;">' + inv.team_name + '</strong>' +
+        '<br><span style="font-size:0.8rem;color:rgba(255,255,255,0.5);">Invited by ' + (inv.invited_by_name||'a team member') + ' as ' + inv.role + '</span></div>' +
+        '<div style="display:flex;gap:8px;">' +
+        '<button onclick="acceptInvite(\\\''+inv.token+'\\\')" class="auth-btn auth-btn--sm">Accept</button>' +
+        '<button onclick="declineInvite(\\\''+inv.token+'\\\')" class="auth-btn auth-btn--sm auth-btn--outline">Decline</button>' +
+        '</div></div>';
+    });
+    el.innerHTML = html;
+  });
+  window.acceptInvite = function(token) {
+    fetch('/api/team/invite/'+token+'/accept', {method:'POST'}).then(function(r){return r.json();}).then(function(d){
+      if (d.ok) location.reload(); else alert(d.error);
+    });
+  };
+  window.declineInvite = function(token) {
+    fetch('/api/team/invite/'+token+'/decline', {method:'POST'}).then(function(r){return r.json();}).then(function(d){
+      if (d.ok) location.reload(); else alert(d.error);
+    });
+  };
+  {% endif %}
+
+  // ── Init ──
+  {% if team %}
+  loadTeam();
+  {% endif %}
+})();
+</script>
+{% endblock %}

@@ -35,7 +35,8 @@ def monitors_page():
 def list_monitors():
     """JSON list of user's monitors."""
     user = get_current_user()
-    monitors = get_user_monitors(user["id"])
+    team_id = session.get("team_id")
+    monitors = get_user_monitors(user["id"], team_id=team_id)
     limit = get_tier_limit(user["tier"], "blocklist_domains")
     return jsonify({"ok": True, "monitors": monitors, "limit": limit, "count": len(monitors)})
 
@@ -53,7 +54,8 @@ def add_monitor():
     if not domain:
         return jsonify({"ok": False, "error": "Domain is required."}), 400
 
-    result = add_user_monitor(user["id"], domain, ip)
+    team_id = session.get("team_id")
+    result = add_user_monitor(user["id"], domain, ip, team_id=team_id)
     if not result["ok"]:
         return jsonify(result), 400
     return jsonify(result), 201
@@ -65,7 +67,8 @@ def add_monitor():
 def delete_monitor(monitor_id):
     """Remove a monitor."""
     user = get_current_user()
-    result = remove_user_monitor(user["id"], monitor_id)
+    team_id = session.get("team_id")
+    result = remove_user_monitor(user["id"], monitor_id, team_id=team_id)
     if not result["ok"]:
         return jsonify(result), 404
     return jsonify(result)
@@ -77,7 +80,8 @@ def delete_monitor(monitor_id):
 def trigger_scan(monitor_id):
     """Trigger a manual scan for a monitored domain."""
     user = get_current_user()
-    result = scan_user_domain(user["id"], monitor_id)
+    team_id = session.get("team_id")
+    result = scan_user_domain(user["id"], monitor_id, team_id=team_id)
     if not result["ok"]:
         return jsonify(result), 400
     return jsonify(result)
@@ -89,8 +93,9 @@ def trigger_scan(monitor_id):
 def monitor_history(monitor_id):
     """Scan history for a monitored domain."""
     user = get_current_user()
+    team_id = session.get("team_id")
     limit = request.args.get("limit", 30, type=int)
-    history = get_monitor_history(user["id"], monitor_id, limit=limit)
+    history = get_monitor_history(user["id"], monitor_id, limit=limit, team_id=team_id)
     return jsonify({"ok": True, "history": history})
 
 

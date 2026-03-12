@@ -8,6 +8,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/static/css/style.css?v={{ range(1000,9999) | random }}" />
   {% if is_admin %}<link rel="stylesheet" href="/static/css/admin.css" />{% endif %}
+  {% set _css = get_custom_css(active_page) %}{% if _css %}<style>{{ _css | safe }}</style>{% endif %}
 </head>
 <body class="sender-page{% if is_admin %} admin-mode{% endif %}"{% if is_admin %} data-page="blacklist_monitor"{% endif %}>
 
@@ -44,6 +45,8 @@
 {% if is_admin %}
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 <script src="/static/js/admin_editor.js"></script>
+<script src="/static/js/admin_style_panel.js"></script>
+<script src="/static/js/admin_sections.js"></script>
 {% endif %}
 </body>
 </html>

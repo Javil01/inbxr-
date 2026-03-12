@@ -229,7 +229,33 @@ CREATE INDEX IF NOT EXISTS idx_alerts_user ON alerts(user_id, is_read, created_a
 # ── Migrations (append-only list) ───────────────────────
 
 _MIGRATIONS = [
-    # Add future migrations here as tuples: ("migration_name", "SQL")
-    # Example:
-    # ("001_add_webhooks_table", "CREATE TABLE IF NOT EXISTS webhooks (...)"),
+    ("001_team_invites", """
+        CREATE TABLE IF NOT EXISTS team_invites (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            team_id INTEGER NOT NULL,
+            email TEXT NOT NULL COLLATE NOCASE,
+            role TEXT DEFAULT 'member' CHECK(role IN ('admin', 'member')),
+            token TEXT UNIQUE NOT NULL,
+            invited_by INTEGER NOT NULL,
+            status TEXT DEFAULT 'pending' CHECK(status IN ('pending', 'accepted', 'declined', 'expired')),
+            created_at TEXT DEFAULT (datetime('now')),
+            expires_at TEXT DEFAULT (datetime('now', '+7 days')),
+            FOREIGN KEY (team_id) REFERENCES teams(id) ON DELETE CASCADE,
+            FOREIGN KEY (invited_by) REFERENCES users(id) ON DELETE CASCADE
+        );
+        CREATE INDEX IF NOT EXISTS idx_team_invites_token ON team_invites(token);
+        CREATE INDEX IF NOT EXISTS idx_team_invites_email ON team_invites(email);
+    """),
+    ("002_team_id_on_shared_tables", """
+        ALTER TABLE check_history ADD COLUMN team_id INTEGER REFERENCES teams(id) ON DELETE SET NULL;
+        ALTER TABLE user_monitors ADD COLUMN team_id INTEGER REFERENCES teams(id) ON DELETE SET NULL;
+        ALTER TABLE bulk_jobs ADD COLUMN team_id INTEGER REFERENCES teams(id) ON DELETE SET NULL;
+        ALTER TABLE alerts ADD COLUMN team_id INTEGER REFERENCES teams(id) ON DELETE SET NULL;
+    """),
+    ("003_team_id_indexes", """
+        CREATE INDEX IF NOT EXISTS idx_check_history_team ON check_history(team_id);
+        CREATE INDEX IF NOT EXISTS idx_user_monitors_team ON user_monitors(team_id);
+        CREATE INDEX IF NOT EXISTS idx_bulk_jobs_team ON bulk_jobs(team_id);
+        CREATE INDEX IF NOT EXISTS idx_alerts_team ON alerts(team_id);
+    """),
 ]

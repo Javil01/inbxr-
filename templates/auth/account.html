@@ -25,6 +25,14 @@
     <span class="account-label">Plan</span>
     <span class="account-value account-tier account-tier--{{ user.tier }}">{{ tier.name }}</span>
   </div>
+  {% if user.tier in ('pro', 'agency') and user.stripe_subscription_id %}
+  <div class="account-row">
+    <span class="account-label">Subscription</span>
+    <span class="account-value">
+      <button class="auth-btn auth-btn--sm auth-btn--outline" onclick="openPortal()">Manage Subscription</button>
+    </span>
+  </div>
+  {% endif %}
   <div class="account-row">
     <span class="account-label">Member Since</span>
     <span class="account-value">{{ user.created_at[:10] }}</span>
@@ -54,9 +62,13 @@
 </div>
 {% endif %}
 
-{% if user.tier == 'free' %}
+{% if user.tier != 'agency' %}
 <div class="account-upgrade">
+  {% if user.tier == 'free' %}
   <p>Upgrade to <strong>Pro</strong> for cloud history, PDF reports, bulk verification, and more.</p>
+  {% elif user.tier == 'pro' %}
+  <p>Upgrade to <strong>Agency</strong> for API access, teams, webhooks, and unlimited scale.</p>
+  {% endif %}
   <a href="{{ url_for('auth.pricing') }}" class="auth-btn">View Plans</a>
 </div>
 {% endif %}
@@ -82,6 +94,11 @@
 </div>
 
 <script>
+function openPortal() {
+  fetch('/billing/customer-portal', {method:'POST', headers:{'Content-Type':'application/json'}})
+    .then(function(r){return r.json();})
+    .then(function(d){if(d.url) window.location.href=d.url; else alert(d.error||'Failed');});
+}
 const fullKey = {{ (user.api_key or '')|tojson }};
 let keyVisible = false;
 function toggleApiKey() {

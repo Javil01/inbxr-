@@ -283,3 +283,393 @@
 body.admin-mode {
   padding-bottom: 44px;
 }
+
+/* ══════════════════════════════════════════════════════
+   Style Editor Panel (.asp)
+   ══════════════════════════════════════════════════════ */
+
+.asp {
+  position: fixed;
+  top: 0;
+  right: -340px;
+  width: 320px;
+  height: 100vh;
+  z-index: 9997;
+  background: #0f172a;
+  border-left: 1px solid rgba(255,255,255,0.08);
+  box-shadow: -4px 0 24px rgba(0,0,0,0.3);
+  display: flex;
+  flex-direction: column;
+  transition: right 0.25s ease;
+  overflow: hidden;
+}
+
+.asp--open {
+  right: 0;
+}
+
+.asp__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  flex-shrink: 0;
+}
+
+.asp__title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #e0e7ff;
+  letter-spacing: 0.02em;
+}
+
+.asp__close {
+  background: none;
+  border: none;
+  color: rgba(255,255,255,0.5);
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+}
+
+.asp__close:hover { color: #fff; }
+
+.asp__body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 16px 80px;
+}
+
+.asp__section {
+  margin-bottom: 16px;
+}
+
+.asp__label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #94a3b8;
+  margin-bottom: 8px;
+}
+
+.asp__info {
+  font-size: 0.78rem;
+  color: #c7d2fe;
+  font-family: 'Courier New', monospace;
+  background: rgba(255,255,255,0.04);
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(255,255,255,0.06);
+}
+
+.asp__row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.asp__field {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.asp__field > span {
+  font-size: 0.68rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.asp__field input[type="text"],
+.asp__field select {
+  width: 100%;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 5px;
+  color: #e0e7ff;
+  font-size: 0.78rem;
+  padding: 5px 8px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.asp__field input[type="text"]:focus,
+.asp__field select:focus {
+  border-color: #6366f1;
+}
+
+.asp__field select {
+  cursor: pointer;
+}
+
+.asp__field select option {
+  background: #1e293b;
+  color: #e0e7ff;
+}
+
+/* Color picker + text combo */
+.asp__color-wrap {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.asp__color-wrap input[type="color"] {
+  width: 28px;
+  height: 28px;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 5px;
+  padding: 2px;
+  background: transparent;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.asp__color-wrap input[type="text"] {
+  flex: 1;
+  min-width: 0;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 5px;
+  color: #e0e7ff;
+  font-size: 0.78rem;
+  padding: 5px 8px;
+  font-family: inherit;
+  outline: none;
+}
+
+.asp__color-wrap input[type="text"]:focus {
+  border-color: #6366f1;
+}
+
+/* Align buttons */
+.asp__align-btns {
+  display: flex;
+  gap: 2px;
+}
+
+.asp__align-btns button {
+  flex: 1;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: #94a3b8;
+  padding: 4px;
+  font-size: 0.7rem;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.asp__align-btns button:first-child { border-radius: 5px 0 0 5px; }
+.asp__align-btns button:last-child  { border-radius: 0 5px 5px 0; }
+
+.asp__align-btns button:hover {
+  background: rgba(99,102,241,0.2);
+  color: #c7d2fe;
+}
+
+/* Apply button */
+.asp__apply-btn {
+  width: 100%;
+  padding: 10px;
+  background: #6366f1;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.asp__apply-btn:hover {
+  background: #4f46e5;
+}
+
+/* Selected element highlight */
+.asp-selected {
+  outline: 2px solid #6366f1 !important;
+  outline-offset: 2px;
+}
+
+/* Style mode cursor */
+body.admin-style-mode .page-section * {
+  cursor: crosshair !important;
+}
+
+body.admin-style-mode .page-section .asp-selected {
+  cursor: default !important;
+}
+
+/* Style editor button active state */
+.admin-toolbar__style-btn.active {
+  background: rgba(99,102,241,0.3) !important;
+  border-color: #6366f1 !important;
+  color: #fff !important;
+}
+
+/* ══════════════════════════════════════════════════════
+   Section Library Modal
+   ══════════════════════════════════════════════════════ */
+
+.section-lib-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10001;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.section-lib-modal {
+  background: #0f172a;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 16px;
+  width: 90%;
+  max-width: 560px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.section-lib-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.section-lib-modal__title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #e0e7ff;
+}
+
+.section-lib-modal__close {
+  background: none;
+  border: none;
+  color: rgba(255,255,255,0.5);
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+
+.section-lib-modal__body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 20px;
+}
+
+.section-lib-card {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: border-color 0.15s;
+}
+
+.section-lib-card:hover {
+  border-color: rgba(99,102,241,0.4);
+}
+
+.section-lib-card__info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.section-lib-card__name {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #e0e7ff;
+}
+
+.section-lib-card__desc {
+  font-size: 0.72rem;
+  color: #64748b;
+}
+
+.section-lib-card__add {
+  background: #6366f1;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 14px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.section-lib-card__add:hover {
+  background: #4f46e5;
+}
+
+/* ── Section remove button ─────────────────────────── */
+.section-remove-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 50;
+  width: 28px;
+  height: 28px;
+  background: #991b1b;
+  color: #fecaca;
+  border: none;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.page-section:hover > .section-remove-btn { opacity: 1; }
+
+/* ── Preview mode ──────────────────────────────────── */
+body.admin-preview .admin-toolbar,
+body.admin-preview .admin-save-bar,
+body.admin-preview .asp,
+body.admin-preview .section-drag-handle,
+body.admin-preview .section-visibility-btn,
+body.admin-preview .section-remove-btn {
+  display: none !important;
+}
+
+body.admin-preview {
+  padding-bottom: 0 !important;
+}
+
+/* Preview floating exit button */
+.admin-preview-exit {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 10000;
+  background: #1e1b4b;
+  color: #c7d2fe;
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 999px;
+  padding: 8px 20px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+}
+
+.admin-preview-exit:hover {
+  background: #312e81;
+}

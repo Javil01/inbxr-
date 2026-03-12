@@ -264,6 +264,66 @@ document.querySelectorAll('.section-visibility-btn').forEach(btn => {
   });
 });
 
+// ── Universal text editing ───────────────────────────────
+// Make ALL visible text elements in page sections editable
+document.querySelectorAll('.page-section').forEach(sec => {
+  sec.querySelectorAll('h1, h2, h3, h4, h5, h6, p, span, a, li, strong, td, th, label').forEach(el => {
+    if (el.getAttribute('contenteditable')) return;
+    if (el.closest('input, textarea, select, .asp, .admin-toolbar, .admin-save-bar')) return;
+    if (el.children.length > 2) return;
+
+    var text = el.textContent.trim();
+    if (!text || text.length < 2) return;
+
+    el.setAttribute('contenteditable', 'true');
+    if (!el.dataset.field) {
+      el.dataset.field = '_auto_' + el.tagName.toLowerCase() + '_' + Math.random().toString(36).substr(2, 6);
+    }
+
+    el.addEventListener('focus', function() {
+      this._original = this.innerText;
+      this.classList.add('admin-editing');
+    });
+
+    el.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        this.innerText = this._original;
+        this.blur();
+      }
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        this.blur();
+      }
+    });
+
+    el.addEventListener('blur', function() {
+      this.classList.remove('admin-editing');
+      if (this.innerText !== this._original) {
+        var section = this.closest('.page-section');
+        if (!section) return;
+        var tag = this.tagName.toLowerCase();
+        var cls = this.className ? '.' + this.className.trim().split(/\s+/)[0] : '';
+        var selector = tag + cls;
+
+        postJSON('/admin/api/update-inline', {
+          page: PAGE_NAME,
+          section_id: section.dataset.sectionId,
+          selector: selector,
+          value: this.innerText
+        }).then(() => {
+          showToast('Text saved');
+        }).catch(() => {
+          showToast('Text save failed', 'error');
+        });
+      }
+      updateDirtyState();
+    });
+  });
+});
+
+// Expose showToast globally for other admin scripts
+window.showToast = showToast;
+
 // ── Init ─────────────────────────────────────────────────
 createSaveBar();
 snapshot = captureSnapshot();

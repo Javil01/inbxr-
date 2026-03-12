@@ -9,8 +9,8 @@ from modules.database import execute, fetchone, fetchall
 from modules.tiers import get_tier_limit
 
 
-def add_user_monitor(user_id, domain, ip=None):
-    """Add a domain to a user's monitored list. Checks tier limit."""
+def add_user_monitor(user_id, domain, ip=None, team_id=None):
+    """Add a domain to a user's (or team's) monitored list. Checks tier limit."""
     from modules.auth import get_user_by_id
 
     domain = domain.strip().lower().rstrip(".")
@@ -21,30 +21,48 @@ def add_user_monitor(user_id, domain, ip=None):
     if not user:
         return {"ok": False, "error": "User not found."}
 
-    limit = get_tier_limit(user["tier"], "blocklist_domains")
+    # Use team owner's tier for limit if in team context
+    tier = user["tier"]
+    if team_id:
+        from modules.database import fetchone as _fo
+        team = _fo("SELECT owner_id FROM teams WHERE id = ?", (team_id,))
+        if team:
+            owner = get_user_by_id(team["owner_id"])
+            if owner:
+                tier = owner["tier"]
+
+    limit = get_tier_limit(tier, "blocklist_domains")
+    count_clause = "team_id = ?" if team_id else "user_id = ?"
+    count_param = team_id if team_id else user_id
     current = fetchone(
-        "SELECT COUNT(*) as cnt FROM user_monitors WHERE user_id = ?", (user_id,)
+        f"SELECT COUNT(*) as cnt FROM user_monitors WHERE {count_clause}", (count_param,)
     )
     if current and current["cnt"] >= limit:
         return {"ok": False, "error": f"You can monitor up to {limit} domains on your plan."}
 
     try:
         cur = execute(
-            """INSERT INTO user_monitors (user_id, domain, ip)
-               VALUES (?, ?, ?)""",
-            (user_id, domain, ip or None),
+            """INSERT INTO user_monitors (user_id, domain, ip, team_id)
+               VALUES (?, ?, ?, ?)""",
+            (user_id, domain, ip or None, team_id),
         )
         return {"ok": True, "id": cur.lastrowid, "domain": domain}
     except Exception:
         return {"ok": False, "error": f"{domain} is already being monitored."}
 
 
-def remove_user_monitor(user_id, monitor_id):
-    """Remove a monitor. Verifies ownership."""
-    row = fetchone(
-        "SELECT id FROM user_monitors WHERE id = ? AND user_id = ?",
-        (monitor_id, user_id),
-    )
+def remove_user_monitor(user_id, monitor_id, team_id=None):
+    """Remove a monitor. Verifies ownership (personal or team)."""
+    if team_id:
+        row = fetchone(
+            "SELECT id FROM user_monitors WHERE id = ? AND team_id = ?",
+            (monitor_id, team_id),
+        )
+    else:
+        row = fetchone(
+            "SELECT id FROM user_monitors WHERE id = ? AND user_id = ?",
+            (monitor_id, user_id),
+        )
     if not row:
         return {"ok": False, "error": "Monitor not found."}
 
@@ -53,12 +71,18 @@ def remove_user_monitor(user_id, monitor_id):
     return {"ok": True}
 
 
-def get_user_monitors(user_id):
-    """List all monitored domains for a user with latest scan info."""
-    monitors = fetchall(
-        "SELECT * FROM user_monitors WHERE user_id = ? ORDER BY created_at DESC",
-        (user_id,),
-    )
+def get_user_monitors(user_id, team_id=None):
+    """List all monitored domains for a user (or team) with latest scan info."""
+    if team_id:
+        monitors = fetchall(
+            "SELECT * FROM user_monitors WHERE team_id = ? ORDER BY created_at DESC",
+            (team_id,),
+        )
+    else:
+        monitors = fetchall(
+            "SELECT * FROM user_monitors WHERE user_id = ? ORDER BY created_at DESC",
+            (user_id,),
+        )
     for m in monitors:
         scan = fetchone(
             "SELECT * FROM monitor_scans WHERE monitor_id = ? ORDER BY scanned_at DESC LIMIT 1",
@@ -77,15 +101,21 @@ def get_user_monitors(user_id):
     return monitors
 
 
-def scan_user_domain(user_id, monitor_id):
+def scan_user_domain(user_id, monitor_id, team_id=None):
     """Run a scan for a specific monitored domain. Store result and check for changes."""
     from modules.blacklist_monitor import scan_domain as _bl_scan_domain
     from modules.alerts import send_blocklist_alert
 
-    monitor = fetchone(
-        "SELECT * FROM user_monitors WHERE id = ? AND user_id = ?",
-        (monitor_id, user_id),
-    )
+    if team_id:
+        monitor = fetchone(
+            "SELECT * FROM user_monitors WHERE id = ? AND team_id = ?",
+            (monitor_id, team_id),
+        )
+    else:
+        monitor = fetchone(
+            "SELECT * FROM user_monitors WHERE id = ? AND user_id = ?",
+            (monitor_id, user_id),
+        )
     if not monitor:
         return {"ok": False, "error": "Monitor not found."}
 
@@ -155,12 +185,18 @@ def scan_all_user_domains(user_id):
     return results
 
 
-def get_monitor_history(user_id, monitor_id, limit=30):
+def get_monitor_history(user_id, monitor_id, limit=30, team_id=None):
     """Get scan history for a specific monitor. Verifies ownership."""
-    monitor = fetchone(
-        "SELECT id FROM user_monitors WHERE id = ? AND user_id = ?",
-        (monitor_id, user_id),
-    )
+    if team_id:
+        monitor = fetchone(
+            "SELECT id FROM user_monitors WHERE id = ? AND team_id = ?",
+            (monitor_id, team_id),
+        )
+    else:
+        monitor = fetchone(
+            "SELECT id FROM user_monitors WHERE id = ? AND user_id = ?",
+            (monitor_id, user_id),
+        )
     if not monitor:
         return []
 

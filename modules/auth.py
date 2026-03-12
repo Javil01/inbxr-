@@ -174,6 +174,21 @@ def login_user(user):
     session["user_name"] = user["display_name"] or user["email"].split("@")[0]
     session.permanent = True
 
+    # Load team context
+    try:
+        from modules.teams import get_user_team
+        team = get_user_team(user["id"])
+        if team:
+            session["team_id"] = team["team_id"]
+            session["team_name"] = team["name"]
+            session["team_role"] = team["role"]
+        else:
+            session.pop("team_id", None)
+            session.pop("team_name", None)
+            session.pop("team_role", None)
+    except Exception:
+        pass
+
 
 def logout_user():
     """Clear user session."""
@@ -181,6 +196,9 @@ def logout_user():
     session.pop("user_email", None)
     session.pop("user_tier", None)
     session.pop("user_name", None)
+    session.pop("team_id", None)
+    session.pop("team_name", None)
+    session.pop("team_role", None)
 
 
 def get_current_user():

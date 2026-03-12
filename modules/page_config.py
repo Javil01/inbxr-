@@ -648,3 +648,130 @@ def update_section_content(page_name, section_id, field, value):
             save_config(cfg)
             return True
     return False
+
+
+def update_inline_override(page_name, section_id, field_key, value):
+    """Store a text override for any element in a section."""
+    cfg = load_config()
+    page = cfg.get(page_name)
+    if not page:
+        return False
+    for s in page["sections"]:
+        if s["id"] == section_id:
+            if "inline_overrides" not in s:
+                s["inline_overrides"] = {}
+            s["inline_overrides"][field_key] = value
+            save_config(cfg)
+            return True
+    return False
+
+
+def update_element_styles(page_name, section_id, selector, styles):
+    """Store CSS style overrides for an element."""
+    cfg = load_config()
+    page = cfg.get(page_name)
+    if not page:
+        return False
+    if "styles" not in page:
+        page["styles"] = {}
+    key = section_id + "::" + selector
+    page["styles"][key] = styles
+    save_config(cfg)
+    return True
+
+
+def get_page_styles(page_name):
+    """Get all custom style overrides for a page."""
+    cfg = load_config()
+    page = cfg.get(page_name, {})
+    return page.get("styles", {})
+
+
+def update_global_theme(variable, value):
+    """Update a global CSS custom property."""
+    cfg = load_config()
+    if "_global_styles" not in cfg:
+        cfg["_global_styles"] = {}
+    cfg["_global_styles"][variable] = value
+    save_config(cfg)
+    return True
+
+
+def get_global_theme():
+    """Get all global CSS custom property overrides."""
+    cfg = load_config()
+    return cfg.get("_global_styles", {})
+
+
+def add_section_to_page(page_name, section_type, position):
+    """Add a section from the library to a page at a given position."""
+    cfg = load_config()
+    page = cfg.get(page_name)
+    if not page:
+        return False
+
+    section_id = section_type + "_" + str(int(__import__("time").time()))
+    new_section = {
+        "id": section_id,
+        "type": section_type,
+        "order": position,
+        "draggable": True,
+        "editable_fields": {},
+        "inline_overrides": {},
+    }
+
+    for s in page["sections"]:
+        if s.get("order", 0) >= position:
+            s["order"] = s.get("order", 0) + 1
+
+    page["sections"].append(new_section)
+    save_config(cfg)
+    return section_id
+
+
+def remove_section_from_page(page_name, section_id):
+    """Remove a section from a page."""
+    cfg = load_config()
+    page = cfg.get(page_name)
+    if not page:
+        return False
+    original_len = len(page["sections"])
+    page["sections"] = [s for s in page["sections"] if s["id"] != section_id]
+    if len(page["sections"]) < original_len:
+        save_config(cfg)
+        return True
+    return False
+
+
+def get_section_library():
+    """Return list of available section templates."""
+    import glob as _glob
+    sections_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "templates", "sections")
+    files = _glob.glob(os.path.join(sections_dir, "*.html"))
+    library = []
+    for f in sorted(files):
+        name = os.path.basename(f).replace(".html", "")
+        if name in ("header",):
+            continue
+        label = name.replace("_", " ").replace("-", " ").title()
+        library.append({"type": name, "label": label})
+    return library
+
+
+def save_uploaded_image(file_storage):
+    """Save an uploaded image to static/uploads/. Returns the URL path."""
+    import time as _time
+
+    ALLOWED = {".png", ".jpg", ".jpeg", ".gif", ".svg", ".webp"}
+    upload_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "static", "uploads")
+    os.makedirs(upload_dir, exist_ok=True)
+
+    filename = file_storage.filename or "upload"
+    ext = os.path.splitext(filename)[1].lower()
+    if ext not in ALLOWED:
+        return None
+
+    safe_name = f"{int(_time.time())}_{filename.replace(' ', '_')}"
+    path = os.path.join(upload_dir, safe_name)
+    file_storage.save(path)
+    return f"/static/uploads/{safe_name}"

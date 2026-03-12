@@ -1,0 +1,16 @@
+{% extends "auth/base_auth.html" %}
+{% block title %}Subscription Activated{% endblock %}
+{% block content %}
+<div style="text-align:center;padding:24px 0;">
+  <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="2" style="margin-bottom:16px;">
+    <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
+    <polyline points="22 4 12 14.01 9 11.01"/>
+  </svg>
+  <h1 class="auth-card__title">You're Upgraded!</h1>
+  <p class="auth-card__sub">Your subscription is now active. All premium features are unlocked.</p>
+  <div style="margin-top:24px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+    <a href="{{ url_for('auth.account') }}" class="auth-btn">Go to Account</a>
+    <a href="/" class="auth-btn auth-btn--outline">Start Testing</a>
+  </div>
+</div>
+{% endblock %}

@@ -53,12 +53,46 @@ app.register_blueprint(pdf_bp)
 from blueprints.monitor_routes import monitor_bp
 app.register_blueprint(monitor_bp)
 
+from blueprints.billing_routes import billing_bp
+app.register_blueprint(billing_bp)
+
+from blueprints.team_routes import team_bp
+app.register_blueprint(team_bp)
+
 from modules.scheduler import init_scheduler
 init_scheduler(app)
 
 # ── Admin credentials (set via env vars in production) ──
 ADMIN_USER = os.environ.get("ADMIN_USER", "admin")
 ADMIN_PASS = os.environ.get("ADMIN_PASS", "inbxr2026")
+
+
+def _get_custom_css(page_name):
+    """Generate a <style> block from saved style overrides for a page."""
+    from modules.page_config import get_page_styles, get_global_theme
+    lines = []
+    # Global theme variables
+    theme = get_global_theme()
+    if theme:
+        parts = []
+        for var, val in theme.items():
+            parts.append(f"  {var}: {val};")
+        lines.append(":root {\n" + "\n".join(parts) + "\n}")
+    # Per-element overrides
+    styles = get_page_styles(page_name)
+    for key, props in styles.items():
+        # key format: "section_id::selector"
+        parts = key.split("::", 1)
+        if len(parts) != 2:
+            continue
+        section_id, selector = parts
+        declarations = []
+        for prop, val in props.items():
+            declarations.append(f"  {prop}: {val};")
+        if declarations:
+            css_selector = f'[data-section-id="{section_id}"] {selector}'
+            lines.append(css_selector + " {\n" + "\n".join(declarations) + "\n}")
+    return "\n".join(lines)
 
 
 # ── Inject user context into all templates ───────────────
@@ -70,6 +104,10 @@ def inject_user_context():
         "current_user_email": session.get("user_email"),
         "current_user_tier": session.get("user_tier", "free"),
         "current_user_name": session.get("user_name"),
+        "current_team_id": session.get("team_id"),
+        "current_team_name": session.get("team_name"),
+        "current_team_role": session.get("team_role"),
+        "get_custom_css": _get_custom_css,
     }
 
 
@@ -283,6 +321,89 @@ def admin_toggle_visibility():
             return jsonify({"ok": True})
 
     return jsonify({"ok": False, "error": "Section not found"}), 404
+
+
+@app.route("/admin/api/update-inline", methods=["POST"])
+def admin_update_inline():
+    if not _is_admin():
+        return jsonify({"ok": False, "error": "Unauthorized"}), 403
+    from modules.page_config import update_inline_override
+    data = request.get_json(force=True, silent=True) or {}
+    field_key = data.get("field_key") or data.get("selector", "")
+    ok = update_inline_override(data.get("page", ""), data.get("section_id", ""), field_key, data.get("value", ""))
+    return jsonify({"ok": ok})
+
+
+@app.route("/admin/api/update-styles", methods=["POST"])
+def admin_update_styles():
+    if not _is_admin():
+        return jsonify({"ok": False, "error": "Unauthorized"}), 403
+    from modules.page_config import update_element_styles
+    data = request.get_json(force=True, silent=True) or {}
+    ok = update_element_styles(data.get("page", ""), data.get("section_id", ""), data.get("selector", ""), data.get("styles", {}))
+    return jsonify({"ok": ok})
+
+
+@app.route("/admin/api/update-theme", methods=["POST"])
+def admin_update_theme():
+    if not _is_admin():
+        return jsonify({"ok": False, "error": "Unauthorized"}), 403
+    from modules.page_config import update_global_theme
+    data = request.get_json(force=True, silent=True) or {}
+    ok = update_global_theme(data.get("variable", ""), data.get("value", ""))
+    return jsonify({"ok": ok})
+
+
+@app.route("/admin/api/get-theme", methods=["GET"])
+def admin_get_theme():
+    if not _is_admin():
+        return jsonify({"ok": False, "error": "Unauthorized"}), 403
+    from modules.page_config import get_global_theme
+    return jsonify({"ok": True, "theme": get_global_theme()})
+
+
+@app.route("/admin/api/upload-image", methods=["POST"])
+def admin_upload_image():
+    if not _is_admin():
+        return jsonify({"ok": False, "error": "Unauthorized"}), 403
+    from modules.page_config import save_uploaded_image
+    file = request.files.get("file")
+    if not file:
+        return jsonify({"ok": False, "error": "No file uploaded"}), 400
+    url = save_uploaded_image(file)
+    if not url:
+        return jsonify({"ok": False, "error": "Invalid file type. Allowed: png, jpg, gif, svg, webp"}), 400
+    return jsonify({"ok": True, "url": url})
+
+
+@app.route("/admin/api/section-library", methods=["GET"])
+def admin_section_library():
+    if not _is_admin():
+        return jsonify({"ok": False, "error": "Unauthorized"}), 403
+    from modules.page_config import get_section_library
+    return jsonify({"ok": True, "sections": get_section_library()})
+
+
+@app.route("/admin/api/add-section", methods=["POST"])
+def admin_add_section():
+    if not _is_admin():
+        return jsonify({"ok": False, "error": "Unauthorized"}), 403
+    from modules.page_config import add_section_to_page
+    data = request.get_json(force=True, silent=True) or {}
+    section_id = add_section_to_page(data.get("page", ""), data.get("type", ""), data.get("position", 0))
+    if not section_id:
+        return jsonify({"ok": False, "error": "Failed to add section"}), 400
+    return jsonify({"ok": True, "section_id": section_id})
+
+
+@app.route("/admin/api/remove-section", methods=["POST"])
+def admin_remove_section():
+    if not _is_admin():
+        return jsonify({"ok": False, "error": "Unauthorized"}), 403
+    from modules.page_config import remove_section_from_page
+    data = request.get_json(force=True, silent=True) or {}
+    ok = remove_section_from_page(data.get("page", ""), data.get("section_id", ""))
+    return jsonify({"ok": ok})
 
 
 # ══════════════════════════════════════════════════════

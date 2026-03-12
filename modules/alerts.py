@@ -8,9 +8,30 @@ from modules.database import execute, fetchone, fetchall
 from modules.mailer import is_configured, _send
 
 
-def create_alert(user_id, alert_type, title, message, data=None):
-    """Store an alert in the database. Returns the alert id."""
+def create_alert(user_id, alert_type, title, message, data=None, team_id=None, severity=None):
+    """Store an alert in the database. Returns the alert id.
+    When team_id is set, creates alerts for all team members.
+    """
     data_json = json.dumps(data) if data else None
+
+    if team_id:
+        # Create alert for each team member
+        try:
+            from modules.teams import get_team_user_ids
+            member_ids = get_team_user_ids(team_id)
+        except Exception:
+            member_ids = [user_id]
+
+        last_id = None
+        for uid in member_ids:
+            cur = execute(
+                """INSERT INTO alerts (user_id, alert_type, title, message, data_json, team_id)
+                   VALUES (?, ?, ?, ?, ?, ?)""",
+                (uid, alert_type, title, message, data_json, team_id),
+            )
+            last_id = cur.lastrowid
+        return last_id
+
     cur = execute(
         """INSERT INTO alerts (user_id, alert_type, title, message, data_json)
            VALUES (?, ?, ?, ?, ?)""",

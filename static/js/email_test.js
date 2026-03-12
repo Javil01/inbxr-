@@ -1067,6 +1067,17 @@ if (scrollToTestBtn) {
   });
 }
 
+// Hero + bottom CTA scroll buttons (class-based)
+document.querySelectorAll('.js-scroll-to-test').forEach(function(btn) {
+  btn.addEventListener('click', function(e) {
+    e.preventDefault();
+    var toolSection = document.querySelector('[data-section-id="email_test_tool"]');
+    if (toolSection) {
+      toolSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  });
+});
+
 // ══════════════════════════════════════════════════════
 //  ACCORDION
 // ══════════════════════════════════════════════════════
