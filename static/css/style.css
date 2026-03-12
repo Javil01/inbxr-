@@ -138,6 +138,13 @@ img { display: block; max-width: 100%; }
 .hidden { display: none !important; }
 
 /* ── 4. HEADER — Clean minimal ────────────────────────── */
+/* ── Embedded mode (inside dashboard iframe) ─────────── */
+.embedded .site-header,
+.embedded footer,
+.embedded .admin-toolbar { display: none !important; }
+.embedded body,
+.embedded .sender-hero { padding-top: 0 !important; margin-top: 0 !important; }
+
 .site-header {
   position: sticky;
   top: 0;
@@ -5835,6 +5842,18 @@ select {
   padding: 28px 32px 60px;
   max-width: 900px;
   min-width: 0;
+}
+
+/* ── Tool iframe ──────────────────────────────────────── */
+.dash-main:has(.dash-tool-frame) {
+  padding: 0;
+  max-width: none;
+}
+.dash-tool-frame {
+  width: 100%;
+  height: calc(100vh - 60px);
+  border: none;
+  display: block;
 }
 
 .dash-loading, .dash-loading-sm {

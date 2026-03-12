@@ -30,32 +30,63 @@ var TOOL_COLORS = {
 // ══════════════════════════════════════════════════════
 //  NAVIGATION
 // ══════════════════════════════════════════════════════
-$$('.dash-nav__item').forEach(function(item) {
-  item.addEventListener('click', function(e) {
-    e.preventDefault();
-    var view = this.dataset.view;
-    if (view === currentView) return;
-    switchView(view);
+function setActiveNav(el) {
+  $$('.dash-nav__item').forEach(function(n) {
+    n.classList.remove('dash-nav__item--active');
   });
-});
-
-function switchView(view) {
-  currentView = view;
-  $$('.dash-nav__item').forEach(function(el) {
-    el.classList.toggle('dash-nav__item--active', el.dataset.view === view);
-  });
+  if (el) el.classList.add('dash-nav__item--active');
   // Close mobile sidebar
   var sidebar = document.getElementById('dashSidebar');
   if (sidebar) sidebar.classList.remove('dash-sidebar--open');
-
-  var main = $('#dashMain');
-  main.innerHTML = '<div class="dash-loading"><div class="loading-ring"></div></div>';
-
-  if (view === 'overview') renderOverview();
-  else if (view === 'blacklist') renderBlacklistView();
-  else if (view === 'warmup') renderWarmupView();
-  else renderToolView(view);
 }
+
+// Overview link
+$$('.dash-nav__item[data-view]').forEach(function(item) {
+  item.addEventListener('click', function(e) {
+    e.preventDefault();
+    if (currentView === 'overview') return;
+    currentView = 'overview';
+    setActiveNav(this);
+    var main = $('#dashMain');
+    main.innerHTML = '<div class="dash-loading"><div class="loading-ring"></div></div>';
+    renderOverview();
+  });
+});
+
+// Tool links — load in iframe
+$$('.dash-nav__item[data-tool]').forEach(function(item) {
+  item.addEventListener('click', function(e) {
+    e.preventDefault();
+    var toolUrl = this.dataset.tool;
+    currentView = toolUrl;
+    setActiveNav(this);
+    loadToolInDashboard(toolUrl);
+  });
+});
+
+// ══════════════════════════════════════════════════════
+//  LOAD TOOL IN DASHBOARD (iframe)
+// ══════════════════════════════════════════════════════
+function loadToolInDashboard(url) {
+  var main = $('#dashMain');
+  // Add ?embed=1 so tool pages can optionally hide their own header/footer
+  var embedUrl = url + (url.indexOf('?') > -1 ? '&' : '?') + 'embed=1';
+  main.innerHTML = '<iframe class="dash-tool-frame" src="' + embedUrl + '" frameborder="0" allowfullscreen></iframe>';
+}
+
+// Quick action cards — intercept to load in dashboard instead of navigating
+document.addEventListener('click', function(e) {
+  var card = e.target.closest('.dash-action-card');
+  if (!card) return;
+  e.preventDefault();
+  var href = card.getAttribute('href');
+  if (!href) return;
+  currentView = href;
+  // Highlight matching sidebar item
+  var match = document.querySelector('.dash-nav__item[data-tool="' + href + '"]');
+  setActiveNav(match);
+  loadToolInDashboard(href);
+});
 
 // Mobile sidebar toggle
 var toggleBtn = document.getElementById('dashSidebarToggle');
