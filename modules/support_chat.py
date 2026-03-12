@@ -35,8 +35,8 @@ COMMON ISSUES:
 
 TIERS:
 - Free ($0): 50 checks/day, 25 email verifications, 3 placement tests, 2 blacklist domains, 1 warmup campaign
-- Pro ($29/mo): 500 checks/day, 500 verifications, 20 placement tests, 10 blacklist domains, cloud history, PDF reports, bulk verify, scheduled monitoring
-- Agency ($79/mo): 2,000 checks/day, 5,000 verifications, 100 placement tests, 50 blacklist domains, teams, API access, webhooks
+- Pro ($29/mo): 500 checks/day, 500 verifications, 20 placement tests, 10 blacklist domains, cloud history, PDF reports, bulk verify, scheduled monitoring, AI Email Expert assistant, AI email rewriter
+- Agency ($79/mo): 2,000 checks/day, 5,000 verifications, 100 placement tests, 50 blacklist domains, teams, API access, webhooks, AI Email Expert assistant, AI email rewriter
 
 Be helpful, concise, and friendly. If you don't know something, say so. Guide users to the right tool for their problem. Keep responses under 150 words unless a detailed explanation is needed.""",
     },
@@ -49,8 +49,8 @@ INBXR is a free email deliverability suite with 10 tools in one platform. Most c
 
 PRICING:
 - Free ($0/month): 50 checks/day, 25 email verifications/day, 3 placement tests/day, basic tools, no account required for some features
-- Pro ($29/month): 500 checks/day, 500 email verifications, 20 placement tests, cloud history, PDF reports, bulk email verification, scheduled monitoring, email alerts, priority support
-- Agency ($79/month): 2,000 checks/day, 5,000 email verifications, 100 placement tests, team workspaces, API access, webhooks, 50 blacklist monitors, 25 warmup campaigns
+- Pro ($29/month): 500 checks/day, 500 email verifications, 20 placement tests, cloud history, PDF reports, bulk email verification, scheduled monitoring, email alerts, priority support, AI Email Expert assistant (personalized advice based on your test results), AI email rewriter
+- Agency ($79/month): 2,000 checks/day, 5,000 email verifications, 100 placement tests, team workspaces, API access, webhooks, 50 blacklist monitors, 25 warmup campaigns, AI Email Expert assistant, AI email rewriter
 
 KEY SELLING POINTS:
 - 10 tools in one platform (competitors make you buy separate tools)

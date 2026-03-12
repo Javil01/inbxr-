@@ -696,5 +696,112 @@ function gradeClass(grade) {
   return 'red';
 }
 
+// ══════════════════════════════════════════════════════
+//  EMAIL EXPERT ASSISTANT (Pro/Agency)
+// ══════════════════════════════════════════════════════
+(function() {
+  var panel = document.getElementById('eaPanel');
+  if (!panel) return; // not rendered for free tier
+
+  var messagesEl = document.getElementById('eaMessages');
+  var inputEl = document.getElementById('eaInput');
+  var sendBtn = document.getElementById('eaSend');
+  var closeBtn = document.getElementById('eaClose');
+  var openBtn = document.getElementById('openAssistant');
+
+  var messages = [];
+  var isLoading = false;
+
+  var GREETING = "Hi! I'm your INBXR Email Expert. I have access to your test results and can help you improve your email deliverability.\n\nAsk me anything — like **\"Why are my emails going to spam?\"** or **\"How do I fix my DMARC?\"** and I'll give you specific advice based on your data.";
+
+  function openAssistant() {
+    messages = [];
+    panel.classList.add('ea-panel--open');
+    messagesEl.innerHTML = '';
+    addMsg('assistant', GREETING);
+    inputEl.focus();
+  }
+
+  function closeAssistant() {
+    panel.classList.remove('ea-panel--open');
+  }
+
+  if (openBtn) {
+    openBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      openAssistant();
+    });
+  }
+
+  closeBtn.addEventListener('click', closeAssistant);
+
+  function sendMessage() {
+    var text = inputEl.value.trim();
+    if (!text || isLoading) return;
+
+    inputEl.value = '';
+    addMsg('user', text);
+    messages.push({ role: 'user', content: text });
+
+    isLoading = true;
+    var loadingEl = addLoading();
+
+    fetch('/api/assistant/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messages: messages })
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      removeLoading(loadingEl);
+      if (data.error) {
+        addMsg('assistant', 'Sorry, I ran into an issue: ' + data.error);
+      } else {
+        var reply = data.reply || 'Sorry, I could not generate a response.';
+        addMsg('assistant', reply);
+        messages.push({ role: 'assistant', content: reply });
+      }
+    })
+    .catch(function() {
+      removeLoading(loadingEl);
+      addMsg('assistant', 'Sorry, something went wrong. Please try again.');
+    })
+    .finally(function() {
+      isLoading = false;
+    });
+  }
+
+  sendBtn.addEventListener('click', sendMessage);
+  inputEl.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') sendMessage();
+  });
+
+  function addMsg(role, text) {
+    var div = document.createElement('div');
+    div.className = 'ea-msg ea-msg--' + role;
+    var html = esc(text)
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/`(.*?)`/g, '<code>$1</code>')
+      .replace(/\n/g, '<br>');
+    div.innerHTML = html;
+    messagesEl.appendChild(div);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+    return div;
+  }
+
+  function addLoading() {
+    var div = document.createElement('div');
+    div.className = 'ea-msg ea-msg--assistant ea-msg--loading';
+    div.innerHTML = '<span class="ea-typing"><span></span><span></span><span></span></span>';
+    messagesEl.appendChild(div);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+    return div;
+  }
+
+  function removeLoading(el) {
+    if (el && el.parentNode) el.parentNode.removeChild(el);
+  }
+})();
+
 // ── Boot ──
 renderOverview();

@@ -55,6 +55,18 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
         BIMI Checker
       </a>
+      <span class="dash-nav__heading">AI Assistant</span>
+      {% if session.get('tier', 'free') in ('pro', 'agency', 'api') %}
+      <a class="dash-nav__item" id="openAssistant" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M12 2a4 4 0 014 4v1a1 1 0 01-1 1H9a1 1 0 01-1-1V6a4 4 0 014-4z"/><path d="M9 8v1a3 3 0 006 0V8"/><path d="M12 14v3"/><path d="M7 17h10a2 2 0 012 2v1H5v-1a2 2 0 012-2z"/></svg>
+        Email Expert
+      </a>
+      {% else %}
+      <a class="dash-nav__item dash-nav__item--locked" href="/account" title="Available on Pro &amp; Agency plans">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+        Email Expert <span class="dash-nav__pro-badge">PRO</span>
+      </a>
+      {% endif %}
       <span class="dash-nav__heading">Support</span>
       <a class="dash-nav__item" href="/support">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
@@ -86,9 +98,31 @@
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
 </button>
 
+<!-- ── Email Expert Assistant Panel ── -->
+{% if session.get('tier', 'free') in ('pro', 'agency', 'api') %}
+<div class="ea-panel" id="eaPanel">
+  <div class="ea-panel__header">
+    <div class="ea-panel__header-info">
+      <span class="ea-panel__dot"></span>
+      <span class="ea-panel__title">Email Expert</span>
+      <span class="ea-panel__badge">AI</span>
+    </div>
+    <button class="ea-panel__close" id="eaClose">&times;</button>
+  </div>
+  <div class="ea-panel__messages" id="eaMessages"></div>
+  <div class="ea-panel__input">
+    <input type="text" id="eaInput" placeholder="Ask about your email deliverability..." autocomplete="off" />
+    <button class="ea-panel__send" id="eaSend">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+    </button>
+  </div>
+</div>
+{% endif %}
+
 <script>
   window.__dashStats = {{ stats | tojson }};
   window.__dashCredits = {{ credits | tojson }};
+  window.__userTier = {{ (session.get('tier', 'free') | tojson) }};
 </script>
 <script src="/static/js/dashboard.js"></script>
 </body>

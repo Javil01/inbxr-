@@ -561,6 +561,32 @@ def support_chat_api():
     return jsonify(result)
 
 
+@app.route("/api/assistant/chat", methods=["POST"])
+def assistant_chat_api():
+    """INBXR Expert Email Assistant — Pro/Agency only."""
+    if not session.get("user_id"):
+        return jsonify({"error": "Please log in to use the Email Assistant.", "signup_url": "/signup"}), 429
+    tier = session.get("tier", "free")
+    if tier not in ("pro", "agency", "api"):
+        return jsonify({"error": "The Email Assistant is available on Pro and Agency plans.", "upgrade_url": "/account"}), 403
+
+    from modules.assistant_chat import chat as assistant_chat, is_available
+    if not is_available():
+        return jsonify({"error": "Email Assistant is not available right now."}), 503
+
+    data = request.get_json(silent=True) or {}
+    messages = data.get("messages", [])
+    if not messages:
+        return jsonify({"error": "No message provided."}), 400
+
+    user_id = session["user_id"]
+    team_id = session.get("current_team_id")
+    result = assistant_chat(user_id, messages, team_id=team_id)
+    if "error" in result:
+        return jsonify(result), 500
+    return jsonify(result)
+
+
 @app.route("/dashboard")
 def dashboard():
     if not session.get("user_id"):
