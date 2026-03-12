@@ -35,6 +35,18 @@ previewBtn.style.cssText = 'background:none;border:1px solid rgba(255,255,255,0.
 previewBtn.addEventListener('click', togglePreview);
 toolbar.appendChild(previewBtn);
 
+// ── Add "Page Builder" button to toolbar ──────────────
+var sep3 = document.createElement('span');
+sep3.className = 'admin-toolbar__sep';
+toolbar.appendChild(sep3);
+
+var builderBtn = document.createElement('a');
+builderBtn.textContent = 'Page Builder';
+builderBtn.href = '/admin/builder/' + PAGE_NAME;
+builderBtn.className = 'admin-toolbar__style-btn';
+builderBtn.style.cssText = 'background:rgba(37,99,235,0.2);border:1px solid #2563eb;color:#bfdbfe;padding:4px 12px;border-radius:6px;font-size:0.75rem;font-weight:600;cursor:pointer;text-decoration:none;';
+toolbar.appendChild(builderBtn);
+
 // ── Preview mode ──────────────────────────────────────
 function togglePreview() {
   document.body.classList.add('admin-preview');

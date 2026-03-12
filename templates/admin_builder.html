@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>INBXR Page Builder — {{ page_name }}</title>
+  <link rel="stylesheet" href="https://unpkg.com/grapesjs@0.21.13/dist/grapes.min.css" />
+  <link rel="stylesheet" href="/static/css/builder.css" />
+</head>
+<body data-page="{{ page_name }}">
+
+  <div id="builder-topbar">
+    <div class="bt-left">
+      <a href="/" class="bt-back">&larr; Back to Site</a>
+      <span class="bt-sep"></span>
+      <span class="bt-page">{{ page_name }}</span>
+    </div>
+    <div class="bt-right">
+      <button class="bt-btn bt-btn--clear" id="clearBtn">Reset</button>
+      <button class="bt-btn bt-btn--save" id="saveBtn">Save Page</button>
+    </div>
+  </div>
+
+  <div id="gjs"></div>
+
+  <script src="https://unpkg.com/grapesjs@0.21.13/dist/grapes.min.js"></script>
+  <script src="/static/js/builder.js"></script>
+</body>
+</html>

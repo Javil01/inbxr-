@@ -1,0 +1,180 @@
+/* ══════════════════════════════════════════════════════
+   INBXR — GrapesJS Page Builder UI
+   ══════════════════════════════════════════════════════ */
+
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css');
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #0d1117;
+  color: #dbeafe;
+  overflow: hidden;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Top bar ─────────────────────────────────────────── */
+#builder-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 48px;
+  padding: 0 16px;
+  background: #172554;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  flex-shrink: 0;
+  z-index: 100;
+}
+
+.bt-left, .bt-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.bt-back {
+  color: #bfdbfe;
+  text-decoration: none;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+.bt-back:hover { color: #fff; }
+
+.bt-sep {
+  width: 1px;
+  height: 18px;
+  background: rgba(255,255,255,0.15);
+}
+
+.bt-page {
+  font-size: 0.78rem;
+  color: #94a3b8;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.bt-btn {
+  border: none;
+  border-radius: 6px;
+  padding: 7px 18px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+}
+.bt-btn--save { background: #2563eb; color: #fff; }
+.bt-btn--save:hover { background: #1d4ed8; }
+.bt-btn--clear { background: rgba(255,255,255,0.08); color: #94a3b8; }
+.bt-btn--clear:hover { background: rgba(255,255,255,0.15); color: #dbeafe; }
+
+/* ── GrapesJS container — fills remaining space ────── */
+#gjs {
+  flex: 1;
+  overflow: hidden;
+}
+
+/* ══════════════════════════════════════════════════════
+   GrapesJS Dark Theme
+   ══════════════════════════════════════════════════════ */
+
+/* Core backgrounds */
+.gjs-one-bg       { background-color: #161b22 !important; }
+.gjs-two-color    { color: #c9d1d9 !important; }
+.gjs-three-bg     { background-color: #172554 !important; }
+.gjs-four-color,
+.gjs-four-color-h:hover { color: #2563eb !important; }
+
+/* Main editor */
+.gjs-editor { background: #0d1117 !important; }
+
+/* Left panel (views = blocks/layers) */
+.gjs-pn-views     { border-right: 1px solid rgba(255,255,255,0.06) !important; }
+.gjs-pn-views .gjs-pn-btn { padding: 8px 6px !important; }
+
+/* Right panel (options = undo/redo/device buttons) */
+.gjs-pn-options .gjs-pn-btn { padding: 6px !important; }
+
+/* All panel buttons */
+.gjs-pn-btn {
+  color: #94a3b8 !important;
+  border-radius: 4px !important;
+  margin: 2px !important;
+}
+.gjs-pn-btn.gjs-pn-active { color: #2563eb !important; background: rgba(37,99,235,0.12) !important; }
+.gjs-pn-btn:hover { color: #bfdbfe !important; }
+
+/* Blocks */
+.gjs-block {
+  background: rgba(255,255,255,0.04) !important;
+  border: 1px solid rgba(255,255,255,0.08) !important;
+  color: #c9d1d9 !important;
+  border-radius: 6px !important;
+  min-height: auto !important;
+}
+.gjs-block:hover { border-color: rgba(37,99,235,0.4) !important; }
+.gjs-block svg { fill: none !important; stroke: #94a3b8 !important; }
+.gjs-block-label { font-size: 0.68rem !important; }
+.gjs-block-category .gjs-title {
+  background: rgba(255,255,255,0.03) !important;
+  color: #94a3b8 !important;
+  border-color: rgba(255,255,255,0.06) !important;
+  font-size: 0.72rem !important;
+  letter-spacing: 0.5px !important;
+  text-transform: uppercase !important;
+  font-weight: 600 !important;
+}
+
+/* Style manager */
+.gjs-sm-sector .gjs-sm-sector-title {
+  background: rgba(255,255,255,0.03) !important;
+  color: #c9d1d9 !important;
+  border-color: rgba(255,255,255,0.06) !important;
+}
+.gjs-sm-property { color: #94a3b8 !important; }
+.gjs-sm-label { font-size: 0.72rem !important; }
+
+/* Fields (inputs, selects) */
+.gjs-field {
+  background: rgba(255,255,255,0.06) !important;
+  border-color: rgba(255,255,255,0.1) !important;
+  color: #dbeafe !important;
+  border-radius: 4px !important;
+}
+.gjs-field input,
+.gjs-field select,
+.gjs-field textarea { color: #dbeafe !important; }
+
+/* Layer manager */
+.gjs-layers     { background: transparent !important; }
+.gjs-layer-title { background: transparent !important; }
+.gjs-layer-name  { color: #c9d1d9 !important; }
+
+/* Traits */
+.gjs-trt-trait { color: #94a3b8 !important; }
+.gjs-trt-trait .gjs-label { font-size: 0.72rem !important; }
+
+/* Canvas */
+.gjs-cv-canvas { background: #0d1117 !important; }
+
+/* Toolbar on selected component */
+.gjs-toolbar { background: #172554 !important; border-radius: 6px !important; box-shadow: 0 4px 12px rgba(0,0,0,0.4) !important; }
+.gjs-toolbar-item { color: #bfdbfe !important; }
+.gjs-toolbar-item:hover { color: #fff !important; }
+
+/* Component badges & highlights */
+.gjs-badge { background: #2563eb !important; color: #fff !important; font-size: 0.65rem !important; }
+.gjs-highlighter { outline: 1px dashed rgba(37,99,235,0.5) !important; }
+.gjs-selected { outline: 2px solid #2563eb !important; outline-offset: -1px; }
+
+/* Rich text editor toolbar */
+.gjs-rte-toolbar { background: #172554 !important; border: 1px solid rgba(255,255,255,0.1) !important; border-radius: 6px !important; }
+.gjs-rte-action { color: #bfdbfe !important; }
+
+/* Notification toasts */
+.gjs-noti-msg { background: #172554 !important; color: #dbeafe !important; border-radius: 8px !important; }
+
+/* Context menu */
+.gjs-cm-editor { background: #161b22 !important; }

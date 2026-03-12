@@ -11,8 +11,8 @@
   right: 0;
   z-index: 9999;
   height: 44px;
-  background: #1e1b4b;
-  color: #e0e7ff;
+  background: #172554;
+  color: #dbeafe;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -48,7 +48,7 @@
 }
 
 .admin-toolbar a {
-  color: #c7d2fe;
+  color: #bfdbfe;
   text-decoration: none;
   font-weight: 500;
   transition: color 0.15s;
@@ -64,8 +64,8 @@
   z-index: 50;
   width: 32px;
   height: 32px;
-  background: #1e1b4b;
-  color: #c7d2fe;
+  background: #172554;
+  color: #bfdbfe;
   border: none;
   border-radius: 6px;
   display: flex;
@@ -92,7 +92,7 @@
 }
 
 .page-section.editable-section:hover {
-  outline: 2px dashed rgba(99,102,241,0.3);
+  outline: 2px dashed rgba(37,99,235,0.3);
   outline-offset: -2px;
 }
 
@@ -124,13 +124,13 @@
 }
 
 .page-section [contenteditable="true"]:hover {
-  outline: 2px dashed rgba(99,102,241,0.25);
+  outline: 2px dashed rgba(37,99,235,0.25);
 }
 
 .page-section [contenteditable="true"]:focus,
 .admin-editing {
   outline: 2px solid var(--brand) !important;
-  background: rgba(99,102,241,0.04) !important;
+  background: rgba(37,99,235,0.04) !important;
 }
 
 /* ── Toast notification ─────────────────────────────── */
@@ -140,8 +140,8 @@
   left: 50%;
   transform: translateX(-50%) translateY(10px);
   z-index: 10000;
-  background: #1e1b4b;
-  color: #e0e7ff;
+  background: #172554;
+  color: #dbeafe;
   font-size: 0.78rem;
   font-weight: 600;
   padding: 8px 18px;
@@ -193,8 +193,8 @@
   z-index: 50;
   width: 32px;
   height: 32px;
-  background: #1e1b4b;
-  color: #c7d2fe;
+  background: #172554;
+  color: #bfdbfe;
   border: none;
   border-radius: 6px;
   display: flex;
@@ -228,7 +228,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  background: #1e1b4b;
+  background: #172554;
   padding: 8px 16px;
   border-radius: 10px;
   box-shadow: 0 4px 20px rgba(0,0,0,0.25);
@@ -262,17 +262,17 @@
 }
 
 .admin-save-bar__btn--save {
-  background: #6366f1;
+  background: #2563eb;
   color: #fff;
 }
 
 .admin-save-bar__btn--save:hover:not(:disabled) {
-  background: #4f46e5;
+  background: #1d4ed8;
 }
 
 .admin-save-bar__btn--undo {
   background: rgba(255,255,255,0.1);
-  color: #e0e7ff;
+  color: #dbeafe;
 }
 
 .admin-save-bar__btn--undo:hover {
@@ -320,7 +320,7 @@ body.admin-mode {
 .asp__title {
   font-size: 0.82rem;
   font-weight: 700;
-  color: #e0e7ff;
+  color: #dbeafe;
   letter-spacing: 0.02em;
 }
 
@@ -357,7 +357,7 @@ body.admin-mode {
 
 .asp__info {
   font-size: 0.78rem;
-  color: #c7d2fe;
+  color: #bfdbfe;
   font-family: 'Courier New', monospace;
   background: rgba(255,255,255,0.04);
   padding: 6px 10px;
@@ -390,7 +390,7 @@ body.admin-mode {
   background: rgba(255,255,255,0.06);
   border: 1px solid rgba(255,255,255,0.1);
   border-radius: 5px;
-  color: #e0e7ff;
+  color: #dbeafe;
   font-size: 0.78rem;
   padding: 5px 8px;
   font-family: inherit;
@@ -400,7 +400,7 @@ body.admin-mode {
 
 .asp__field input[type="text"]:focus,
 .asp__field select:focus {
-  border-color: #6366f1;
+  border-color: #2563eb;
 }
 
 .asp__field select {
@@ -409,7 +409,7 @@ body.admin-mode {
 
 .asp__field select option {
   background: #1e293b;
-  color: #e0e7ff;
+  color: #dbeafe;
 }
 
 /* Color picker + text combo */
@@ -436,7 +436,7 @@ body.admin-mode {
   background: rgba(255,255,255,0.06);
   border: 1px solid rgba(255,255,255,0.1);
   border-radius: 5px;
-  color: #e0e7ff;
+  color: #dbeafe;
   font-size: 0.78rem;
   padding: 5px 8px;
   font-family: inherit;
@@ -444,7 +444,7 @@ body.admin-mode {
 }
 
 .asp__color-wrap input[type="text"]:focus {
-  border-color: #6366f1;
+  border-color: #2563eb;
 }
 
 /* Align buttons */
@@ -468,15 +468,15 @@ body.admin-mode {
 .asp__align-btns button:last-child  { border-radius: 0 5px 5px 0; }
 
 .asp__align-btns button:hover {
-  background: rgba(99,102,241,0.2);
-  color: #c7d2fe;
+  background: rgba(37,99,235,0.2);
+  color: #bfdbfe;
 }
 
 /* Apply button */
 .asp__apply-btn {
   width: 100%;
   padding: 10px;
-  background: #6366f1;
+  background: #2563eb;
   color: #fff;
   border: none;
   border-radius: 8px;
@@ -487,12 +487,12 @@ body.admin-mode {
 }
 
 .asp__apply-btn:hover {
-  background: #4f46e5;
+  background: #1d4ed8;
 }
 
 /* Selected element highlight */
 .asp-selected {
-  outline: 2px solid #6366f1 !important;
+  outline: 2px solid #2563eb !important;
   outline-offset: 2px;
 }
 
@@ -507,8 +507,8 @@ body.admin-style-mode .page-section .asp-selected {
 
 /* Style editor button active state */
 .admin-toolbar__style-btn.active {
-  background: rgba(99,102,241,0.3) !important;
-  border-color: #6366f1 !important;
+  background: rgba(37,99,235,0.3) !important;
+  border-color: #2563eb !important;
   color: #fff !important;
 }
 
@@ -549,7 +549,7 @@ body.admin-style-mode .page-section .asp-selected {
 .section-lib-modal__title {
   font-size: 0.95rem;
   font-weight: 700;
-  color: #e0e7ff;
+  color: #dbeafe;
 }
 
 .section-lib-modal__close {
@@ -579,7 +579,7 @@ body.admin-style-mode .page-section .asp-selected {
 }
 
 .section-lib-card:hover {
-  border-color: rgba(99,102,241,0.4);
+  border-color: rgba(37,99,235,0.4);
 }
 
 .section-lib-card__info {
@@ -591,7 +591,7 @@ body.admin-style-mode .page-section .asp-selected {
 .section-lib-card__name {
   font-size: 0.82rem;
   font-weight: 600;
-  color: #e0e7ff;
+  color: #dbeafe;
 }
 
 .section-lib-card__desc {
@@ -600,7 +600,7 @@ body.admin-style-mode .page-section .asp-selected {
 }
 
 .section-lib-card__add {
-  background: #6366f1;
+  background: #2563eb;
   color: #fff;
   border: none;
   border-radius: 6px;
@@ -612,7 +612,7 @@ body.admin-style-mode .page-section .asp-selected {
 }
 
 .section-lib-card__add:hover {
-  background: #4f46e5;
+  background: #1d4ed8;
 }
 
 /* ── Section remove button ─────────────────────────── */
@@ -659,8 +659,8 @@ body.admin-preview {
   bottom: 20px;
   right: 20px;
   z-index: 10000;
-  background: #1e1b4b;
-  color: #c7d2fe;
+  background: #172554;
+  color: #bfdbfe;
   border: 1px solid rgba(255,255,255,0.15);
   border-radius: 999px;
   padding: 8px 20px;

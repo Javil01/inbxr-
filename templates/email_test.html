@@ -25,6 +25,11 @@
 </div>
 {% endif %}
 
+{% set _builder = get_builder_override('email_test') %}
+{% if _builder and not is_admin %}
+<style>{{ _builder.css | safe }}</style>
+{{ _builder.html | safe }}
+{% else %}
 <div id="page-sections">
 {% for section in sections %}
   <div class="page-section{% if is_admin %} editable-section{% endif %}{% if not section.draggable and is_admin %} page-section--locked{% endif %}"
@@ -40,6 +45,7 @@
   </div>
 {% endfor %}
 </div>
+{% endif %}
 
 {% set _overrides = get_inline_overrides_json(active_page) %}
 {% if _overrides %}

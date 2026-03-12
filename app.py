@@ -67,6 +67,12 @@ ADMIN_USER = os.environ.get("ADMIN_USER", "admin")
 ADMIN_PASS = os.environ.get("ADMIN_PASS", "inbxr2026")
 
 
+def _get_builder_override(page_name):
+    """Get builder HTML/CSS override for a page, or None."""
+    from modules.page_config import get_builder_data
+    return get_builder_data(page_name)
+
+
 def _get_inline_overrides_json(page_name):
     """Get inline text overrides as a JSON string for injection."""
     import json as _json
@@ -117,6 +123,7 @@ def inject_user_context():
         "current_team_role": session.get("team_role"),
         "get_custom_css": _get_custom_css,
         "get_inline_overrides_json": _get_inline_overrides_json,
+        "get_builder_override": _get_builder_override,
     }
 
 
@@ -412,6 +419,77 @@ def admin_remove_section():
     from modules.page_config import remove_section_from_page
     data = request.get_json(force=True, silent=True) or {}
     ok = remove_section_from_page(data.get("page", ""), data.get("section_id", ""))
+    return jsonify({"ok": ok})
+
+
+# ── GrapesJS Page Builder ─────────────────────────────
+
+# Map URL-friendly names to config keys
+_PAGE_ALIASES = {"index": "analyzer"}
+
+
+def _resolve_page_name(page_name):
+    return _PAGE_ALIASES.get(page_name, page_name)
+
+
+@app.route("/admin/builder/<page_name>")
+def admin_builder(page_name):
+    if not _is_admin():
+        return redirect("/admin/login")
+    page_name = _resolve_page_name(page_name)
+    return render_template("admin_builder.html", page_name=page_name)
+
+
+@app.route("/admin/api/builder-load/<page_name>")
+def admin_builder_load(page_name):
+    if not _is_admin():
+        return jsonify({"ok": False}), 403
+    page_name = _resolve_page_name(page_name)
+    from modules.page_config import get_builder_data, get_page_sections
+    data = get_builder_data(page_name)
+    if data:
+        return jsonify({"ok": True, "html": data["html"], "css": data["css"]})
+    # Generate from sections
+    sections = get_page_sections(page_name)
+    html_parts = []
+    for s in sections:
+        try:
+            rendered = render_template(
+                "sections/" + s["type"] + ".html",
+                section=s, is_admin=False, active_page=page_name,
+            )
+        except Exception:
+            rendered = f'<div>Section: {s["id"]}</div>'
+        html_parts.append(
+            f'<div class="page-section" data-section-id="{s["id"]}" '
+            f'data-section-type="{s["type"]}">{rendered}</div>'
+        )
+    full_html = '<div id="page-sections">' + "".join(html_parts) + "</div>"
+    return jsonify({"ok": True, "html": full_html, "css": ""})
+
+
+@app.route("/admin/api/builder-save/<page_name>", methods=["POST"])
+def admin_builder_save(page_name):
+    if not _is_admin():
+        return jsonify({"ok": False}), 403
+    page_name = _resolve_page_name(page_name)
+    from modules.page_config import save_builder_data
+    data = request.get_json(force=True, silent=True) or {}
+    html = data.get("html", "")
+    css = data.get("css", "")
+    if not html:
+        return jsonify({"ok": False, "error": "No HTML provided"}), 400
+    ok = save_builder_data(page_name, html, css)
+    return jsonify({"ok": ok})
+
+
+@app.route("/admin/api/builder-clear/<page_name>", methods=["POST"])
+def admin_builder_clear(page_name):
+    if not _is_admin():
+        return jsonify({"ok": False}), 403
+    page_name = _resolve_page_name(page_name)
+    from modules.page_config import clear_builder_data
+    ok = clear_builder_data(page_name)
     return jsonify({"ok": ok})
 
 
