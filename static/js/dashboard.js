@@ -769,6 +769,10 @@ function gradeClass(grade) {
         var reply = data.reply || 'Sorry, I could not generate a response.';
         addMsg('assistant', reply);
         messages.push({ role: 'assistant', content: reply });
+        // Update remaining counter for Pro users
+        if (data.remaining != null && data.monthly_limit) {
+          updateRemainingCounter(data.remaining, data.monthly_limit);
+        }
       }
     })
     .catch(function() {
@@ -809,6 +813,21 @@ function gradeClass(grade) {
 
   function removeLoading(el) {
     if (el && el.parentNode) el.parentNode.removeChild(el);
+  }
+
+  function updateRemainingCounter(remaining, limit) {
+    var counter = document.getElementById('eaCounter');
+    if (!counter) {
+      // Create counter element below header
+      counter = document.createElement('div');
+      counter.id = 'eaCounter';
+      counter.className = 'ea-counter';
+      panel.querySelector('.ea-panel__header').insertAdjacentElement('afterend', counter);
+    }
+    var used = limit - remaining;
+    counter.innerHTML = '<span>' + used + ' of ' + limit + ' conversations used this month</span>' +
+      (remaining <= 3 ? '<a href="/account">Upgrade for unlimited</a>' : '');
+    counter.classList.toggle('ea-counter--low', remaining <= 3);
   }
 })();
 

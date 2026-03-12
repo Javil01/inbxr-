@@ -600,6 +600,13 @@ def assistant_chat_api():
     from modules.rate_limiter import log_usage
     log_usage("assistant_chat")
 
+    # Include remaining count for Pro users
+    if tier == "pro":
+        from modules.rate_limiter import check_monthly_limit
+        _, remaining = check_monthly_limit(session["user_id"], "assistant_chat", 10)
+        result["remaining"] = remaining
+        result["monthly_limit"] = 10
+
     return jsonify(result)
 
 

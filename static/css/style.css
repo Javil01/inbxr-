@@ -7089,6 +7089,29 @@ select {
 }
 .ea-panel__close:hover { color: #fff; }
 
+.ea-counter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 16px;
+  background: var(--bg-2);
+  border-bottom: 1px solid var(--border-1);
+  font-size: 0.72rem;
+  color: var(--text-3);
+  flex-shrink: 0;
+}
+.ea-counter a {
+  color: var(--brand);
+  font-weight: 600;
+  text-decoration: none;
+}
+.ea-counter a:hover { text-decoration: underline; }
+.ea-counter--low {
+  background: #fef3c7;
+  color: #92400e;
+}
+.ea-counter--low a { color: #d97706; }
+
 .ea-panel__messages {
   flex: 1;
   overflow-y: auto;
