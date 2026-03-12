@@ -12,7 +12,7 @@
 {% endif %}
 
 <form method="post" class="auth-form">
-  <input type="hidden" name="next" value="{{ request.args.get('next', '/') }}" />
+  <input type="hidden" name="next" value="{{ request.args.get('next', '/dashboard') }}" />
   <label class="auth-label">
     <span>Email</span>
     <input type="email" name="email" required autocomplete="email" placeholder="you@company.com" />

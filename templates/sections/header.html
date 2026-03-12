@@ -9,45 +9,49 @@
     </button>
     <nav class="site-nav">
       {% if session.get('user_id') %}
-      <a href="/dashboard"      class="nav-link nav-link--featured{% if active_page == 'dashboard' %} nav-link--active{% endif %}">Dashboard</a>
-      {% endif %}
-      <a href="/"               class="nav-link{% if not session.get('user_id') %} nav-link--featured{% endif %}{% if active_page == 'index' %} nav-link--active{% endif %}">{% if session.get('user_id') %}Email Tester{% else %}Home{% endif %}</a>
-      <a href="/analyzer"       class="nav-link{% if active_page == 'analyzer' %} nav-link--active{% endif %}">Email Analyzer</a>
-      <a href="/sender"         class="nav-link{% if active_page == 'sender' %} nav-link--active{% endif %}">Sender Check</a>
-      <a href="/placement"      class="nav-link{% if active_page == 'placement' %} nav-link--active{% endif %}">Inbox Placement</a>
-      <div class="nav-dropdown">
-        <button class="nav-link nav-link--dropdown{% if active_page in ['subject_scorer','bimi','header_analyzer','blacklist_monitor','warmup','email_verifier'] %} nav-link--active{% endif %}">
-          More Tools
-          <svg width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </button>
-        <div class="nav-dropdown__menu">
-          <a href="/subject-scorer"    class="nav-dropdown__link{% if active_page == 'subject_scorer' %} nav-dropdown__link--active{% endif %}">Subject Scorer</a>
-          <a href="/bimi"              class="nav-dropdown__link{% if active_page == 'bimi' %} nav-dropdown__link--active{% endif %}">BIMI Checker</a>
-          <a href="/header-analyzer"   class="nav-dropdown__link{% if active_page == 'header_analyzer' %} nav-dropdown__link--active{% endif %}">Header Analyzer</a>
-          <a href="/blacklist-monitor" class="nav-dropdown__link{% if active_page == 'blacklist_monitor' %} nav-dropdown__link--active{% endif %}">Blacklist Monitor</a>
-          <a href="/email-verifier"    class="nav-dropdown__link{% if active_page == 'email_verifier' %} nav-dropdown__link--active{% endif %}">Email Verifier</a>
-          <a href="/warmup"            class="nav-dropdown__link{% if active_page == 'warmup' %} nav-dropdown__link--active{% endif %}">Warm-up Tracker</a>
-        </div>
-      </div>
-      {% if current_team_id or current_user_tier == 'agency' %}
-      <a href="/team"           class="nav-link{% if active_page == 'team' %} nav-link--active{% endif %}">Team{% if current_team_name %}: {{ current_team_name }}{% endif %}</a>
-      {% endif %}
-      <span class="nav-spacer"></span>
-      {% if session.get('user_id') %}
-      <a href="/monitors" class="nav-link alert-bell" id="alertBell" title="Alerts">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
-        <span class="alert-bell__badge" id="alertBadge" style="display:none;">0</span>
-      </a>
-      <a href="/account" class="nav-link nav-link--user{% if active_page == 'account' %} nav-link--active{% endif %}">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-        {{ session.get('user_name', 'Account') }}
-      </a>
+        {# Logged-in: Dashboard + user controls only (tools are in the sidebar) #}
+        <a href="/dashboard" class="nav-link nav-link--featured{% if active_page == 'dashboard' %} nav-link--active{% endif %}">Dashboard</a>
+        {% if current_team_id or current_user_tier == 'agency' %}
+        <a href="/team" class="nav-link{% if active_page == 'team' %} nav-link--active{% endif %}">Team{% if current_team_name %}: {{ current_team_name }}{% endif %}</a>
+        {% endif %}
+        <span class="nav-spacer"></span>
+        <a href="/monitors" class="nav-link alert-bell" id="alertBell" title="Alerts">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+          <span class="alert-bell__badge" id="alertBadge" style="display:none;">0</span>
+        </a>
+        <a href="/account" class="nav-link nav-link--user{% if active_page == 'account' %} nav-link--active{% endif %}">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          {{ session.get('user_name', 'Account') }}
+        </a>
+        {% if is_admin %}
+        <a href="/admin/logout" class="nav-link" style="color:var(--red);margin-left:8px">Logout</a>
+        {% endif %}
       {% else %}
-      <a href="/login" class="nav-link{% if active_page == 'login' %} nav-link--active{% endif %}">Log in</a>
-      <a href="/signup" class="nav-link nav-link--cta">Sign Up Free</a>
-      {% endif %}
-      {% if is_admin %}
-      <a href="/admin/logout" class="nav-link" style="color:var(--red);margin-left:8px">Logout</a>
+        {# Visitors: full tool navigation + sign up CTA #}
+        <a href="/" class="nav-link nav-link--featured{% if active_page == 'index' %} nav-link--active{% endif %}">Home</a>
+        <a href="/analyzer"       class="nav-link{% if active_page == 'analyzer' %} nav-link--active{% endif %}">Email Analyzer</a>
+        <a href="/sender"         class="nav-link{% if active_page == 'sender' %} nav-link--active{% endif %}">Sender Check</a>
+        <a href="/placement"      class="nav-link{% if active_page == 'placement' %} nav-link--active{% endif %}">Inbox Placement</a>
+        <div class="nav-dropdown">
+          <button class="nav-link nav-link--dropdown{% if active_page in ['subject_scorer','bimi','header_analyzer','blacklist_monitor','warmup','email_verifier'] %} nav-link--active{% endif %}">
+            More Tools
+            <svg width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <div class="nav-dropdown__menu">
+            <a href="/subject-scorer"    class="nav-dropdown__link{% if active_page == 'subject_scorer' %} nav-dropdown__link--active{% endif %}">Subject Scorer</a>
+            <a href="/bimi"              class="nav-dropdown__link{% if active_page == 'bimi' %} nav-dropdown__link--active{% endif %}">BIMI Checker</a>
+            <a href="/header-analyzer"   class="nav-dropdown__link{% if active_page == 'header_analyzer' %} nav-dropdown__link--active{% endif %}">Header Analyzer</a>
+            <a href="/blacklist-monitor" class="nav-dropdown__link{% if active_page == 'blacklist_monitor' %} nav-dropdown__link--active{% endif %}">Blacklist Monitor</a>
+            <a href="/email-verifier"    class="nav-dropdown__link{% if active_page == 'email_verifier' %} nav-dropdown__link--active{% endif %}">Email Verifier</a>
+            <a href="/warmup"            class="nav-dropdown__link{% if active_page == 'warmup' %} nav-dropdown__link--active{% endif %}">Warm-up Tracker</a>
+          </div>
+        </div>
+        <span class="nav-spacer"></span>
+        <a href="/login" class="nav-link{% if active_page == 'login' %} nav-link--active{% endif %}">Log in</a>
+        <a href="/signup" class="nav-link nav-link--cta">Sign Up Free</a>
+        {% if is_admin %}
+        <a href="/admin/logout" class="nav-link" style="color:var(--red);margin-left:8px">Logout</a>
+        {% endif %}
       {% endif %}
     </nav>
   </div>

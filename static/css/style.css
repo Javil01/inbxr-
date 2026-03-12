@@ -141,9 +141,11 @@ img { display: block; max-width: 100%; }
 /* ── Embedded mode (inside dashboard iframe) ─────────── */
 .embedded .site-header,
 .embedded footer,
-.embedded .admin-toolbar { display: none !important; }
-.embedded body,
-.embedded .sender-hero { padding-top: 0 !important; margin-top: 0 !important; }
+.embedded .admin-toolbar,
+.embedded .sender-hero,
+.embedded .tool-hero,
+.embedded .et-homepage-hero,
+.embedded .et-final-cta { display: none !important; }
 
 .site-header {
   position: sticky;
