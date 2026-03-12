@@ -124,6 +124,22 @@ def check_rate_limit(action, limit_key=None):
     return True, info
 
 
+def check_monthly_limit(user_id, action, limit):
+    """Check if a user is within a monthly limit for a given action.
+    Returns (allowed: bool, remaining: int).
+    """
+    now = datetime.now(timezone.utc)
+    month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0).isoformat()
+
+    row = fetchone(
+        "SELECT COUNT(*) as cnt FROM usage_log WHERE user_id = ? AND action = ? AND created_at >= ?",
+        (user_id, action, month_start),
+    )
+    count = row["cnt"] if row else 0
+    remaining = max(0, limit - count)
+    return count < limit, remaining
+
+
 def get_usage_summary(user_id=None):
     """Get usage summary for a user (for account page)."""
     now = datetime.now(timezone.utc)

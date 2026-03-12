@@ -762,7 +762,7 @@ function gradeClass(grade) {
       removeLoading(loadingEl);
       if (data.__is429) {
         var msg = data.error || 'Daily limit reached.';
-        addMsg('assistant', msg + (data.upgrade_url ? '\n\nUpgrade to **Agency** for unlimited conversations.' : ''));
+        addMsg('assistant', msg + (data.upgrade_url ? '\n\nUpgrade to **Agency** for unlimited monthly conversations.' : ''));
       } else if (data.error) {
         addMsg('assistant', 'Sorry, I ran into an issue: ' + data.error);
       } else {

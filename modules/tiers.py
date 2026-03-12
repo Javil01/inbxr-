@@ -44,7 +44,7 @@ TIERS = {
             "warmup_campaigns": 5,
             "subject_tests_per_day": 50,
             "placement_tests_per_day": 20,
-            "assistant_chats_per_day": 10,
+            "assistant_chats_per_month": 10,
         },
         "features": {
             "cloud_history": True,
