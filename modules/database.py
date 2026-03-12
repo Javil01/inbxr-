@@ -7,7 +7,8 @@ import os
 import sqlite3
 import threading
 
-_DB_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data")
+_DEFAULT_DB_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data")
+_DB_DIR = os.environ.get("INBXR_DATA_DIR", _DEFAULT_DB_DIR)
 _DB_PATH = os.path.join(_DB_DIR, "inbxr.db")
 _local = threading.local()
 
