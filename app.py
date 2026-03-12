@@ -574,6 +574,17 @@ def assistant_chat_api():
     if not is_available():
         return jsonify({"error": "Email Assistant is not available right now."}), 503
 
+    # Pro: 10 conversations/day; Agency/API: unlimited
+    if tier == "pro":
+        from modules.rate_limiter import check_rate_limit
+        allowed, info = check_rate_limit("assistant_chat", limit_key="assistant_chats_per_day")
+        if not allowed:
+            return jsonify({
+                "error": "You've used your 10 Email Expert conversations for today. Upgrade to Agency for unlimited.",
+                "upgrade_url": "/account",
+                "remaining": 0,
+            }), 429
+
     data = request.get_json(silent=True) or {}
     messages = data.get("messages", [])
     if not messages:
@@ -584,6 +595,11 @@ def assistant_chat_api():
     result = assistant_chat(user_id, messages, team_id=team_id)
     if "error" in result:
         return jsonify(result), 500
+
+    # Log usage for rate limiting
+    from modules.rate_limiter import log_usage
+    log_usage("assistant_chat")
+
     return jsonify(result)
 
 

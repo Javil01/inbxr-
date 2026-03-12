@@ -751,10 +751,19 @@ function gradeClass(grade) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ messages: messages })
     })
-    .then(function(res) { return res.json(); })
+    .then(function(res) {
+      var is429 = res.status === 429;
+      return res.json().then(function(data) {
+        data.__is429 = is429;
+        return data;
+      });
+    })
     .then(function(data) {
       removeLoading(loadingEl);
-      if (data.error) {
+      if (data.__is429) {
+        var msg = data.error || 'Daily limit reached.';
+        addMsg('assistant', msg + (data.upgrade_url ? '\n\nUpgrade to **Agency** for unlimited conversations.' : ''));
+      } else if (data.error) {
         addMsg('assistant', 'Sorry, I ran into an issue: ' + data.error);
       } else {
         var reply = data.reply || 'Sorry, I could not generate a response.';
