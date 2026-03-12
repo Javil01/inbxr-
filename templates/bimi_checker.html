@@ -41,6 +41,22 @@
 {% endfor %}
 </div>
 
+{% set _overrides = get_inline_overrides_json(active_page) %}
+{% if _overrides %}
+<script>
+(function(){
+  var ov = {{ _overrides | safe }};
+  for (var key in ov) {
+    var parts = key.split('::');
+    var secId = parts[0], sel = parts[1];
+    var sec = document.querySelector('[data-section-id="' + secId + '"]');
+    if (!sec) continue;
+    var el = sec.querySelector(sel);
+    if (el) el.textContent = ov[key];
+  }
+})();
+</script>
+{% endif %}
 <script src="/static/js/bimi_checker.js?v={{ range(1000,9999) | random }}"></script>
 {% if is_admin %}
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>

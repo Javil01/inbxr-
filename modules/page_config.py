@@ -655,7 +655,10 @@ def update_inline_override(page_name, section_id, field_key, value):
     cfg = load_config()
     page = cfg.get(page_name)
     if not page:
-        return False
+        # Auto-create page entry
+        cfg[page_name] = {"sections": []}
+        page = cfg[page_name]
+
     for s in page["sections"]:
         if s["id"] == section_id:
             if "inline_overrides" not in s:
@@ -663,7 +666,19 @@ def update_inline_override(page_name, section_id, field_key, value):
             s["inline_overrides"][field_key] = value
             save_config(cfg)
             return True
-    return False
+
+    # Section not in config yet — create a stub and save the override
+    new_section = {
+        "id": section_id,
+        "type": section_id,
+        "order": len(page["sections"]),
+        "draggable": True,
+        "editable_fields": {},
+        "inline_overrides": {field_key: value},
+    }
+    page["sections"].append(new_section)
+    save_config(cfg)
+    return True
 
 
 def update_element_styles(page_name, section_id, selector, styles):
@@ -671,7 +686,8 @@ def update_element_styles(page_name, section_id, selector, styles):
     cfg = load_config()
     page = cfg.get(page_name)
     if not page:
-        return False
+        cfg[page_name] = {"sections": [], "styles": {}}
+        page = cfg[page_name]
     if "styles" not in page:
         page["styles"] = {}
     key = section_id + "::" + selector
@@ -685,6 +701,17 @@ def get_page_styles(page_name):
     cfg = load_config()
     page = cfg.get(page_name, {})
     return page.get("styles", {})
+
+
+def get_inline_overrides(page_name):
+    """Get all inline text overrides for a page as {section_id::selector: value}."""
+    cfg = load_config()
+    page = cfg.get(page_name, {})
+    result = {}
+    for s in page.get("sections", []):
+        for key, val in s.get("inline_overrides", {}).items():
+            result[s["id"] + "::" + key] = val
+    return result
 
 
 def update_global_theme(variable, value):

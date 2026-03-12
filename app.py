@@ -67,6 +67,14 @@ ADMIN_USER = os.environ.get("ADMIN_USER", "admin")
 ADMIN_PASS = os.environ.get("ADMIN_PASS", "inbxr2026")
 
 
+def _get_inline_overrides_json(page_name):
+    """Get inline text overrides as a JSON string for injection."""
+    import json as _json
+    from modules.page_config import get_inline_overrides
+    overrides = get_inline_overrides(page_name)
+    return _json.dumps(overrides) if overrides else ""
+
+
 def _get_custom_css(page_name):
     """Generate a <style> block from saved style overrides for a page."""
     from modules.page_config import get_page_styles, get_global_theme
@@ -108,6 +116,7 @@ def inject_user_context():
         "current_team_name": session.get("team_name"),
         "current_team_role": session.get("team_role"),
         "get_custom_css": _get_custom_css,
+        "get_inline_overrides_json": _get_inline_overrides_json,
     }
 
 
