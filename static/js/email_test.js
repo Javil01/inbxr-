@@ -189,6 +189,11 @@ function hideSkeletonLoading() {
     skeleton.classList.add('et-skeleton--fade');
     setTimeout(() => skeleton.remove(), 300);
   }
+  // Restore elements hidden by showSkeletonLoading
+  ['#etPlacementSummary', '#etAssessment', '#etHeaderGrades', '#etTransport', '#etIdentity', '#etScores', '#etReadability', '#etReputation', '#etAudit', '#etRawHeaders'].forEach(s => {
+    const el = $(s);
+    if (el) el.style.display = '';
+  });
   $('.placement-actions').style.display = '';
 }
 
@@ -219,6 +224,7 @@ async function runCheck(btn) {
       notFoundCount++;
       renderNotFound();
       if (notFoundCount < 4) {
+        showScanCompleteFlash();
         startAutoRecheck();
       }
       return;
@@ -272,17 +278,39 @@ function clearAutoRecheck() {
 }
 
 // ══════════════════════════════════════════════════════
+//  SCAN COMPLETE FLASH — shows user a scan actually ran
+// ══════════════════════════════════════════════════════
+function showScanCompleteFlash() {
+  var existing = document.getElementById('scanFlash');
+  if (existing) existing.remove();
+
+  var flash = document.createElement('div');
+  flash.id = 'scanFlash';
+  flash.className = 'et-scan-flash';
+  flash.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Scan complete \u2014 email not found yet. Trying again shortly\u2026';
+
+  var summary = $('#etPlacementSummary');
+  if (summary) summary.insertBefore(flash, summary.firstChild);
+
+  setTimeout(function() { flash.classList.add('et-scan-flash--visible'); }, 10);
+  setTimeout(function() {
+    flash.classList.remove('et-scan-flash--visible');
+    setTimeout(function() { flash.remove(); }, 400);
+  }, 4000);
+}
+
+// ══════════════════════════════════════════════════════
 //  RENDER: NOT FOUND
 // ══════════════════════════════════════════════════════
 function renderNotFound() {
   let msg, extra = '';
 
   if (notFoundCount <= 1) {
-    msg = "Email not found in the seed mailbox yet. It may still be in transit — we'll auto-check again in 45 seconds.";
+    msg = "We scanned the mailbox \u2014 your email hasn\u2019t arrived yet. It may still be in transit. We\u2019ll automatically check again in 45 seconds.";
   } else if (notFoundCount === 2) {
-    msg = "Still waiting — email hasn't arrived yet. Some email systems can take 1–2 minutes to deliver. We'll check once more automatically.";
+    msg = "Scan #2 complete \u2014 still no email. Some servers take 1\u20132 minutes to deliver. We\u2019ll check once more automatically.";
   } else if (notFoundCount === 3) {
-    msg = "Third check — still no email. This is taking longer than usual. We'll try one more time.";
+    msg = "Scan #3 complete \u2014 still not found. This is taking longer than usual. We\u2019ll try one more time.";
     extra = `
       <div class="et-nf-tips">
         <strong>Quick checks:</strong>
@@ -293,34 +321,57 @@ function renderNotFound() {
         </ul>
       </div>`;
   } else {
-    msg = "Email not found after multiple checks. This may indicate a delivery issue — the email could have been blocked or rejected before reaching the mailbox.";
+    msg = "Email not found after multiple checks. This usually means it was blocked, bounced, or filtered before reaching the mailbox. Don\u2019t worry — here\u2019s how to find out what happened.";
     extra = `
-      <div class="et-nf-recommend">
-        <div class="et-nf-recommend__icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+      <div class="et-nf-next-steps">
+        <h3 class="et-nf-next-steps__title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M9 18l6-6-6-6"/></svg>
+          Recommended Next Steps
+        </h3>
+
+        <div class="et-nf-recommend et-nf-recommend--primary">
+          <div class="et-nf-recommend__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/></svg>
+          </div>
+          <div class="et-nf-recommend__body">
+            <strong>Run a Free Inbox Placement Test</strong>
+            <p>See exactly where your emails land — inbox, spam, or blocked — across Gmail, Outlook, Yahoo, iCloud, and more. This will tell you if the issue is with one provider or all of them.</p>
+            <a href="/placement" class="et-nf-recommend__btn">Run Free Placement Test &rarr;</a>
+          </div>
         </div>
-        <div class="et-nf-recommend__body">
-          <strong>Recommended: Run a Placement Test</strong>
-          <p>If your email isn't reaching our seed account, it may be getting blocked or filtered before delivery.
-          The <a href="/placement">Inbox Placement Test</a> sends to multiple seed accounts across Gmail, Outlook, Yahoo, and more —
-          giving you a broader view of where your email lands and helping pinpoint whether the issue is provider-specific or systemic.</p>
-          <a href="/placement" class="et-nf-recommend__btn">Run Placement Test &rarr;</a>
+
+        <div class="et-nf-recommend-grid">
+          <a href="/sender" class="et-nf-recommend-card">
+            <div class="et-nf-recommend-card__icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            </div>
+            <strong>Check Your Auth Records</strong>
+            <span>Verify SPF, DKIM, DMARC are set up correctly — a missing record is the #1 cause of blocked emails.</span>
+          </a>
+          <a href="/blacklist-monitor" class="et-nf-recommend-card">
+            <div class="et-nf-recommend-card__icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+            </div>
+            <strong>Scan 110+ Blocklists</strong>
+            <span>Check if your domain or IP is listed on a blocklist — one listing can silently kill your deliverability.</span>
+          </a>
         </div>
-      </div>
-      <div class="et-nf-tips">
-        <strong>Other things to check:</strong>
-        <ul>
-          <li><strong>Sender Check</strong> — <a href="/sender">run a sender audit</a> to verify your SPF, DKIM, DMARC, and check for blocklist listings</li>
-          <li><strong>Bounce notifications</strong> — check if your ESP or mail server sent a bounce-back or delivery failure notice</li>
-          <li><strong>Sending limits</strong> — some ESPs throttle new accounts or domains with low reputation</li>
-          <li><strong>Firewall / security</strong> — corporate email systems may block outbound mail to unknown addresses</li>
-        </ul>
+
+        <div class="et-nf-tips">
+          <strong>Also worth checking:</strong>
+          <ul>
+            <li><strong>Bounce-back emails</strong> — check your sent folder or ESP dashboard for delivery failure notices</li>
+            <li><strong>Subject line token</strong> — confirm <code>${escHtml(currentToken)}</code> was in the subject line exactly as shown</li>
+            <li><strong>Sending address</strong> — verify you sent to <code>${escHtml(seedAddress)}</code></li>
+            <li><strong>ESP sending limits</strong> — new accounts or cold domains often get throttled</li>
+          </ul>
+        </div>
       </div>`;
   }
 
   const borderColor = notFoundCount >= 4 ? 'var(--color-red)' : 'var(--color-yellow)';
-  const icon = notFoundCount >= 4 ? '\u2717' : '?';
-  const title = notFoundCount >= 4 ? 'Delivery Issue Detected' : 'Not Found';
+  const icon = notFoundCount >= 4 ? '\u2717' : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>';
+  const title = notFoundCount >= 4 ? 'Delivery Issue Detected' : 'Scan Complete \u2014 Not Found Yet';
   const attemptText = notFoundCount > 1 ? ` &middot; Attempt ${notFoundCount}` : '';
 
   $('#etPlacementSummary').innerHTML = `
@@ -1067,13 +1118,18 @@ if (scrollToTestBtn) {
   });
 }
 
-// Hero + bottom CTA scroll buttons (class-based)
+// Hero + bottom CTA scroll buttons — scroll to the start button
 document.querySelectorAll('.js-scroll-to-test').forEach(function(btn) {
   btn.addEventListener('click', function(e) {
     e.preventDefault();
-    var toolSection = document.querySelector('[data-section-id="email_test_tool"]');
-    if (toolSection) {
-      toolSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    var startBtn = document.getElementById('startTestBtn');
+    if (startBtn) {
+      startBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    } else {
+      var toolSection = document.querySelector('[data-section-id="email_test_tool"]');
+      if (toolSection) {
+        toolSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
     }
   });
 });

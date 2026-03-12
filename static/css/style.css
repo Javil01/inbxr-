@@ -2687,43 +2687,47 @@ select {
   background: #fff;
   border: 1px solid var(--border-1);
   border-radius: var(--r-4);
-  padding: 36px 32px;
+  padding: 28px 32px;
   box-shadow: var(--shadow-2);
   text-align: center;
 }
 .placement-card__icon {
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 .placement-card__icon svg {
-  width: 48px;
-  height: 48px;
+  width: 36px;
+  height: 36px;
   color: var(--brand);
 }
 .placement-card__title {
   font-family: var(--font-display);
-  font-size: 1.25rem;
+  font-size: 1.15rem;
   font-weight: 700;
   color: var(--text-1);
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 .placement-card__desc {
-  font-size: 0.85rem;
+  font-size: 0.84rem;
   color: var(--text-2);
   max-width: 520px;
-  margin: 0 auto 24px;
-  line-height: 1.6;
+  margin: 0 auto 16px;
+  line-height: 1.55;
 }
 
 /* ── How it works steps ──────────────────────────── */
 .placement-how {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  margin-bottom: 24px;
+  gap: 8px;
+  margin-bottom: 20px;
   text-align: left;
   max-width: 460px;
   margin-left: auto;
   margin-right: auto;
+}
+.placement-how--compact {
+  gap: 6px;
+  margin-bottom: 16px;
 }
 .placement-how__item {
   display: flex;
@@ -6294,8 +6298,71 @@ a.et-nf-recommend__btn {
 }
 .et-nf-recommend__btn:hover { opacity: 0.85; }
 
+/* Scan complete flash */
+.et-scan-flash {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 16px; margin-bottom: 12px;
+  border-radius: 8px;
+  background: var(--brand-muted);
+  border: 1px solid var(--brand-border);
+  color: var(--brand);
+  font-size: 0.82rem; font-weight: 600;
+  opacity: 0; transform: translateY(-6px);
+  transition: opacity 0.3s, transform 0.3s;
+}
+.et-scan-flash--visible { opacity: 1; transform: translateY(0); }
+.et-scan-flash svg { flex-shrink: 0; }
+
+/* Next steps container */
+.et-nf-next-steps { margin-top: 20px; }
+.et-nf-next-steps__title {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 1rem; font-weight: 700; color: var(--text-primary);
+  margin-bottom: 16px;
+}
+.et-nf-next-steps__title svg { color: var(--brand); }
+
+/* Primary recommend card — more prominent */
+.et-nf-recommend--primary {
+  border-color: var(--brand-border);
+  background: var(--brand-muted);
+}
+.et-nf-recommend--primary .et-nf-recommend__icon {
+  background: rgba(37,99,235,0.15);
+  color: var(--brand);
+}
+
+/* Recommend card grid */
+.et-nf-recommend-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+  margin-top: 12px;
+}
+.et-nf-recommend-card {
+  display: flex; flex-direction: column; gap: 8px;
+  padding: 18px; border-radius: 12px;
+  background: var(--bg-2); border: 1px solid var(--border-1);
+  text-decoration: none; color: inherit;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.et-nf-recommend-card:hover {
+  border-color: var(--brand-border);
+  box-shadow: 0 2px 8px rgba(37,99,235,0.08);
+}
+.et-nf-recommend-card__icon {
+  width: 36px; height: 36px; border-radius: 8px;
+  background: rgba(37,99,235,0.08); color: var(--brand);
+  display: flex; align-items: center; justify-content: center;
+}
+.et-nf-recommend-card strong {
+  font-size: 0.85rem; color: var(--text-primary);
+}
+.et-nf-recommend-card span {
+  font-size: 0.78rem; color: var(--text-3); line-height: 1.5;
+}
+
 @media (max-width: 600px) {
   .et-nf-recommend { flex-direction: column; }
+  .et-nf-recommend-grid { grid-template-columns: 1fr; }
 }
 
 /* ── Token guide ── */
