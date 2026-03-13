@@ -25,7 +25,8 @@
           {{ session.get('user_name', 'Account') }}
         </a>
         {% if is_admin %}
-        <a href="/admin/logout" class="nav-link" style="color:var(--red);margin-left:8px">Logout</a>
+        <a href="/admin/users" class="nav-link" style="margin-left:8px" title="Admin: Users">Users</a>
+        <a href="/admin/logout" class="nav-link" style="color:var(--red);margin-left:4px">Logout</a>
         {% endif %}
       {% else %}
         {# Visitors: full tool navigation + sign up CTA #}
@@ -52,7 +53,8 @@
         <a href="/login" class="nav-link{% if active_page == 'login' %} nav-link--active{% endif %}">Log in</a>
         <a href="/signup" class="nav-link nav-link--cta">Sign Up Free</a>
         {% if is_admin %}
-        <a href="/admin/logout" class="nav-link" style="color:var(--red);margin-left:8px">Logout</a>
+        <a href="/admin/users" class="nav-link" style="margin-left:8px" title="Admin: Users">Users</a>
+        <a href="/admin/logout" class="nav-link" style="color:var(--red);margin-left:4px">Logout</a>
         {% endif %}
       {% endif %}
     </nav>

@@ -493,6 +493,97 @@ def admin_builder_clear(page_name):
     return jsonify({"ok": ok})
 
 
+# ── Admin: User Management ───────────────────────────
+
+@app.route("/admin/users")
+def admin_users():
+    if not _is_admin():
+        return redirect("/admin/login")
+    return render_template("admin_users.html", is_admin=True)
+
+
+@app.route("/admin/api/users")
+def admin_api_users():
+    if not _is_admin():
+        return jsonify({"error": "Unauthorized"}), 403
+
+    from modules.database import fetchall, fetchone
+
+    search = request.args.get("q", "").strip()
+    tier_filter = request.args.get("tier", "")
+    sort = request.args.get("sort", "created_at")
+    order = "ASC" if request.args.get("order") == "asc" else "DESC"
+    page = max(1, int(request.args.get("page", 1)))
+    per_page = 50
+
+    allowed_sorts = {"created_at", "email", "tier", "display_name"}
+    if sort not in allowed_sorts:
+        sort = "created_at"
+
+    where_clauses = []
+    params = []
+
+    if search:
+        where_clauses.append("(u.email LIKE ? OR u.display_name LIKE ?)")
+        params.extend([f"%{search}%", f"%{search}%"])
+    if tier_filter:
+        where_clauses.append("u.tier = ?")
+        params.append(tier_filter)
+
+    where_sql = ("WHERE " + " AND ".join(where_clauses)) if where_clauses else ""
+
+    # Total count
+    total = fetchone(f"SELECT COUNT(*) as cnt FROM users u {where_sql}", tuple(params))
+    total_count = total["cnt"] if total else 0
+
+    # Users with usage stats
+    users = fetchall(f"""
+        SELECT u.id, u.email, u.display_name, u.tier, u.email_verified,
+               u.stripe_customer_id, u.created_at, u.updated_at,
+               (SELECT COUNT(*) FROM check_history ch WHERE ch.user_id = u.id) as total_checks,
+               (SELECT COUNT(*) FROM usage_log ul WHERE ul.user_id = u.id
+                AND ul.created_at > datetime('now', '-1 day')) as checks_today,
+               (SELECT MAX(created_at) FROM usage_log ul2 WHERE ul2.user_id = u.id) as last_active
+        FROM users u
+        {where_sql}
+        ORDER BY u.{sort} {order}
+        LIMIT ? OFFSET ?
+    """, tuple(params + [per_page, (page - 1) * per_page]))
+
+    # Summary stats
+    tier_counts = fetchall("SELECT tier, COUNT(*) as cnt FROM users GROUP BY tier")
+    summary = {
+        "total_users": total_count,
+        "tier_counts": {r["tier"]: r["cnt"] for r in tier_counts},
+        "page": page,
+        "per_page": per_page,
+        "total_pages": max(1, (total_count + per_page - 1) // per_page),
+    }
+
+    return jsonify({"users": users, "summary": summary})
+
+
+@app.route("/admin/api/users/<int:user_id>/tier", methods=["POST"])
+def admin_api_update_tier(user_id):
+    """Admin: Change a user's tier."""
+    if not _is_admin():
+        return jsonify({"error": "Unauthorized"}), 403
+
+    from modules.database import execute, fetchone
+
+    data = request.get_json(silent=True) or {}
+    new_tier = data.get("tier", "")
+    if new_tier not in ("free", "pro", "agency", "api"):
+        return jsonify({"error": "Invalid tier"}), 400
+
+    user = fetchone("SELECT id, email FROM users WHERE id = ?", (user_id,))
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    execute("UPDATE users SET tier = ?, updated_at = datetime('now') WHERE id = ?", (new_tier, user_id))
+    return jsonify({"ok": True, "email": user["email"], "tier": new_tier})
+
+
 # ══════════════════════════════════════════════════════
 #  PAGE ROUTES
 # ══════════════════════════════════════════════════════

@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>INBXR Admin — Users</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/style.css" />
+  <style>
+    body { background: var(--bg-1); color: var(--text-1); font-family: 'Inter', sans-serif; }
+
+    .au { max-width: 1200px; margin: 0 auto; padding: 24px; }
+    .au-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
+    .au-header h1 { font-size: 1.4rem; font-weight: 700; margin: 0; }
+    .au-header a { color: var(--brand); text-decoration: none; font-size: 0.85rem; }
+
+    /* Summary cards */
+    .au-summary { display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; }
+    .au-stat { background: var(--card-bg); border: 1px solid var(--border-1); border-radius: 10px; padding: 16px 20px; min-width: 120px; flex: 1; }
+    .au-stat__num { font-size: 1.6rem; font-weight: 800; display: block; color: var(--brand); }
+    .au-stat__label { font-size: 0.72rem; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.5px; }
+    .au-stat--free .au-stat__num { color: var(--text-2); }
+    .au-stat--pro .au-stat__num { color: #2563eb; }
+    .au-stat--agency .au-stat__num { color: #7c3aed; }
+
+    /* Filters */
+    .au-filters { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
+    .au-search { flex: 1; min-width: 200px; padding: 9px 14px; border: 1px solid var(--border-1); border-radius: var(--r-full); font-size: 0.84rem; background: var(--card-bg); color: var(--text-1); outline: none; }
+    .au-search:focus { border-color: var(--brand); }
+    .au-filter-btn { padding: 8px 14px; border: 1px solid var(--border-1); border-radius: var(--r-full); font-size: 0.78rem; background: var(--card-bg); color: var(--text-2); cursor: pointer; transition: all 0.15s; }
+    .au-filter-btn:hover { border-color: var(--brand); color: var(--brand); }
+    .au-filter-btn--active { background: var(--brand); color: #fff; border-color: var(--brand); }
+
+    /* Table */
+    .au-table-wrap { overflow-x: auto; background: var(--card-bg); border: 1px solid var(--border-1); border-radius: 12px; }
+    .au-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+    .au-table th { padding: 12px 14px; text-align: left; font-weight: 600; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-3); border-bottom: 1px solid var(--border-1); cursor: pointer; user-select: none; white-space: nowrap; }
+    .au-table th:hover { color: var(--brand); }
+    .au-table th .sort-arrow { margin-left: 4px; opacity: 0.4; }
+    .au-table th.sorted .sort-arrow { opacity: 1; color: var(--brand); }
+    .au-table td { padding: 10px 14px; border-bottom: 1px solid var(--border-1); vertical-align: middle; }
+    .au-table tr:last-child td { border-bottom: none; }
+    .au-table tr:hover td { background: rgba(37,99,235,0.03); }
+
+    .au-email { font-weight: 600; color: var(--text-1); }
+    .au-name { color: var(--text-3); font-size: 0.76rem; }
+    .au-tier { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+    .au-tier--free { background: rgba(100,116,139,0.1); color: #64748b; }
+    .au-tier--pro { background: rgba(37,99,235,0.1); color: #2563eb; }
+    .au-tier--agency { background: rgba(124,58,237,0.1); color: #7c3aed; }
+    .au-tier--api { background: rgba(5,150,105,0.1); color: #059669; }
+
+    .au-verified { color: #22c55e; }
+    .au-unverified { color: #ef4444; font-size: 0.72rem; }
+
+    .au-actions select { padding: 4px 8px; border: 1px solid var(--border-1); border-radius: 6px; font-size: 0.76rem; background: var(--card-bg); color: var(--text-1); cursor: pointer; }
+
+    .au-date { white-space: nowrap; color: var(--text-3); font-size: 0.76rem; }
+    .au-num { font-weight: 600; text-align: center; }
+
+    /* Pagination */
+    .au-pagination { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 16px; }
+    .au-page-btn { padding: 6px 12px; border: 1px solid var(--border-1); border-radius: 6px; font-size: 0.78rem; background: var(--card-bg); color: var(--text-2); cursor: pointer; }
+    .au-page-btn:hover { border-color: var(--brand); color: var(--brand); }
+    .au-page-btn--active { background: var(--brand); color: #fff; border-color: var(--brand); }
+    .au-page-btn:disabled { opacity: 0.4; cursor: default; }
+    .au-page-info { font-size: 0.78rem; color: var(--text-3); }
+
+    .au-loading { text-align: center; padding: 40px; color: var(--text-3); }
+    .au-empty { text-align: center; padding: 40px; color: var(--text-3); font-size: 0.88rem; }
+  </style>
+</head>
+<body>
+
+{% include 'sections/header.html' %}
+
+<div class="au">
+  <div class="au-header">
+    <h1>User Management</h1>
+    <a href="/dashboard">&larr; Back to Dashboard</a>
+  </div>
+
+  <div class="au-summary" id="auSummary"></div>
+
+  <div class="au-filters">
+    <input type="text" class="au-search" id="auSearch" placeholder="Search by email or name..." />
+    <button class="au-filter-btn au-filter-btn--active" data-tier="">All</button>
+    <button class="au-filter-btn" data-tier="free">Free</button>
+    <button class="au-filter-btn" data-tier="pro">Pro</button>
+    <button class="au-filter-btn" data-tier="agency">Agency</button>
+    <button class="au-filter-btn" data-tier="api">API</button>
+  </div>
+
+  <div class="au-table-wrap">
+    <table class="au-table">
+      <thead>
+        <tr>
+          <th data-sort="email">Email <span class="sort-arrow">&#9650;</span></th>
+          <th data-sort="tier">Tier <span class="sort-arrow">&#9650;</span></th>
+          <th>Verified</th>
+          <th>Checks</th>
+          <th>Today</th>
+          <th>Last Active</th>
+          <th data-sort="created_at" class="sorted">Joined <span class="sort-arrow">&#9660;</span></th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="auBody">
+        <tr><td colspan="8" class="au-loading">Loading users...</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="au-pagination" id="auPagination"></div>
+</div>
+
+<script>
+(function() {
+  var currentPage = 1;
+  var currentSort = 'created_at';
+  var currentOrder = 'desc';
+  var currentTier = '';
+  var searchTimeout = null;
+
+  function loadUsers() {
+    var q = document.getElementById('auSearch').value.trim();
+    var params = '?page=' + currentPage + '&sort=' + currentSort + '&order=' + currentOrder;
+    if (q) params += '&q=' + encodeURIComponent(q);
+    if (currentTier) params += '&tier=' + currentTier;
+
+    fetch('/admin/api/users' + params)
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        renderSummary(data.summary);
+        renderTable(data.users);
+        renderPagination(data.summary);
+      })
+      .catch(function() {
+        document.getElementById('auBody').innerHTML = '<tr><td colspan="8" class="au-empty">Failed to load users.</td></tr>';
+      });
+  }
+
+  function renderSummary(s) {
+    var tc = s.tier_counts || {};
+    var html =
+      statCard(s.total_users, 'Total Users', '') +
+      statCard(tc.free || 0, 'Free', 'free') +
+      statCard(tc.pro || 0, 'Pro', 'pro') +
+      statCard(tc.agency || 0, 'Agency', 'agency') +
+      statCard(tc.api || 0, 'API', '');
+    document.getElementById('auSummary').innerHTML = html;
+  }
+
+  function statCard(num, label, tier) {
+    var cls = tier ? ' au-stat--' + tier : '';
+    return '<div class="au-stat' + cls + '"><span class="au-stat__num">' + num + '</span><span class="au-stat__label">' + esc(label) + '</span></div>';
+  }
+
+  function renderTable(users) {
+    var body = document.getElementById('auBody');
+    if (!users.length) {
+      body.innerHTML = '<tr><td colspan="8" class="au-empty">No users found.</td></tr>';
+      return;
+    }
+    var html = '';
+    users.forEach(function(u) {
+      html += '<tr>' +
+        '<td><span class="au-email">' + esc(u.email) + '</span>' +
+          (u.display_name ? '<br><span class="au-name">' + esc(u.display_name) + '</span>' : '') +
+        '</td>' +
+        '<td><span class="au-tier au-tier--' + u.tier + '">' + u.tier + '</span></td>' +
+        '<td>' + (u.email_verified ? '<span class="au-verified">&#10003;</span>' : '<span class="au-unverified">No</span>') + '</td>' +
+        '<td class="au-num">' + (u.total_checks || 0) + '</td>' +
+        '<td class="au-num">' + (u.checks_today || 0) + '</td>' +
+        '<td class="au-date">' + relDate(u.last_active) + '</td>' +
+        '<td class="au-date">' + shortDate(u.created_at) + '</td>' +
+        '<td class="au-actions">' +
+          '<select data-uid="' + u.id + '" onchange="changeTier(this)">' +
+            tierOption('free', u.tier) +
+            tierOption('pro', u.tier) +
+            tierOption('agency', u.tier) +
+            tierOption('api', u.tier) +
+          '</select>' +
+        '</td>' +
+      '</tr>';
+    });
+    body.innerHTML = html;
+  }
+
+  function tierOption(tier, current) {
+    return '<option value="' + tier + '"' + (tier === current ? ' selected' : '') + '>' + tier.charAt(0).toUpperCase() + tier.slice(1) + '</option>';
+  }
+
+  function renderPagination(s) {
+    var el = document.getElementById('auPagination');
+    if (s.total_pages <= 1) { el.innerHTML = ''; return; }
+    var html = '<button class="au-page-btn" onclick="goPage(' + (s.page - 1) + ')"' + (s.page <= 1 ? ' disabled' : '') + '>&laquo; Prev</button>';
+    html += '<span class="au-page-info">Page ' + s.page + ' of ' + s.total_pages + '</span>';
+    html += '<button class="au-page-btn" onclick="goPage(' + (s.page + 1) + ')"' + (s.page >= s.total_pages ? ' disabled' : '') + '>Next &raquo;</button>';
+    el.innerHTML = html;
+  }
+
+  // Tier change
+  window.changeTier = function(sel) {
+    var uid = sel.dataset.uid;
+    var newTier = sel.value;
+    if (!confirm('Change this user to ' + newTier + '?')) {
+      loadUsers(); // reset select
+      return;
+    }
+    fetch('/admin/api/users/' + uid + '/tier', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tier: newTier })
+    }).then(function(r) { return r.json(); }).then(function(d) {
+      if (d.ok) loadUsers();
+      else alert(d.error || 'Failed');
+    });
+  };
+
+  // Pagination
+  window.goPage = function(p) {
+    currentPage = p;
+    loadUsers();
+  };
+
+  // Sort
+  document.querySelectorAll('.au-table th[data-sort]').forEach(function(th) {
+    th.addEventListener('click', function() {
+      var s = this.dataset.sort;
+      if (currentSort === s) {
+        currentOrder = currentOrder === 'desc' ? 'asc' : 'desc';
+      } else {
+        currentSort = s;
+        currentOrder = 'desc';
+      }
+      currentPage = 1;
+      // Update header UI
+      document.querySelectorAll('.au-table th').forEach(function(h) { h.classList.remove('sorted'); });
+      this.classList.add('sorted');
+      this.querySelector('.sort-arrow').innerHTML = currentOrder === 'desc' ? '&#9660;' : '&#9650;';
+      loadUsers();
+    });
+  });
+
+  // Tier filter
+  document.querySelectorAll('.au-filter-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      currentTier = this.dataset.tier;
+      currentPage = 1;
+      document.querySelectorAll('.au-filter-btn').forEach(function(b) { b.classList.remove('au-filter-btn--active'); });
+      this.classList.add('au-filter-btn--active');
+      loadUsers();
+    });
+  });
+
+  // Search
+  document.getElementById('auSearch').addEventListener('input', function() {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(function() {
+      currentPage = 1;
+      loadUsers();
+    }, 300);
+  });
+
+  // Helpers
+  function esc(s) { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  function relDate(d) {
+    if (!d) return '<span style="color:var(--text-3)">Never</span>';
+    try {
+      var diff = Date.now() - new Date(d + 'Z').getTime();
+      if (diff < 60000) return 'Just now';
+      if (diff < 3600000) return Math.floor(diff/60000) + 'm ago';
+      if (diff < 86400000) return Math.floor(diff/3600000) + 'h ago';
+      if (diff < 604800000) return Math.floor(diff/86400000) + 'd ago';
+      return shortDate(d);
+    } catch(e) { return ''; }
+  }
+
+  function shortDate(d) {
+    if (!d) return '';
+    try {
+      var dt = new Date(d + 'Z');
+      return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    } catch(e) { return ''; }
+  }
+
+  loadUsers();
+})();
+</script>
+
+</body>
+</html>
