@@ -785,37 +785,6 @@ def get_section_library():
     return library
 
 
-def save_builder_data(page_name, html, css):
-    """Store GrapesJS builder HTML and CSS for a page."""
-    cfg = load_config()
-    if page_name not in cfg:
-        cfg[page_name] = {"sections": []}
-    cfg[page_name]["builder"] = {"html": html, "css": css}
-    save_config(cfg)
-    return True
-
-
-def get_builder_data(page_name):
-    """Get stored builder HTML/CSS for a page, or None."""
-    cfg = load_config()
-    page = cfg.get(page_name, {})
-    builder = page.get("builder")
-    if builder and builder.get("html"):
-        return builder
-    return None
-
-
-def clear_builder_data(page_name):
-    """Remove builder override, reverting to section-based rendering."""
-    cfg = load_config()
-    page = cfg.get(page_name, {})
-    if "builder" in page:
-        del page["builder"]
-        save_config(cfg)
-        return True
-    return False
-
-
 def save_uploaded_image(file_storage):
     """Save an uploaded image to static/uploads/. Returns the URL path."""
     import time as _time

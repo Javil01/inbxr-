@@ -67,12 +67,6 @@ ADMIN_USER = os.environ.get("ADMIN_USER", "admin")
 ADMIN_PASS = os.environ.get("ADMIN_PASS", "inbxr2026")
 
 
-def _get_builder_override(page_name):
-    """Get builder HTML/CSS override for a page, or None."""
-    from modules.page_config import get_builder_data
-    return get_builder_data(page_name)
-
-
 def _get_inline_overrides_json(page_name):
     """Get inline text overrides as a JSON string for injection."""
     import json as _json
@@ -181,7 +175,6 @@ def inject_user_context():
         "current_team_role": session.get("team_role"),
         "get_custom_css": _get_custom_css,
         "get_inline_overrides_json": _get_inline_overrides_json,
-        "get_builder_override": _get_builder_override,
         "tracking_tags": _get_tracking_tags(),
     }
 
@@ -627,75 +620,12 @@ def admin_remove_section():
     return jsonify({"ok": ok})
 
 
-# ── GrapesJS Page Builder ─────────────────────────────
-
-# Map URL-friendly names to config keys
+# Map URL-friendly names to config keys (used by SEO, analytics, etc.)
 _PAGE_ALIASES = {"index": "analyzer"}
 
 
 def _resolve_page_name(page_name):
     return _PAGE_ALIASES.get(page_name, page_name)
-
-
-@app.route("/admin/builder/<page_name>")
-def admin_builder(page_name):
-    if not _is_admin():
-        return redirect("/admin/login")
-    page_name = _resolve_page_name(page_name)
-    return render_template("admin_builder.html", page_name=page_name)
-
-
-@app.route("/admin/api/builder-load/<page_name>")
-def admin_builder_load(page_name):
-    if not _is_admin():
-        return jsonify({"ok": False}), 403
-    page_name = _resolve_page_name(page_name)
-    from modules.page_config import get_builder_data, get_page_sections
-    data = get_builder_data(page_name)
-    if data:
-        return jsonify({"ok": True, "html": data["html"], "css": data["css"]})
-    # Generate from sections
-    sections = get_page_sections(page_name)
-    html_parts = []
-    for s in sections:
-        try:
-            rendered = render_template(
-                "sections/" + s["type"] + ".html",
-                section=s, is_admin=False, active_page=page_name,
-            )
-        except Exception:
-            rendered = f'<div>Section: {s["id"]}</div>'
-        html_parts.append(
-            f'<div class="page-section" data-section-id="{s["id"]}" '
-            f'data-section-type="{s["type"]}">{rendered}</div>'
-        )
-    full_html = '<div id="page-sections">' + "".join(html_parts) + "</div>"
-    return jsonify({"ok": True, "html": full_html, "css": ""})
-
-
-@app.route("/admin/api/builder-save/<page_name>", methods=["POST"])
-def admin_builder_save(page_name):
-    if not _is_admin():
-        return jsonify({"ok": False}), 403
-    page_name = _resolve_page_name(page_name)
-    from modules.page_config import save_builder_data
-    data = request.get_json(force=True, silent=True) or {}
-    html = data.get("html", "")
-    css = data.get("css", "")
-    if not html:
-        return jsonify({"ok": False, "error": "No HTML provided"}), 400
-    ok = save_builder_data(page_name, html, css)
-    return jsonify({"ok": ok})
-
-
-@app.route("/admin/api/builder-clear/<page_name>", methods=["POST"])
-def admin_builder_clear(page_name):
-    if not _is_admin():
-        return jsonify({"ok": False}), 403
-    page_name = _resolve_page_name(page_name)
-    from modules.page_config import clear_builder_data
-    ok = clear_builder_data(page_name)
-    return jsonify({"ok": ok})
 
 
 # ── Admin: User Management ───────────────────────────
@@ -1428,167 +1358,6 @@ def admin_api_session_intelligence():
     })
 
 
-# ── Admin: Page Builder Enhanced API ──────────────────
-
-@app.route("/admin/api/builder-save-draft/<page_name>", methods=["POST"])
-def admin_api_save_draft(page_name):
-    if not _is_admin():
-        return jsonify({"ok": False}), 403
-    page_name = _resolve_page_name(page_name)
-    from modules.database import execute, fetchone
-    data = request.get_json(force=True, silent=True) or {}
-    draft_data = data.get("draft_data", "{}")
-    existing = fetchone("SELECT page_name FROM page_drafts WHERE page_name = ?", (page_name,))
-    if existing:
-        execute("UPDATE page_drafts SET draft_data = ?, updated_at = datetime('now') WHERE page_name = ?",
-                (draft_data, page_name))
-    else:
-        execute("INSERT INTO page_drafts (page_name, draft_data) VALUES (?, ?)", (page_name, draft_data))
-    return jsonify({"ok": True})
-
-
-@app.route("/admin/api/builder-load-draft/<page_name>")
-def admin_api_load_draft(page_name):
-    if not _is_admin():
-        return jsonify({"ok": False}), 403
-    page_name = _resolve_page_name(page_name)
-    from modules.database import fetchone
-    draft = fetchone("SELECT draft_data, updated_at FROM page_drafts WHERE page_name = ?", (page_name,))
-    if draft:
-        return jsonify({"ok": True, "draft_data": draft["draft_data"], "updated_at": draft["updated_at"]})
-    return jsonify({"ok": False, "draft_data": None})
-
-
-@app.route("/admin/api/builder-publish/<page_name>", methods=["POST"])
-def admin_api_publish(page_name):
-    if not _is_admin():
-        return jsonify({"ok": False}), 403
-    page_name = _resolve_page_name(page_name)
-    from modules.database import execute, fetchone
-    from modules.page_config import save_builder_data
-    import json as _json
-    draft = fetchone("SELECT draft_data FROM page_drafts WHERE page_name = ?", (page_name,))
-    if not draft:
-        return jsonify({"ok": False, "error": "No draft found"}), 404
-    try:
-        dd = _json.loads(draft["draft_data"])
-    except Exception:
-        return jsonify({"ok": False, "error": "Invalid draft data"}), 400
-    html = dd.get("html", "")
-    css = dd.get("css", "")
-    # Save version before publishing
-    from modules.page_config import get_builder_data
-    current = get_builder_data(page_name)
-    if current:
-        execute("INSERT INTO page_versions (page_name, version_data, label) VALUES (?, ?, ?)",
-                (page_name, _json.dumps(current), "Auto-save before publish"))
-    save_builder_data(page_name, html, css)
-    execute("DELETE FROM page_drafts WHERE page_name = ?", (page_name,))
-    return jsonify({"ok": True})
-
-
-@app.route("/admin/api/builder-versions/<page_name>")
-def admin_api_versions(page_name):
-    if not _is_admin():
-        return jsonify({"ok": False}), 403
-    page_name = _resolve_page_name(page_name)
-    from modules.database import fetchall
-    versions = fetchall(
-        "SELECT id, label, created_at FROM page_versions WHERE page_name = ? ORDER BY created_at DESC LIMIT 50",
-        (page_name,)
-    )
-    return jsonify({"ok": True, "versions": versions})
-
-
-@app.route("/admin/api/builder-save-version/<page_name>", methods=["POST"])
-def admin_api_save_version(page_name):
-    if not _is_admin():
-        return jsonify({"ok": False}), 403
-    page_name = _resolve_page_name(page_name)
-    from modules.database import execute
-    from modules.page_config import get_builder_data
-    import json as _json
-    data = request.get_json(force=True, silent=True) or {}
-    label = data.get("label", "Manual save")
-    current = get_builder_data(page_name)
-    if not current:
-        return jsonify({"ok": False, "error": "No current page data to save"}), 400
-    execute("INSERT INTO page_versions (page_name, version_data, label) VALUES (?, ?, ?)",
-            (page_name, _json.dumps(current), label))
-    return jsonify({"ok": True})
-
-
-@app.route("/admin/api/builder-rollback/<page_name>/<int:version_id>", methods=["POST"])
-def admin_api_rollback(page_name, version_id):
-    if not _is_admin():
-        return jsonify({"ok": False}), 403
-    page_name = _resolve_page_name(page_name)
-    from modules.database import fetchone, execute
-    from modules.page_config import save_builder_data, get_builder_data
-    import json as _json
-    version = fetchone("SELECT version_data FROM page_versions WHERE id = ? AND page_name = ?",
-                       (version_id, page_name))
-    if not version:
-        return jsonify({"ok": False, "error": "Version not found"}), 404
-    # Save current as version before rollback
-    current = get_builder_data(page_name)
-    if current:
-        execute("INSERT INTO page_versions (page_name, version_data, label) VALUES (?, ?, ?)",
-                (page_name, _json.dumps(current), "Before rollback"))
-    try:
-        vd = _json.loads(version["version_data"])
-    except Exception:
-        return jsonify({"ok": False, "error": "Corrupt version data"}), 400
-    save_builder_data(page_name, vd.get("html", ""), vd.get("css", ""))
-    return jsonify({"ok": True})
-
-
-# ── Templates ────────────────────────────────────────
-
-@app.route("/admin/api/templates")
-def admin_api_templates():
-    if not _is_admin():
-        return jsonify({"ok": False}), 403
-    from modules.database import fetchall
-    templates = fetchall("SELECT id, name, description, thumbnail, created_at FROM page_templates ORDER BY created_at DESC")
-    return jsonify({"ok": True, "templates": templates})
-
-
-@app.route("/admin/api/templates", methods=["POST"])
-def admin_api_save_template():
-    if not _is_admin():
-        return jsonify({"ok": False}), 403
-    from modules.database import execute
-    data = request.get_json(force=True, silent=True) or {}
-    name = data.get("name", "Untitled Template")
-    description = data.get("description", "")
-    template_data = data.get("template_data", "{}")
-    thumbnail = data.get("thumbnail", "")
-    execute("INSERT INTO page_templates (name, description, thumbnail, template_data) VALUES (?, ?, ?, ?)",
-            (name, description, thumbnail, template_data))
-    return jsonify({"ok": True})
-
-
-@app.route("/admin/api/templates/<int:template_id>")
-def admin_api_get_template(template_id):
-    if not _is_admin():
-        return jsonify({"ok": False}), 403
-    from modules.database import fetchone
-    t = fetchone("SELECT * FROM page_templates WHERE id = ?", (template_id,))
-    if not t:
-        return jsonify({"ok": False}), 404
-    return jsonify({"ok": True, "template": t})
-
-
-@app.route("/admin/api/templates/<int:template_id>", methods=["DELETE"])
-def admin_api_delete_template(template_id):
-    if not _is_admin():
-        return jsonify({"ok": False}), 403
-    from modules.database import execute
-    execute("DELETE FROM page_templates WHERE id = ?", (template_id,))
-    return jsonify({"ok": True})
-
-
 # ── Media Library ────────────────────────────────────
 
 @app.route("/admin/api/media")
@@ -1709,31 +1478,6 @@ def admin_api_save_seo(page_name):
              vals["og_description"], vals["og_image"], vals["canonical_url"], vals["noindex"], vals["json_ld"])
         )
     return jsonify({"ok": True})
-
-
-# ── Page Duplication ─────────────────────────────────
-
-@app.route("/admin/api/builder-duplicate/<page_name>", methods=["POST"])
-def admin_api_duplicate_page(page_name):
-    if not _is_admin():
-        return jsonify({"ok": False}), 403
-    page_name = _resolve_page_name(page_name)
-    from modules.page_config import get_builder_data, save_builder_data, load_config, save_config
-    import time as _time
-    data = request.get_json(force=True, silent=True) or {}
-    new_name = data.get("new_name", page_name + "_copy_" + str(int(_time.time())))
-    # Copy builder data
-    builder = get_builder_data(page_name)
-    if builder:
-        save_builder_data(new_name, builder["html"], builder["css"])
-    else:
-        # Copy section config
-        cfg = load_config()
-        if page_name in cfg:
-            import copy
-            cfg[new_name] = copy.deepcopy(cfg[page_name])
-            save_config(cfg)
-    return jsonify({"ok": True, "new_name": new_name})
 
 
 # ── Page Analytics ───────────────────────────────────
