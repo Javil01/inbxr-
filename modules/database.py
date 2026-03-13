@@ -345,4 +345,15 @@ _MIGRATIONS = [
             updated_at TEXT DEFAULT (datetime('now'))
         );
     """),
+    ("007_admin_audit_log", """
+        CREATE TABLE IF NOT EXISTS admin_audit_log (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            action TEXT NOT NULL,
+            details TEXT DEFAULT '',
+            ip_address TEXT,
+            created_at TEXT DEFAULT (datetime('now'))
+        );
+        CREATE INDEX IF NOT EXISTS idx_admin_audit_log_action ON admin_audit_log(action, created_at DESC);
+        CREATE INDEX IF NOT EXISTS idx_admin_audit_log_date ON admin_audit_log(created_at DESC);
+    """),
 ]

@@ -6,6 +6,9 @@ Flask backend: analysis API + file parsing + admin editor + user auth.
 import re
 import os
 import tempfile
+import time
+import threading
+import uuid
 
 # ── Load .env file if present (no dependencies) ──────
 _env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
@@ -26,7 +29,24 @@ from flask import Flask, render_template, request, jsonify, session, redirect, u
 app = Flask(__name__)
 
 # ── Secret key for sessions ──────────────────────────────
-app.secret_key = os.environ.get("SECRET_KEY", "inbxr-dev-secret-change-in-production")
+import sys
+
+_DEFAULT_SECRET = "inbxr-dev-secret-change-in-production"
+_is_production = os.environ.get("FLASK_ENV") == "production" or os.environ.get("INBXR_ENV") == "production"
+_secret_key = os.environ.get("SECRET_KEY", "")
+
+if _is_production:
+    if not _secret_key or _secret_key == _DEFAULT_SECRET:
+        print("\n" + "!" * 60)
+        print("  FATAL: SECRET_KEY is missing or using the default value.")
+        print("  Set a strong SECRET_KEY env var before running in production.")
+        print("!" * 60 + "\n")
+        sys.exit(1)
+    app.secret_key = _secret_key
+else:
+    if not _secret_key or _secret_key == _DEFAULT_SECRET:
+        print("[WARNING] Using default SECRET_KEY — do NOT use this in production.")
+    app.secret_key = _secret_key if _secret_key else _DEFAULT_SECRET
 
 # ── Max upload size: 10 MB ──────────────────────────────
 app.config["MAX_CONTENT_LENGTH"] = 10 * 1024 * 1024
@@ -62,9 +82,38 @@ app.register_blueprint(team_bp)
 from modules.scheduler import init_scheduler
 init_scheduler(app)
 
-# ── Admin credentials (set via env vars in production) ──
-ADMIN_USER = os.environ.get("ADMIN_USER", "admin")
-ADMIN_PASS = os.environ.get("ADMIN_PASS", "inbxr2026")
+# ── Admin credentials (MUST be set via env vars — no defaults) ──
+ADMIN_USER = os.environ.get("ADMIN_USER")
+ADMIN_PASS = os.environ.get("ADMIN_PASS")
+
+# ── Admin login rate limiting ──
+import time as _time
+_admin_login_failures = {}  # {ip: [timestamp, ...]}
+_ADMIN_RATE_LIMIT_WINDOW = 15 * 60   # 15 minutes
+_ADMIN_RATE_LIMIT_MAX = 5            # max failures before block
+
+def _check_admin_rate_limit(ip):
+    """Return True if IP is blocked from admin login."""
+    now = _time.time()
+    attempts = _admin_login_failures.get(ip, [])
+    attempts = [t for t in attempts if now - t < _ADMIN_RATE_LIMIT_WINDOW]
+    _admin_login_failures[ip] = attempts
+    return len(attempts) >= _ADMIN_RATE_LIMIT_MAX
+
+def _record_admin_login_failure(ip):
+    """Record a failed admin login attempt."""
+    now = _time.time()
+    attempts = _admin_login_failures.get(ip, [])
+    attempts = [t for t in attempts if now - t < _ADMIN_RATE_LIMIT_WINDOW]
+    attempts.append(now)
+    _admin_login_failures[ip] = attempts
+
+def _clear_admin_login_failures(ip):
+    """Clear failures on successful login."""
+    _admin_login_failures.pop(ip, None)
+
+# ── Admin session expiry ──
+_ADMIN_SESSION_HOURS = 4
 
 
 def _get_inline_overrides_json(page_name):
@@ -103,8 +152,21 @@ def _get_custom_css(page_name):
     return "\n".join(lines)
 
 
+_tracking_tags_cache = {"data": None, "ts": 0}
+_TRACKING_TAGS_TTL = 300  # 5 minutes
+
+
+def _invalidate_tracking_tags_cache():
+    """Force the tracking tags cache to refresh on next access."""
+    _tracking_tags_cache["ts"] = 0
+
+
 def _get_tracking_tags():
-    """Get tracking tag HTML for injection into page headers."""
+    """Get tracking tag HTML for injection into page headers (cached, 5-min TTL)."""
+    now = time.monotonic()
+    if _tracking_tags_cache["data"] is not None and (now - _tracking_tags_cache["ts"]) < _TRACKING_TAGS_TTL:
+        return _tracking_tags_cache["data"]
+
     try:
         from modules.database import fetchall
         settings = {s["key"]: s["value"] for s in fetchall("SELECT key, value FROM site_settings")}
@@ -158,7 +220,10 @@ def _get_tracking_tags():
     if custom_body:
         body_parts.append(custom_body)
 
-    return {"head": "\n".join(head_parts), "body": "\n".join(body_parts)}
+    result = {"head": "\n".join(head_parts), "body": "\n".join(body_parts)}
+    _tracking_tags_cache["data"] = result
+    _tracking_tags_cache["ts"] = time.monotonic()
+    return result
 
 
 # ── Inject user context into all templates ───────────────
@@ -230,7 +295,32 @@ def _rate_limit_response(info):
     }), 429
 
 def _is_admin():
-    return session.get("is_admin", False)
+    if not session.get("is_admin", False):
+        return False
+    # Check session expiry
+    admin_login_time = session.get("admin_login_at")
+    if not admin_login_time:
+        session.pop("is_admin", None)
+        return False
+    elapsed = _time.time() - admin_login_time
+    if elapsed > _ADMIN_SESSION_HOURS * 3600:
+        session.pop("is_admin", None)
+        session.pop("admin_login_at", None)
+        return False
+    return True
+
+
+def _log_admin_action(action, details=""):
+    """Log an admin action to the audit log table."""
+    try:
+        from modules.database import execute
+        ip = request.remote_addr or "unknown"
+        execute(
+            "INSERT INTO admin_audit_log (action, details, ip_address) VALUES (?, ?, ?)",
+            (action, details, ip),
+        )
+    except Exception:
+        pass
 
 
 def _extract_ctas_from_body(body: str) -> tuple:
@@ -296,13 +386,30 @@ def admin_login():
             return redirect("/admin")
         return render_template("admin_login.html", error=None)
 
+    # Admin login disabled if credentials not configured
+    if not ADMIN_USER or not ADMIN_PASS:
+        _log_admin_action("login_disabled", "Admin login attempted but credentials not configured")
+        return render_template("admin_login.html", error="Admin login is disabled. Set ADMIN_USER and ADMIN_PASS environment variables.")
+
+    ip = request.remote_addr or "unknown"
+
+    # Rate limit check
+    if _check_admin_rate_limit(ip):
+        _log_admin_action("login_blocked", f"Rate-limited IP: {ip}")
+        return render_template("admin_login.html", error="Too many failed attempts. Try again in 15 minutes."), 429
+
     username = (request.form.get("username") or "").strip()
     password = (request.form.get("password") or "")
 
     if username == ADMIN_USER and password == ADMIN_PASS:
         session["is_admin"] = True
+        session["admin_login_at"] = _time.time()
+        _clear_admin_login_failures(ip)
+        _log_admin_action("login", f"Admin login successful from {ip}")
         return redirect("/admin")
 
+    _record_admin_login_failure(ip)
+    _log_admin_action("login_failed", f"Failed admin login attempt from {ip} (user: {username})")
     return render_template("admin_login.html", error="Invalid username or password.")
 
 
@@ -422,7 +529,9 @@ def admin_dashboard():
 
 @app.route("/admin/logout")
 def admin_logout():
+    _log_admin_action("logout", "Admin logged out")
     session.pop("is_admin", None)
+    session.pop("admin_login_at", None)
     return redirect("/")
 
 
@@ -716,6 +825,7 @@ def admin_api_update_tier(user_id):
         return jsonify({"error": "User not found"}), 404
 
     execute("UPDATE users SET tier = ?, updated_at = datetime('now') WHERE id = ?", (new_tier, user_id))
+    _log_admin_action("tier_change", f"User {user['email']} (id={user_id}) tier changed to {new_tier}")
     return jsonify({"ok": True, "email": user["email"], "tier": new_tier})
 
 
@@ -972,6 +1082,63 @@ def admin_api_revenue():
 
 
 # ══════════════════════════════════════════════════════
+#  ADMIN — CONVERSION DRIVERS
+# ══════════════════════════════════════════════════════
+
+@app.route("/admin/api/conversion-funnel")
+def admin_api_conversion_funnel():
+    """Which tools do free users use before upgrading to paid?"""
+    if not _is_admin():
+        return jsonify({"error": "Unauthorized"}), 403
+
+    from modules.database import fetchall
+
+    # 1. Pre-upgrade tool usage: tools free users used BEFORE upgrading to paid.
+    #    We identify upgraded users as those currently on a paid tier whose
+    #    updated_at differs from created_at (i.e. their tier was changed).
+    #    We then look at their usage_log entries from before the upgrade date.
+    pre_upgrade = fetchall("""
+        SELECT ul.action,
+               COUNT(DISTINCT ul.user_id) AS converted_users,
+               COUNT(*) AS total_uses
+        FROM usage_log ul
+        JOIN users u ON u.id = ul.user_id
+        WHERE u.tier IN ('pro', 'agency')
+          AND u.updated_at != u.created_at
+          AND ul.created_at < u.updated_at
+          AND ul.created_at > datetime(u.updated_at, '-30 days')
+        GROUP BY ul.action
+        ORDER BY converted_users DESC, total_uses DESC
+    """)
+
+    # 2. Paid-user retention signals: which tools do paid users use most (last 30 days)?
+    paid_usage = fetchall("""
+        SELECT ul.action,
+               COUNT(DISTINCT ul.user_id) AS active_paid_users,
+               COUNT(*) AS total_uses
+        FROM usage_log ul
+        JOIN users u ON u.id = ul.user_id
+        WHERE u.tier IN ('pro', 'agency')
+          AND ul.created_at > datetime('now', '-30 days')
+        GROUP BY ul.action
+        ORDER BY active_paid_users DESC, total_uses DESC
+    """)
+
+    # 3. Summary stats
+    total_converted = fetchall("""
+        SELECT COUNT(*) as cnt FROM users
+        WHERE tier IN ('pro', 'agency') AND updated_at != created_at
+    """)
+    converted_count = total_converted[0]["cnt"] if total_converted else 0
+
+    return jsonify({
+        "pre_upgrade_tools": pre_upgrade,
+        "paid_retention_tools": paid_usage,
+        "total_converted_users": converted_count,
+    })
+
+
+# ══════════════════════════════════════════════════════
 #  ADMIN — USER SEGMENTS
 # ══════════════════════════════════════════════════════
 
@@ -1108,6 +1275,7 @@ def admin_api_suspend_user(user_id):
     if not user:
         return jsonify({"error": "User not found"}), 404
     execute("UPDATE users SET status = 'suspended', suspended_at = datetime('now'), updated_at = datetime('now') WHERE id = ?", (user_id,))
+    _log_admin_action("suspend", f"User id={user_id} suspended")
     return jsonify({"ok": True, "status": "suspended"})
 
 
@@ -1120,6 +1288,7 @@ def admin_api_reactivate_user(user_id):
     if not user:
         return jsonify({"error": "User not found"}), 404
     execute("UPDATE users SET status = 'active', suspended_at = NULL, updated_at = datetime('now') WHERE id = ?", (user_id,))
+    _log_admin_action("reactivate", f"User id={user_id} reactivated")
     return jsonify({"ok": True, "status": "active"})
 
 
@@ -1134,6 +1303,7 @@ def admin_api_update_flags(user_id):
     data = request.get_json(silent=True) or {}
     flags = data.get("flags", "")
     execute("UPDATE users SET admin_flags = ?, updated_at = datetime('now') WHERE id = ?", (flags, user_id))
+    _log_admin_action("flag_change", f"User id={user_id} flags set to: {flags}")
     return jsonify({"ok": True, "flags": flags})
 
 
@@ -1163,16 +1333,64 @@ def admin_api_email_user(user_id):
         # Log it as admin note
         execute("INSERT INTO admin_notes (user_id, note, tag) VALUES (?, ?, 'general')",
                 (user_id, f"[EMAIL SENT] Subject: {subject}"))
+        _log_admin_action("email_sent", f"Email to {user['email']} (id={user_id}), subject: {subject}")
     return jsonify({"ok": ok, "error": "" if ok else "Failed to send"})
+
+
+# ── Bulk email job tracking ───────────────────────────────
+_bulk_email_jobs = {}  # job_id -> {status, total, sent, failed}
+
+
+def _bulk_email_worker(job_id, users, subject, body_html, body_plain):
+    """Background worker that sends bulk emails and updates job progress."""
+    from modules.database import execute
+    from modules.mailer import send_admin_email
+
+    job = _bulk_email_jobs[job_id]
+    job["status"] = "running"
+    sent = 0
+    failed = 0
+
+    for u in users:
+        try:
+            ok = send_admin_email(u["email"], subject, body_html, body_plain)
+        except Exception:
+            ok = False
+        if ok:
+            sent += 1
+        else:
+            failed += 1
+        job["sent"] = sent
+        job["failed"] = failed
+
+    # Log bulk email
+    try:
+        execute("INSERT INTO admin_notes (user_id, note, tag) VALUES (1, ?, 'general')",
+                (f"[BULK EMAIL] Subject: {subject} | Sent: {sent}, Failed: {failed}, Total: {len(users)}",))
+    except Exception:
+        pass
+
+    job["status"] = "completed"
+
+
+@app.route("/admin/api/users/bulk-email/status/<job_id>")
+def admin_api_bulk_email_status(job_id):
+    """Check the status of a bulk email job."""
+    if not _is_admin():
+        return jsonify({"error": "Unauthorized"}), 403
+    job = _bulk_email_jobs.get(job_id)
+    if not job:
+        return jsonify({"ok": False, "error": "Job not found"}), 404
+    return jsonify({"ok": True, **job})
 
 
 @app.route("/admin/api/users/bulk-email", methods=["POST"])
 def admin_api_bulk_email():
-    """Send bulk email to multiple users by filter or ID list."""
+    """Send bulk email to multiple users by filter or ID list (async)."""
     if not _is_admin():
         return jsonify({"error": "Unauthorized"}), 403
-    from modules.database import fetchall, execute
-    from modules.mailer import send_admin_email, is_configured
+    from modules.database import fetchall
+    from modules.mailer import is_configured
     if not is_configured():
         return jsonify({"ok": False, "error": "SMTP not configured"}), 400
     data = request.get_json(force=True, silent=True) or {}
@@ -1223,20 +1441,26 @@ def admin_api_bulk_email():
         for line in body.split("\n") if line.strip()
     )
 
-    sent = 0
-    failed = 0
-    for u in users:
-        ok = send_admin_email(u["email"], subject, body_html, body)
-        if ok:
-            sent += 1
-        else:
-            failed += 1
+    # Create job and start background thread
+    job_id = uuid.uuid4().hex[:12]
+    _bulk_email_jobs[job_id] = {
+        "status": "queued",
+        "total": len(users),
+        "sent": 0,
+        "failed": 0,
+    }
 
-    # Log bulk email
-    execute("INSERT INTO admin_notes (user_id, note, tag) VALUES (1, ?, 'general')",
-            (f"[BULK EMAIL] Subject: {subject} | Sent: {sent}, Failed: {failed}, Total: {len(users)}",))
+    # Convert sqlite Row objects to plain dicts for use outside request context
+    users_list = [{"id": u["id"], "email": u["email"]} for u in users]
 
-    return jsonify({"ok": True, "sent": sent, "failed": failed, "total": len(users)})
+    t = threading.Thread(
+        target=_bulk_email_worker,
+        args=(job_id, users_list, subject, body_html, body),
+        daemon=True,
+    )
+    t.start()
+
+    return jsonify({"ok": True, "job_id": job_id, "status": "queued", "total": len(users)})
 
 
 # ══════════════════════════════════════════════════════
@@ -1534,6 +1758,7 @@ def admin_api_save_settings():
             execute("UPDATE site_settings SET value = ?, updated_at = datetime('now') WHERE key = ?", (value, key))
         else:
             execute("INSERT INTO site_settings (key, value) VALUES (?, ?)", (key, value))
+    _invalidate_tracking_tags_cache()
     return jsonify({"ok": True})
 
 

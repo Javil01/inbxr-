@@ -63,6 +63,19 @@
     .ar-user-row__stat { color: var(--text-3); white-space: nowrap; }
 
     .ar-loading { text-align: center; padding: 40px; color: var(--text-3); font-size: 0.85rem; }
+
+    /* Conversion Drivers */
+    .ar-drivers { margin-top: 24px; }
+    .ar-driver-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border-1); font-size: 0.8rem; }
+    .ar-driver-row:last-child { border-bottom: none; }
+    .ar-driver-row__rank { width: 24px; font-weight: 800; color: var(--text-3); font-size: 0.72rem; text-align: center; flex-shrink: 0; }
+    .ar-driver-row__name { flex: 1; font-weight: 600; }
+    .ar-driver-row__stat { font-size: 0.74rem; color: var(--text-2); white-space: nowrap; min-width: 70px; text-align: right; }
+    .ar-driver-bar { flex: 1; max-width: 120px; height: 8px; background: var(--bg-2); border-radius: 4px; overflow: hidden; }
+    .ar-driver-bar__fill { height: 100%; border-radius: 4px; }
+    .ar-driver-bar__fill--green { background: #22c55e; }
+    .ar-driver-bar__fill--blue { background: #2563eb; }
+    .ar-driver-empty { font-size: 0.78rem; color: var(--text-3); font-style: italic; padding: 12px 0; }
   </style>
 </head>
 <body>
@@ -164,6 +177,63 @@
     html += '</div></div>';
 
     document.getElementById('revenueContent').innerHTML = html;
+
+    // Load Conversion Drivers
+    loadConversionDrivers();
+  }
+
+  function loadConversionDrivers() {
+    fetch('/admin/api/conversion-funnel').then(function(r){ return r.json(); }).then(function(cd){
+      if (cd.error) return;
+      var el = document.getElementById('revenueContent');
+      var html = '<div class="ar-drivers">';
+
+      // Conversion Drivers section
+      html += '<div class="ar-row">';
+
+      // Pre-upgrade tools
+      html += '<div class="ar-panel"><h3 class="ar-panel__title">Conversion Drivers</h3>';
+      html += '<p style="font-size:0.72rem;color:var(--text-3);margin:0 0 12px;">Tools free users used before upgrading (' + cd.total_converted_users + ' converted users)</p>';
+      if (cd.pre_upgrade_tools.length === 0) {
+        html += '<div class="ar-driver-empty">No conversion data yet.</div>';
+      } else {
+        var maxConv = cd.pre_upgrade_tools[0].converted_users || 1;
+        cd.pre_upgrade_tools.forEach(function(t, i) {
+          var pct = Math.max(5, t.converted_users / maxConv * 100);
+          html += '<div class="ar-driver-row">' +
+            '<span class="ar-driver-row__rank">' + (i + 1) + '</span>' +
+            '<span class="ar-driver-row__name">' + esc(t.action) + '</span>' +
+            '<div class="ar-driver-bar"><div class="ar-driver-bar__fill ar-driver-bar__fill--green" style="width:' + pct + '%"></div></div>' +
+            '<span class="ar-driver-row__stat">' + t.converted_users + ' users</span>' +
+            '<span class="ar-driver-row__stat">' + t.total_uses + ' uses</span>' +
+          '</div>';
+        });
+      }
+      html += '</div>';
+
+      // Paid retention tools
+      html += '<div class="ar-panel"><h3 class="ar-panel__title">Paid User Retention Signals</h3>';
+      html += '<p style="font-size:0.72rem;color:var(--text-3);margin:0 0 12px;">Most-used tools by paying users (last 30 days)</p>';
+      if (cd.paid_retention_tools.length === 0) {
+        html += '<div class="ar-driver-empty">No paid usage data yet.</div>';
+      } else {
+        var maxRet = cd.paid_retention_tools[0].active_paid_users || 1;
+        cd.paid_retention_tools.forEach(function(t, i) {
+          var pct = Math.max(5, t.active_paid_users / maxRet * 100);
+          html += '<div class="ar-driver-row">' +
+            '<span class="ar-driver-row__rank">' + (i + 1) + '</span>' +
+            '<span class="ar-driver-row__name">' + esc(t.action) + '</span>' +
+            '<div class="ar-driver-bar"><div class="ar-driver-bar__fill ar-driver-bar__fill--blue" style="width:' + pct + '%"></div></div>' +
+            '<span class="ar-driver-row__stat">' + t.active_paid_users + ' users</span>' +
+            '<span class="ar-driver-row__stat">' + t.total_uses + ' uses</span>' +
+          '</div>';
+        });
+      }
+      html += '</div>';
+
+      html += '</div></div>';
+      el.innerHTML += html;
+    });
   }
 
   function esc(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }

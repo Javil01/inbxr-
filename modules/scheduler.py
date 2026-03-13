@@ -43,6 +43,16 @@ def init_scheduler(app):
         next_run_time=None,
     )
 
+    # Job 3: SQLite database backup every hour
+    _scheduler.add_job(
+        _scheduled_backup,
+        IntervalTrigger(hours=1),
+        id="hourly_db_backup",
+        name="Hourly DB Backup",
+        replace_existing=True,
+        next_run_time=None,
+    )
+
     _scheduler.start()
     logger.info("[SCHEDULER] Started with %d jobs", len(_scheduler.get_jobs()))
 
@@ -82,6 +92,17 @@ def _scheduled_cleanup():
         logger.info("[SCHEDULER] Old usage logs cleaned up")
     except Exception as e:
         logger.error("[SCHEDULER] Cleanup failed: %s", e)
+
+
+def _scheduled_backup():
+    """Run an hourly SQLite database backup."""
+    from modules.backup import run_backup
+
+    try:
+        run_backup()
+        logger.info("[SCHEDULER] Database backup completed")
+    except Exception as e:
+        logger.error("[SCHEDULER] Database backup failed: %s", e)
 
 
 def get_scheduler_status():
