@@ -209,7 +209,7 @@ def _extract_body(msg) -> str:
 def admin_login():
     if request.method == "GET":
         if _is_admin():
-            return redirect("/")
+            return redirect("/admin")
         return render_template("admin_login.html", error=None)
 
     username = (request.form.get("username") or "").strip()
@@ -217,9 +217,40 @@ def admin_login():
 
     if username == ADMIN_USER and password == ADMIN_PASS:
         session["is_admin"] = True
-        return redirect("/")
+        return redirect("/admin")
 
     return render_template("admin_login.html", error="Invalid username or password.")
+
+
+@app.route("/admin")
+def admin_dashboard():
+    if not _is_admin():
+        return redirect("/admin/login")
+
+    from modules.database import fetchone, fetchall
+
+    # Quick stats for dashboard
+    total_users = fetchone("SELECT COUNT(*) as cnt FROM users")
+    tier_counts = fetchall("SELECT tier, COUNT(*) as cnt FROM users GROUP BY tier")
+    today_signups = fetchone(
+        "SELECT COUNT(*) as cnt FROM users WHERE created_at > datetime('now', '-1 day')"
+    )
+    today_usage = fetchone(
+        "SELECT COUNT(*) as cnt FROM usage_log WHERE created_at > datetime('now', '-1 day')"
+    )
+    week_usage = fetchone(
+        "SELECT COUNT(*) as cnt FROM usage_log WHERE created_at > datetime('now', '-7 days')"
+    )
+
+    stats = {
+        "total_users": total_users["cnt"] if total_users else 0,
+        "tier_counts": {r["tier"]: r["cnt"] for r in tier_counts},
+        "today_signups": today_signups["cnt"] if today_signups else 0,
+        "today_usage": today_usage["cnt"] if today_usage else 0,
+        "week_usage": week_usage["cnt"] if week_usage else 0,
+    }
+
+    return render_template("admin_dashboard.html", is_admin=True, stats=stats)
 
 
 @app.route("/admin/logout")
