@@ -1207,6 +1207,108 @@ def admin_api_update_flags(user_id):
     return jsonify({"ok": True, "flags": flags})
 
 
+# ── Admin: Email Users ───────────────────────────────
+
+@app.route("/admin/api/users/<int:user_id>/email", methods=["POST"])
+def admin_api_email_user(user_id):
+    """Send an individual email to a user."""
+    if not _is_admin():
+        return jsonify({"error": "Unauthorized"}), 403
+    from modules.database import fetchone, execute
+    from modules.mailer import send_admin_email, is_configured
+    if not is_configured():
+        return jsonify({"ok": False, "error": "SMTP not configured. Set SMTP_HOST, SMTP_USER, SMTP_PASS env vars."}), 400
+    user = fetchone("SELECT id, email FROM users WHERE id = ?", (user_id,))
+    if not user:
+        return jsonify({"ok": False, "error": "User not found"}), 404
+    data = request.get_json(force=True, silent=True) or {}
+    subject = data.get("subject", "").strip()
+    body = data.get("body", "").strip()
+    if not subject or not body:
+        return jsonify({"ok": False, "error": "Subject and body are required"}), 400
+    # Convert newlines to HTML paragraphs
+    body_html = "".join(f"<p style='color:#334155;font-size:15px;line-height:1.6;margin:0 0 12px;'>{line}</p>" for line in body.split("\n") if line.strip())
+    ok = send_admin_email(user["email"], subject, body_html, body)
+    if ok:
+        # Log it as admin note
+        execute("INSERT INTO admin_notes (user_id, note, tag) VALUES (?, ?, 'general')",
+                (user_id, f"[EMAIL SENT] Subject: {subject}"))
+    return jsonify({"ok": ok, "error": "" if ok else "Failed to send"})
+
+
+@app.route("/admin/api/users/bulk-email", methods=["POST"])
+def admin_api_bulk_email():
+    """Send bulk email to multiple users by filter or ID list."""
+    if not _is_admin():
+        return jsonify({"error": "Unauthorized"}), 403
+    from modules.database import fetchall, execute
+    from modules.mailer import send_admin_email, is_configured
+    if not is_configured():
+        return jsonify({"ok": False, "error": "SMTP not configured"}), 400
+    data = request.get_json(force=True, silent=True) or {}
+    subject = data.get("subject", "").strip()
+    body = data.get("body", "").strip()
+    if not subject or not body:
+        return jsonify({"ok": False, "error": "Subject and body are required"}), 400
+
+    # Get recipients
+    user_ids = data.get("user_ids", [])
+    tier_filter = data.get("tier", "")
+    segment = data.get("segment", "")
+
+    if user_ids:
+        placeholders = ",".join("?" * len(user_ids))
+        users = fetchall(f"SELECT id, email FROM users WHERE id IN ({placeholders})", user_ids)
+    elif tier_filter:
+        users = fetchall("SELECT id, email FROM users WHERE tier = ? AND status != 'suspended'", (tier_filter,))
+    elif segment == "verified":
+        users = fetchall("SELECT id, email FROM users WHERE email_verified = 1 AND status != 'suspended'")
+    elif segment == "unverified":
+        users = fetchall("SELECT id, email FROM users WHERE email_verified = 0 AND status != 'suspended'")
+    elif segment == "active_7d":
+        users = fetchall("""
+            SELECT DISTINCT u.id, u.email FROM users u
+            JOIN usage_log ul ON ul.user_id = u.id
+            WHERE ul.created_at > datetime('now', '-7 days') AND u.status != 'suspended'
+        """)
+    elif segment == "dormant_30d":
+        users = fetchall("""
+            SELECT u.id, u.email FROM users u
+            WHERE u.status != 'suspended'
+            AND u.id NOT IN (
+                SELECT DISTINCT user_id FROM usage_log
+                WHERE created_at > datetime('now', '-30 days') AND user_id IS NOT NULL
+            )
+        """)
+    elif segment == "all":
+        users = fetchall("SELECT id, email FROM users WHERE status != 'suspended'")
+    else:
+        return jsonify({"ok": False, "error": "Specify user_ids, tier, or segment"}), 400
+
+    if not users:
+        return jsonify({"ok": False, "error": "No matching users found"}), 404
+
+    body_html = "".join(
+        f"<p style='color:#334155;font-size:15px;line-height:1.6;margin:0 0 12px;'>{line}</p>"
+        for line in body.split("\n") if line.strip()
+    )
+
+    sent = 0
+    failed = 0
+    for u in users:
+        ok = send_admin_email(u["email"], subject, body_html, body)
+        if ok:
+            sent += 1
+        else:
+            failed += 1
+
+    # Log bulk email
+    execute("INSERT INTO admin_notes (user_id, note, tag) VALUES (1, ?, 'general')",
+            (f"[BULK EMAIL] Subject: {subject} | Sent: {sent}, Failed: {failed}, Total: {len(users)}",))
+
+    return jsonify({"ok": True, "sent": sent, "failed": failed, "total": len(users)})
+
+
 # ══════════════════════════════════════════════════════
 #  ADMIN — FEATURE ADOPTION & TEAM ANALYTICS
 # ══════════════════════════════════════════════════════

@@ -142,6 +142,19 @@ def send_welcome_email(to_email, display_name=None):
     return _send(to_email, subject, html, text)
 
 
+def send_admin_email(to_email, subject, body_html, body_text=None):
+    """Send an arbitrary email from admin. Returns True on success."""
+    html = f"""
+    <div style="font-family:Inter,sans-serif;max-width:520px;margin:0 auto;padding:32px 24px;">
+      {body_html}
+      <p style="color:#94a3b8;font-size:12px;margin-top:32px;border-top:1px solid #e2e8f0;padding-top:16px;">
+        INBXR &mdash; Email Intelligence Platform
+      </p>
+    </div>
+    """
+    return _send(to_email, subject, html, body_text)
+
+
 def send_team_invite_email(to_email, team_name, inviter_name, token):
     """Send a team invite email with accept link."""
     accept_url = f"{BASE_URL}/team/invite/{token}"
