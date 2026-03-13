@@ -229,25 +229,89 @@ def admin_dashboard():
 
     from modules.database import fetchone, fetchall
 
-    # Quick stats for dashboard
+    # User stats
     total_users = fetchone("SELECT COUNT(*) as cnt FROM users")
     tier_counts = fetchall("SELECT tier, COUNT(*) as cnt FROM users GROUP BY tier")
     today_signups = fetchone(
         "SELECT COUNT(*) as cnt FROM users WHERE created_at > datetime('now', '-1 day')"
     )
+    week_signups = fetchone(
+        "SELECT COUNT(*) as cnt FROM users WHERE created_at > datetime('now', '-7 days')"
+    )
+    verified_count = fetchone("SELECT COUNT(*) as cnt FROM users WHERE email_verified = 1")
+
+    # Usage stats
     today_usage = fetchone(
         "SELECT COUNT(*) as cnt FROM usage_log WHERE created_at > datetime('now', '-1 day')"
     )
     week_usage = fetchone(
         "SELECT COUNT(*) as cnt FROM usage_log WHERE created_at > datetime('now', '-7 days')"
     )
+    # Top tools today
+    top_tools = fetchall(
+        "SELECT action, COUNT(*) as cnt FROM usage_log WHERE created_at > datetime('now', '-1 day') GROUP BY action ORDER BY cnt DESC LIMIT 8"
+    )
+
+    # Check history stats
+    total_checks = fetchone("SELECT COUNT(*) as cnt FROM check_history")
+    today_checks = fetchone(
+        "SELECT COUNT(*) as cnt FROM check_history WHERE created_at > datetime('now', '-1 day')"
+    )
+
+    # Active monitors
+    total_monitors = fetchone("SELECT COUNT(*) as cnt FROM user_monitors")
+    listed_monitors = fetchone("SELECT COUNT(*) as cnt FROM user_monitors WHERE last_listed_count > 0")
+
+    # Bulk jobs
+    active_bulk = fetchone("SELECT COUNT(*) as cnt FROM bulk_jobs WHERE status IN ('pending','processing')")
+    total_bulk = fetchone("SELECT COUNT(*) as cnt FROM bulk_jobs")
+
+    # Alerts
+    total_alerts = fetchone("SELECT COUNT(*) as cnt FROM alerts")
+    unread_alerts = fetchone("SELECT COUNT(*) as cnt FROM alerts WHERE is_read = 0")
+
+    # Teams
+    total_teams = fetchone("SELECT COUNT(*) as cnt FROM teams")
+
+    # Recent signups (last 5)
+    recent_signups = fetchall(
+        "SELECT id, email, display_name, tier, created_at FROM users ORDER BY created_at DESC LIMIT 5"
+    )
+
+    # Scheduler status
+    try:
+        from modules.scheduler import get_scheduler_status
+        scheduler = get_scheduler_status()
+    except Exception:
+        scheduler = {"running": False, "jobs": []}
+
+    # Service health
+    services = {}
+    services["groq"] = bool(os.environ.get("GROQ_API_KEY"))
+    services["stripe"] = bool(os.environ.get("STRIPE_SECRET_KEY"))
+    services["smtp"] = bool(os.environ.get("SMTP_HOST"))
 
     stats = {
         "total_users": total_users["cnt"] if total_users else 0,
         "tier_counts": {r["tier"]: r["cnt"] for r in tier_counts},
         "today_signups": today_signups["cnt"] if today_signups else 0,
+        "week_signups": week_signups["cnt"] if week_signups else 0,
+        "verified_users": verified_count["cnt"] if verified_count else 0,
         "today_usage": today_usage["cnt"] if today_usage else 0,
         "week_usage": week_usage["cnt"] if week_usage else 0,
+        "top_tools": top_tools,
+        "total_checks": total_checks["cnt"] if total_checks else 0,
+        "today_checks": today_checks["cnt"] if today_checks else 0,
+        "total_monitors": total_monitors["cnt"] if total_monitors else 0,
+        "listed_monitors": listed_monitors["cnt"] if listed_monitors else 0,
+        "active_bulk": active_bulk["cnt"] if active_bulk else 0,
+        "total_bulk": total_bulk["cnt"] if total_bulk else 0,
+        "total_alerts": total_alerts["cnt"] if total_alerts else 0,
+        "unread_alerts": unread_alerts["cnt"] if unread_alerts else 0,
+        "total_teams": total_teams["cnt"] if total_teams else 0,
+        "recent_signups": recent_signups,
+        "scheduler": scheduler,
+        "services": services,
     }
 
     return render_template("admin_dashboard.html", is_admin=True, stats=stats)
