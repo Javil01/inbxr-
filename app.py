@@ -100,6 +100,11 @@ app.config["MAX_CONTENT_LENGTH"] = 10 * 1024 * 1024
 # ── Permanent session lifetime ───────────────────────────
 app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(days=30)
 
+# ── Session cookie security ─────────────────────────────
+app.config['SESSION_COOKIE_SECURE'] = os.environ.get('FLASK_ENV') == 'production'
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+
 # ── Initialize database and register blueprints ─────────
 from modules.database import init_db
 init_db()
@@ -1982,6 +1987,20 @@ def support_page():
     return render_template("support.html",
                            is_admin=_is_admin(),
                            active_page="support")
+
+
+@app.route("/privacy")
+def privacy_page():
+    return render_template("privacy.html",
+                           is_admin=_is_admin(),
+                           active_page="privacy")
+
+
+@app.route("/terms")
+def terms_page():
+    return render_template("terms.html",
+                           is_admin=_is_admin(),
+                           active_page="terms")
 
 
 @app.route("/api/support/chat", methods=["POST"])
