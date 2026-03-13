@@ -1,0 +1,22 @@
+{% extends "auth/base_auth.html" %}
+{% block title %}Verify Your Email{% endblock %}
+{% block content %}
+<h1 class="auth-card__title">Verify Your Email</h1>
+<p style="margin-bottom:16px;color:var(--text-muted, #888);">
+  To use INBXR tools, please verify your email address.
+  We sent a verification link to <strong>{{ current_user_email }}</strong>.
+</p>
+
+{% if request.args.get('resent') %}
+<div class="auth-alert auth-alert--success">Verification email resent. Check your inbox (and spam folder).</div>
+{% endif %}
+
+<form method="POST" action="/resend-verification" style="margin-bottom:16px;">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <button type="submit" class="btn btn--primary" style="width:100%;">Resend Verification Email</button>
+</form>
+
+<p class="auth-card__footer" style="font-size:0.85rem;color:var(--text-muted, #888);">
+  Wrong email? <a href="/logout">Log out</a> and sign up again.
+</p>
+{% endblock %}

@@ -6,9 +6,12 @@ Configure via environment variables:
 """
 
 import os
+import logging
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+
+logger = logging.getLogger('inbxr.mailer')
 
 SMTP_HOST = os.environ.get("SMTP_HOST", "")
 SMTP_PORT = int(os.environ.get("SMTP_PORT", "587"))
@@ -26,7 +29,7 @@ def is_configured():
 def _send(to_email, subject, html_body, text_body=None):
     """Send an email via SMTP. Returns True on success, False on failure."""
     if not is_configured():
-        print(f"[MAILER] SMTP not configured. Would send to {to_email}: {subject}")
+        logger.info("SMTP not configured. Would send to %s: %s", to_email, subject)
         return False
 
     msg = MIMEMultipart("alternative")
@@ -47,8 +50,11 @@ def _send(to_email, subject, html_body, text_body=None):
             server.login(SMTP_USER, SMTP_PASS)
             server.sendmail(SMTP_FROM, to_email, msg.as_string())
         return True
-    except Exception as e:
-        print(f"[MAILER] Failed to send to {to_email}: {e}")
+    except smtplib.SMTPException as e:
+        logger.error("SMTP error sending to %s: %s", to_email, e)
+        return False
+    except OSError as e:
+        logger.error("Network error sending to %s: %s", to_email, e)
         return False
 
 

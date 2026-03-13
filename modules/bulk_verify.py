@@ -6,10 +6,13 @@ Create, process, and manage bulk verification jobs.
 import json
 import csv
 import io
+import logging
 from datetime import datetime, timezone
 
 from modules.database import execute, fetchone, fetchall
 from modules.email_verifier import verify_email
+
+logger = logging.getLogger('inbxr.bulk_verify')
 
 MAX_EMAILS_PER_JOB = 10_000
 
@@ -115,6 +118,7 @@ def process_bulk_job(job_id):
                 summary["unknown"] += 1
 
         except Exception:
+            logger.exception("Bulk verify failed for email: %s", row["email"])
             execute(
                 """UPDATE bulk_results
                    SET verdict = 'unknown', score = 0,

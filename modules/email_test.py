@@ -4,12 +4,15 @@ Fetches a real received email via IMAP, parses headers comprehensively,
 and runs all analysis modules against the actual content.
 """
 
+import logging
 import re
 import time
 import imaplib
 import email as email_lib
 from email import policy as email_policy
 from concurrent.futures import ThreadPoolExecutor, as_completed
+
+logger = logging.getLogger('inbxr.email_test')
 
 from modules.inbox_placement import (
     load_seed_accounts, generate_token, check_rate_limit,
@@ -89,6 +92,7 @@ class EmailTestFetcher:
             return {"status": "not_found", "elapsed_ms": elapsed}
 
         except Exception as e:
+            logger.exception("Email test fetch failed")
             elapsed = round((time.time() - start) * 1000)
             return {"status": "error", "error": str(e)[:200], "elapsed_ms": elapsed}
         finally:
@@ -96,7 +100,7 @@ class EmailTestFetcher:
                 try:
                     imap.logout()
                 except Exception:
-                    pass
+                    pass  # Cleanup — safe to ignore
 
     def _search_and_fetch(self, imap, folder: str, provider: str):
         """Search folder for token, fetch full raw message. Returns (raw_bytes, tab) or None."""
@@ -128,7 +132,9 @@ class EmailTestFetcher:
 
             return raw_bytes, tab
 
-        except Exception:
+        except imaplib.IMAP4.error:
+            return None
+        except OSError:
             return None
 
     def _detect_gmail_tab(self, imap, msg_id):
@@ -642,7 +648,7 @@ def run_full_analysis(raw_bytes: bytes, placement: str, folder: str,
         )
         result["spam"] = spam.analyze()
     except Exception:
-        pass
+        logger.exception("Non-fatal: spam analysis failed in email test")
 
     try:
         from modules.copy_analyzer import CopyAnalyzer
@@ -654,14 +660,14 @@ def run_full_analysis(raw_bytes: bytes, placement: str, folder: str,
         )
         result["copy"] = copy.analyze()
     except Exception:
-        pass
+        logger.exception("Non-fatal: copy analysis failed in email test")
 
     # Readability
     try:
         from modules.readability import analyze_readability
         result["readability"] = analyze_readability(body=body, subject=clean_subject)
     except Exception:
-        pass
+        logger.exception("Non-fatal: readability analysis failed in email test")
 
     # Link & image validation
     if body:
@@ -669,7 +675,7 @@ def run_full_analysis(raw_bytes: bytes, placement: str, folder: str,
             from modules.link_image_validator import validate_links_and_images
             result["link_image"] = validate_links_and_images(body)
         except Exception:
-            pass
+            logger.exception("Non-fatal: link/image validation failed in email test")
 
     # Reputation check (DNS-based)
     if domain:
@@ -680,14 +686,14 @@ def run_full_analysis(raw_bytes: bytes, placement: str, folder: str,
             checker = ReputationChecker(domain=domain, sender_ip=sender_ip)
             result["reputation"] = checker.analyze()
         except Exception:
-            pass
+            logger.exception("Non-fatal: reputation check failed in email test")
 
         # BIMI
         try:
             from modules.bimi_validator import validate_bimi
             result["bimi"] = validate_bimi(domain)
         except Exception:
-            pass
+            logger.exception("Non-fatal: BIMI validation failed in email test")
 
     # Benchmarks
     try:
@@ -701,14 +707,14 @@ def run_full_analysis(raw_bytes: bytes, placement: str, folder: str,
             body_word_count=len(re.findall(r"\b\w+\b", body)),
         )
     except Exception:
-        pass
+        logger.exception("Non-fatal: benchmarks failed in email test")
 
     # Pre-send audit
     try:
         from modules.presend_audit import generate_audit
         result["audit"] = generate_audit(result)
     except Exception:
-        pass
+        logger.exception("Non-fatal: pre-send audit failed in email test")
 
     # Header-specific grades
     result["header_grades"] = _grade_headers(headers, body)

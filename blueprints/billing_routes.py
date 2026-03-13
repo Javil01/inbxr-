@@ -4,15 +4,31 @@ Checkout sessions, customer portal, and webhook handling.
 """
 
 import os
+import logging
 import stripe
 from flask import Blueprint, request, jsonify, redirect, url_for, render_template
 
 from modules.auth import login_required, get_current_user, get_user_by_id, update_user_tier
 from modules.database import fetchone, execute
 
+logger = logging.getLogger('inbxr.billing')
+
 billing_bp = Blueprint("billing", __name__, url_prefix="/billing")
 
 stripe.api_key = os.environ.get("STRIPE_SECRET_KEY")
+
+# ── Graceful degradation when Stripe is not configured ──
+_STRIPE_CONFIGURED = bool(stripe.api_key)
+
+if not _STRIPE_CONFIGURED:
+    logger.warning("STRIPE_SECRET_KEY not set — billing routes will return 503")
+
+
+def _billing_not_configured():
+    """Return a friendly error when Stripe keys are missing."""
+    return jsonify({
+        "error": "Billing is not configured. Please contact the administrator."
+    }), 503
 
 # ── Map Stripe price IDs → tier names ──────────────────
 PRICE_TO_TIER = {}
@@ -37,6 +53,8 @@ TIER_TO_PRICE_ENV = {
 @login_required
 def create_checkout_session():
     """Create a Stripe Checkout session for upgrading."""
+    if not _STRIPE_CONFIGURED:
+        return _billing_not_configured()
     _ensure_price_map()
     user = get_current_user()
     if not user:
@@ -86,6 +104,8 @@ def create_checkout_session():
 @login_required
 def customer_portal():
     """Open Stripe Customer Portal for managing subscription."""
+    if not _STRIPE_CONFIGURED:
+        return _billing_not_configured()
     user = get_current_user()
     if not user or not user.get("stripe_customer_id"):
         return jsonify({"error": "No active subscription found"}), 400
@@ -103,6 +123,8 @@ def customer_portal():
 @billing_bp.route("/webhook", methods=["POST"])
 def webhook():
     """Handle Stripe webhook events."""
+    if not _STRIPE_CONFIGURED:
+        return _billing_not_configured()
     _ensure_price_map()
     payload = request.data
     sig = request.headers.get("Stripe-Signature")
@@ -207,4 +229,4 @@ def _handle_payment_failed(invoice):
             severity="critical",
         )
     except Exception:
-        pass
+        logger.exception("Failed to create payment_failed alert for user %s", user["id"])

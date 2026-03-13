@@ -3,9 +3,13 @@ INBXR — Team Routes
 Create, manage, and invite members to team workspaces.
 """
 
+import logging
+
 from flask import Blueprint, render_template, request, jsonify, session, redirect, url_for
 
 from modules.auth import login_required, get_current_user
+
+logger = logging.getLogger('inbxr.team_routes')
 from modules.tiers import has_feature
 from modules.teams import (
     create_team, get_user_team, get_team_members, get_team_user_ids,
@@ -177,7 +181,7 @@ def send_invite():
         inviter_name = user.get("display_name") or user["email"].split("@")[0]
         send_team_invite_email(email, team["name"], inviter_name, result["token"])
     except Exception:
-        pass  # Invite still created even if email fails
+        logger.exception("Failed to send team invite email to %s", email)
 
     return jsonify(result), 201
 

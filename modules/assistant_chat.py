@@ -5,10 +5,13 @@ and provides personalized, actionable guidance.
 """
 
 import json
+import logging
 import os
 import ssl
 from http.client import HTTPSConnection
 from modules.history import get_history, get_result, get_history_stats, get_tool_breakdown
+
+logger = logging.getLogger('inbxr.assistant_chat')
 
 _TIMEOUT = 45  # longer timeout — richer responses
 
@@ -154,7 +157,7 @@ def chat(user_id, messages, team_id=None):
         if resp.status != 200:
             try:
                 err = json.loads(body).get("error", {}).get("message", "API error")
-            except Exception:
+            except (json.JSONDecodeError, KeyError, TypeError):
                 err = "API error"
             return {"error": err}
 
@@ -164,6 +167,7 @@ def chat(user_id, messages, team_id=None):
         return {"reply": reply, "tokens": usage.get("total_tokens", 0)}
 
     except Exception as e:
+        logger.exception("Assistant chat API connection error")
         return {"error": f"Connection error: {str(e)[:100]}"}
     finally:
         conn.close()

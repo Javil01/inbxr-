@@ -3,9 +3,12 @@ INBXR — Teams & Workspaces
 Create teams, invite members, manage roles, share resources.
 """
 
+import logging
 import secrets
 from modules.database import execute, fetchone, fetchall
 from modules.tiers import has_feature, get_tier_limit
+
+logger = logging.getLogger('inbxr.teams')
 
 
 MAX_TEAM_MEMBERS = 10  # Agency tier cap
@@ -189,6 +192,7 @@ def accept_invite(token, user_id):
             (invite["team_id"], user_id, invite["role"]),
         )
     except Exception:
+        logger.exception("Failed to add user %s to team %s", user_id, invite["team_id"])
         return {"ok": False, "error": "Could not join team."}
 
     execute("UPDATE team_invites SET status = 'accepted' WHERE id = ?", (invite["id"],))

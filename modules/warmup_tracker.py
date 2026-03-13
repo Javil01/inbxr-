@@ -5,8 +5,11 @@ Tracks IP/domain warm-up campaigns with daily volume logging and health assessme
 
 import os
 import json
+import logging
 import sqlite3
 from datetime import datetime, timezone, timedelta
+
+logger = logging.getLogger('inbxr.warmup_tracker')
 
 DB_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "warmup.db")
 
@@ -230,8 +233,8 @@ def get_campaign_stats(campaign_id):
                     total = (pr.get("inbox", 0) + pr.get("spam", 0) + pr.get("not_found", 0)) or 1
                     inbox_rates.append(round(pr.get("inbox", 0) / total * 100))
                 placement_trend = inbox_rates
-            except Exception:
-                pass
+            except (json.JSONDecodeError, KeyError, TypeError, ValueError):
+                logger.exception("Failed to parse placement trend data for campaign %s", campaign_id)
 
         return {
             "total_days": total_days,

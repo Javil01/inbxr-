@@ -5,6 +5,7 @@ Registration, login, password hashing, session management, decorators.
 
 import os
 import hashlib
+import logging
 import secrets
 import functools
 from datetime import datetime, timedelta, timezone
@@ -12,6 +13,8 @@ from datetime import datetime, timedelta, timezone
 from flask import session, request, redirect, url_for, jsonify, g
 
 from modules.database import execute, fetchone, fetchall
+
+logger = logging.getLogger('inbxr.auth')
 
 
 # ── Password Hashing (uses hashlib — no extra deps) ─────
@@ -190,7 +193,7 @@ def login_user(user):
             session.pop("team_name", None)
             session.pop("team_role", None)
     except Exception:
-        pass
+        logger.exception("Failed to load team context for user %s", user["id"])
 
 
 def logout_user():

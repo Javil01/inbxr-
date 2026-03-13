@@ -6,6 +6,7 @@ Uses Python stdlib imaplib — zero external dependencies.
 
 import imaplib
 import json
+import logging
 import os
 import re
 import socket
@@ -13,6 +14,8 @@ import time
 import uuid
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from threading import Lock
+
+logger = logging.getLogger('inbxr.inbox_placement')
 
 CONFIG_PATH = os.path.join(os.path.dirname(__file__), "..", "config", "seed_accounts.json")
 
@@ -160,6 +163,7 @@ def check_seed_health() -> list:
             status["healthy"] = True
             status["latency_ms"] = round((time.time() - start) * 1000)
         except Exception as e:
+            logger.exception("Seed health check failed for %s", acc["email"])
             status["error"] = str(e)[:120]
             status["latency_ms"] = round((time.time() - start) * 1000)
         finally:
@@ -167,7 +171,7 @@ def check_seed_health() -> list:
                 try:
                     imap.logout()
                 except Exception:
-                    pass
+                    pass  # Cleanup — safe to ignore
 
         results.append(status)
     return results
@@ -228,16 +232,17 @@ def cleanup_seeds(keep_token: str = None) -> dict:
 
                     imap.expunge()
                 except Exception:
-                    pass
+                    logger.exception("Failed to clean folder %s for %s", folder, acc["email"])
 
         except Exception as e:
+            logger.exception("Seed cleanup failed for %s", acc["email"])
             summary["errors"].append(f"{acc['email']}: {str(e)[:80]}")
         finally:
             if imap:
                 try:
                     imap.logout()
                 except Exception:
-                    pass
+                    pass  # Cleanup — safe to ignore
 
     return summary
 
@@ -384,7 +389,9 @@ class InboxPlacementTester:
 
             return True, tab
 
-        except Exception:
+        except imaplib.IMAP4.error:
+            return False, None
+        except OSError:
             return False, None
 
     # ── Gmail tab detection via X-GM-LABELS ──────────

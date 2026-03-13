@@ -5,6 +5,7 @@ Checks DNS record, SVG logo, VMC certificate, and DMARC prerequisites.
 Zero external dependencies beyond dnspython (already used by reputation_checker).
 """
 
+import logging
 import re
 import ssl
 import socket
@@ -12,6 +13,8 @@ import time
 from urllib.parse import urlparse
 from http.client import HTTPSConnection, HTTPConnection
 from concurrent.futures import ThreadPoolExecutor, as_completed
+
+logger = logging.getLogger('inbxr.bimi_validator')
 
 # ── BIMI requirements ─────────────────────────────────
 _BIMI_SELECTOR = "default"
@@ -240,6 +243,7 @@ def _check_dmarc_prerequisite(domain: str) -> dict:
         return {"found": False, "record": None, "policy": "none", "pct": 0,
                 "meets_requirement": False, "issue": "No DMARC record found"}
     except Exception:
+        logger.exception("Failed to check DMARC prerequisite for %s", domain)
         return {"found": False, "record": None, "policy": "none", "pct": 0,
                 "meets_requirement": False, "issue": "Could not query DMARC record"}
 

@@ -4,8 +4,11 @@ Creates, stores, and sends notifications for blocklist changes and other events.
 """
 
 import json
+import logging
 from modules.database import execute, fetchone, fetchall
 from modules.mailer import is_configured, _send
+
+logger = logging.getLogger('inbxr.alerts')
 
 
 def create_alert(user_id, alert_type, title, message, data=None, team_id=None, severity=None):
@@ -20,6 +23,7 @@ def create_alert(user_id, alert_type, title, message, data=None, team_id=None, s
             from modules.teams import get_team_user_ids
             member_ids = get_team_user_ids(team_id)
         except Exception:
+            logger.exception("Failed to get team user IDs for team %s, falling back to user %s", team_id, user_id)
             member_ids = [user_id]
 
         last_id = None

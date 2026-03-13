@@ -4,6 +4,7 @@ Performs live DNS lookups for SPF, DKIM, DMARC, BIMI,
 PTR / FCrDNS, parallel DNSBL checks, and SMTP diagnostics.
 """
 
+import logging
 import re
 import socket
 import smtplib
@@ -14,6 +15,8 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 import dns.resolver
 import dns.exception
 import dns.reversename
+
+logger = logging.getLogger('inbxr.reputation_checker')
 
 # ── DKIM selectors to try when none is specified ──────
 COMMON_SELECTORS = [
@@ -333,6 +336,7 @@ def _get_txt(resolver, name: str) -> tuple[list[str], str | None]:
     except dns.exception.Timeout:
         return [], "Timeout"
     except Exception as e:
+        logger.exception("Unexpected DNS lookup error")
         return [], str(e)
 
 
@@ -637,6 +641,7 @@ class ReputationChecker:
             return {"fetched": True, "mode": mode, "mx": mx_patterns,
                     "max_age": max_age, "raw": body[:500]}
         except Exception as e:
+            logger.exception("MTA-STS policy fetch failed")
             return {"fetched": False, "error": str(e)[:100]}
 
     def _check_tls_rpt(self) -> dict:
@@ -695,6 +700,7 @@ class ReputationChecker:
             })
             return {"checked": True, "hostname": None, "found": False}
         except Exception:
+            logger.exception("PTR lookup failed for %s", self.sender_ip)
             return {"checked": True, "hostname": None, "found": False, "error": "lookup failed"}
 
     def _check_fcrdns(self, ptr_hostname: str) -> dict:
@@ -712,6 +718,7 @@ class ReputationChecker:
                 })
             return {"valid": valid, "checked": True, "resolved": resolved}
         except Exception:
+            logger.exception("FCrDNS lookup failed for %s", ptr_hostname)
             return {"valid": False, "checked": True, "resolved": []}
 
     def _check_mx(self) -> dict:
@@ -731,6 +738,7 @@ class ReputationChecker:
                     pass
             return {"found": True, "records": records, "ips": ips}
         except Exception:
+            logger.exception("MX lookup failed for %s", self.domain)
             return {"found": False, "records": [], "ips": []}
 
     def _check_domain_setup(self) -> dict:
@@ -937,6 +945,7 @@ class ReputationChecker:
                 try:
                     results.append(future.result())
                 except Exception:
+                    logger.exception("DNSBL check thread failed")
                     entry = futures_map[future]
                     results.append({"zone": entry["zone"], "name": entry["name"],
                                     "type": "?", "weight": entry["weight"],
@@ -972,7 +981,7 @@ class ReputationChecker:
             try:
                 target_ip = socket.gethostbyname(mx_host)
                 result["ip"] = target_ip
-            except Exception:
+            except socket.gaierror:
                 result["errors"].append("Could not resolve MX host IP")
                 return result
 
@@ -1006,8 +1015,8 @@ class ReputationChecker:
                         "item": "Mail server does not advertise STARTTLS",
                         "recommendation": "Enable STARTTLS on your mail server. Gmail, Yahoo, and Microsoft penalize servers that don't support encryption in transit.",
                     })
-            except Exception:
-                pass
+            except smtplib.SMTPException:
+                logger.exception("STARTTLS check failed")
 
             # ── Open Relay Test ──
             # Try to relay a message from a foreign domain to a foreign domain.
@@ -1043,6 +1052,7 @@ class ReputationChecker:
                 result["open_relay"] = False
                 result["open_relay_status"] = "closed"
             except Exception as e:
+                logger.exception("Open relay test error")
                 result["open_relay_status"] = "error"
                 result["errors"].append(f"Open relay test error: {str(e)[:80]}")
 
@@ -1060,6 +1070,7 @@ class ReputationChecker:
         except OSError as e:
             result["errors"].append(f"Network error: {str(e)[:80]}")
         except Exception as e:
+            logger.exception("Unexpected SMTP diagnostic error")
             result["errors"].append(f"SMTP error: {str(e)[:80]}")
 
         return result

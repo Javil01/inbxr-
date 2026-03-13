@@ -4,9 +4,12 @@ Technical support and sales agents powered by Groq API.
 """
 
 import json
+import logging
 import os
 import ssl
 from http.client import HTTPSConnection
+
+logger = logging.getLogger('inbxr.support_chat')
 
 _TIMEOUT = 30
 
@@ -129,7 +132,7 @@ def chat(agent_type, messages):
         if resp.status != 200:
             try:
                 err = json.loads(body).get("error", {}).get("message", "API error")
-            except Exception:
+            except (json.JSONDecodeError, KeyError, TypeError):
                 err = "API error"
             return {"error": err}
 
@@ -138,6 +141,7 @@ def chat(agent_type, messages):
         return {"reply": reply}
 
     except Exception as e:
+        logger.exception("Support chat API connection error")
         return {"error": f"Connection error: {str(e)[:100]}"}
     finally:
         conn.close()

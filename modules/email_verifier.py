@@ -7,12 +7,15 @@ Performs syntax validation, domain checks, disposable/free provider detection,
 MX record lookup, catch-all detection, and mailbox verification via raw SMTP.
 """
 
+import logging
 import re
 import socket
 import random
 import string
 
 import dns.resolver
+
+logger = logging.getLogger('inbxr.email_verifier')
 
 
 # ---------------------------------------------------------------------------
@@ -387,7 +390,9 @@ def verify_email(email: str) -> dict:
             dns.resolver.resolve(domain, "A")
             # Domain itself can accept mail
             mx_hosts = [(0, domain)]
-        except Exception:
+        except (dns.resolver.NoAnswer, dns.resolver.NXDOMAIN,
+                dns.resolver.NoNameservers, dns.exception.Timeout,
+                Exception):
             pass
 
     if mx_hosts:

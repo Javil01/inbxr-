@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/static/css/style.css" />
+  <meta name="csrf-token" content="{{ csrf_token() }}">
   <style>
     body { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: var(--bg-2); }
     .login-card {
@@ -80,6 +81,7 @@
     {% endif %}
 
     <form method="POST" action="/admin/login" novalidate>
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
       <div class="field">
         <label for="username">Username</label>
         <input type="text" id="username" name="username" placeholder="admin" autocomplete="username" required />

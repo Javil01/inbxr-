@@ -9,6 +9,14 @@ import tempfile
 import time
 import threading
 import uuid
+import logging
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s [%(levelname)s] %(name)s: %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
+logger = logging.getLogger('inbxr')
 
 # ── Load .env file if present (no dependencies) ──────
 _env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
@@ -28,6 +36,46 @@ from flask import Flask, render_template, request, jsonify, session, redirect, u
 
 app = Flask(__name__)
 
+from flask_wtf.csrf import CSRFProtect, validate_csrf
+from wtforms import ValidationError as WTFValidationError
+
+csrf = CSRFProtect(app)
+
+# Disable automatic CSRF checking — we enforce it selectively for HTML form POSTs
+app.config["WTF_CSRF_CHECK_DEFAULT"] = False
+
+# Paths that require CSRF validation (HTML form submissions)
+_CSRF_PROTECTED_PATHS = {
+    "/admin/login",
+    "/signup",
+    "/login",
+    "/forgot-password",
+    "/account/change-password",
+    "/resend-verification",
+}
+
+@app.before_request
+def csrf_protect_forms():
+    """Enforce CSRF validation on HTML form POST submissions only."""
+    if request.method not in ("POST", "PUT", "PATCH", "DELETE"):
+        return
+    # Check if this path requires CSRF protection
+    if request.path in _CSRF_PROTECTED_PATHS:
+        token = request.form.get("csrf_token") or request.headers.get("X-CSRFToken")
+        try:
+            validate_csrf(token)
+        except WTFValidationError:
+            from flask import abort
+            abort(400, description="CSRF token missing or invalid.")
+    # Also protect reset-password paths (dynamic URL)
+    elif request.path.startswith("/reset-password/"):
+        token = request.form.get("csrf_token") or request.headers.get("X-CSRFToken")
+        try:
+            validate_csrf(token)
+        except WTFValidationError:
+            from flask import abort
+            abort(400, description="CSRF token missing or invalid.")
+
 # ── Secret key for sessions ──────────────────────────────
 import sys
 
@@ -37,15 +85,13 @@ _secret_key = os.environ.get("SECRET_KEY", "")
 
 if _is_production:
     if not _secret_key or _secret_key == _DEFAULT_SECRET:
-        print("\n" + "!" * 60)
-        print("  FATAL: SECRET_KEY is missing or using the default value.")
-        print("  Set a strong SECRET_KEY env var before running in production.")
-        print("!" * 60 + "\n")
+        logger.critical("FATAL: SECRET_KEY is missing or using the default value. "
+                        "Set a strong SECRET_KEY env var before running in production.")
         sys.exit(1)
     app.secret_key = _secret_key
 else:
     if not _secret_key or _secret_key == _DEFAULT_SECRET:
-        print("[WARNING] Using default SECRET_KEY — do NOT use this in production.")
+        logger.warning("Using default SECRET_KEY — do NOT use this in production.")
     app.secret_key = _secret_key if _secret_key else _DEFAULT_SECRET
 
 # ── Max upload size: 10 MB ──────────────────────────────
@@ -171,6 +217,7 @@ def _get_tracking_tags():
         from modules.database import fetchall
         settings = {s["key"]: s["value"] for s in fetchall("SELECT key, value FROM site_settings")}
     except Exception:
+        logger.exception("Failed to load tracking tags from site_settings")
         return {"head": "", "body": ""}
 
     head_parts = []
@@ -244,6 +291,99 @@ def inject_user_context():
     }
 
 
+# ── Email verification enforcement ────────────────────
+# Logged-in users who haven't verified their email get redirected to a
+# verification-required page.  Anonymous/guest users are NOT affected.
+# Admin routes, auth flow routes, static files and health check are exempt.
+
+_VERIFICATION_EXEMPT_PREFIXES = (
+    "/static/",
+    "/admin",
+    "/webhook",
+)
+
+_VERIFICATION_EXEMPT_PATHS = {
+    "/",
+    "/login",
+    "/signup",
+    "/logout",
+    "/resend-verification",
+    "/forgot-password",
+    "/health",
+    "/pricing",
+    "/support",
+    "/verification-required",
+    "/account",
+    "/account/change-password",
+    "/account/api-key",
+    "/create-checkout-session",
+    "/customer-portal",
+    "/success",
+}
+
+@app.before_request
+def enforce_email_verification():
+    """Redirect logged-in but unverified users away from protected routes."""
+    # Only applies to logged-in users
+    user_id = session.get("user_id")
+    if not user_id:
+        return None
+
+    # Skip exempt prefixes (static, admin, webhooks)
+    path = request.path
+    if any(path.startswith(p) for p in _VERIFICATION_EXEMPT_PREFIXES):
+        return None
+
+    # Skip exempt exact paths
+    if path in _VERIFICATION_EXEMPT_PATHS:
+        return None
+
+    # Skip verify-email token links (dynamic path)
+    if path.startswith("/verify-email/"):
+        return None
+
+    # Skip reset-password links (dynamic path)
+    if path.startswith("/reset-password/"):
+        return None
+
+    # Skip team invite links so they can still accept after verifying
+    if path.startswith("/team/invite/"):
+        return None
+
+    # Check verification status
+    from modules.auth import get_current_user as _get_current_user
+    user = _get_current_user()
+    if not user:
+        return None
+
+    if user.get("email_verified"):
+        return None
+
+    # Unverified — block with appropriate response
+    if request.is_json or request.path.startswith("/api/"):
+        return jsonify({
+            "error": "Please verify your email address before using this feature.",
+            "verification_required": True,
+            "resend_url": "/resend-verification",
+        }), 403
+
+    return redirect("/verification-required")
+
+
+@app.route("/verification-required")
+def verification_required_page():
+    """Show the email verification required page."""
+    # If not logged in, send to login
+    if not session.get("user_id"):
+        return redirect(url_for("auth.login"))
+    # If already verified, send to dashboard
+    from modules.auth import get_current_user as _get_current_user
+    user = _get_current_user()
+    if user and user.get("email_verified"):
+        return redirect("/dashboard")
+    return render_template("auth/verification_required.html", active_page="")
+
+
 # ── Page view tracking ────────────────────────────────
 _TRACKED_PAGES = {
     "/", "/analyzer", "/sender", "/placement", "/subject-scorer",
@@ -272,8 +412,34 @@ def track_page_view(response):
                  request.referrer[:500] if request.referrer else None, session.get("user_id")),
             )
         except Exception:
-            pass
+            logger.exception("Failed to log page view for %s", request.path)
     return response
+
+
+@app.after_request
+def add_security_headers(response):
+    """Add security headers to every response."""
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    response.headers['X-Frame-Options'] = 'DENY'
+    response.headers['X-XSS-Protection'] = '1; mode=block'
+    return response
+
+
+# ── Error handlers ──────────────────────────────────
+@app.errorhandler(404)
+def not_found(e):
+    return render_template('errors/404.html'), 404
+
+
+@app.errorhandler(500)
+def server_error(e):
+    return render_template('errors/500.html'), 500
+
+
+# ── Health check ────────────────────────────────────
+@app.route('/health')
+def health_check():
+    return jsonify({'status': 'ok'}), 200
 
 
 # ══════════════════════════════════════════════════════
@@ -320,7 +486,7 @@ def _log_admin_action(action, details=""):
             (action, details, ip),
         )
     except Exception:
-        pass
+        logger.exception("Failed to log admin action: %s", action)
 
 
 def _extract_ctas_from_body(body: str) -> tuple:
@@ -489,6 +655,7 @@ def admin_dashboard():
         from modules.scheduler import get_scheduler_status
         scheduler = get_scheduler_status()
     except Exception:
+        logger.exception("Failed to get scheduler status")
         scheduler = {"running": False, "jobs": []}
 
     # Service health
@@ -1355,6 +1522,7 @@ def _bulk_email_worker(job_id, users, subject, body_html, body_plain):
         try:
             ok = send_admin_email(u["email"], subject, body_html, body_plain)
         except Exception:
+            logger.exception("Failed to send bulk email to %s", u["email"])
             ok = False
         if ok:
             sent += 1
@@ -1368,7 +1536,7 @@ def _bulk_email_worker(job_id, users, subject, body_html, body_plain):
         execute("INSERT INTO admin_notes (user_id, note, tag) VALUES (1, ?, 'general')",
                 (f"[BULK EMAIL] Subject: {subject} | Sent: {sent}, Failed: {failed}, Total: {len(users)}",))
     except Exception:
-        pass
+        logger.exception("Failed to log bulk email admin note")
 
     job["status"] = "completed"
 
@@ -1654,8 +1822,8 @@ def admin_api_media_delete(media_id):
         if _os.path.exists(filepath):
             try:
                 _os.remove(filepath)
-            except Exception:
-                pass
+            except OSError:
+                logger.exception("Failed to delete media file: %s", filepath)
         execute("DELETE FROM media_library WHERE id = ?", (media_id,))
     return jsonify({"ok": True})
 
@@ -2024,6 +2192,7 @@ def email_test_check():
             seed_email=fetch_result["seed_email"],
         )
     except Exception as e:
+        logger.exception("Email test analysis failed")
         return jsonify({"error": f"Analysis failed: {str(e)[:200]}"}), 500
 
     analysis["status"] = "found"
@@ -2107,6 +2276,7 @@ def placement_check():
     try:
         results = tester.check_all()
     except Exception as e:
+        logger.exception("Inbox placement check failed")
         return jsonify({"error": f"Placement check failed: {e}"}), 500
 
     # Build summary
@@ -2162,6 +2332,7 @@ def placement_cleanup():
     try:
         result = cleanup_seeds()
     except Exception as e:
+        logger.exception("Seed cleanup failed")
         return jsonify({"error": f"Cleanup failed: {e}"}), 500
     return jsonify(result)
 
@@ -2200,6 +2371,7 @@ def analyze_headers():
         parser = HeaderParser()
         msg = parser.parsestr(raw_headers)
     except Exception as e:
+        logger.exception("Failed to parse email headers")
         return jsonify({"error": f"Failed to parse headers: {str(e)[:200]}"}), 400
 
     # ── Envelope ──
@@ -2258,7 +2430,7 @@ def analyze_headers():
             try:
                 dt = parsedate_to_datetime(ts_str)
                 timestamps.append(dt)
-            except Exception:
+            except (ValueError, TypeError):
                 timestamps.append(None)
         else:
             timestamps.append(None)
@@ -2461,6 +2633,7 @@ def domain_health_check():
                 domain=domain, auth_categories=auth_cats
             )
         except Exception:
+            logger.exception("Non-fatal: DNS suggestions generation failed")
             results["dns_suggestions"] = None
 
     # ── Compute scores ──
@@ -2777,6 +2950,7 @@ def full_audit_check():
                 domain=domain, auth_categories=auth_cats
             )
         except Exception:
+            logger.exception("Non-fatal: DNS suggestions generation failed")
             dns_suggestions = None
 
     # ── BIMI fix record ──
@@ -3339,16 +3513,19 @@ def check_reputation():
         try:
             bimi_data = future_bimi.result(timeout=15) or {}
         except Exception:
+            logger.exception("Non-fatal: BIMI check failed")
             bimi_data = {}
 
         try:
             mx_data = future_mx.result(timeout=10)
         except Exception:
+            logger.exception("Non-fatal: MX check failed")
             mx_data = {"found": False, "records": []}
 
         try:
             ssl_data = future_ssl.result(timeout=10)
         except Exception:
+            logger.exception("Non-fatal: SSL check failed")
             ssl_data = {"connected": False}
 
     # ── ESP Auto-Detection ──
@@ -3558,6 +3735,7 @@ def ai_rewrite():
     except AIRewriteError as e:
         return jsonify({"error": str(e)}), 500
     except Exception as e:
+        logger.exception("AI rewrite failed")
         return jsonify({"error": f"Rewrite failed: {str(e)[:100]}"}), 500
 
     return jsonify(result)
@@ -3596,6 +3774,7 @@ def validate_bimi_route():
     try:
         result = validate_bimi(domain, selector=selector)
     except Exception as e:
+        logger.exception("BIMI validation failed for %s", domain)
         return jsonify({"error": f"BIMI validation failed: {e}"}), 500
 
     return jsonify(result)
@@ -3705,6 +3884,7 @@ def lookup_mta_sts():
     try:
         result = checker._check_mta_sts()
     except Exception as e:
+        logger.exception("MTA-STS lookup failed for %s", domain)
         return jsonify({"error": f"MTA-STS lookup failed: {e}"}), 500
 
     return jsonify({"domain": domain, **result})
@@ -3728,6 +3908,7 @@ def lookup_tls_rpt():
     try:
         result = checker._check_tls_rpt()
     except Exception as e:
+        logger.exception("TLS-RPT lookup failed for %s", domain)
         return jsonify({"error": f"TLS-RPT lookup failed: {e}"}), 500
 
     return jsonify({"domain": domain, **result})
@@ -3797,7 +3978,7 @@ def analyze():
                 checker = ReputationChecker(domain=domain)
                 reputation_result = checker.analyze()
             except Exception:
-                pass  # non-fatal — still return spam + copy results
+                logger.exception("Non-fatal: reputation check failed for %s", domain)
 
     readability_result = analyze_readability(body=body, subject=subject)
 
@@ -3807,7 +3988,7 @@ def analyze():
         try:
             link_image_result = validate_links_and_images(body)
         except Exception:
-            pass
+            logger.exception("Non-fatal: link/image validation failed")
 
     result = {
         "spam": spam.analyze(),
@@ -3836,7 +4017,7 @@ def analyze():
             body_word_count=len(re.findall(r"\b\w+\b", body)),
         )
     except Exception:
-        pass
+        logger.exception("Non-fatal: benchmarks calculation failed")
 
     if link_image_result:
         result["link_image"] = link_image_result
@@ -3853,7 +4034,7 @@ def analyze():
             if dns_suggestions.get("has_suggestions"):
                 result["dns_suggestions"] = dns_suggestions
         except Exception:
-            pass
+            logger.exception("Non-fatal: DNS suggestions failed for %s", domain)
 
         # BIMI validation (non-fatal)
         try:
@@ -3861,14 +4042,14 @@ def analyze():
             bimi_result = validate_bimi(domain)
             result["bimi"] = bimi_result
         except Exception:
-            pass
+            logger.exception("Non-fatal: BIMI validation failed for %s", domain)
 
     # Pre-send audit checklist (aggregates all results)
     try:
         from modules.presend_audit import generate_audit
         result["audit"] = generate_audit(result)
     except Exception:
-        pass
+        logger.exception("Non-fatal: pre-send audit generation failed")
 
     log_usage("copy_analysis")
 
@@ -3905,6 +4086,7 @@ def parse_file():
     try:
         content = file.read()
     except Exception as e:
+        logger.exception("Failed to read uploaded file")
         return jsonify({"error": f"Could not read file: {e}"}), 400
 
     result = {"subject": "", "from_addr": "", "body": "", "filename": file.filename,
@@ -3976,8 +4158,13 @@ def parse_file():
         return jsonify(result)
 
     except Exception as e:
+        logger.exception("Failed to parse uploaded file")
         return jsonify({"error": f"Failed to parse file: {e}"}), 500
 
 
 if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0", port=5000)
+    app.run(
+        debug=os.environ.get("FLASK_ENV") != "production",
+        host="0.0.0.0",
+        port=int(os.environ.get("PORT", 5000))
+    )

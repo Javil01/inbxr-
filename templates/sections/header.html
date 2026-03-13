@@ -1,4 +1,5 @@
 {% if tracking_tags and tracking_tags.head %}{{ tracking_tags.head | safe }}{% endif %}
+<meta name="csrf-token" content="{{ csrf_token() }}">
 <script>if(new URLSearchParams(location.search).get('embed')==='1'){document.documentElement.classList.add('embedded');}</script>
 <header class="site-header">
   <div class="header-inner">
@@ -69,9 +70,21 @@
 </header>
 <script>
 (function(){
-  /* ── Global 429 interceptor: styled signup/upgrade prompt ── */
+  /* ── Global fetch interceptor: CSRF token + 429 handler ── */
   var _origFetch = window.fetch;
-  window.fetch = function() {
+  window.fetch = function(url, opts) {
+    // Auto-inject CSRF token header for non-GET requests
+    if (opts && opts.method && opts.method.toUpperCase() !== 'GET') {
+      var csrfMeta = document.querySelector('meta[name="csrf-token"]');
+      if (csrfMeta) {
+        opts.headers = opts.headers || {};
+        if (opts.headers instanceof Headers) {
+          if (!opts.headers.has('X-CSRFToken')) opts.headers.set('X-CSRFToken', csrfMeta.content);
+        } else {
+          if (!opts.headers['X-CSRFToken']) opts.headers['X-CSRFToken'] = csrfMeta.content;
+        }
+      }
+    }
     return _origFetch.apply(this, arguments).then(function(res) {
       if (res.status === 429) {
         var clone = res.clone();

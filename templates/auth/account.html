@@ -7,6 +7,7 @@
 <div class="auth-alert auth-alert--warning" style="background:rgba(234,179,8,0.08);color:#ca8a04;border:1px solid rgba(234,179,8,0.2);margin-bottom:20px;">
   <strong>Verify your email</strong> — check your inbox for a verification link.
   <form method="post" action="{{ url_for('auth.resend_verification') }}" style="display:inline;margin-left:8px;">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
     <button type="submit" style="background:none;border:none;color:#ca8a04;text-decoration:underline;cursor:pointer;font-size:inherit;font-family:inherit;">Resend</button>
   </form>
 </div>

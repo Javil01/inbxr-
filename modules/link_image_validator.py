@@ -10,6 +10,7 @@ Validates all links and images in an email body:
 Uses Python stdlib only (http.client, ssl, urllib).
 """
 
+import logging
 import re
 import ssl
 import time
@@ -17,6 +18,8 @@ from html.parser import HTMLParser
 from http.client import HTTPSConnection, HTTPConnection
 from urllib.parse import urlparse, urljoin
 from concurrent.futures import ThreadPoolExecutor, as_completed
+
+logger = logging.getLogger('inbxr.link_image_validator')
 
 # ── Config ────────────────────────────────────────────
 _FETCH_TIMEOUT = 8
@@ -103,7 +106,7 @@ def validate_links_and_images(body: str) -> dict:
     try:
         parser.feed(body)
     except Exception:
-        pass
+        logger.exception("Failed to parse HTML body for link/image extraction")
 
     raw_links = parser.links
     raw_images = parser.images

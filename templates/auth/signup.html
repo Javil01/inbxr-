@@ -9,6 +9,7 @@
 {% endif %}
 
 <form method="post" class="auth-form">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
   <label class="auth-label">
     <span>Email</span>
     <input type="email" name="email" required autocomplete="email" placeholder="you@company.com" />

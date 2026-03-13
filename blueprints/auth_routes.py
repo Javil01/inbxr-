@@ -154,6 +154,9 @@ def resend_verification():
     if is_configured():
         send_verification_email(user["email"], token)
 
+    # If user is unverified, redirect to verification-required page (not account)
+    if not user.get("email_verified"):
+        return redirect("/verification-required?resent=1")
     return redirect(url_for("auth.account") + "?resent=1")
 
 

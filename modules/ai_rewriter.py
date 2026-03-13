@@ -5,12 +5,15 @@ alternative subject lines, body rewrites, and CTAs with tone matching.
 """
 
 import json
+import logging
 import os
 import re
 import ssl
 import time
 from http.client import HTTPSConnection
 from html.parser import HTMLParser
+
+logger = logging.getLogger('inbxr.ai_rewriter')
 
 # ── Config (read at call time to allow .env loading) ──
 def _get_config():
@@ -163,7 +166,7 @@ def _call_api(prompt_json: str) -> str:
             try:
                 err_data = json.loads(body)
                 err_msg = err_data.get("error", {}).get("message", body[:200])
-            except Exception:
+            except (json.JSONDecodeError, KeyError, TypeError):
                 err_msg = body[:200]
             raise AIRewriteError(f"API returned {resp.status}: {err_msg}")
 
@@ -256,7 +259,7 @@ def _strip_html(html: str) -> str:
     try:
         stripper.feed(html)
     except Exception:
-        pass
+        logger.exception("Failed to strip HTML content")
     text = "".join(stripper.text)
     text = re.sub(r'\n{3,}', '\n\n', text)
     text = re.sub(r' {2,}', ' ', text)

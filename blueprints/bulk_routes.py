@@ -5,11 +5,14 @@ Upload CSV / paste emails, run bulk verification, download results.
 
 import csv
 import io
+import logging
 import threading
 
 from flask import (
     Blueprint, render_template, request, jsonify, session, Response,
 )
+
+logger = logging.getLogger('inbxr.bulk_routes')
 
 from modules.auth import login_required, tier_required, get_current_user
 from modules.tiers import get_tier_limit
@@ -51,7 +54,8 @@ def _parse_csv_emails(file_content):
     try:
         reader = csv.reader(io.StringIO(file_content))
         rows = list(reader)
-    except Exception:
+    except csv.Error:
+        logger.exception("Failed to parse CSV content")
         return emails
 
     if not rows:
@@ -138,7 +142,7 @@ def create_bulk():
         filename = file.filename
         try:
             content = file.read().decode("utf-8", errors="replace")
-        except Exception:
+        except (OSError, UnicodeDecodeError):
             return jsonify({"error": "Could not read file."}), 400
 
         # Check if it's a plain text file (one email per line)

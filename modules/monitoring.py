@@ -5,8 +5,11 @@ Stores everything in the main inbxr.db via modules/database.
 """
 
 import json
+import logging
 from modules.database import execute, fetchone, fetchall
 from modules.tiers import get_tier_limit
+
+logger = logging.getLogger('inbxr.monitoring')
 
 
 def add_user_monitor(user_id, domain, ip=None, team_id=None):
@@ -48,6 +51,7 @@ def add_user_monitor(user_id, domain, ip=None, team_id=None):
         )
         return {"ok": True, "id": cur.lastrowid, "domain": domain}
     except Exception:
+        logger.exception("Failed to add monitor for domain %s", domain)
         return {"ok": False, "error": f"{domain} is already being monitored."}
 
 
