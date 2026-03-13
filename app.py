@@ -584,6 +584,164 @@ def admin_api_update_tier(user_id):
     return jsonify({"ok": True, "email": user["email"], "tier": new_tier})
 
 
+@app.route("/admin/api/users/<int:user_id>/profile")
+def admin_api_user_profile(user_id):
+    """Admin: Full user profile with activity history."""
+    if not _is_admin():
+        return jsonify({"error": "Unauthorized"}), 403
+
+    from modules.database import fetchone, fetchall
+
+    user = fetchone("""
+        SELECT id, email, display_name, tier, email_verified,
+               stripe_customer_id, stripe_subscription_id, api_key,
+               created_at, updated_at
+        FROM users WHERE id = ?
+    """, (user_id,))
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    # Usage stats
+    usage_today = fetchone(
+        "SELECT COUNT(*) as cnt FROM usage_log WHERE user_id = ? AND created_at > datetime('now', '-1 day')",
+        (user_id,),
+    )
+    usage_week = fetchone(
+        "SELECT COUNT(*) as cnt FROM usage_log WHERE user_id = ? AND created_at > datetime('now', '-7 days')",
+        (user_id,),
+    )
+    usage_month = fetchone(
+        "SELECT COUNT(*) as cnt FROM usage_log WHERE user_id = ? AND created_at > datetime('now', '-30 days')",
+        (user_id,),
+    )
+
+    # Tool breakdown
+    tool_breakdown = fetchall("""
+        SELECT action, COUNT(*) as cnt
+        FROM usage_log WHERE user_id = ?
+        GROUP BY action ORDER BY cnt DESC
+    """, (user_id,))
+
+    # Recent test history (last 25)
+    history = fetchall("""
+        SELECT id, tool, input_summary, grade, score, created_at
+        FROM check_history WHERE user_id = ?
+        ORDER BY created_at DESC LIMIT 25
+    """, (user_id,))
+
+    # Recent usage log (last 50 actions)
+    activity = fetchall("""
+        SELECT action, ip_address, created_at
+        FROM usage_log WHERE user_id = ?
+        ORDER BY created_at DESC LIMIT 50
+    """, (user_id,))
+
+    # Admin notes
+    notes = fetchall("""
+        SELECT id, note, created_at FROM admin_notes
+        WHERE user_id = ? ORDER BY created_at DESC
+    """, (user_id,))
+
+    # Teams
+    teams = fetchall("""
+        SELECT t.id, t.name, tm.role
+        FROM team_members tm JOIN teams t ON t.id = tm.team_id
+        WHERE tm.user_id = ?
+    """, (user_id,))
+
+    return jsonify({
+        "user": dict(user),
+        "usage": {
+            "today": usage_today["cnt"] if usage_today else 0,
+            "week": usage_week["cnt"] if usage_week else 0,
+            "month": usage_month["cnt"] if usage_month else 0,
+        },
+        "tool_breakdown": tool_breakdown,
+        "history": history,
+        "activity": activity,
+        "notes": notes,
+        "teams": teams,
+    })
+
+
+@app.route("/admin/api/users/<int:user_id>/notes", methods=["POST"])
+def admin_api_add_note(user_id):
+    """Admin: Add a note to a user's profile."""
+    if not _is_admin():
+        return jsonify({"error": "Unauthorized"}), 403
+
+    from modules.database import execute, fetchone
+
+    user = fetchone("SELECT id FROM users WHERE id = ?", (user_id,))
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    data = request.get_json(silent=True) or {}
+    note = (data.get("note") or "").strip()
+    if not note:
+        return jsonify({"error": "Note is required"}), 400
+
+    execute("INSERT INTO admin_notes (user_id, note) VALUES (?, ?)", (user_id, note))
+    return jsonify({"ok": True})
+
+
+@app.route("/admin/api/users/<int:user_id>/notes/<int:note_id>", methods=["DELETE"])
+def admin_api_delete_note(user_id, note_id):
+    """Admin: Delete a note."""
+    if not _is_admin():
+        return jsonify({"error": "Unauthorized"}), 403
+
+    from modules.database import execute
+    execute("DELETE FROM admin_notes WHERE id = ? AND user_id = ?", (note_id, user_id))
+    return jsonify({"ok": True})
+
+
+@app.route("/admin/api/users/export")
+def admin_api_export_users():
+    """Admin: Export all users as CSV."""
+    if not _is_admin():
+        return jsonify({"error": "Unauthorized"}), 403
+
+    import csv
+    import io
+    from modules.database import fetchall
+
+    tier_filter = request.args.get("tier", "")
+    where = "WHERE tier = ?" if tier_filter else ""
+    params = (tier_filter,) if tier_filter else ()
+
+    users = fetchall(f"""
+        SELECT u.id, u.email, u.display_name, u.tier, u.email_verified,
+               u.stripe_customer_id, u.created_at,
+               (SELECT COUNT(*) FROM check_history ch WHERE ch.user_id = u.id) as total_checks,
+               (SELECT COUNT(*) FROM usage_log ul WHERE ul.user_id = u.id
+                AND ul.created_at > datetime('now', '-30 days')) as checks_30d,
+               (SELECT MAX(created_at) FROM usage_log ul2 WHERE ul2.user_id = u.id) as last_active
+        FROM users u {where}
+        ORDER BY u.created_at DESC
+    """, params)
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["ID", "Email", "Name", "Tier", "Verified", "Stripe ID",
+                      "Joined", "Total Checks", "Checks (30d)", "Last Active"])
+    for u in users:
+        writer.writerow([
+            u["id"], u["email"], u["display_name"], u["tier"],
+            "Yes" if u["email_verified"] else "No",
+            u["stripe_customer_id"] or "",
+            u["created_at"], u["total_checks"], u["checks_30d"],
+            u["last_active"] or "Never",
+        ])
+
+    from flask import Response
+    return Response(
+        output.getvalue(),
+        mimetype="text/csv",
+        headers={"Content-Disposition": "attachment; filename=inbxr-users.csv"},
+    )
+
+
 # ══════════════════════════════════════════════════════
 #  PAGE ROUTES
 # ══════════════════════════════════════════════════════

@@ -13,7 +13,10 @@
     .au { max-width: 1200px; margin: 0 auto; padding: 24px; }
     .au-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
     .au-header h1 { font-size: 1.4rem; font-weight: 700; margin: 0; }
-    .au-header a { color: var(--brand); text-decoration: none; font-size: 0.85rem; }
+    .au-header-links { display: flex; gap: 12px; align-items: center; }
+    .au-header-links a { color: var(--brand); text-decoration: none; font-size: 0.85rem; }
+    .au-export-btn { padding: 7px 16px; background: var(--brand); color: #fff; border: none; border-radius: var(--r-full); font-size: 0.78rem; font-weight: 600; cursor: pointer; text-decoration: none; }
+    .au-export-btn:hover { filter: brightness(1.15); }
 
     /* Summary cards */
     .au-summary { display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; }
@@ -41,7 +44,7 @@
     .au-table th.sorted .sort-arrow { opacity: 1; color: var(--brand); }
     .au-table td { padding: 10px 14px; border-bottom: 1px solid var(--border-1); vertical-align: middle; }
     .au-table tr:last-child td { border-bottom: none; }
-    .au-table tr:hover td { background: rgba(37,99,235,0.03); }
+    .au-table tr:hover td { background: rgba(37,99,235,0.03); cursor: pointer; }
 
     .au-email { font-weight: 600; color: var(--text-1); }
     .au-name { color: var(--text-3); font-size: 0.76rem; }
@@ -53,9 +56,7 @@
 
     .au-verified { color: #22c55e; }
     .au-unverified { color: #ef4444; font-size: 0.72rem; }
-
     .au-actions select { padding: 4px 8px; border: 1px solid var(--border-1); border-radius: 6px; font-size: 0.76rem; background: var(--card-bg); color: var(--text-1); cursor: pointer; }
-
     .au-date { white-space: nowrap; color: var(--text-3); font-size: 0.76rem; }
     .au-num { font-weight: 600; text-align: center; }
 
@@ -63,12 +64,75 @@
     .au-pagination { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 16px; }
     .au-page-btn { padding: 6px 12px; border: 1px solid var(--border-1); border-radius: 6px; font-size: 0.78rem; background: var(--card-bg); color: var(--text-2); cursor: pointer; }
     .au-page-btn:hover { border-color: var(--brand); color: var(--brand); }
-    .au-page-btn--active { background: var(--brand); color: #fff; border-color: var(--brand); }
     .au-page-btn:disabled { opacity: 0.4; cursor: default; }
     .au-page-info { font-size: 0.78rem; color: var(--text-3); }
-
     .au-loading { text-align: center; padding: 40px; color: var(--text-3); }
     .au-empty { text-align: center; padding: 40px; color: var(--text-3); font-size: 0.88rem; }
+
+    /* ── User Profile Panel ── */
+    .up-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 900; display: none; }
+    .up-overlay--open { display: block; }
+    .up-panel { position: fixed; right: -540px; top: 0; width: 520px; height: 100vh; background: var(--card-bg); border-left: 1px solid var(--border-1); box-shadow: -6px 0 30px rgba(0,0,0,0.15); z-index: 1000; display: flex; flex-direction: column; transition: right 0.3s ease; overflow: hidden; }
+    .up-panel--open { right: 0; }
+    @media (max-width: 580px) { .up-panel { width: 100%; right: -100%; } }
+
+    .up-panel__header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--border-1); flex-shrink: 0; }
+    .up-panel__header h2 { font-size: 1rem; font-weight: 700; margin: 0; }
+    .up-panel__close { background: none; border: none; font-size: 1.4rem; color: var(--text-3); cursor: pointer; padding: 0 4px; }
+    .up-panel__close:hover { color: var(--text-1); }
+
+    .up-panel__body { flex: 1; overflow-y: auto; padding: 20px; }
+
+    /* Profile sections */
+    .up-info { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+    .up-field { font-size: 0.78rem; }
+    .up-field__label { color: var(--text-3); font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; }
+    .up-field__value { font-weight: 600; }
+
+    .up-section { margin-bottom: 20px; }
+    .up-section__title { font-size: 0.82rem; font-weight: 700; margin: 0 0 10px; padding-bottom: 6px; border-bottom: 1px solid var(--border-1); }
+
+    /* Usage bars */
+    .up-usage { display: flex; gap: 10px; margin-bottom: 16px; }
+    .up-usage-card { flex: 1; background: var(--bg-2); border-radius: 8px; padding: 10px 12px; text-align: center; }
+    .up-usage-card__num { font-size: 1.2rem; font-weight: 800; color: var(--brand); display: block; }
+    .up-usage-card__label { font-size: 0.66rem; color: var(--text-3); text-transform: uppercase; }
+
+    /* Tool breakdown */
+    .up-breakdown { display: flex; flex-direction: column; gap: 6px; }
+    .up-bd-row { display: flex; align-items: center; gap: 8px; font-size: 0.76rem; }
+    .up-bd-row__label { width: 100px; color: var(--text-2); flex-shrink: 0; }
+    .up-bd-row__bar { flex: 1; height: 6px; background: var(--bg-2); border-radius: 3px; overflow: hidden; }
+    .up-bd-row__fill { height: 100%; background: var(--brand); border-radius: 3px; }
+    .up-bd-row__count { width: 30px; text-align: right; font-weight: 600; color: var(--text-1); }
+
+    /* History list */
+    .up-history { display: flex; flex-direction: column; gap: 6px; max-height: 240px; overflow-y: auto; }
+    .up-hist-item { display: flex; align-items: center; gap: 8px; font-size: 0.76rem; padding: 6px 8px; border-radius: 6px; background: var(--bg-2); }
+    .up-hist-item__tool { font-weight: 600; color: var(--brand); min-width: 80px; }
+    .up-hist-item__summary { flex: 1; color: var(--text-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .up-hist-item__grade { font-weight: 700; }
+    .up-hist-item__date { color: var(--text-3); font-size: 0.7rem; white-space: nowrap; }
+
+    /* Activity log */
+    .up-activity { display: flex; flex-direction: column; gap: 4px; max-height: 180px; overflow-y: auto; }
+    .up-act-item { display: flex; align-items: center; gap: 8px; font-size: 0.72rem; padding: 4px 8px; }
+    .up-act-item__action { font-weight: 600; min-width: 90px; }
+    .up-act-item__ip { color: var(--text-3); flex: 1; }
+    .up-act-item__date { color: var(--text-3); white-space: nowrap; }
+
+    /* Notes */
+    .up-notes { display: flex; flex-direction: column; gap: 8px; }
+    .up-note { background: #fef9c3; border: 1px solid #fde68a; border-radius: 8px; padding: 8px 12px; font-size: 0.78rem; position: relative; }
+    .up-note__text { color: #713f12; line-height: 1.5; white-space: pre-wrap; }
+    .up-note__meta { font-size: 0.66rem; color: #a16207; margin-top: 4px; }
+    .up-note__delete { position: absolute; top: 6px; right: 8px; background: none; border: none; color: #d97706; cursor: pointer; font-size: 0.88rem; opacity: 0.5; }
+    .up-note__delete:hover { opacity: 1; }
+    .up-note-form { display: flex; gap: 8px; }
+    .up-note-input { flex: 1; padding: 8px 12px; border: 1px solid var(--border-1); border-radius: 8px; font-size: 0.78rem; resize: none; min-height: 36px; font-family: inherit; }
+    .up-note-submit { padding: 8px 14px; background: var(--brand); color: #fff; border: none; border-radius: 8px; font-size: 0.76rem; font-weight: 600; cursor: pointer; white-space: nowrap; }
+    .up-note-submit:hover { filter: brightness(1.15); }
+    .up-empty { color: var(--text-3); font-size: 0.78rem; font-style: italic; }
   </style>
 </head>
 <body>
@@ -78,7 +142,10 @@
 <div class="au">
   <div class="au-header">
     <h1>User Management</h1>
-    <a href="/dashboard">&larr; Back to Dashboard</a>
+    <div class="au-header-links">
+      <a href="/admin/api/users/export" class="au-export-btn" id="exportBtn">Export CSV</a>
+      <a href="/dashboard">&larr; Dashboard</a>
+    </div>
   </div>
 
   <div class="au-summary" id="auSummary"></div>
@@ -115,6 +182,18 @@
   <div class="au-pagination" id="auPagination"></div>
 </div>
 
+<!-- User Profile Panel -->
+<div class="up-overlay" id="upOverlay"></div>
+<div class="up-panel" id="upPanel">
+  <div class="up-panel__header">
+    <h2 id="upTitle">User Profile</h2>
+    <button class="up-panel__close" id="upClose">&times;</button>
+  </div>
+  <div class="up-panel__body" id="upBody">
+    <div class="au-loading">Loading...</div>
+  </div>
+</div>
+
 <script>
 (function() {
   var currentPage = 1;
@@ -122,6 +201,24 @@
   var currentOrder = 'desc';
   var currentTier = '';
   var searchTimeout = null;
+  var currentProfileId = null;
+
+  // ── CSV export: append tier filter ──
+  document.querySelectorAll('.au-filter-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      currentTier = this.dataset.tier;
+      currentPage = 1;
+      document.querySelectorAll('.au-filter-btn').forEach(function(b) { b.classList.remove('au-filter-btn--active'); });
+      this.classList.add('au-filter-btn--active');
+      updateExportLink();
+      loadUsers();
+    });
+  });
+
+  function updateExportLink() {
+    var btn = document.getElementById('exportBtn');
+    btn.href = '/admin/api/users/export' + (currentTier ? '?tier=' + currentTier : '');
+  }
 
   function loadUsers() {
     var q = document.getElementById('auSearch').value.trim();
@@ -143,13 +240,12 @@
 
   function renderSummary(s) {
     var tc = s.tier_counts || {};
-    var html =
+    document.getElementById('auSummary').innerHTML =
       statCard(s.total_users, 'Total Users', '') +
       statCard(tc.free || 0, 'Free', 'free') +
       statCard(tc.pro || 0, 'Pro', 'pro') +
       statCard(tc.agency || 0, 'Agency', 'agency') +
       statCard(tc.api || 0, 'API', '');
-    document.getElementById('auSummary').innerHTML = html;
   }
 
   function statCard(num, label, tier) {
@@ -165,7 +261,7 @@
     }
     var html = '';
     users.forEach(function(u) {
-      html += '<tr>' +
+      html += '<tr data-uid="' + u.id + '">' +
         '<td><span class="au-email">' + esc(u.email) + '</span>' +
           (u.display_name ? '<br><span class="au-name">' + esc(u.display_name) + '</span>' : '') +
         '</td>' +
@@ -175,7 +271,7 @@
         '<td class="au-num">' + (u.checks_today || 0) + '</td>' +
         '<td class="au-date">' + relDate(u.last_active) + '</td>' +
         '<td class="au-date">' + shortDate(u.created_at) + '</td>' +
-        '<td class="au-actions">' +
+        '<td class="au-actions" onclick="event.stopPropagation()">' +
           '<select data-uid="' + u.id + '" onchange="changeTier(this)">' +
             tierOption('free', u.tier) +
             tierOption('pro', u.tier) +
@@ -186,6 +282,13 @@
       '</tr>';
     });
     body.innerHTML = html;
+
+    // Click row to open profile
+    body.querySelectorAll('tr[data-uid]').forEach(function(row) {
+      row.addEventListener('click', function() {
+        openProfile(parseInt(this.dataset.uid));
+      });
+    });
   }
 
   function tierOption(tier, current) {
@@ -195,18 +298,206 @@
   function renderPagination(s) {
     var el = document.getElementById('auPagination');
     if (s.total_pages <= 1) { el.innerHTML = ''; return; }
-    var html = '<button class="au-page-btn" onclick="goPage(' + (s.page - 1) + ')"' + (s.page <= 1 ? ' disabled' : '') + '>&laquo; Prev</button>';
-    html += '<span class="au-page-info">Page ' + s.page + ' of ' + s.total_pages + '</span>';
-    html += '<button class="au-page-btn" onclick="goPage(' + (s.page + 1) + ')"' + (s.page >= s.total_pages ? ' disabled' : '') + '>Next &raquo;</button>';
-    el.innerHTML = html;
+    el.innerHTML =
+      '<button class="au-page-btn" onclick="goPage(' + (s.page - 1) + ')"' + (s.page <= 1 ? ' disabled' : '') + '>&laquo; Prev</button>' +
+      '<span class="au-page-info">Page ' + s.page + ' of ' + s.total_pages + '</span>' +
+      '<button class="au-page-btn" onclick="goPage(' + (s.page + 1) + ')"' + (s.page >= s.total_pages ? ' disabled' : '') + '>Next &raquo;</button>';
   }
 
-  // Tier change
+  // ── User Profile Panel ──
+  var overlay = document.getElementById('upOverlay');
+  var panel = document.getElementById('upPanel');
+
+  function openProfile(uid) {
+    currentProfileId = uid;
+    overlay.classList.add('up-overlay--open');
+    panel.classList.add('up-panel--open');
+    document.getElementById('upBody').innerHTML = '<div class="au-loading">Loading profile...</div>';
+
+    fetch('/admin/api/users/' + uid + '/profile')
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data.error) {
+          document.getElementById('upBody').innerHTML = '<p>' + esc(data.error) + '</p>';
+          return;
+        }
+        renderProfile(data);
+      })
+      .catch(function() {
+        document.getElementById('upBody').innerHTML = '<p>Failed to load profile.</p>';
+      });
+  }
+
+  function closeProfile() {
+    overlay.classList.remove('up-overlay--open');
+    panel.classList.remove('up-panel--open');
+    currentProfileId = null;
+  }
+
+  document.getElementById('upClose').addEventListener('click', closeProfile);
+  overlay.addEventListener('click', closeProfile);
+
+  function renderProfile(data) {
+    var u = data.user;
+    var usage = data.usage;
+    document.getElementById('upTitle').textContent = u.email;
+
+    var html = '';
+
+    // Basic info
+    html += '<div class="up-info">' +
+      upField('Email', u.email) +
+      upField('Name', u.display_name || '—') +
+      upField('Tier', '<span class="au-tier au-tier--' + u.tier + '">' + u.tier + '</span>') +
+      upField('Verified', u.email_verified ? '<span class="au-verified">Yes</span>' : '<span class="au-unverified">No</span>') +
+      upField('Joined', shortDate(u.created_at)) +
+      upField('Updated', shortDate(u.updated_at)) +
+      upField('Stripe', u.stripe_customer_id ? '<code style="font-size:0.7rem">' + esc(u.stripe_customer_id) + '</code>' : '—') +
+      upField('API Key', u.api_key ? '<code style="font-size:0.7rem">' + esc(u.api_key.substring(0, 12)) + '...</code>' : '—') +
+    '</div>';
+
+    // Usage
+    html += '<div class="up-section">' +
+      '<h3 class="up-section__title">Usage</h3>' +
+      '<div class="up-usage">' +
+        usageCard(usage.today, 'Today') +
+        usageCard(usage.week, '7 Days') +
+        usageCard(usage.month, '30 Days') +
+      '</div>' +
+    '</div>';
+
+    // Tool breakdown
+    if (data.tool_breakdown && data.tool_breakdown.length) {
+      var maxBd = Math.max.apply(null, data.tool_breakdown.map(function(b) { return b.cnt; }));
+      html += '<div class="up-section"><h3 class="up-section__title">Tool Breakdown</h3><div class="up-breakdown">';
+      data.tool_breakdown.forEach(function(b) {
+        var pct = Math.round(b.cnt / maxBd * 100);
+        html += '<div class="up-bd-row">' +
+          '<span class="up-bd-row__label">' + esc(b.action) + '</span>' +
+          '<div class="up-bd-row__bar"><div class="up-bd-row__fill" style="width:' + pct + '%"></div></div>' +
+          '<span class="up-bd-row__count">' + b.cnt + '</span>' +
+        '</div>';
+      });
+      html += '</div></div>';
+    }
+
+    // Teams
+    if (data.teams && data.teams.length) {
+      html += '<div class="up-section"><h3 class="up-section__title">Teams</h3>';
+      data.teams.forEach(function(t) {
+        html += '<div class="up-hist-item"><span class="up-hist-item__tool">' + esc(t.name) + '</span><span class="up-hist-item__summary">' + esc(t.role) + '</span></div>';
+      });
+      html += '</div>';
+    }
+
+    // Test history
+    html += '<div class="up-section"><h3 class="up-section__title">Recent Test History</h3>';
+    if (data.history && data.history.length) {
+      html += '<div class="up-history">';
+      data.history.forEach(function(h) {
+        html += '<div class="up-hist-item">' +
+          '<span class="up-hist-item__tool">' + esc(h.tool) + '</span>' +
+          '<span class="up-hist-item__summary">' + esc(h.input_summary || '') + '</span>' +
+          (h.grade ? '<span class="up-hist-item__grade">' + esc(h.grade) + '</span>' : '') +
+          (h.score != null ? '<span style="font-size:0.72rem;color:var(--text-3)">' + h.score + '</span>' : '') +
+          '<span class="up-hist-item__date">' + relDate(h.created_at) + '</span>' +
+        '</div>';
+      });
+      html += '</div>';
+    } else {
+      html += '<p class="up-empty">No test history.</p>';
+    }
+    html += '</div>';
+
+    // Activity log
+    html += '<div class="up-section"><h3 class="up-section__title">Recent Activity</h3>';
+    if (data.activity && data.activity.length) {
+      html += '<div class="up-activity">';
+      data.activity.forEach(function(a) {
+        html += '<div class="up-act-item">' +
+          '<span class="up-act-item__action">' + esc(a.action) + '</span>' +
+          '<span class="up-act-item__ip">' + esc(a.ip_address || '') + '</span>' +
+          '<span class="up-act-item__date">' + relDate(a.created_at) + '</span>' +
+        '</div>';
+      });
+      html += '</div>';
+    } else {
+      html += '<p class="up-empty">No activity recorded.</p>';
+    }
+    html += '</div>';
+
+    // Notes
+    html += '<div class="up-section"><h3 class="up-section__title">Admin Notes</h3>';
+    html += '<div class="up-note-form">' +
+      '<textarea class="up-note-input" id="noteInput" placeholder="Add a note about this user..."></textarea>' +
+      '<button class="up-note-submit" id="noteSubmit">Add</button>' +
+    '</div>';
+    html += '<div class="up-notes" id="upNotes" style="margin-top:10px">';
+    if (data.notes && data.notes.length) {
+      data.notes.forEach(function(n) {
+        html += noteHtml(n);
+      });
+    } else {
+      html += '<p class="up-empty" id="noNotes">No notes yet.</p>';
+    }
+    html += '</div></div>';
+
+    document.getElementById('upBody').innerHTML = html;
+
+    // Note submit handler
+    document.getElementById('noteSubmit').addEventListener('click', function() {
+      var input = document.getElementById('noteInput');
+      var text = input.value.trim();
+      if (!text) return;
+
+      fetch('/admin/api/users/' + currentProfileId + '/notes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ note: text })
+      }).then(function(r) { return r.json(); }).then(function(d) {
+        if (d.ok) {
+          input.value = '';
+          // Reload profile to get the new note with ID
+          openProfile(currentProfileId);
+        }
+      });
+    });
+  }
+
+  function noteHtml(n) {
+    return '<div class="up-note" data-nid="' + n.id + '">' +
+      '<button class="up-note__delete" onclick="deleteNote(' + n.id + ')" title="Delete note">&times;</button>' +
+      '<div class="up-note__text">' + esc(n.note) + '</div>' +
+      '<div class="up-note__meta">' + relDate(n.created_at) + '</div>' +
+    '</div>';
+  }
+
+  window.deleteNote = function(noteId) {
+    if (!confirm('Delete this note?')) return;
+    fetch('/admin/api/users/' + currentProfileId + '/notes/' + noteId, { method: 'DELETE' })
+      .then(function(r) { return r.json(); })
+      .then(function(d) {
+        if (d.ok) {
+          var el = document.querySelector('.up-note[data-nid="' + noteId + '"]');
+          if (el) el.remove();
+        }
+      });
+  };
+
+  function upField(label, value) {
+    return '<div class="up-field"><div class="up-field__label">' + esc(label) + '</div><div class="up-field__value">' + value + '</div></div>';
+  }
+
+  function usageCard(num, label) {
+    return '<div class="up-usage-card"><span class="up-usage-card__num">' + (num || 0) + '</span><span class="up-usage-card__label">' + esc(label) + '</span></div>';
+  }
+
+  // ── Tier change ──
   window.changeTier = function(sel) {
     var uid = sel.dataset.uid;
     var newTier = sel.value;
     if (!confirm('Change this user to ' + newTier + '?')) {
-      loadUsers(); // reset select
+      loadUsers();
       return;
     }
     fetch('/admin/api/users/' + uid + '/tier', {
@@ -219,24 +510,15 @@
     });
   };
 
-  // Pagination
-  window.goPage = function(p) {
-    currentPage = p;
-    loadUsers();
-  };
+  window.goPage = function(p) { currentPage = p; loadUsers(); };
 
-  // Sort
+  // ── Sort ──
   document.querySelectorAll('.au-table th[data-sort]').forEach(function(th) {
     th.addEventListener('click', function() {
       var s = this.dataset.sort;
-      if (currentSort === s) {
-        currentOrder = currentOrder === 'desc' ? 'asc' : 'desc';
-      } else {
-        currentSort = s;
-        currentOrder = 'desc';
-      }
+      if (currentSort === s) { currentOrder = currentOrder === 'desc' ? 'asc' : 'desc'; }
+      else { currentSort = s; currentOrder = 'desc'; }
       currentPage = 1;
-      // Update header UI
       document.querySelectorAll('.au-table th').forEach(function(h) { h.classList.remove('sorted'); });
       this.classList.add('sorted');
       this.querySelector('.sort-arrow').innerHTML = currentOrder === 'desc' ? '&#9660;' : '&#9650;';
@@ -244,27 +526,13 @@
     });
   });
 
-  // Tier filter
-  document.querySelectorAll('.au-filter-btn').forEach(function(btn) {
-    btn.addEventListener('click', function() {
-      currentTier = this.dataset.tier;
-      currentPage = 1;
-      document.querySelectorAll('.au-filter-btn').forEach(function(b) { b.classList.remove('au-filter-btn--active'); });
-      this.classList.add('au-filter-btn--active');
-      loadUsers();
-    });
-  });
-
-  // Search
+  // ── Search ──
   document.getElementById('auSearch').addEventListener('input', function() {
     clearTimeout(searchTimeout);
-    searchTimeout = setTimeout(function() {
-      currentPage = 1;
-      loadUsers();
-    }, 300);
+    searchTimeout = setTimeout(function() { currentPage = 1; loadUsers(); }, 300);
   });
 
-  // Helpers
+  // ── Helpers ──
   function esc(s) { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
   function relDate(d) {

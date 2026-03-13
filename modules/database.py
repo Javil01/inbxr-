@@ -253,6 +253,16 @@ _MIGRATIONS = [
         ALTER TABLE bulk_jobs ADD COLUMN team_id INTEGER REFERENCES teams(id) ON DELETE SET NULL;
         ALTER TABLE alerts ADD COLUMN team_id INTEGER REFERENCES teams(id) ON DELETE SET NULL;
     """),
+    ("004_admin_notes", """
+        CREATE TABLE IF NOT EXISTS admin_notes (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            note TEXT NOT NULL,
+            created_at TEXT DEFAULT (datetime('now')),
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        );
+        CREATE INDEX IF NOT EXISTS idx_admin_notes_user ON admin_notes(user_id);
+    """),
     ("003_team_id_indexes", """
         CREATE INDEX IF NOT EXISTS idx_check_history_team ON check_history(team_id);
         CREATE INDEX IF NOT EXISTS idx_user_monitors_team ON user_monitors(team_id);
