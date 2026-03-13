@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>INBXR Admin — Site Settings</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/style.css" />
+  <style>
+    .as-wrap { max-width: 800px; margin: 0 auto; padding: 32px 24px; }
+    .as-header { display: flex; align-items: center; gap: 16px; margin-bottom: 32px; }
+    .as-header a { color: var(--brand); text-decoration: none; font-size: 0.88rem; font-weight: 600; }
+    .as-header h1 { font-size: 1.4rem; font-weight: 800; }
+    .as-card { background: var(--card-bg); border: 1px solid var(--border-1); border-radius: var(--r-lg); padding: 24px; margin-bottom: 24px; }
+    .as-card h2 { font-size: 1.05rem; font-weight: 700; margin-bottom: 4px; }
+    .as-card p.as-desc { font-size: 0.82rem; color: var(--text-3); margin-bottom: 16px; }
+    .as-field { margin-bottom: 16px; }
+    .as-field label { display: block; font-size: 0.78rem; font-weight: 600; color: var(--text-2); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .as-field input, .as-field textarea {
+      width: 100%; background: rgba(255,255,255,0.04); border: 1px solid var(--border-1);
+      border-radius: var(--r-sm); padding: 10px 14px; color: var(--text-1);
+      font-family: 'Courier New', monospace; font-size: 0.82rem;
+    }
+    .as-field textarea { min-height: 80px; resize: vertical; }
+    .as-field input:focus, .as-field textarea:focus { border-color: var(--brand); outline: none; }
+    .as-field .as-hint { font-size: 0.72rem; color: var(--text-3); margin-top: 4px; }
+    .as-save-btn {
+      background: var(--brand); color: #fff; border: none; border-radius: var(--r-full);
+      padding: 10px 28px; font-weight: 700; font-size: 0.88rem; cursor: pointer;
+    }
+    .as-save-btn:hover { background: var(--brand-hover); }
+    .as-save-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .as-toast {
+      position: fixed; bottom: 24px; right: 24px; background: #22c55e; color: #fff;
+      padding: 12px 24px; border-radius: var(--r-lg); font-weight: 600; font-size: 0.88rem;
+      display: none; z-index: 1000;
+    }
+    .as-token-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .as-token-field { display: flex; align-items: center; gap: 8px; }
+    .as-token-field label { min-width: 120px; font-size: 0.75rem; color: var(--text-2); margin: 0; }
+    .as-token-field input { flex: 1; }
+    .as-color-preview { width: 28px; height: 28px; border-radius: 6px; border: 1px solid var(--border-1); flex-shrink: 0; }
+  </style>
+</head>
+<body>
+  {% include "sections/header.html" %}
+  <div class="as-wrap">
+    <div class="as-header">
+      <a href="/admin">&larr; Dashboard</a>
+      <h1>Site Settings</h1>
+    </div>
+
+    <!-- Tracking Tags -->
+    <div class="as-card">
+      <h2>Tracking Tags</h2>
+      <p class="as-desc">Add tracking pixels and analytics tags. These are injected into every public page automatically.</p>
+
+      <div class="as-field">
+        <label>Meta Pixel ID</label>
+        <input type="text" id="metaPixelId" placeholder="e.g. 123456789012345" />
+        <div class="as-hint">Facebook/Meta Pixel ID. Leave empty to disable.</div>
+      </div>
+
+      <div class="as-field">
+        <label>Google Analytics / Tag Manager ID</label>
+        <input type="text" id="googleTagId" placeholder="e.g. G-XXXXXXXXXX or GTM-XXXXXXX" />
+        <div class="as-hint">Supports GA4 (G-xxx), UA (UA-xxx), and GTM (GTM-xxx) IDs.</div>
+      </div>
+
+      <div class="as-field">
+        <label>Custom Head Scripts</label>
+        <textarea id="customHeadScripts" placeholder="<!-- Any custom scripts to inject in <head> -->"></textarea>
+        <div class="as-hint">Raw HTML/JS injected before &lt;/head&gt; on all public pages. Use with caution.</div>
+      </div>
+
+      <div class="as-field">
+        <label>Custom Body Scripts</label>
+        <textarea id="customBodyScripts" placeholder="<!-- Any custom scripts to inject before </body> -->"></textarea>
+        <div class="as-hint">Raw HTML/JS injected before &lt;/body&gt; on all public pages (e.g. chat widgets, noscript tags).</div>
+      </div>
+
+      <button class="as-save-btn" onclick="saveTracking()">Save Tracking Tags</button>
+    </div>
+
+    <!-- Design Tokens -->
+    <div class="as-card">
+      <h2>Global Design Tokens</h2>
+      <p class="as-desc">Override CSS custom properties site-wide. Changes apply to all pages immediately.</p>
+
+      <div class="as-token-grid" id="tokenGrid">
+        <div class="as-token-field">
+          <label>--brand</label>
+          <input type="color" class="as-color-preview" data-token="--brand" value="#2563eb" onchange="syncTokenColor(this)" />
+          <input type="text" data-token="--brand" value="#2563eb" class="as-token-input" />
+        </div>
+        <div class="as-token-field">
+          <label>--brand-hover</label>
+          <input type="color" class="as-color-preview" data-token="--brand-hover" value="#1d4ed8" onchange="syncTokenColor(this)" />
+          <input type="text" data-token="--brand-hover" value="#1d4ed8" class="as-token-input" />
+        </div>
+        <div class="as-token-field">
+          <label>--green</label>
+          <input type="color" class="as-color-preview" data-token="--green" value="#22c55e" onchange="syncTokenColor(this)" />
+          <input type="text" data-token="--green" value="#22c55e" class="as-token-input" />
+        </div>
+        <div class="as-token-field">
+          <label>--red</label>
+          <input type="color" class="as-color-preview" data-token="--red" value="#ef4444" onchange="syncTokenColor(this)" />
+          <input type="text" data-token="--red" value="#ef4444" class="as-token-input" />
+        </div>
+        <div class="as-token-field">
+          <label>--bg-body</label>
+          <input type="color" class="as-color-preview" data-token="--bg-body" value="#050a14" onchange="syncTokenColor(this)" />
+          <input type="text" data-token="--bg-body" value="#050a14" class="as-token-input" />
+        </div>
+        <div class="as-token-field">
+          <label>--card-bg</label>
+          <input type="color" class="as-color-preview" data-token="--card-bg" value="#0f172a" onchange="syncTokenColor(this)" />
+          <input type="text" data-token="--card-bg" value="#0f172a" class="as-token-input" />
+        </div>
+        <div class="as-token-field">
+          <label>--text-1</label>
+          <input type="color" class="as-color-preview" data-token="--text-1" value="#dbeafe" onchange="syncTokenColor(this)" />
+          <input type="text" data-token="--text-1" value="#dbeafe" class="as-token-input" />
+        </div>
+        <div class="as-token-field">
+          <label>--text-2</label>
+          <input type="color" class="as-color-preview" data-token="--text-2" value="#94a3b8" onchange="syncTokenColor(this)" />
+          <input type="text" data-token="--text-2" value="#94a3b8" class="as-token-input" />
+        </div>
+      </div>
+
+      <button class="as-save-btn" onclick="saveTokens()" style="margin-top:16px;">Save Design Tokens</button>
+    </div>
+  </div>
+
+  <div class="as-toast" id="toast">Saved!</div>
+
+  <script>
+  (function() {
+    var toast = document.getElementById('toast');
+    function showToast(msg) {
+      toast.textContent = msg || 'Saved!';
+      toast.style.display = 'block';
+      setTimeout(function() { toast.style.display = 'none'; }, 2500);
+    }
+
+    // Load settings on page load
+    fetch('/admin/api/site-settings').then(function(r) { return r.json(); }).then(function(d) {
+      if (!d.ok) return;
+      var s = d.settings;
+      if (s.meta_pixel_id) document.getElementById('metaPixelId').value = s.meta_pixel_id;
+      if (s.google_tag_id) document.getElementById('googleTagId').value = s.google_tag_id;
+      if (s.custom_head_scripts) document.getElementById('customHeadScripts').value = s.custom_head_scripts;
+      if (s.custom_body_scripts) document.getElementById('customBodyScripts').value = s.custom_body_scripts;
+    });
+
+    // Load design tokens
+    fetch('/admin/api/theme').then(function(r) { return r.json(); }).then(function(d) {
+      if (!d.ok) return;
+      var theme = d.theme;
+      for (var token in theme) {
+        var inputs = document.querySelectorAll('[data-token="' + token + '"]');
+        inputs.forEach(function(inp) {
+          inp.value = theme[token];
+        });
+      }
+    });
+
+    window.syncTokenColor = function(colorInput) {
+      var token = colorInput.dataset.token;
+      var textInput = colorInput.parentElement.querySelector('input[type="text"][data-token="' + token + '"]');
+      if (textInput) textInput.value = colorInput.value;
+    };
+
+    window.saveTracking = function() {
+      var data = {
+        meta_pixel_id: document.getElementById('metaPixelId').value.trim(),
+        google_tag_id: document.getElementById('googleTagId').value.trim(),
+        custom_head_scripts: document.getElementById('customHeadScripts').value,
+        custom_body_scripts: document.getElementById('customBodyScripts').value,
+      };
+      fetch('/admin/api/site-settings', {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(data)
+      }).then(function(r) { return r.json(); }).then(function(d) {
+        if (d.ok) showToast('Tracking tags saved!');
+      });
+    };
+
+    window.saveTokens = function() {
+      var inputs = document.querySelectorAll('.as-token-input');
+      var promises = [];
+      inputs.forEach(function(inp) {
+        var token = inp.dataset.token;
+        var val = inp.value.trim();
+        if (token && val) {
+          promises.push(
+            fetch('/admin/api/theme', {
+              method: 'POST', headers: {'Content-Type': 'application/json'},
+              body: JSON.stringify({ variable: token, value: val })
+            })
+          );
+        }
+      });
+      Promise.all(promises).then(function() { showToast('Design tokens saved!'); });
+    };
+  })();
+  </script>
+</body>
+</html>

@@ -269,4 +269,80 @@ _MIGRATIONS = [
         CREATE INDEX IF NOT EXISTS idx_bulk_jobs_team ON bulk_jobs(team_id);
         CREATE INDEX IF NOT EXISTS idx_alerts_team ON alerts(team_id);
     """),
+    ("005_user_status_and_note_tags", """
+        ALTER TABLE users ADD COLUMN status TEXT DEFAULT 'active' CHECK(status IN ('active', 'suspended'));
+        ALTER TABLE users ADD COLUMN suspended_at TEXT;
+        ALTER TABLE users ADD COLUMN admin_flags TEXT DEFAULT '';
+        ALTER TABLE admin_notes ADD COLUMN tag TEXT DEFAULT 'general' CHECK(tag IN ('general', 'vip', 'support', 'complaint', 'follow_up', 'bug'));
+    """),
+    ("006_builder_system", """
+        CREATE TABLE IF NOT EXISTS page_versions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            page_name TEXT NOT NULL,
+            version_data TEXT NOT NULL,
+            label TEXT DEFAULT '',
+            created_at TEXT DEFAULT (datetime('now'))
+        );
+        CREATE INDEX IF NOT EXISTS idx_page_versions_page ON page_versions(page_name, created_at DESC);
+
+        CREATE TABLE IF NOT EXISTS page_drafts (
+            page_name TEXT PRIMARY KEY,
+            draft_data TEXT NOT NULL,
+            updated_at TEXT DEFAULT (datetime('now'))
+        );
+
+        CREATE TABLE IF NOT EXISTS page_templates (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            description TEXT DEFAULT '',
+            thumbnail TEXT DEFAULT '',
+            template_data TEXT NOT NULL,
+            created_at TEXT DEFAULT (datetime('now'))
+        );
+
+        CREATE TABLE IF NOT EXISTS media_library (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            filename TEXT NOT NULL,
+            url TEXT NOT NULL,
+            alt_text TEXT DEFAULT '',
+            file_size INTEGER DEFAULT 0,
+            mime_type TEXT DEFAULT '',
+            width INTEGER,
+            height INTEGER,
+            tags TEXT DEFAULT '',
+            created_at TEXT DEFAULT (datetime('now'))
+        );
+        CREATE INDEX IF NOT EXISTS idx_media_created ON media_library(created_at DESC);
+
+        CREATE TABLE IF NOT EXISTS page_seo (
+            page_name TEXT PRIMARY KEY,
+            meta_title TEXT DEFAULT '',
+            meta_description TEXT DEFAULT '',
+            og_title TEXT DEFAULT '',
+            og_description TEXT DEFAULT '',
+            og_image TEXT DEFAULT '',
+            canonical_url TEXT DEFAULT '',
+            noindex INTEGER DEFAULT 0,
+            json_ld TEXT DEFAULT '',
+            updated_at TEXT DEFAULT (datetime('now'))
+        );
+
+        CREATE TABLE IF NOT EXISTS page_views (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            page_name TEXT NOT NULL,
+            ip_address TEXT,
+            user_agent TEXT,
+            referrer TEXT,
+            user_id INTEGER,
+            created_at TEXT DEFAULT (datetime('now'))
+        );
+        CREATE INDEX IF NOT EXISTS idx_page_views_page ON page_views(page_name, created_at DESC);
+        CREATE INDEX IF NOT EXISTS idx_page_views_date ON page_views(created_at);
+
+        CREATE TABLE IF NOT EXISTS site_settings (
+            key TEXT PRIMARY KEY,
+            value TEXT NOT NULL,
+            updated_at TEXT DEFAULT (datetime('now'))
+        );
+    """),
 ]

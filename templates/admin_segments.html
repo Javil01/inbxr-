@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>INBXR Admin — User Segments</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/style.css" />
+  <style>
+    body { background: var(--bg-1); color: var(--text-1); font-family: 'Inter', sans-serif; }
+    .as { max-width: 1200px; margin: 0 auto; padding: 28px 24px; }
+    .as-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; flex-wrap: wrap; gap: 8px; }
+    .as-header h1 { font-size: 1.5rem; font-weight: 800; margin: 0; }
+    .as-back { color: var(--brand); text-decoration: none; font-size: 0.85rem; }
+
+    /* Tabs */
+    .as-tabs { display: flex; gap: 4px; margin-bottom: 24px; flex-wrap: wrap; }
+    .as-tab { padding: 8px 16px; border: 1px solid var(--border-1); border-radius: var(--r-full); font-size: 0.78rem; font-weight: 600; background: var(--card-bg); color: var(--text-2); cursor: pointer; transition: all 0.15s; }
+    .as-tab:hover { border-color: var(--brand); color: var(--brand); }
+    .as-tab--active { background: var(--brand); color: #fff; border-color: var(--brand); }
+    .as-tab__count { font-weight: 400; opacity: 0.7; margin-left: 4px; }
+
+    /* Segment panel */
+    .as-panel { background: var(--card-bg); border: 1px solid var(--border-1); border-radius: 12px; padding: 20px; margin-bottom: 16px; display: none; }
+    .as-panel--active { display: block; }
+    .as-panel__header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; flex-wrap: wrap; gap: 8px; }
+    .as-panel__title { font-size: 0.92rem; font-weight: 700; margin: 0; }
+    .as-panel__desc { font-size: 0.78rem; color: var(--text-3); margin: 0; }
+    .as-panel__actions { display: flex; gap: 8px; }
+
+    /* Bulk action bar */
+    .as-bulk { display: none; align-items: center; gap: 12px; padding: 12px 16px; background: rgba(37,99,235,0.08); border: 1px solid rgba(37,99,235,0.2); border-radius: 10px; margin-bottom: 12px; font-size: 0.82rem; }
+    .as-bulk--show { display: flex; }
+    .as-bulk select { padding: 5px 10px; border: 1px solid var(--border-1); border-radius: 6px; font-size: 0.78rem; background: var(--card-bg); color: var(--text-1); }
+    .as-btn { padding: 6px 14px; border: none; border-radius: var(--r-full); font-size: 0.76rem; font-weight: 600; cursor: pointer; transition: filter 0.15s; }
+    .as-btn--primary { background: var(--brand); color: #fff; }
+    .as-btn--primary:hover { filter: brightness(1.15); }
+    .as-btn--outline { background: transparent; border: 1px solid var(--border-1); color: var(--text-2); }
+    .as-btn--outline:hover { border-color: var(--brand); color: var(--brand); }
+
+    /* User table */
+    .as-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
+    .as-table th { text-align: left; padding: 8px 10px; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-3); border-bottom: 2px solid var(--border-1); }
+    .as-table td { padding: 8px 10px; border-bottom: 1px solid var(--border-1); }
+    .as-table tr:hover { background: rgba(37,99,235,0.03); }
+    .as-table__email { font-weight: 500; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .as-table__tier { font-size: 0.66rem; font-weight: 700; padding: 2px 8px; border-radius: 999px; display: inline-block; }
+    .as-table__tier--free { background: rgba(100,116,139,0.1); color: #64748b; }
+    .as-table__tier--pro { background: rgba(37,99,235,0.1); color: #2563eb; }
+    .as-table__tier--agency { background: rgba(124,58,237,0.1); color: #7c3aed; }
+    .as-table__tier--api { background: rgba(5,150,105,0.1); color: #059669; }
+    .as-table__muted { color: var(--text-3); }
+    .as-table input[type="checkbox"] { accent-color: var(--brand); }
+
+    .as-empty { text-align: center; padding: 30px; color: var(--text-3); font-size: 0.85rem; font-style: italic; }
+    .as-loading { text-align: center; padding: 40px; color: var(--text-3); }
+
+    /* Feature adoption & team analytics */
+    .as-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+    @media (max-width: 700px) { .as-grid { grid-template-columns: 1fr; } }
+    .as-adopt-row { display: flex; align-items: center; gap: 8px; font-size: 0.76rem; margin-bottom: 6px; }
+    .as-adopt-row__label { width: 130px; color: var(--text-2); flex-shrink: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .as-adopt-row__bar { flex: 1; height: 6px; background: var(--bg-2); border-radius: 3px; overflow: hidden; }
+    .as-adopt-row__fill { height: 100%; border-radius: 3px; }
+    .as-adopt-row__count { width: 60px; text-align: right; font-weight: 600; font-size: 0.72rem; }
+
+    .as-team-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border-1); font-size: 0.78rem; }
+    .as-team-row:last-child { border-bottom: none; }
+    .as-team-row__name { font-weight: 600; flex: 1; }
+    .as-team-row__stat { color: var(--text-3); white-space: nowrap; font-size: 0.74rem; }
+
+    /* Session intelligence */
+    .as-session-row { display: flex; align-items: center; gap: 10px; padding: 6px 0; border-bottom: 1px solid var(--border-1); font-size: 0.76rem; }
+    .as-session-row:last-child { border-bottom: none; }
+    .as-session-row__val { font-weight: 600; }
+    .as-session-row__label { color: var(--text-3); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .as-session-row__count { font-weight: 700; }
+
+    .as-hour-chart { display: flex; align-items: flex-end; gap: 2px; height: 60px; }
+    .as-hour-bar { flex: 1; background: var(--brand); border-radius: 2px 2px 0 0; min-height: 1px; }
+  </style>
+</head>
+<body>
+{% include 'sections/header.html' %}
+
+<div class="as">
+  <div class="as-header">
+    <div>
+      <h1>User Segments & Intelligence</h1>
+    </div>
+    <a href="/admin" class="as-back">&larr; Admin Dashboard</a>
+  </div>
+
+  <div class="as-tabs" id="asTabs">
+    <button class="as-tab as-tab--active" data-tab="power_free">Upsell Targets<span class="as-tab__count" id="countPower"></span></button>
+    <button class="as-tab" data-tab="at_risk">At-Risk Paid<span class="as-tab__count" id="countRisk"></span></button>
+    <button class="as-tab" data-tab="active_7d">Active (7d)<span class="as-tab__count" id="countActive"></span></button>
+    <button class="as-tab" data-tab="dormant">Dormant (30d+)<span class="as-tab__count" id="countDormant"></span></button>
+    <button class="as-tab" data-tab="new_users">New Signups<span class="as-tab__count" id="countNew"></span></button>
+    <button class="as-tab" data-tab="never_used">Never Used<span class="as-tab__count" id="countNever"></span></button>
+    <button class="as-tab" data-tab="adoption">Feature Adoption</button>
+    <button class="as-tab" data-tab="teams">Team Analytics</button>
+    <button class="as-tab" data-tab="sessions">Sessions</button>
+  </div>
+
+  <!-- Bulk action bar -->
+  <div class="as-bulk" id="asBulk">
+    <span><strong id="bulkCount">0</strong> selected</span>
+    <select id="bulkTier">
+      <option value="">Change tier to...</option>
+      <option value="free">Free</option>
+      <option value="pro">Pro</option>
+      <option value="agency">Agency</option>
+      <option value="api">API</option>
+    </select>
+    <button class="as-btn as-btn--primary" id="bulkApply">Apply</button>
+    <button class="as-btn as-btn--outline" id="bulkClear">Clear</button>
+  </div>
+
+  <div id="segmentContent">
+    <div class="as-loading">Loading segments...</div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var segmentData = null;
+  var selectedIds = new Set();
+  var currentTab = 'power_free';
+
+  // Load segment data
+  fetch('/admin/api/segments').then(function(r){ return r.json(); }).then(function(d){
+    if (d.error) { document.getElementById('segmentContent').innerHTML = '<p>' + d.error + '</p>'; return; }
+    segmentData = d;
+    setText('countPower', '(' + d.power_free.length + ')');
+    setText('countRisk', '(' + d.at_risk.length + ')');
+    setText('countActive', '(' + d.active_7d.length + ')');
+    setText('countDormant', '(' + d.dormant.length + ')');
+    setText('countNew', '(' + d.new_users.length + ')');
+    setText('countNever', '(' + d.never_used.length + ')');
+    renderTab('power_free');
+  });
+
+  // Tab switching
+  document.getElementById('asTabs').addEventListener('click', function(e) {
+    var tab = e.target.closest('.as-tab');
+    if (!tab) return;
+    var tabName = tab.dataset.tab;
+    currentTab = tabName;
+    document.querySelectorAll('.as-tab').forEach(function(t) { t.classList.remove('as-tab--active'); });
+    tab.classList.add('as-tab--active');
+    selectedIds.clear();
+    updateBulkBar();
+
+    if (tabName === 'adoption') { loadAdoption(); return; }
+    if (tabName === 'teams') { loadTeams(); return; }
+    if (tabName === 'sessions') { loadSessions(); return; }
+    if (segmentData) renderTab(tabName);
+  });
+
+  function renderTab(tab) {
+    var el = document.getElementById('segmentContent');
+    var data = segmentData[tab] || [];
+    var descs = {
+      power_free: { title: 'Power Free Users', desc: 'Free tier users with 50+ total actions — prime upsell candidates for Pro.' },
+      at_risk: { title: 'At-Risk Paid Users', desc: 'Paid users with fewer than 5 actions in the last 30 days — may churn.' },
+      active_7d: { title: 'Active Users (Last 7 Days)', desc: 'Most active users this week, sorted by action count.' },
+      dormant: { title: 'Dormant Users', desc: 'Users with no activity in 30+ days but have used the platform before.' },
+      new_users: { title: 'New Signups (Last 7 Days)', desc: 'Users who signed up this week — monitor onboarding.' },
+      never_used: { title: 'Never Used', desc: 'Signed up but never performed any action — need activation.' },
+    };
+
+    var info = descs[tab] || { title: tab, desc: '' };
+    var html = '<div class="as-panel as-panel--active">' +
+      '<div class="as-panel__header"><div><h3 class="as-panel__title">' + info.title + '</h3><p class="as-panel__desc">' + info.desc + '</p></div></div>';
+
+    if (data.length === 0) {
+      html += '<div class="as-empty">No users in this segment.</div>';
+    } else {
+      html += '<div style="overflow-x:auto"><table class="as-table"><thead><tr>' +
+        '<th><input type="checkbox" id="selectAll" /></th>' +
+        '<th>Email</th><th>Tier</th>';
+
+      if (tab === 'power_free' || tab === 'active_7d' || tab === 'dormant' || tab === 'new_users') {
+        html += '<th>Actions</th>';
+      }
+      if (tab === 'at_risk') {
+        html += '<th>Recent (30d)</th>';
+      }
+      html += '<th>Last Active</th><th>Joined</th></tr></thead><tbody>';
+
+      data.forEach(function(u) {
+        html += '<tr>' +
+          '<td><input type="checkbox" class="row-check" data-id="' + u.id + '" /></td>' +
+          '<td class="as-table__email">' + esc(u.email) + '</td>' +
+          '<td><span class="as-table__tier as-table__tier--' + u.tier + '">' + u.tier + '</span></td>';
+
+        if (tab === 'power_free') html += '<td>' + u.total_actions + '</td>';
+        if (tab === 'active_7d') html += '<td>' + u.week_actions + '</td>';
+        if (tab === 'dormant') html += '<td>' + u.total_actions + '</td>';
+        if (tab === 'new_users') html += '<td>' + u.total_actions + '</td>';
+        if (tab === 'at_risk') html += '<td class="as-table__muted">' + u.recent_actions + '</td>';
+
+        var la = u.last_active ? u.last_active.slice(0, 10) : 'Never';
+        var joined = u.created_at ? u.created_at.slice(0, 10) : '';
+        html += '<td class="as-table__muted">' + la + '</td><td class="as-table__muted">' + joined + '</td></tr>';
+      });
+
+      html += '</tbody></table></div>';
+    }
+    html += '</div>';
+    el.innerHTML = html;
+
+    // Checkbox handlers
+    var selectAll = document.getElementById('selectAll');
+    if (selectAll) {
+      selectAll.addEventListener('change', function() {
+        var checks = document.querySelectorAll('.row-check');
+        var checked = this.checked;
+        checks.forEach(function(c) { c.checked = checked; if (checked) selectedIds.add(+c.dataset.id); else selectedIds.delete(+c.dataset.id); });
+        updateBulkBar();
+      });
+    }
+    el.addEventListener('change', function(e) {
+      if (!e.target.classList.contains('row-check')) return;
+      var id = +e.target.dataset.id;
+      if (e.target.checked) selectedIds.add(id); else selectedIds.delete(id);
+      updateBulkBar();
+    });
+  }
+
+  function updateBulkBar() {
+    var bar = document.getElementById('asBulk');
+    document.getElementById('bulkCount').textContent = selectedIds.size;
+    bar.classList.toggle('as-bulk--show', selectedIds.size > 0);
+  }
+
+  document.getElementById('bulkClear').addEventListener('click', function() {
+    selectedIds.clear();
+    document.querySelectorAll('.row-check').forEach(function(c) { c.checked = false; });
+    var sa = document.getElementById('selectAll');
+    if (sa) sa.checked = false;
+    updateBulkBar();
+  });
+
+  document.getElementById('bulkApply').addEventListener('click', function() {
+    var tier = document.getElementById('bulkTier').value;
+    if (!tier) { alert('Select a tier first.'); return; }
+    if (!confirm('Change ' + selectedIds.size + ' users to ' + tier + '?')) return;
+
+    fetch('/admin/api/users/bulk-tier', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_ids: Array.from(selectedIds), tier: tier })
+    }).then(function(r) { return r.json(); }).then(function(d) {
+      if (d.ok) {
+        alert('Updated ' + d.updated + ' users.');
+        selectedIds.clear();
+        updateBulkBar();
+        // Reload segments
+        fetch('/admin/api/segments').then(function(r){ return r.json(); }).then(function(nd){
+          segmentData = nd;
+          renderTab(currentTab);
+        });
+      } else { alert(d.error || 'Failed.'); }
+    });
+  });
+
+  // Feature Adoption
+  function loadAdoption() {
+    var el = document.getElementById('segmentContent');
+    el.innerHTML = '<div class="as-loading">Loading feature adoption...</div>';
+
+    fetch('/admin/api/feature-adoption').then(function(r){ return r.json(); }).then(function(d){
+      if (d.error) { el.innerHTML = '<p>' + d.error + '</p>'; return; }
+      var html = '<div class="as-grid">';
+
+      // Unique users per tool
+      html += '<div class="as-panel as-panel--active"><h3 class="as-panel__title">Tool Adoption (30 days)</h3>';
+      var maxUsers = d.unique_per_tool.length > 0 ? d.unique_per_tool[0].unique_users : 1;
+      d.unique_per_tool.forEach(function(t) {
+        var pct = Math.max(3, t.unique_users / maxUsers * 100);
+        html += '<div class="as-adopt-row">' +
+          '<span class="as-adopt-row__label">' + esc(t.action) + '</span>' +
+          '<div class="as-adopt-row__bar"><div class="as-adopt-row__fill" style="width:' + pct + '%;background:var(--brand)"></div></div>' +
+          '<span class="as-adopt-row__count">' + t.unique_users + ' users / ' + t.total_uses + '</span>' +
+        '</div>';
+      });
+      if (d.unique_per_tool.length === 0) html += '<div class="as-empty">No data yet.</div>';
+      html += '</div>';
+
+      // Usage by tier
+      html += '<div class="as-panel as-panel--active"><h3 class="as-panel__title">Usage by Tier (30 days)</h3>';
+      var tierColors = { free: '#64748b', pro: '#2563eb', agency: '#7c3aed', api: '#059669' };
+      var byTier = {};
+      d.by_tier.forEach(function(r) {
+        if (!byTier[r.tier]) byTier[r.tier] = [];
+        byTier[r.tier].push(r);
+      });
+      Object.keys(byTier).forEach(function(tier) {
+        html += '<h4 style="font-size:0.76rem;font-weight:700;margin:12px 0 6px;color:' + (tierColors[tier] || 'var(--text-1)') + '">' + tier.charAt(0).toUpperCase() + tier.slice(1) + '</h4>';
+        var tierMax = byTier[tier][0] ? byTier[tier][0].cnt : 1;
+        byTier[tier].slice(0, 6).forEach(function(r) {
+          var pct = Math.max(3, r.cnt / tierMax * 100);
+          html += '<div class="as-adopt-row">' +
+            '<span class="as-adopt-row__label">' + esc(r.action) + '</span>' +
+            '<div class="as-adopt-row__bar"><div class="as-adopt-row__fill" style="width:' + pct + '%;background:' + (tierColors[tier] || 'var(--brand)') + '"></div></div>' +
+            '<span class="as-adopt-row__count">' + r.cnt + '</span>' +
+          '</div>';
+        });
+      });
+      if (Object.keys(byTier).length === 0) html += '<div class="as-empty">No data yet.</div>';
+      html += '</div></div>';
+
+      el.innerHTML = html;
+    });
+  }
+
+  // Team Analytics
+  function loadTeams() {
+    var el = document.getElementById('segmentContent');
+    el.innerHTML = '<div class="as-loading">Loading team analytics...</div>';
+
+    fetch('/admin/api/team-analytics').then(function(r){ return r.json(); }).then(function(d){
+      if (d.error) { el.innerHTML = '<p>' + d.error + '</p>'; return; }
+      var html = '<div class="as-grid">';
+
+      // Teams list
+      html += '<div class="as-panel as-panel--active"><h3 class="as-panel__title">Teams (' + d.teams.length + ')</h3>';
+      if (d.teams.length === 0) {
+        html += '<div class="as-empty">No teams created yet.</div>';
+      } else {
+        d.teams.forEach(function(t) {
+          html += '<div class="as-team-row">' +
+            '<span class="as-team-row__name">' + esc(t.name) + '</span>' +
+            '<span class="as-team-row__stat">' + t.member_count + ' members</span>' +
+            '<span class="as-team-row__stat">' + t.total_checks + ' tests</span>' +
+            '<span class="as-team-row__stat">' + esc(t.owner_email || '') + '</span>' +
+            '<span class="as-table__tier as-table__tier--' + (t.owner_tier || 'free') + '">' + (t.owner_tier || 'free') + '</span>' +
+          '</div>';
+        });
+      }
+      html += '</div>';
+
+      // Invite stats
+      html += '<div class="as-panel as-panel--active"><h3 class="as-panel__title">Invite Status</h3>';
+      var statuses = d.invite_stats || {};
+      var inviteLabels = { pending: 'Pending', accepted: 'Accepted', declined: 'Declined', expired: 'Expired' };
+      var inviteColors = { pending: '#d97706', accepted: '#22c55e', declined: '#ef4444', expired: '#64748b' };
+      var hasInvites = false;
+      Object.keys(inviteLabels).forEach(function(s) {
+        if (statuses[s]) {
+          hasInvites = true;
+          html += '<div class="as-team-row">' +
+            '<span class="as-team-row__name" style="color:' + inviteColors[s] + '">' + inviteLabels[s] + '</span>' +
+            '<span style="font-size:1.2rem;font-weight:800">' + statuses[s] + '</span>' +
+          '</div>';
+        }
+      });
+      if (!hasInvites) html += '<div class="as-empty">No invitations sent yet.</div>';
+      html += '</div></div>';
+
+      el.innerHTML = html;
+    });
+  }
+
+  // Session Intelligence
+  function loadSessions() {
+    var el = document.getElementById('segmentContent');
+    el.innerHTML = '<div class="as-loading">Loading session data...</div>';
+
+    fetch('/admin/api/session-intelligence').then(function(r){ return r.json(); }).then(function(d){
+      if (d.error) { el.innerHTML = '<p>' + d.error + '</p>'; return; }
+      var html = '<div class="as-panel as-panel--active" style="margin-bottom:16px">' +
+        '<h3 class="as-panel__title">Active Sessions: <span style="color:var(--brand)">' + d.active_sessions + '</span></h3></div>';
+
+      html += '<div class="as-grid">';
+
+      // Hourly logins chart
+      html += '<div class="as-panel as-panel--active"><h3 class="as-panel__title">Logins by Hour (24h)</h3>';
+      if (d.hourly_logins.length > 0) {
+        var maxH = Math.max.apply(null, d.hourly_logins.map(function(h){ return h.cnt; })) || 1;
+        html += '<div class="as-hour-chart">';
+        for (var h = 0; h < 24; h++) {
+          var found = d.hourly_logins.find(function(r){ return parseInt(r.hour) === h; });
+          var cnt = found ? found.cnt : 0;
+          var pct = Math.max(1, cnt / maxH * 100);
+          html += '<div class="as-hour-bar" style="height:' + pct + '%" title="' + h + ':00 — ' + cnt + ' logins"></div>';
+        }
+        html += '</div><div style="display:flex;justify-content:space-between;font-size:0.58rem;color:var(--text-3);margin-top:4px"><span>0:00</span><span>6:00</span><span>12:00</span><span>18:00</span><span>23:00</span></div>';
+      } else {
+        html += '<div class="as-empty">No login data in the last 24 hours.</div>';
+      }
+      html += '</div>';
+
+      // Multi-session users
+      html += '<div class="as-panel as-panel--active"><h3 class="as-panel__title">Multi-Session Users</h3>';
+      if (d.multi_session.length === 0) {
+        html += '<div class="as-empty">No users with multiple active sessions.</div>';
+      } else {
+        d.multi_session.forEach(function(u) {
+          html += '<div class="as-session-row">' +
+            '<span class="as-session-row__val">' + esc(u.email) + '</span>' +
+            '<span class="as-table__tier as-table__tier--' + u.tier + '">' + u.tier + '</span>' +
+            '<span class="as-session-row__count">' + u.session_count + ' sessions</span>' +
+          '</div>';
+        });
+      }
+      html += '</div></div>';
+
+      html += '<div class="as-grid">';
+
+      // Top IPs
+      html += '<div class="as-panel as-panel--active"><h3 class="as-panel__title">Top IPs (Active Sessions)</h3>';
+      if (d.top_ips.length === 0) {
+        html += '<div class="as-empty">No session data.</div>';
+      } else {
+        d.top_ips.forEach(function(ip) {
+          html += '<div class="as-session-row">' +
+            '<span class="as-session-row__val" style="font-family:monospace;font-size:0.72rem">' + esc(ip.ip_address || 'unknown') + '</span>' +
+            '<span class="as-session-row__label">' + ip.unique_users + ' users</span>' +
+            '<span class="as-session-row__count">' + ip.cnt + ' sessions</span>' +
+          '</div>';
+        });
+      }
+      html += '</div>';
+
+      // Top user agents
+      html += '<div class="as-panel as-panel--active"><h3 class="as-panel__title">Top Devices / Browsers</h3>';
+      if (d.top_agents.length === 0) {
+        html += '<div class="as-empty">No session data.</div>';
+      } else {
+        d.top_agents.forEach(function(a) {
+          var agent = a.user_agent || 'Unknown';
+          if (agent.length > 60) agent = agent.slice(0, 60) + '...';
+          html += '<div class="as-session-row">' +
+            '<span class="as-session-row__label">' + esc(agent) + '</span>' +
+            '<span class="as-session-row__count">' + a.cnt + '</span>' +
+          '</div>';
+        });
+      }
+      html += '</div></div>';
+
+      el.innerHTML = html;
+    });
+  }
+
+  function setText(id, txt) { var e = document.getElementById(id); if (e) e.textContent = txt; }
+  function esc(s) { var d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+})();
+</script>
+</body>
+</html>

@@ -1,3 +1,4 @@
+{% if tracking_tags and tracking_tags.head %}{{ tracking_tags.head | safe }}{% endif %}
 <script>if(new URLSearchParams(location.search).get('embed')==='1'){document.documentElement.classList.add('embedded');}</script>
 <header class="site-header">
   <div class="header-inner">
@@ -8,7 +9,17 @@
       <span></span><span></span><span></span>
     </button>
     <nav class="site-nav">
-      {% if session.get('user_id') %}
+      {% if is_admin and not session.get('user_id') %}
+        {# Admin-only session: minimal nav #}
+        <a href="/admin" class="nav-link nav-link--featured{% if active_page == 'admin' %} nav-link--active{% endif %}">Dashboard</a>
+        <a href="/admin/users" class="nav-link{% if active_page == 'admin_users' %} nav-link--active{% endif %}">Users</a>
+        <a href="/admin/revenue" class="nav-link{% if active_page == 'admin_revenue' %} nav-link--active{% endif %}">Revenue</a>
+        <a href="/admin/segments" class="nav-link{% if active_page == 'admin_segments' %} nav-link--active{% endif %}">Segments</a>
+        <a href="/admin/settings" class="nav-link{% if active_page == 'admin_settings' %} nav-link--active{% endif %}">Settings</a>
+        <a href="/" class="nav-link">View Site</a>
+        <span class="nav-spacer"></span>
+        <a href="/admin/logout" class="nav-link" style="color:var(--red)">Logout</a>
+      {% elif session.get('user_id') %}
         {# Logged-in: Dashboard + user controls only (tools are in the sidebar) #}
         <a href="/dashboard" class="nav-link nav-link--featured{% if active_page == 'dashboard' %} nav-link--active{% endif %}">Dashboard</a>
         {% if current_team_id or current_user_tier == 'agency' %}
@@ -52,10 +63,6 @@
         <span class="nav-spacer"></span>
         <a href="/login" class="nav-link{% if active_page == 'login' %} nav-link--active{% endif %}">Log in</a>
         <a href="/signup" class="nav-link nav-link--cta">Sign Up Free</a>
-        {% if is_admin %}
-        <a href="/admin" class="nav-link" style="margin-left:8px" title="Admin Dashboard">Admin</a>
-        <a href="/admin/logout" class="nav-link" style="color:var(--red);margin-left:4px">Logout</a>
-        {% endif %}
       {% endif %}
     </nav>
   </div>
@@ -117,3 +124,4 @@
 })();
 </script>
 {% endif %}
+{% if tracking_tags and tracking_tags.body %}{{ tracking_tags.body | safe }}{% endif %}

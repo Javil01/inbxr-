@@ -2,52 +2,159 @@
 {% block title %}Pricing{% endblock %}
 {% block content %}
 <h1 class="auth-card__title pricing-title">Simple, Transparent Pricing</h1>
-<p class="auth-card__sub">Every tool is free. Upgrade when you need more.</p>
+<p class="auth-card__sub">Every tool is free to start. Upgrade for AI-powered insights, higher limits, and team collaboration.</p>
 
 <div class="pricing-grid">
-  {% for key, t in tiers.items() %}
-  <div class="pricing-card{% if user and user.tier == key %} pricing-card--current{% endif %}{% if key == 'pro' %} pricing-card--featured{% endif %}">
-    {% if key == 'pro' %}<span class="pricing-card__badge">Most Popular</span>{% endif %}
-    <h2 class="pricing-card__name">{{ t.name }}</h2>
+
+  {# ── FREE ── #}
+  {% set t = tiers['free'] %}
+  <div class="pricing-card{% if user and user.tier == 'free' %} pricing-card--current{% endif %}">
+    <h2 class="pricing-card__name">Free</h2>
     <div class="pricing-card__price">
-      {% if t.price_monthly == 0 %}
-        <span class="pricing-card__amount">$0</span>
-        <span class="pricing-card__period">forever</span>
-      {% else %}
-        <span class="pricing-card__amount">${{ t.price_monthly }}</span>
-        <span class="pricing-card__period">/month</span>
-      {% endif %}
+      <span class="pricing-card__amount">$0</span>
+      <span class="pricing-card__period">forever</span>
     </div>
+    <p class="pricing-card__desc">Everything you need to get started with email deliverability.</p>
     <ul class="pricing-card__features">
       <li>{{ t.limits.checks_per_day }} checks/day</li>
       <li>{{ t.limits.email_verifications_per_day }} email verifications/day</li>
+      <li>{{ t.limits.placement_tests_per_day }} inbox placement tests/day</li>
+      <li>{{ t.limits.subject_tests_per_day }} subject line tests/day</li>
       <li>{{ t.limits.blocklist_domains }} monitored domains</li>
-      <li>{{ t.limits.warmup_campaigns }} warmup campaign{{ 's' if t.limits.warmup_campaigns != 1 }}</li>
-      {% if t.features.cloud_history %}<li>Cloud history</li>{% endif %}
-      {% if t.features.pdf_reports %}<li>PDF reports</li>{% endif %}
-      {% if t.features.bulk_verify %}<li>Bulk email verification</li>{% endif %}
-      {% if t.features.scheduled_monitoring %}<li>Scheduled monitoring</li>{% endif %}
-      {% if t.features.email_alerts %}<li>Email alerts</li>{% endif %}
-      {% if t.features.api_access %}<li>API access</li>{% endif %}
-      {% if t.features.teams %}<li>Teams & workspaces</li>{% endif %}
-      {% if t.features.webhooks %}<li>Webhooks</li>{% endif %}
-      {% if t.features.priority_support %}<li>Priority support</li>{% endif %}
+      <li>{{ t.limits.warmup_campaigns }} warmup campaign</li>
+      <li>Full Email Test with auth analysis</li>
+      <li>Sender Check (SPF, DKIM, DMARC)</li>
+      <li>Header Analyzer</li>
+      <li>BIMI Checker</li>
+      <li>AI Sales &amp; Technical Support chat</li>
     </ul>
     <div class="pricing-card__action">
-      {% if user and user.tier == key %}
-        <span class="pricing-card__current-label">Current Plan</span>
-      {% elif key == 'free' %}
-        {% if user %}
-          <span class="pricing-card__current-label">Included</span>
+      {% if user %}
+        {% if user.tier == 'free' %}
+          <span class="pricing-card__current-label">Current Plan</span>
         {% else %}
-          <a href="{{ url_for('auth.signup') }}" class="auth-btn auth-btn--outline">Get Started</a>
+          <span class="pricing-card__current-label">Included</span>
         {% endif %}
       {% else %}
-        <a href="#" class="auth-btn{% if key == 'pro' %} auth-btn--featured{% endif %}" data-tier="{{ key }}">Upgrade to {{ t.name }}</a>
+        <a href="{{ url_for('auth.signup') }}" class="auth-btn auth-btn--outline">Get Started Free</a>
       {% endif %}
     </div>
   </div>
-  {% endfor %}
+
+  {# ── PRO ── #}
+  {% set t = tiers['pro'] %}
+  <div class="pricing-card pricing-card--featured{% if user and user.tier == 'pro' %} pricing-card--current{% endif %}">
+    <span class="pricing-card__badge">Most Popular</span>
+    <h2 class="pricing-card__name">Pro</h2>
+    <div class="pricing-card__price">
+      <span class="pricing-card__amount">${{ t.price_monthly }}</span>
+      <span class="pricing-card__period">/month</span>
+    </div>
+    <p class="pricing-card__desc">AI-powered guidance and serious limits for growing senders.</p>
+    <ul class="pricing-card__features">
+      <li><strong>{{ t.limits.checks_per_day }}</strong> checks/day</li>
+      <li><strong>{{ t.limits.email_verifications_per_day }}</strong> email verifications/day</li>
+      <li><strong>{{ t.limits.placement_tests_per_day }}</strong> inbox placement tests/day</li>
+      <li><strong>{{ t.limits.subject_tests_per_day }}</strong> subject line tests/day</li>
+      <li><strong>{{ t.limits.blocklist_domains }}</strong> monitored domains</li>
+      <li><strong>{{ t.limits.warmup_campaigns }}</strong> warmup campaigns</li>
+      <li class="pricing-card__feature--highlight">AI Email Expert — 10 conversations/mo</li>
+      <li class="pricing-card__feature--highlight">AI Copy Rewriter</li>
+      <li>Cloud test history</li>
+      <li>PDF reports</li>
+      <li>Bulk email verification (CSV)</li>
+      <li>Scheduled blacklist monitoring</li>
+      <li>Email alerts on listing changes</li>
+      <li>Priority support</li>
+    </ul>
+    <div class="pricing-card__action">
+      {% if user and user.tier == 'pro' %}
+        <span class="pricing-card__current-label">Current Plan</span>
+      {% else %}
+        <a href="#" class="auth-btn auth-btn--featured" data-tier="pro">Upgrade to Pro</a>
+      {% endif %}
+    </div>
+  </div>
+
+  {# ── AGENCY ── #}
+  {% set t = tiers['agency'] %}
+  <div class="pricing-card{% if user and user.tier == 'agency' %} pricing-card--current{% endif %}">
+    <h2 class="pricing-card__name">Agency</h2>
+    <div class="pricing-card__price">
+      <span class="pricing-card__amount">${{ t.price_monthly }}</span>
+      <span class="pricing-card__period">/month</span>
+    </div>
+    <p class="pricing-card__desc">Full platform access for agencies managing multiple clients.</p>
+    <ul class="pricing-card__features">
+      <li><strong>{{ t.limits.checks_per_day }}</strong> checks/day</li>
+      <li><strong>{{ t.limits.email_verifications_per_day }}</strong> email verifications/day</li>
+      <li><strong>{{ t.limits.placement_tests_per_day }}</strong> inbox placement tests/day</li>
+      <li><strong>{{ t.limits.subject_tests_per_day }}</strong> subject line tests/day</li>
+      <li><strong>{{ t.limits.blocklist_domains }}</strong> monitored domains</li>
+      <li><strong>{{ t.limits.warmup_campaigns }}</strong> warmup campaigns</li>
+      <li class="pricing-card__feature--highlight">AI Email Expert — Unlimited</li>
+      <li class="pricing-card__feature--highlight">AI Copy Rewriter</li>
+      <li>Everything in Pro, plus:</li>
+      <li>Teams &amp; client workspaces</li>
+      <li>API access</li>
+      <li>Webhooks</li>
+    </ul>
+    <div class="pricing-card__action">
+      {% if user and user.tier == 'agency' %}
+        <span class="pricing-card__current-label">Current Plan</span>
+      {% else %}
+        <a href="#" class="auth-btn" data-tier="agency">Upgrade to Agency</a>
+      {% endif %}
+    </div>
+  </div>
+
+</div>
+
+{# ── Feature comparison ── #}
+<div class="pricing-compare">
+  <h3 class="pricing-compare__title">Compare Plans</h3>
+  <div class="pricing-compare__table-wrap">
+    <table class="pricing-compare__table">
+      <thead>
+        <tr>
+          <th></th>
+          <th>Free</th>
+          <th class="pricing-compare__th--featured">Pro</th>
+          <th>Agency</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="pricing-compare__section"><td colspan="4">Deliverability Tools</td></tr>
+        <tr><td>Email Test (send &amp; analyze)</td><td>&#10003;</td><td>&#10003;</td><td>&#10003;</td></tr>
+        <tr><td>Sender Check (SPF/DKIM/DMARC)</td><td>&#10003;</td><td>&#10003;</td><td>&#10003;</td></tr>
+        <tr><td>Inbox Placement Test</td><td>3/day</td><td>20/day</td><td>100/day</td></tr>
+        <tr><td>Subject Line Scorer</td><td>10/day</td><td>50/day</td><td>200/day</td></tr>
+        <tr><td>Header Analyzer</td><td>&#10003;</td><td>&#10003;</td><td>&#10003;</td></tr>
+        <tr><td>BIMI Checker</td><td>&#10003;</td><td>&#10003;</td><td>&#10003;</td></tr>
+        <tr><td>Blacklist Monitor</td><td>2 domains</td><td>10 domains</td><td>50 domains</td></tr>
+        <tr><td>Email Verifier</td><td>25/day</td><td>500/day</td><td>5,000/day</td></tr>
+        <tr><td>Warmup Tracker</td><td>1 campaign</td><td>5 campaigns</td><td>25 campaigns</td></tr>
+
+        <tr class="pricing-compare__section"><td colspan="4">AI Features</td></tr>
+        <tr><td>AI Email Expert Assistant</td><td>&mdash;</td><td>10/month</td><td>Unlimited</td></tr>
+        <tr><td>AI Copy Rewriter</td><td>&mdash;</td><td>&#10003;</td><td>&#10003;</td></tr>
+        <tr><td>AI Support Chat (Sales &amp; Tech)</td><td>&#10003;</td><td>&#10003;</td><td>&#10003;</td></tr>
+
+        <tr class="pricing-compare__section"><td colspan="4">Productivity</td></tr>
+        <tr><td>Cloud Test History</td><td>&mdash;</td><td>&#10003;</td><td>&#10003;</td></tr>
+        <tr><td>PDF Reports</td><td>&mdash;</td><td>&#10003;</td><td>&#10003;</td></tr>
+        <tr><td>Bulk Email Verification (CSV)</td><td>&mdash;</td><td>&#10003;</td><td>&#10003;</td></tr>
+        <tr><td>Scheduled Monitoring</td><td>&mdash;</td><td>&#10003;</td><td>&#10003;</td></tr>
+        <tr><td>Email Alerts</td><td>&mdash;</td><td>&#10003;</td><td>&#10003;</td></tr>
+
+        <tr class="pricing-compare__section"><td colspan="4">Collaboration &amp; Scale</td></tr>
+        <tr><td>Teams &amp; Client Workspaces</td><td>&mdash;</td><td>&mdash;</td><td>&#10003;</td></tr>
+        <tr><td>API Access</td><td>&mdash;</td><td>&mdash;</td><td>&#10003;</td></tr>
+        <tr><td>Webhooks</td><td>&mdash;</td><td>&mdash;</td><td>&#10003;</td></tr>
+        <tr><td>Priority Support</td><td>&mdash;</td><td>&#10003;</td><td>&#10003;</td></tr>
+      </tbody>
+    </table>
+  </div>
 </div>
 
 <div class="pricing-api-note">

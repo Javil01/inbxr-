@@ -15,7 +15,7 @@
     .au-header h1 { font-size: 1.4rem; font-weight: 700; margin: 0; }
     .au-header-links { display: flex; gap: 12px; align-items: center; }
     .au-header-links a { color: var(--brand); text-decoration: none; font-size: 0.85rem; }
-    .au-export-btn { padding: 7px 16px; background: var(--brand); color: #fff; border: none; border-radius: var(--r-full); font-size: 0.78rem; font-weight: 600; cursor: pointer; text-decoration: none; }
+    .au-header-links .au-export-btn { padding: 7px 16px; background: var(--brand); color: #fff !important; border: none; border-radius: var(--r-full); font-size: 0.78rem; font-weight: 600; cursor: pointer; text-decoration: none; }
     .au-export-btn:hover { filter: brightness(1.15); }
 
     /* Summary cards */
@@ -133,6 +133,17 @@
     .up-note-submit { padding: 8px 14px; background: var(--brand); color: #fff; border: none; border-radius: 8px; font-size: 0.76rem; font-weight: 600; cursor: pointer; white-space: nowrap; }
     .up-note-submit:hover { filter: brightness(1.15); }
     .up-empty { color: var(--text-3); font-size: 0.78rem; font-style: italic; }
+
+    /* Action & flag buttons */
+    .up-action-btn { padding: 4px 12px; border: none; border-radius: var(--r-full); font-size: 0.72rem; font-weight: 600; cursor: pointer; }
+    .up-action-btn--red { background: rgba(239,68,68,0.1); color: #ef4444; }
+    .up-action-btn--red:hover { background: rgba(239,68,68,0.2); }
+    .up-action-btn--green { background: rgba(34,197,94,0.1); color: #22c55e; }
+    .up-action-btn--green:hover { background: rgba(34,197,94,0.2); }
+    .up-flag-btn { padding: 3px 10px; border: 1px solid var(--border-1); border-radius: var(--r-full); font-size: 0.68rem; font-weight: 600; cursor: pointer; background: transparent; color: var(--text-3); transition: all 0.15s; }
+    .up-flag-btn:hover { border-color: var(--flag-color); color: var(--flag-color); }
+    .up-flag-btn--active { background: color-mix(in srgb, var(--flag-color) 10%, transparent); border-color: var(--flag-color); color: var(--flag-color); }
+    .up-note-form { display: flex; flex-direction: column; gap: 8px; }
   </style>
 </head>
 <body>
@@ -144,7 +155,7 @@
     <h1>User Management</h1>
     <div class="au-header-links">
       <a href="/admin/api/users/export" class="au-export-btn" id="exportBtn">Export CSV</a>
-      <a href="/dashboard">&larr; Dashboard</a>
+      <a href="/admin">&larr; Admin Dashboard</a>
     </div>
   </div>
 
@@ -344,6 +355,30 @@
 
     var html = '';
 
+    // Status & Actions bar
+    var isSuspended = u.status === 'suspended';
+    html += '<div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center">';
+    if (isSuspended) {
+      html += '<span style="padding:4px 12px;border-radius:999px;font-size:0.72rem;font-weight:700;background:rgba(239,68,68,0.1);color:#ef4444">SUSPENDED</span>' +
+        '<button class="up-action-btn up-action-btn--green" onclick="reactivateUser(' + u.id + ')">Reactivate</button>';
+    } else {
+      html += '<span style="padding:4px 12px;border-radius:999px;font-size:0.72rem;font-weight:700;background:rgba(34,197,94,0.1);color:#22c55e">ACTIVE</span>' +
+        '<button class="up-action-btn up-action-btn--red" onclick="suspendUser(' + u.id + ')">Suspend</button>';
+    }
+    // Flags
+    var flags = (u.admin_flags || '').split(',').filter(function(f) { return f; });
+    html += '<span style="flex:1"></span>';
+    var flagOptions = ['vip', 'follow_up', 'spammer'];
+    flagOptions.forEach(function(f) {
+      var active = flags.indexOf(f) > -1;
+      var colors = { vip: '#d97706', follow_up: '#2563eb', spammer: '#ef4444' };
+      var labels = { vip: 'VIP', follow_up: 'Follow-up', spammer: 'Spammer' };
+      html += '<button class="up-flag-btn' + (active ? ' up-flag-btn--active' : '') + '" ' +
+        'style="--flag-color:' + colors[f] + '" ' +
+        'onclick="toggleFlag(' + u.id + ',\'' + f + '\',' + !active + ')">' + labels[f] + '</button>';
+    });
+    html += '</div>';
+
     // Basic info
     html += '<div class="up-info">' +
       upField('Email', u.email) +
@@ -430,7 +465,17 @@
     html += '<div class="up-section"><h3 class="up-section__title">Admin Notes</h3>';
     html += '<div class="up-note-form">' +
       '<textarea class="up-note-input" id="noteInput" placeholder="Add a note about this user..."></textarea>' +
-      '<button class="up-note-submit" id="noteSubmit">Add</button>' +
+      '<div style="display:flex;gap:8px;align-items:center">' +
+        '<select id="noteTag" style="padding:5px 8px;border:1px solid var(--border-1);border-radius:6px;font-size:0.76rem;background:var(--card-bg);color:var(--text-1)">' +
+          '<option value="general">General</option>' +
+          '<option value="vip">VIP</option>' +
+          '<option value="support">Support</option>' +
+          '<option value="complaint">Complaint</option>' +
+          '<option value="follow_up">Follow-up</option>' +
+          '<option value="bug">Bug Report</option>' +
+        '</select>' +
+        '<button class="up-note-submit" id="noteSubmit">Add</button>' +
+      '</div>' +
     '</div>';
     html += '<div class="up-notes" id="upNotes" style="margin-top:10px">';
     if (data.notes && data.notes.length) {
@@ -450,10 +495,11 @@
       var text = input.value.trim();
       if (!text) return;
 
+      var tag = document.getElementById('noteTag').value;
       fetch('/admin/api/users/' + currentProfileId + '/notes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ note: text })
+        body: JSON.stringify({ note: text, tag: tag })
       }).then(function(r) { return r.json(); }).then(function(d) {
         if (d.ok) {
           input.value = '';
@@ -465,12 +511,47 @@
   }
 
   function noteHtml(n) {
+    var tagColors = { general: '#64748b', vip: '#d97706', support: '#2563eb', complaint: '#ef4444', follow_up: '#7c3aed', bug: '#059669' };
+    var tagLabels = { general: 'General', vip: 'VIP', support: 'Support', complaint: 'Complaint', follow_up: 'Follow-up', bug: 'Bug' };
+    var tag = n.tag || 'general';
     return '<div class="up-note" data-nid="' + n.id + '">' +
       '<button class="up-note__delete" onclick="deleteNote(' + n.id + ')" title="Delete note">&times;</button>' +
+      '<span style="display:inline-block;padding:1px 7px;border-radius:999px;font-size:0.62rem;font-weight:700;background:' + tagColors[tag] + '22;color:' + tagColors[tag] + ';margin-bottom:4px">' + (tagLabels[tag] || tag) + '</span>' +
       '<div class="up-note__text">' + esc(n.note) + '</div>' +
       '<div class="up-note__meta">' + relDate(n.created_at) + '</div>' +
     '</div>';
   }
+
+  window.suspendUser = function(uid) {
+    if (!confirm('Suspend this user? They will not be able to use the platform.')) return;
+    fetch('/admin/api/users/' + uid + '/suspend', { method: 'POST' })
+      .then(function(r) { return r.json(); })
+      .then(function(d) { if (d.ok) openProfile(uid); else alert(d.error || 'Failed'); });
+  };
+
+  window.reactivateUser = function(uid) {
+    fetch('/admin/api/users/' + uid + '/reactivate', { method: 'POST' })
+      .then(function(r) { return r.json(); })
+      .then(function(d) { if (d.ok) openProfile(uid); else alert(d.error || 'Failed'); });
+  };
+
+  window.toggleFlag = function(uid, flag, add) {
+    // Get current flags, toggle the one clicked
+    fetch('/admin/api/users/' + uid + '/profile')
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        var flags = (data.user.admin_flags || '').split(',').filter(function(f) { return f; });
+        if (add && flags.indexOf(flag) === -1) flags.push(flag);
+        else if (!add) flags = flags.filter(function(f) { return f !== flag; });
+        return fetch('/admin/api/users/' + uid + '/flags', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ flags: flags.join(',') })
+        });
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(d) { if (d.ok) openProfile(uid); });
+  };
 
   window.deleteNote = function(noteId) {
     if (!confirm('Delete this note?')) return;

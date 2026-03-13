@@ -109,6 +109,64 @@ def _get_custom_css(page_name):
     return "\n".join(lines)
 
 
+def _get_tracking_tags():
+    """Get tracking tag HTML for injection into page headers."""
+    try:
+        from modules.database import fetchall
+        settings = {s["key"]: s["value"] for s in fetchall("SELECT key, value FROM site_settings")}
+    except Exception:
+        return {"head": "", "body": ""}
+
+    head_parts = []
+    body_parts = []
+
+    # Meta Pixel
+    pixel_id = settings.get("meta_pixel_id", "").strip()
+    if pixel_id:
+        head_parts.append(
+            "<script>!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?"
+            "n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;"
+            "n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;"
+            "t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,"
+            "document,'script','https://connect.facebook.net/en_US/fbevents.js');"
+            f"fbq('init','{pixel_id}');fbq('track','PageView');</script>"
+            f'<noscript><img height="1" width="1" style="display:none" '
+            f'src="https://www.facebook.com/tr?id={pixel_id}&ev=PageView&noscript=1"/></noscript>'
+        )
+
+    # Google Tag
+    google_id = settings.get("google_tag_id", "").strip()
+    if google_id:
+        if google_id.startswith("GTM-"):
+            head_parts.append(
+                f"<script>(function(w,d,s,l,i){{w[l]=w[l]||[];w[l].push({{'gtm.start':new Date().getTime(),event:'gtm.js'}});"
+                f"var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';"
+                f"j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;"
+                f"f.parentNode.insertBefore(j,f);}})(window,document,'script','dataLayer','{google_id}');</script>"
+            )
+            body_parts.append(
+                f'<noscript><iframe src="https://www.googletagmanager.com/ns.html?id={google_id}" '
+                f'height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>'
+            )
+        else:
+            head_parts.append(
+                f'<script async src="https://www.googletagmanager.com/gtag/js?id={google_id}"></script>'
+                f"<script>window.dataLayer=window.dataLayer||[];function gtag(){{dataLayer.push(arguments);}}"
+                f"gtag('js',new Date());gtag('config','{google_id}');</script>"
+            )
+
+    # Custom scripts
+    custom_head = settings.get("custom_head_scripts", "").strip()
+    if custom_head:
+        head_parts.append(custom_head)
+
+    custom_body = settings.get("custom_body_scripts", "").strip()
+    if custom_body:
+        body_parts.append(custom_body)
+
+    return {"head": "\n".join(head_parts), "body": "\n".join(body_parts)}
+
+
 # ── Inject user context into all templates ───────────────
 @app.context_processor
 def inject_user_context():
@@ -124,7 +182,40 @@ def inject_user_context():
         "get_custom_css": _get_custom_css,
         "get_inline_overrides_json": _get_inline_overrides_json,
         "get_builder_override": _get_builder_override,
+        "tracking_tags": _get_tracking_tags(),
     }
+
+
+# ── Page view tracking ────────────────────────────────
+_TRACKED_PAGES = {
+    "/", "/analyzer", "/sender", "/placement", "/subject-scorer",
+    "/bimi", "/header-analyzer", "/blacklist-monitor", "/email-verifier",
+    "/warmup", "/dns-generator", "/dashboard", "/pricing", "/support",
+}
+
+@app.after_request
+def track_page_view(response):
+    """Record page views for analytics (public pages, HTML responses only)."""
+    if (
+        request.method == "GET"
+        and response.status_code == 200
+        and response.content_type
+        and "text/html" in response.content_type
+        and request.path in _TRACKED_PAGES
+        and not request.path.startswith("/admin")
+    ):
+        try:
+            from modules.database import execute
+            # Map URL to page name
+            page_name = request.path.strip("/") or "index"
+            execute(
+                "INSERT INTO page_views (page_name, ip_address, user_agent, referrer, user_id) VALUES (?, ?, ?, ?, ?)",
+                (page_name, request.remote_addr, request.user_agent.string[:200] if request.user_agent else None,
+                 request.referrer[:500] if request.referrer else None, session.get("user_id")),
+            )
+        except Exception:
+            pass
+    return response
 
 
 # ══════════════════════════════════════════════════════
@@ -273,6 +364,21 @@ def admin_dashboard():
     # Teams
     total_teams = fetchone("SELECT COUNT(*) as cnt FROM teams")
 
+    # Revenue / MRR
+    prices = {"free": 0, "pro": 29, "agency": 79, "api": 0}
+    mrr = sum(prices.get(r["tier"], 0) * r["cnt"] for r in tier_counts)
+
+    # Active users (7d / 30d)
+    active_7d = fetchone(
+        "SELECT COUNT(DISTINCT user_id) as cnt FROM usage_log WHERE created_at > datetime('now', '-7 days') AND user_id IS NOT NULL"
+    )
+    active_30d = fetchone(
+        "SELECT COUNT(DISTINCT user_id) as cnt FROM usage_log WHERE created_at > datetime('now', '-30 days') AND user_id IS NOT NULL"
+    )
+
+    # Suspended users
+    suspended_count = fetchone("SELECT COUNT(*) as cnt FROM users WHERE status = 'suspended'")
+
     # Recent signups (last 5)
     recent_signups = fetchall(
         "SELECT id, email, display_name, tier, created_at FROM users ORDER BY created_at DESC LIMIT 5"
@@ -309,12 +415,16 @@ def admin_dashboard():
         "total_alerts": total_alerts["cnt"] if total_alerts else 0,
         "unread_alerts": unread_alerts["cnt"] if unread_alerts else 0,
         "total_teams": total_teams["cnt"] if total_teams else 0,
+        "mrr": mrr,
+        "active_7d": active_7d["cnt"] if active_7d else 0,
+        "active_30d": active_30d["cnt"] if active_30d else 0,
+        "suspended": suspended_count["cnt"] if suspended_count else 0,
         "recent_signups": recent_signups,
         "scheduler": scheduler,
         "services": services,
     }
 
-    return render_template("admin_dashboard.html", is_admin=True, stats=stats)
+    return render_template("admin_dashboard.html", is_admin=True, stats=stats, active_page="admin")
 
 
 @app.route("/admin/logout")
@@ -594,7 +704,7 @@ def admin_builder_clear(page_name):
 def admin_users():
     if not _is_admin():
         return redirect("/admin/login")
-    return render_template("admin_users.html", is_admin=True)
+    return render_template("admin_users.html", is_admin=True, active_page="admin_users")
 
 
 @app.route("/admin/api/users")
@@ -690,7 +800,9 @@ def admin_api_user_profile(user_id):
     user = fetchone("""
         SELECT id, email, display_name, tier, email_verified,
                stripe_customer_id, stripe_subscription_id, api_key,
-               created_at, updated_at
+               created_at, updated_at,
+               COALESCE(status, 'active') as status, suspended_at,
+               COALESCE(admin_flags, '') as admin_flags
         FROM users WHERE id = ?
     """, (user_id,))
     if not user:
@@ -733,7 +845,7 @@ def admin_api_user_profile(user_id):
 
     # Admin notes
     notes = fetchall("""
-        SELECT id, note, created_at FROM admin_notes
+        SELECT id, note, COALESCE(tag, 'general') as tag, created_at FROM admin_notes
         WHERE user_id = ? ORDER BY created_at DESC
     """, (user_id,))
 
@@ -773,10 +885,13 @@ def admin_api_add_note(user_id):
 
     data = request.get_json(silent=True) or {}
     note = (data.get("note") or "").strip()
+    tag = data.get("tag", "general")
+    if tag not in ("general", "vip", "support", "complaint", "follow_up", "bug"):
+        tag = "general"
     if not note:
         return jsonify({"error": "Note is required"}), 400
 
-    execute("INSERT INTO admin_notes (user_id, note) VALUES (?, ?)", (user_id, note))
+    execute("INSERT INTO admin_notes (user_id, note, tag) VALUES (?, ?, ?)", (user_id, note, tag))
     return jsonify({"ok": True})
 
 
@@ -835,6 +950,752 @@ def admin_api_export_users():
         mimetype="text/csv",
         headers={"Content-Disposition": "attachment; filename=inbxr-users.csv"},
     )
+
+
+# ══════════════════════════════════════════════════════
+#  ADMIN — REVENUE DASHBOARD
+# ══════════════════════════════════════════════════════
+
+@app.route("/admin/revenue")
+def admin_revenue():
+    if not _is_admin():
+        return redirect("/admin/login")
+    return render_template("admin_revenue.html", is_admin=True, active_page="admin_revenue")
+
+
+@app.route("/admin/api/revenue")
+def admin_api_revenue():
+    if not _is_admin():
+        return jsonify({"error": "Unauthorized"}), 403
+
+    from modules.database import fetchone, fetchall
+
+    PRICES = {"free": 0, "pro": 29, "agency": 79, "api": 0}
+
+    # Current MRR
+    tier_counts = fetchall("SELECT tier, COUNT(*) as cnt FROM users GROUP BY tier")
+    tc = {r["tier"]: r["cnt"] for r in tier_counts}
+    mrr = sum(PRICES.get(t, 0) * c for t, c in tc.items())
+
+    # MRR trend (last 12 months) — approximate by counting users created before each month-end
+    mrr_trend = []
+    for months_ago in range(11, -1, -1):
+        row = fetchall(f"""
+            SELECT tier, COUNT(*) as cnt FROM users
+            WHERE created_at <= datetime('now', '-{months_ago} months', 'start of month', '+1 month', '-1 second')
+            GROUP BY tier
+        """)
+        month_tc = {r["tier"]: r["cnt"] for r in row}
+        month_mrr = sum(PRICES.get(t, 0) * c for t, c in month_tc.items())
+        label_row = fetchone(f"SELECT strftime('%Y-%m', datetime('now', '-{months_ago} months')) as m")
+        mrr_trend.append({"month": label_row["m"] if label_row else "", "mrr": month_mrr})
+
+    # ARPU (average revenue per user)
+    total_users = sum(tc.values()) or 1
+    paid_users = tc.get("pro", 0) + tc.get("agency", 0)
+    arpu = round(mrr / total_users, 2) if total_users else 0
+    arpu_paid = round(mrr / paid_users, 2) if paid_users else 0
+
+    # Churn proxy — paid users inactive 30+ days
+    churned = fetchone("""
+        SELECT COUNT(*) as cnt FROM users
+        WHERE tier IN ('pro', 'agency')
+        AND id NOT IN (
+            SELECT DISTINCT user_id FROM usage_log
+            WHERE created_at > datetime('now', '-30 days') AND user_id IS NOT NULL
+        )
+    """)
+
+    # Revenue by tier
+    revenue_by_tier = [
+        {"tier": t, "users": tc.get(t, 0), "revenue": PRICES.get(t, 0) * tc.get(t, 0)}
+        for t in ["pro", "agency"]
+    ]
+
+    # Top revenue users (paid with most activity)
+    top_users = fetchall("""
+        SELECT u.id, u.email, u.tier, u.created_at,
+               (SELECT COUNT(*) FROM usage_log ul WHERE ul.user_id = u.id) as total_actions,
+               (SELECT COUNT(*) FROM check_history ch WHERE ch.user_id = u.id) as total_checks
+        FROM users u
+        WHERE u.tier IN ('pro', 'agency')
+        ORDER BY total_actions DESC LIMIT 10
+    """)
+
+    # Conversion funnel: signups → verified → paid
+    total = fetchone("SELECT COUNT(*) as cnt FROM users")["cnt"] or 0
+    verified = fetchone("SELECT COUNT(*) as cnt FROM users WHERE email_verified = 1")["cnt"] or 0
+    paid = paid_users
+
+    return jsonify({
+        "mrr": mrr,
+        "mrr_trend": mrr_trend,
+        "arpu": arpu,
+        "arpu_paid": arpu_paid,
+        "paid_users": paid_users,
+        "churn_risk": churned["cnt"] if churned else 0,
+        "revenue_by_tier": revenue_by_tier,
+        "top_users": top_users,
+        "funnel": {"total": total, "verified": verified, "paid": paid},
+        "tier_counts": tc,
+    })
+
+
+# ══════════════════════════════════════════════════════
+#  ADMIN — USER SEGMENTS
+# ══════════════════════════════════════════════════════
+
+@app.route("/admin/segments")
+def admin_segments():
+    if not _is_admin():
+        return redirect("/admin/login")
+    return render_template("admin_segments.html", is_admin=True, active_page="admin_segments")
+
+
+@app.route("/admin/api/segments")
+def admin_api_segments():
+    if not _is_admin():
+        return jsonify({"error": "Unauthorized"}), 403
+
+    from modules.database import fetchall
+
+    # Power free users (free tier, 50+ actions total)
+    power_free = fetchall("""
+        SELECT u.id, u.email, u.tier, u.created_at,
+               COUNT(ul.id) as total_actions,
+               MAX(ul.created_at) as last_active
+        FROM users u
+        JOIN usage_log ul ON ul.user_id = u.id
+        WHERE u.tier = 'free'
+        GROUP BY u.id
+        HAVING total_actions >= 50
+        ORDER BY total_actions DESC
+    """)
+
+    # At-risk paid (paid but < 5 actions in last 30 days)
+    at_risk = fetchall("""
+        SELECT u.id, u.email, u.tier, u.created_at,
+               COALESCE(recent.cnt, 0) as recent_actions,
+               (SELECT MAX(created_at) FROM usage_log ul2 WHERE ul2.user_id = u.id) as last_active
+        FROM users u
+        LEFT JOIN (
+            SELECT user_id, COUNT(*) as cnt FROM usage_log
+            WHERE created_at > datetime('now', '-30 days')
+            GROUP BY user_id
+        ) recent ON recent.user_id = u.id
+        WHERE u.tier IN ('pro', 'agency')
+        AND COALESCE(recent.cnt, 0) < 5
+        ORDER BY recent_actions ASC
+    """)
+
+    # Active users (any action in last 7 days)
+    active_7d = fetchall("""
+        SELECT u.id, u.email, u.tier,
+               COUNT(ul.id) as week_actions
+        FROM users u
+        JOIN usage_log ul ON ul.user_id = u.id AND ul.created_at > datetime('now', '-7 days')
+        GROUP BY u.id
+        ORDER BY week_actions DESC
+        LIMIT 50
+    """)
+
+    # Dormant (no activity in 30+ days, has at least 1 action ever)
+    dormant = fetchall("""
+        SELECT u.id, u.email, u.tier, u.created_at,
+               MAX(ul.created_at) as last_active,
+               COUNT(ul.id) as total_actions
+        FROM users u
+        JOIN usage_log ul ON ul.user_id = u.id
+        GROUP BY u.id
+        HAVING last_active < datetime('now', '-30 days')
+        ORDER BY last_active DESC
+        LIMIT 50
+    """)
+
+    # New users (signed up in last 7 days)
+    new_users = fetchall("""
+        SELECT u.id, u.email, u.tier, u.email_verified, u.created_at,
+               (SELECT COUNT(*) FROM usage_log ul WHERE ul.user_id = u.id) as total_actions
+        FROM users u
+        WHERE u.created_at > datetime('now', '-7 days')
+        ORDER BY u.created_at DESC
+    """)
+
+    # Never used (signed up but 0 actions)
+    never_used = fetchall("""
+        SELECT u.id, u.email, u.tier, u.email_verified, u.created_at
+        FROM users u
+        LEFT JOIN usage_log ul ON ul.user_id = u.id
+        WHERE ul.id IS NULL
+        ORDER BY u.created_at DESC
+        LIMIT 50
+    """)
+
+    return jsonify({
+        "power_free": power_free,
+        "at_risk": at_risk,
+        "active_7d": active_7d,
+        "dormant": dormant,
+        "new_users": new_users,
+        "never_used": never_used,
+    })
+
+
+@app.route("/admin/api/users/bulk-tier", methods=["POST"])
+def admin_api_bulk_tier():
+    """Bulk change tier for multiple users."""
+    if not _is_admin():
+        return jsonify({"error": "Unauthorized"}), 403
+
+    from modules.database import execute
+
+    data = request.get_json(silent=True) or {}
+    user_ids = data.get("user_ids", [])
+    new_tier = data.get("tier", "")
+    if new_tier not in ("free", "pro", "agency", "api"):
+        return jsonify({"error": "Invalid tier"}), 400
+    if not user_ids or not isinstance(user_ids, list):
+        return jsonify({"error": "No users selected"}), 400
+
+    placeholders = ",".join("?" for _ in user_ids)
+    execute(
+        f"UPDATE users SET tier = ?, updated_at = datetime('now') WHERE id IN ({placeholders})",
+        (new_tier, *user_ids),
+    )
+    return jsonify({"ok": True, "updated": len(user_ids)})
+
+
+# ══════════════════════════════════════════════════════
+#  ADMIN — SUSPEND / REACTIVATE / FLAGS
+# ══════════════════════════════════════════════════════
+
+@app.route("/admin/api/users/<int:user_id>/suspend", methods=["POST"])
+def admin_api_suspend_user(user_id):
+    if not _is_admin():
+        return jsonify({"error": "Unauthorized"}), 403
+    from modules.database import execute, fetchone
+    user = fetchone("SELECT id FROM users WHERE id = ?", (user_id,))
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+    execute("UPDATE users SET status = 'suspended', suspended_at = datetime('now'), updated_at = datetime('now') WHERE id = ?", (user_id,))
+    return jsonify({"ok": True, "status": "suspended"})
+
+
+@app.route("/admin/api/users/<int:user_id>/reactivate", methods=["POST"])
+def admin_api_reactivate_user(user_id):
+    if not _is_admin():
+        return jsonify({"error": "Unauthorized"}), 403
+    from modules.database import execute, fetchone
+    user = fetchone("SELECT id FROM users WHERE id = ?", (user_id,))
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+    execute("UPDATE users SET status = 'active', suspended_at = NULL, updated_at = datetime('now') WHERE id = ?", (user_id,))
+    return jsonify({"ok": True, "status": "active"})
+
+
+@app.route("/admin/api/users/<int:user_id>/flags", methods=["POST"])
+def admin_api_update_flags(user_id):
+    if not _is_admin():
+        return jsonify({"error": "Unauthorized"}), 403
+    from modules.database import execute, fetchone
+    user = fetchone("SELECT id FROM users WHERE id = ?", (user_id,))
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+    data = request.get_json(silent=True) or {}
+    flags = data.get("flags", "")
+    execute("UPDATE users SET admin_flags = ?, updated_at = datetime('now') WHERE id = ?", (flags, user_id))
+    return jsonify({"ok": True, "flags": flags})
+
+
+# ══════════════════════════════════════════════════════
+#  ADMIN — FEATURE ADOPTION & TEAM ANALYTICS
+# ══════════════════════════════════════════════════════
+
+@app.route("/admin/api/feature-adoption")
+def admin_api_feature_adoption():
+    if not _is_admin():
+        return jsonify({"error": "Unauthorized"}), 403
+
+    from modules.database import fetchall
+
+    # Feature usage by tier
+    by_tier = fetchall("""
+        SELECT u.tier, ul.action, COUNT(*) as cnt
+        FROM usage_log ul
+        JOIN users u ON u.id = ul.user_id
+        WHERE ul.created_at > datetime('now', '-30 days')
+        GROUP BY u.tier, ul.action
+        ORDER BY cnt DESC
+    """)
+
+    # Unique users per tool (last 30 days)
+    unique_per_tool = fetchall("""
+        SELECT action, COUNT(DISTINCT user_id) as unique_users, COUNT(*) as total_uses
+        FROM usage_log
+        WHERE created_at > datetime('now', '-30 days') AND user_id IS NOT NULL
+        GROUP BY action
+        ORDER BY unique_users DESC
+    """)
+
+    return jsonify({"by_tier": by_tier, "unique_per_tool": unique_per_tool})
+
+
+@app.route("/admin/api/team-analytics")
+def admin_api_team_analytics():
+    if not _is_admin():
+        return jsonify({"error": "Unauthorized"}), 403
+
+    from modules.database import fetchall
+
+    teams = fetchall("""
+        SELECT t.id, t.name, t.created_at,
+               (SELECT email FROM users WHERE id = t.owner_id) as owner_email,
+               (SELECT tier FROM users WHERE id = t.owner_id) as owner_tier,
+               (SELECT COUNT(*) FROM team_members tm WHERE tm.team_id = t.id) as member_count,
+               (SELECT COUNT(*) FROM team_invites ti WHERE ti.team_id = t.id AND ti.status = 'pending') as pending_invites,
+               (SELECT COUNT(*) FROM check_history ch WHERE ch.team_id = t.id) as total_checks
+        FROM teams t
+        ORDER BY t.created_at DESC
+    """)
+
+    # Invite stats
+    invite_stats = fetchall("""
+        SELECT status, COUNT(*) as cnt FROM team_invites GROUP BY status
+    """)
+
+    return jsonify({"teams": teams, "invite_stats": {r["status"]: r["cnt"] for r in invite_stats}})
+
+
+@app.route("/admin/api/session-intelligence")
+def admin_api_session_intelligence():
+    if not _is_admin():
+        return jsonify({"error": "Unauthorized"}), 403
+
+    from modules.database import fetchall, fetchone
+
+    # Active sessions
+    active_sessions = fetchone("""
+        SELECT COUNT(*) as cnt FROM sessions WHERE expires_at > datetime('now')
+    """)
+
+    # Sessions by device (user_agent parsing)
+    top_agents = fetchall("""
+        SELECT user_agent, COUNT(*) as cnt
+        FROM sessions
+        WHERE expires_at > datetime('now')
+        GROUP BY user_agent
+        ORDER BY cnt DESC LIMIT 10
+    """)
+
+    # Top IPs with most sessions
+    top_ips = fetchall("""
+        SELECT ip_address, COUNT(*) as cnt,
+               COUNT(DISTINCT user_id) as unique_users
+        FROM sessions
+        WHERE expires_at > datetime('now')
+        GROUP BY ip_address
+        ORDER BY cnt DESC LIMIT 15
+    """)
+
+    # Users with multiple active sessions
+    multi_session = fetchall("""
+        SELECT s.user_id, u.email, u.tier, COUNT(*) as session_count
+        FROM sessions s
+        JOIN users u ON u.id = s.user_id
+        WHERE s.expires_at > datetime('now')
+        GROUP BY s.user_id
+        HAVING session_count > 1
+        ORDER BY session_count DESC LIMIT 20
+    """)
+
+    # Logins last 24h by hour
+    hourly_logins = fetchall("""
+        SELECT strftime('%H', created_at) as hour, COUNT(*) as cnt
+        FROM sessions
+        WHERE created_at > datetime('now', '-1 day')
+        GROUP BY hour
+        ORDER BY hour
+    """)
+
+    return jsonify({
+        "active_sessions": active_sessions["cnt"] if active_sessions else 0,
+        "top_agents": top_agents,
+        "top_ips": top_ips,
+        "multi_session": multi_session,
+        "hourly_logins": hourly_logins,
+    })
+
+
+# ── Admin: Page Builder Enhanced API ──────────────────
+
+@app.route("/admin/api/builder-save-draft/<page_name>", methods=["POST"])
+def admin_api_save_draft(page_name):
+    if not _is_admin():
+        return jsonify({"ok": False}), 403
+    page_name = _resolve_page_name(page_name)
+    from modules.database import execute, fetchone
+    data = request.get_json(force=True, silent=True) or {}
+    draft_data = data.get("draft_data", "{}")
+    existing = fetchone("SELECT page_name FROM page_drafts WHERE page_name = ?", (page_name,))
+    if existing:
+        execute("UPDATE page_drafts SET draft_data = ?, updated_at = datetime('now') WHERE page_name = ?",
+                (draft_data, page_name))
+    else:
+        execute("INSERT INTO page_drafts (page_name, draft_data) VALUES (?, ?)", (page_name, draft_data))
+    return jsonify({"ok": True})
+
+
+@app.route("/admin/api/builder-load-draft/<page_name>")
+def admin_api_load_draft(page_name):
+    if not _is_admin():
+        return jsonify({"ok": False}), 403
+    page_name = _resolve_page_name(page_name)
+    from modules.database import fetchone
+    draft = fetchone("SELECT draft_data, updated_at FROM page_drafts WHERE page_name = ?", (page_name,))
+    if draft:
+        return jsonify({"ok": True, "draft_data": draft["draft_data"], "updated_at": draft["updated_at"]})
+    return jsonify({"ok": False, "draft_data": None})
+
+
+@app.route("/admin/api/builder-publish/<page_name>", methods=["POST"])
+def admin_api_publish(page_name):
+    if not _is_admin():
+        return jsonify({"ok": False}), 403
+    page_name = _resolve_page_name(page_name)
+    from modules.database import execute, fetchone
+    from modules.page_config import save_builder_data
+    import json as _json
+    draft = fetchone("SELECT draft_data FROM page_drafts WHERE page_name = ?", (page_name,))
+    if not draft:
+        return jsonify({"ok": False, "error": "No draft found"}), 404
+    try:
+        dd = _json.loads(draft["draft_data"])
+    except Exception:
+        return jsonify({"ok": False, "error": "Invalid draft data"}), 400
+    html = dd.get("html", "")
+    css = dd.get("css", "")
+    # Save version before publishing
+    from modules.page_config import get_builder_data
+    current = get_builder_data(page_name)
+    if current:
+        execute("INSERT INTO page_versions (page_name, version_data, label) VALUES (?, ?, ?)",
+                (page_name, _json.dumps(current), "Auto-save before publish"))
+    save_builder_data(page_name, html, css)
+    execute("DELETE FROM page_drafts WHERE page_name = ?", (page_name,))
+    return jsonify({"ok": True})
+
+
+@app.route("/admin/api/builder-versions/<page_name>")
+def admin_api_versions(page_name):
+    if not _is_admin():
+        return jsonify({"ok": False}), 403
+    page_name = _resolve_page_name(page_name)
+    from modules.database import fetchall
+    versions = fetchall(
+        "SELECT id, label, created_at FROM page_versions WHERE page_name = ? ORDER BY created_at DESC LIMIT 50",
+        (page_name,)
+    )
+    return jsonify({"ok": True, "versions": versions})
+
+
+@app.route("/admin/api/builder-save-version/<page_name>", methods=["POST"])
+def admin_api_save_version(page_name):
+    if not _is_admin():
+        return jsonify({"ok": False}), 403
+    page_name = _resolve_page_name(page_name)
+    from modules.database import execute
+    from modules.page_config import get_builder_data
+    import json as _json
+    data = request.get_json(force=True, silent=True) or {}
+    label = data.get("label", "Manual save")
+    current = get_builder_data(page_name)
+    if not current:
+        return jsonify({"ok": False, "error": "No current page data to save"}), 400
+    execute("INSERT INTO page_versions (page_name, version_data, label) VALUES (?, ?, ?)",
+            (page_name, _json.dumps(current), label))
+    return jsonify({"ok": True})
+
+
+@app.route("/admin/api/builder-rollback/<page_name>/<int:version_id>", methods=["POST"])
+def admin_api_rollback(page_name, version_id):
+    if not _is_admin():
+        return jsonify({"ok": False}), 403
+    page_name = _resolve_page_name(page_name)
+    from modules.database import fetchone, execute
+    from modules.page_config import save_builder_data, get_builder_data
+    import json as _json
+    version = fetchone("SELECT version_data FROM page_versions WHERE id = ? AND page_name = ?",
+                       (version_id, page_name))
+    if not version:
+        return jsonify({"ok": False, "error": "Version not found"}), 404
+    # Save current as version before rollback
+    current = get_builder_data(page_name)
+    if current:
+        execute("INSERT INTO page_versions (page_name, version_data, label) VALUES (?, ?, ?)",
+                (page_name, _json.dumps(current), "Before rollback"))
+    try:
+        vd = _json.loads(version["version_data"])
+    except Exception:
+        return jsonify({"ok": False, "error": "Corrupt version data"}), 400
+    save_builder_data(page_name, vd.get("html", ""), vd.get("css", ""))
+    return jsonify({"ok": True})
+
+
+# ── Templates ────────────────────────────────────────
+
+@app.route("/admin/api/templates")
+def admin_api_templates():
+    if not _is_admin():
+        return jsonify({"ok": False}), 403
+    from modules.database import fetchall
+    templates = fetchall("SELECT id, name, description, thumbnail, created_at FROM page_templates ORDER BY created_at DESC")
+    return jsonify({"ok": True, "templates": templates})
+
+
+@app.route("/admin/api/templates", methods=["POST"])
+def admin_api_save_template():
+    if not _is_admin():
+        return jsonify({"ok": False}), 403
+    from modules.database import execute
+    data = request.get_json(force=True, silent=True) or {}
+    name = data.get("name", "Untitled Template")
+    description = data.get("description", "")
+    template_data = data.get("template_data", "{}")
+    thumbnail = data.get("thumbnail", "")
+    execute("INSERT INTO page_templates (name, description, thumbnail, template_data) VALUES (?, ?, ?, ?)",
+            (name, description, thumbnail, template_data))
+    return jsonify({"ok": True})
+
+
+@app.route("/admin/api/templates/<int:template_id>")
+def admin_api_get_template(template_id):
+    if not _is_admin():
+        return jsonify({"ok": False}), 403
+    from modules.database import fetchone
+    t = fetchone("SELECT * FROM page_templates WHERE id = ?", (template_id,))
+    if not t:
+        return jsonify({"ok": False}), 404
+    return jsonify({"ok": True, "template": t})
+
+
+@app.route("/admin/api/templates/<int:template_id>", methods=["DELETE"])
+def admin_api_delete_template(template_id):
+    if not _is_admin():
+        return jsonify({"ok": False}), 403
+    from modules.database import execute
+    execute("DELETE FROM page_templates WHERE id = ?", (template_id,))
+    return jsonify({"ok": True})
+
+
+# ── Media Library ────────────────────────────────────
+
+@app.route("/admin/api/media")
+def admin_api_media():
+    if not _is_admin():
+        return jsonify({"ok": False}), 403
+    from modules.database import fetchall
+    q = request.args.get("q", "").strip()
+    if q:
+        media = fetchall(
+            "SELECT * FROM media_library WHERE filename LIKE ? OR alt_text LIKE ? OR tags LIKE ? ORDER BY created_at DESC",
+            (f"%{q}%", f"%{q}%", f"%{q}%")
+        )
+    else:
+        media = fetchall("SELECT * FROM media_library ORDER BY created_at DESC LIMIT 100")
+    return jsonify({"ok": True, "media": media})
+
+
+@app.route("/admin/api/media/upload", methods=["POST"])
+def admin_api_media_upload():
+    if not _is_admin():
+        return jsonify({"ok": False}), 403
+    from modules.page_config import save_uploaded_image
+    from modules.database import execute
+    import os as _os
+    f = request.files.get("file")
+    if not f:
+        return jsonify({"ok": False, "error": "No file"}), 400
+    url = save_uploaded_image(f)
+    if not url:
+        return jsonify({"ok": False, "error": "Invalid file type"}), 400
+    alt_text = request.form.get("alt_text", "")
+    tags = request.form.get("tags", "")
+    # Try to get file size
+    f.seek(0, 2)
+    file_size = f.tell()
+    f.seek(0)
+    execute(
+        "INSERT INTO media_library (filename, url, alt_text, file_size, mime_type, tags) VALUES (?, ?, ?, ?, ?, ?)",
+        (f.filename, url, alt_text, file_size, f.content_type or "", tags)
+    )
+    return jsonify({"ok": True, "url": url, "filename": f.filename})
+
+
+@app.route("/admin/api/media/<int:media_id>", methods=["PUT"])
+def admin_api_media_update(media_id):
+    if not _is_admin():
+        return jsonify({"ok": False}), 403
+    from modules.database import execute
+    data = request.get_json(force=True, silent=True) or {}
+    alt_text = data.get("alt_text")
+    tags = data.get("tags")
+    if alt_text is not None:
+        execute("UPDATE media_library SET alt_text = ? WHERE id = ?", (alt_text, media_id))
+    if tags is not None:
+        execute("UPDATE media_library SET tags = ? WHERE id = ?", (tags, media_id))
+    return jsonify({"ok": True})
+
+
+@app.route("/admin/api/media/<int:media_id>", methods=["DELETE"])
+def admin_api_media_delete(media_id):
+    if not _is_admin():
+        return jsonify({"ok": False}), 403
+    from modules.database import fetchone, execute
+    media = fetchone("SELECT url FROM media_library WHERE id = ?", (media_id,))
+    if media:
+        # Try to delete physical file
+        import os as _os
+        filepath = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), media["url"].lstrip("/").replace("/", _os.sep))
+        if _os.path.exists(filepath):
+            try:
+                _os.remove(filepath)
+            except Exception:
+                pass
+        execute("DELETE FROM media_library WHERE id = ?", (media_id,))
+    return jsonify({"ok": True})
+
+
+# ── SEO Panel ────────────────────────────────────────
+
+@app.route("/admin/api/seo/<page_name>")
+def admin_api_get_seo(page_name):
+    if not _is_admin():
+        return jsonify({"ok": False}), 403
+    page_name = _resolve_page_name(page_name)
+    from modules.database import fetchone
+    seo = fetchone("SELECT * FROM page_seo WHERE page_name = ?", (page_name,))
+    return jsonify({"ok": True, "seo": seo})
+
+
+@app.route("/admin/api/seo/<page_name>", methods=["POST"])
+def admin_api_save_seo(page_name):
+    if not _is_admin():
+        return jsonify({"ok": False}), 403
+    page_name = _resolve_page_name(page_name)
+    from modules.database import execute, fetchone
+    data = request.get_json(force=True, silent=True) or {}
+    fields = ["meta_title", "meta_description", "og_title", "og_description",
+              "og_image", "canonical_url", "noindex", "json_ld"]
+    existing = fetchone("SELECT page_name FROM page_seo WHERE page_name = ?", (page_name,))
+    if existing:
+        sets = []
+        params = []
+        for f in fields:
+            if f in data:
+                sets.append(f"{f} = ?")
+                params.append(data[f])
+        if sets:
+            sets.append("updated_at = datetime('now')")
+            params.append(page_name)
+            execute(f"UPDATE page_seo SET {', '.join(sets)} WHERE page_name = ?", params)
+    else:
+        vals = {f: data.get(f, "") for f in fields}
+        vals["noindex"] = data.get("noindex", 0)
+        execute(
+            "INSERT INTO page_seo (page_name, meta_title, meta_description, og_title, og_description, og_image, canonical_url, noindex, json_ld) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (page_name, vals["meta_title"], vals["meta_description"], vals["og_title"],
+             vals["og_description"], vals["og_image"], vals["canonical_url"], vals["noindex"], vals["json_ld"])
+        )
+    return jsonify({"ok": True})
+
+
+# ── Page Duplication ─────────────────────────────────
+
+@app.route("/admin/api/builder-duplicate/<page_name>", methods=["POST"])
+def admin_api_duplicate_page(page_name):
+    if not _is_admin():
+        return jsonify({"ok": False}), 403
+    page_name = _resolve_page_name(page_name)
+    from modules.page_config import get_builder_data, save_builder_data, load_config, save_config
+    import time as _time
+    data = request.get_json(force=True, silent=True) or {}
+    new_name = data.get("new_name", page_name + "_copy_" + str(int(_time.time())))
+    # Copy builder data
+    builder = get_builder_data(page_name)
+    if builder:
+        save_builder_data(new_name, builder["html"], builder["css"])
+    else:
+        # Copy section config
+        cfg = load_config()
+        if page_name in cfg:
+            import copy
+            cfg[new_name] = copy.deepcopy(cfg[page_name])
+            save_config(cfg)
+    return jsonify({"ok": True, "new_name": new_name})
+
+
+# ── Page Analytics ───────────────────────────────────
+
+@app.route("/admin/api/page-analytics/<page_name>")
+def admin_api_page_analytics(page_name):
+    if not _is_admin():
+        return jsonify({"ok": False}), 403
+    page_name = _resolve_page_name(page_name)
+    from modules.database import fetchone, fetchall
+    total = fetchone("SELECT COUNT(*) as cnt FROM page_views WHERE page_name = ?", (page_name,))
+    today = fetchone("SELECT COUNT(*) as cnt FROM page_views WHERE page_name = ? AND created_at > datetime('now', '-1 day')", (page_name,))
+    week = fetchone("SELECT COUNT(*) as cnt FROM page_views WHERE page_name = ? AND created_at > datetime('now', '-7 days')", (page_name,))
+    daily = fetchall("""
+        SELECT date(created_at) as day, COUNT(*) as cnt
+        FROM page_views WHERE page_name = ? AND created_at > datetime('now', '-30 days')
+        GROUP BY day ORDER BY day
+    """, (page_name,))
+    referrers = fetchall("""
+        SELECT referrer, COUNT(*) as cnt
+        FROM page_views WHERE page_name = ? AND referrer IS NOT NULL AND referrer != ''
+        GROUP BY referrer ORDER BY cnt DESC LIMIT 10
+    """, (page_name,))
+    return jsonify({
+        "ok": True,
+        "total": total["cnt"] if total else 0,
+        "today": today["cnt"] if today else 0,
+        "week": week["cnt"] if week else 0,
+        "daily": daily,
+        "referrers": referrers,
+    })
+
+
+# ── Site Settings (Tracking Tags, Design Tokens) ────
+
+@app.route("/admin/api/site-settings")
+def admin_api_get_settings():
+    if not _is_admin():
+        return jsonify({"ok": False}), 403
+    from modules.database import fetchall
+    settings = fetchall("SELECT key, value FROM site_settings")
+    return jsonify({"ok": True, "settings": {s["key"]: s["value"] for s in settings}})
+
+
+@app.route("/admin/api/site-settings", methods=["POST"])
+def admin_api_save_settings():
+    if not _is_admin():
+        return jsonify({"ok": False}), 403
+    from modules.database import execute, fetchone
+    data = request.get_json(force=True, silent=True) or {}
+    for key, value in data.items():
+        existing = fetchone("SELECT key FROM site_settings WHERE key = ?", (key,))
+        if existing:
+            execute("UPDATE site_settings SET value = ?, updated_at = datetime('now') WHERE key = ?", (value, key))
+        else:
+            execute("INSERT INTO site_settings (key, value) VALUES (?, ?)", (key, value))
+    return jsonify({"ok": True})
+
+
+@app.route("/admin/settings")
+def admin_settings():
+    if not _is_admin():
+        return redirect("/admin/login")
+    return render_template("admin_settings.html", is_admin=True, active_page="admin_settings")
 
 
 # ══════════════════════════════════════════════════════

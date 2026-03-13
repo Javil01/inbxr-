@@ -73,9 +73,12 @@ def get_user_by_api_key(api_key):
 
 
 def authenticate(email, password):
-    """Check email + password. Returns user dict or None."""
+    """Check email + password. Returns user dict or None.
+    Returns None if user is suspended."""
     user = get_user_by_email(email)
     if not user:
+        return None
+    if user.get("status") == "suspended":
         return None
     if _verify_password(user["password_hash"], password):
         return user

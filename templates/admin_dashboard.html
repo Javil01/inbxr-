@@ -117,8 +117,20 @@
   <!-- ══════════ KEY METRICS ══════════ -->
   <div class="ad-stats">
     <div class="ad-stat">
+      <span class="ad-stat__num" style="color:#22c55e">${{ stats.mrr }}</span>
+      <span class="ad-stat__label">Est. MRR</span>
+    </div>
+    <div class="ad-stat">
       <span class="ad-stat__num">{{ stats.total_users }}</span>
       <span class="ad-stat__label">Total Users</span>
+    </div>
+    <div class="ad-stat">
+      <span class="ad-stat__num">{{ stats.active_7d }}</span>
+      <span class="ad-stat__label">Active (7d)</span>
+    </div>
+    <div class="ad-stat">
+      <span class="ad-stat__num">{{ stats.active_30d }}</span>
+      <span class="ad-stat__label">Active (30d)</span>
     </div>
     <div class="ad-stat">
       <span class="ad-stat__num">{{ stats.today_signups }}</span>
@@ -133,10 +145,6 @@
       <span class="ad-stat__label">API Calls Today</span>
     </div>
     <div class="ad-stat">
-      <span class="ad-stat__num">{{ stats.week_usage }}</span>
-      <span class="ad-stat__label">API Calls (7d)</span>
-    </div>
-    <div class="ad-stat">
       <span class="ad-stat__num">{{ stats.total_checks }}</span>
       <span class="ad-stat__label">Total Tests</span>
     </div>
@@ -148,6 +156,12 @@
       <span class="ad-stat__num">{{ stats.total_teams }}</span>
       <span class="ad-stat__label">Teams</span>
     </div>
+    {% if stats.suspended > 0 %}
+    <div class="ad-stat">
+      <span class="ad-stat__num ad-stat__num--warn">{{ stats.suspended }}</span>
+      <span class="ad-stat__label">Suspended</span>
+    </div>
+    {% endif %}
   </div>
 
   <div class="ad-tiers">
@@ -166,15 +180,31 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
         </div>
         <strong>User Management</strong>
-        <span>View users, change tiers, activity logs, notes, CSV export.</span>
+        <span>View users, change tiers, suspend, notes, CSV export.</span>
+      </a>
+
+      <a href="/admin/revenue" class="ad-card">
+        <div class="ad-card__icon ic-green">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+        </div>
+        <strong>Revenue Dashboard</strong>
+        <span>MRR trends, ARPU, churn risk, conversion funnel.</span>
+      </a>
+
+      <a href="/admin/segments" class="ad-card">
+        <div class="ad-card__icon ic-purple">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+        </div>
+        <strong>User Segments</strong>
+        <span>Power users, at-risk, dormant, new signups. Bulk actions.</span>
       </a>
 
       <a href="/admin/api/users/export" class="ad-card">
-        <div class="ad-card__icon ic-green">
+        <div class="ad-card__icon ic-cyan">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         </div>
         <strong>Export Users CSV</strong>
-        <span>Download all user data with usage stats as a spreadsheet.</span>
+        <span>Download user data with usage stats.</span>
       </a>
     </div>
   </div>
@@ -197,6 +227,14 @@
         </div>
         <strong>Page Builder</strong>
         <span>Visual drag-and-drop builder for advanced page layouts.</span>
+      </a>
+
+      <a href="/admin/settings" class="ad-card">
+        <div class="ad-card__icon ic-cyan">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+        </div>
+        <strong>Site Settings</strong>
+        <span>Tracking tags (Meta Pixel, Google), design tokens, custom scripts.</span>
       </a>
     </div>
   </div>
@@ -238,12 +276,12 @@
         </div>
       </div>
 
-      <a href="/dashboard" class="ad-card">
+      <a href="/" class="ad-card">
         <div class="ad-card__icon ic-orange">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
         </div>
-        <strong>View User Dashboard</strong>
-        <span>See the dashboard exactly as your users see it.</span>
+        <strong>View Live Site</strong>
+        <span>See the homepage exactly as your visitors see it.</span>
       </a>
 
       <a href="/support" class="ad-card">

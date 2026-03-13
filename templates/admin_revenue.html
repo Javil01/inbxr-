@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>INBXR Admin — Revenue</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/style.css" />
+  <style>
+    body { background: var(--bg-1); color: var(--text-1); font-family: 'Inter', sans-serif; }
+    .ar { max-width: 1100px; margin: 0 auto; padding: 28px 24px; }
+    .ar-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; }
+    .ar-header h1 { font-size: 1.5rem; font-weight: 800; margin: 0; }
+    .ar-back { color: var(--brand); text-decoration: none; font-size: 0.85rem; }
+
+    .ar-stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; margin-bottom: 24px; }
+    .ar-stat { background: var(--card-bg); border: 1px solid var(--border-1); border-radius: 12px; padding: 16px 18px; }
+    .ar-stat__num { font-size: 1.6rem; font-weight: 800; display: block; }
+    .ar-stat__num--green { color: #22c55e; }
+    .ar-stat__num--blue { color: #2563eb; }
+    .ar-stat__num--amber { color: #d97706; }
+    .ar-stat__num--red { color: #ef4444; }
+    .ar-stat__label { font-size: 0.68rem; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.5px; }
+
+    .ar-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+    @media (max-width: 700px) { .ar-row { grid-template-columns: 1fr; } }
+
+    .ar-panel { background: var(--card-bg); border: 1px solid var(--border-1); border-radius: 12px; padding: 20px; }
+    .ar-panel__title { font-size: 0.85rem; font-weight: 700; margin: 0 0 16px; }
+
+    /* MRR Chart */
+    .ar-chart { display: flex; align-items: flex-end; gap: 4px; height: 140px; padding-top: 8px; }
+    .ar-chart__bar { flex: 1; background: var(--brand); border-radius: 4px 4px 0 0; min-height: 2px; position: relative; cursor: default; transition: filter 0.15s; }
+    .ar-chart__bar:hover { filter: brightness(1.2); }
+    .ar-chart__bar-tip { position: absolute; top: -22px; left: 50%; transform: translateX(-50%); font-size: 0.64rem; font-weight: 700; white-space: nowrap; display: none; }
+    .ar-chart__bar:hover .ar-chart__bar-tip { display: block; }
+    .ar-chart__labels { display: flex; gap: 4px; margin-top: 6px; }
+    .ar-chart__labels span { flex: 1; text-align: center; font-size: 0.58rem; color: var(--text-3); }
+
+    /* Funnel */
+    .ar-funnel { display: flex; flex-direction: column; gap: 8px; }
+    .ar-funnel__step { display: flex; align-items: center; gap: 12px; }
+    .ar-funnel__bar-bg { flex: 1; height: 28px; background: var(--bg-2); border-radius: 6px; overflow: hidden; position: relative; }
+    .ar-funnel__bar { height: 100%; border-radius: 6px; display: flex; align-items: center; padding-left: 10px; font-size: 0.72rem; font-weight: 700; color: #fff; min-width: 30px; }
+    .ar-funnel__label { width: 70px; font-size: 0.76rem; color: var(--text-2); flex-shrink: 0; }
+    .ar-funnel__count { width: 50px; font-size: 0.76rem; font-weight: 700; text-align: right; flex-shrink: 0; }
+
+    /* Revenue by tier */
+    .ar-tier-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border-1); font-size: 0.82rem; }
+    .ar-tier-row:last-child { border-bottom: none; }
+    .ar-tier-row__name { font-weight: 700; width: 70px; }
+    .ar-tier-row__users { color: var(--text-3); width: 80px; }
+    .ar-tier-row__rev { font-weight: 800; color: #22c55e; }
+
+    /* Top users */
+    .ar-user-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border-1); font-size: 0.78rem; }
+    .ar-user-row:last-child { border-bottom: none; }
+    .ar-user-row__email { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
+    .ar-user-row__tier { font-size: 0.66rem; font-weight: 700; padding: 2px 8px; border-radius: 999px; }
+    .ar-user-row__tier--pro { background: rgba(37,99,235,0.1); color: #2563eb; }
+    .ar-user-row__tier--agency { background: rgba(124,58,237,0.1); color: #7c3aed; }
+    .ar-user-row__stat { color: var(--text-3); white-space: nowrap; }
+
+    .ar-loading { text-align: center; padding: 40px; color: var(--text-3); font-size: 0.85rem; }
+  </style>
+</head>
+<body>
+{% include 'sections/header.html' %}
+
+<div class="ar">
+  <div class="ar-header">
+    <h1>Revenue Dashboard</h1>
+    <a href="/admin" class="ar-back">&larr; Admin Dashboard</a>
+  </div>
+
+  <div id="revenueContent">
+    <div class="ar-loading">Loading revenue data...</div>
+  </div>
+</div>
+
+<script>
+(function(){
+  fetch('/admin/api/revenue').then(function(r){ return r.json(); }).then(function(d){
+    if (d.error) { document.getElementById('revenueContent').innerHTML = '<p>' + d.error + '</p>'; return; }
+    render(d);
+  }).catch(function(){ document.getElementById('revenueContent').innerHTML = '<p>Failed to load data.</p>'; });
+
+  function render(d) {
+    var maxMRR = Math.max.apply(null, d.mrr_trend.map(function(m){ return m.mrr; })) || 1;
+    var funnelMax = d.funnel.total || 1;
+
+    var html = '';
+
+    // Stats row
+    html += '<div class="ar-stats">' +
+      '<div class="ar-stat"><span class="ar-stat__num ar-stat__num--green">$' + d.mrr + '</span><span class="ar-stat__label">Monthly Recurring Revenue</span></div>' +
+      '<div class="ar-stat"><span class="ar-stat__num ar-stat__num--blue">' + d.paid_users + '</span><span class="ar-stat__label">Paying Users</span></div>' +
+      '<div class="ar-stat"><span class="ar-stat__num ar-stat__num--blue">$' + d.arpu + '</span><span class="ar-stat__label">ARPU (All Users)</span></div>' +
+      '<div class="ar-stat"><span class="ar-stat__num ar-stat__num--green">$' + d.arpu_paid + '</span><span class="ar-stat__label">ARPU (Paid Only)</span></div>' +
+      '<div class="ar-stat"><span class="ar-stat__num' + (d.churn_risk > 0 ? ' ar-stat__num--red' : ' ar-stat__num--green') + '">' + d.churn_risk + '</span><span class="ar-stat__label">Churn Risk (30d inactive)</span></div>' +
+    '</div>';
+
+    // MRR Trend + Revenue by Tier
+    html += '<div class="ar-row">';
+
+    // MRR chart
+    html += '<div class="ar-panel"><h3 class="ar-panel__title">MRR Trend (12 months)</h3><div class="ar-chart">';
+    d.mrr_trend.forEach(function(m) {
+      var pct = maxMRR > 0 ? Math.max(2, m.mrr / maxMRR * 100) : 2;
+      html += '<div class="ar-chart__bar" style="height:' + pct + '%"><span class="ar-chart__bar-tip">$' + m.mrr + '</span></div>';
+    });
+    html += '</div><div class="ar-chart__labels">';
+    d.mrr_trend.forEach(function(m) {
+      html += '<span>' + (m.month ? m.month.slice(5) : '') + '</span>';
+    });
+    html += '</div></div>';
+
+    // Revenue by tier
+    html += '<div class="ar-panel"><h3 class="ar-panel__title">Revenue by Tier</h3>';
+    d.revenue_by_tier.forEach(function(t) {
+      html += '<div class="ar-tier-row">' +
+        '<span class="ar-tier-row__name">' + t.tier.charAt(0).toUpperCase() + t.tier.slice(1) + '</span>' +
+        '<span class="ar-tier-row__users">' + t.users + ' users</span>' +
+        '<span class="ar-tier-row__rev">$' + t.revenue + '/mo</span>' +
+      '</div>';
+    });
+    html += '</div></div>';
+
+    // Conversion Funnel + Top Users
+    html += '<div class="ar-row">';
+
+    // Funnel
+    html += '<div class="ar-panel"><h3 class="ar-panel__title">Conversion Funnel</h3><div class="ar-funnel">';
+    var steps = [
+      { label: 'Signed Up', count: d.funnel.total, color: '#64748b' },
+      { label: 'Verified', count: d.funnel.verified, color: '#2563eb' },
+      { label: 'Paid', count: d.funnel.paid, color: '#22c55e' },
+    ];
+    steps.forEach(function(s) {
+      var pct = Math.max(3, s.count / funnelMax * 100);
+      html += '<div class="ar-funnel__step">' +
+        '<span class="ar-funnel__label">' + s.label + '</span>' +
+        '<div class="ar-funnel__bar-bg"><div class="ar-funnel__bar" style="width:' + pct + '%;background:' + s.color + '">' + Math.round(s.count / funnelMax * 100) + '%</div></div>' +
+        '<span class="ar-funnel__count">' + s.count + '</span>' +
+      '</div>';
+    });
+    html += '</div></div>';
+
+    // Top users
+    html += '<div class="ar-panel"><h3 class="ar-panel__title">Top Paying Users (by activity)</h3>';
+    if (d.top_users.length === 0) {
+      html += '<span style="font-size:0.78rem;color:var(--text-3);font-style:italic;">No paying users yet.</span>';
+    } else {
+      d.top_users.forEach(function(u) {
+        html += '<div class="ar-user-row">' +
+          '<span class="ar-user-row__email">' + esc(u.email) + '</span>' +
+          '<span class="ar-user-row__tier ar-user-row__tier--' + u.tier + '">' + u.tier + '</span>' +
+          '<span class="ar-user-row__stat">' + u.total_checks + ' tests</span>' +
+          '<span class="ar-user-row__stat">' + u.total_actions + ' actions</span>' +
+        '</div>';
+      });
+    }
+    html += '</div></div>';
+
+    document.getElementById('revenueContent').innerHTML = html;
+  }
+
+  function esc(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+})();
+</script>
+</body>
+</html>

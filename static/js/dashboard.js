@@ -181,6 +181,20 @@ function quickActionBtn(href, paths, title, desc) {
   '</a>';
 }
 
+function buildAssistantTeaser() {
+  if (window.__userTier !== 'free') return '';
+  return '<div class="dash-assistant-teaser">' +
+    '<div class="dash-assistant-teaser__icon">' +
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="32" height="32"><path d="M12 2a4 4 0 014 4v1a1 1 0 01-1 1H9a1 1 0 01-1-1V6a4 4 0 014-4z"/><path d="M9 8v1a3 3 0 006 0V8"/><path d="M12 14v3"/><path d="M7 17h10a2 2 0 012 2v1H5v-1a2 2 0 012-2z"/></svg>' +
+    '</div>' +
+    '<div class="dash-assistant-teaser__content">' +
+      '<h3 class="dash-assistant-teaser__title">Need Expert Help With Your Results?</h3>' +
+      '<p class="dash-assistant-teaser__text">Our AI Email Expert reads your test results and gives you personalized, step-by-step guidance to fix deliverability issues, improve your sender reputation, and land in the inbox.</p>' +
+      '<a href="/pricing" class="dash-assistant-teaser__cta">Unlock Email Expert &rarr;</a>' +
+    '</div>' +
+  '</div>';
+}
+
 function buildOverviewShell(s) {
   var c = window.__dashCredits || {};
   return '<div class="dash-view">' +
@@ -193,6 +207,7 @@ function buildOverviewShell(s) {
       statCardHtml('statGrade', s.best_grade || '--', 'Best Grade') +
     '</div>' +
     buildQuickActions() +
+    buildAssistantTeaser() +
     '<div class="dash-row">' +
       '<div class="dash-card dash-card--wide">' +
         '<h3 class="dash-card__title">Score Trend (30 days)</h3>' +
