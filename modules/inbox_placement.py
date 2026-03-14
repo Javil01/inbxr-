@@ -96,8 +96,27 @@ def check_rate_limit() -> bool:
 # ══════════════════════════════════════════════════════
 
 def load_seed_accounts():
-    """Load seed accounts from config file or SEED_ACCOUNTS env var."""
-    # Try env var first (for Railway/production where config file is gitignored)
+    """Load seed accounts from env vars, JSON env var, or config file."""
+    # Try individual env vars first (simplest for Railway)
+    # Format: SEED_1_EMAIL, SEED_1_PASS, SEED_1_PROVIDER, SEED_1_LABEL
+    accounts = []
+    for i in range(1, 10):
+        email = os.environ.get(f"SEED_{i}_EMAIL", "")
+        password = os.environ.get(f"SEED_{i}_PASS", "")
+        if email and password:
+            provider = os.environ.get(f"SEED_{i}_PROVIDER", "gmail")
+            label = os.environ.get(f"SEED_{i}_LABEL", f"{provider.title()} ({i})")
+            accounts.append({
+                "provider": provider,
+                "label": label,
+                "email": email,
+                "username": email,
+                "password": password,
+            })
+    if accounts:
+        return accounts
+
+    # Try JSON env var
     env_seeds = os.environ.get("SEED_ACCOUNTS", "")
     if env_seeds:
         try:
@@ -105,6 +124,7 @@ def load_seed_accounts():
         except (json.JSONDecodeError, ValueError):
             logger.error("Failed to parse SEED_ACCOUNTS env var")
             return []
+
     # Fall back to config file (local development)
     if not os.path.exists(CONFIG_PATH):
         return []
