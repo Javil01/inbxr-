@@ -458,9 +458,14 @@ def imap_health():
         return jsonify({'error': 'unauthorized'}), 403
     from modules.inbox_placement import load_seed_accounts
     import imaplib
+    # Debug: check what env vars are available
+    seed_debug = {
+        'SEED_1_EMAIL': os.environ.get('SEED_1_EMAIL', '(not set)'),
+        'SEED_ACCOUNTS': os.environ.get('SEED_ACCOUNTS', '(not set)')[:50] if os.environ.get('SEED_ACCOUNTS') else '(not set)',
+    }
     accounts = load_seed_accounts()
     if not accounts:
-        return jsonify({'error': 'no seed accounts found', 'config_path': 'config/seed_accounts.json'})
+        return jsonify({'error': 'no seed accounts found', 'debug': seed_debug})
     results = []
     for a in accounts:
         provider = a.get('provider', '')
