@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>INBXR Admin — {{ 'Edit Post' if post else 'New Post' }}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/style.css" />
+  <style>
+    body { background: #0f172a; color: #e2e8f0; font-family: 'Inter', sans-serif; }
+  </style>
+</head>
+<body>
+
+{% include 'sections/header.html' %}
+
+<div style="max-width:1400px; margin:0 auto; padding:16px 24px;">
+  <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px;">
+    <h1 style="font-size:1.3rem; font-weight:700; margin:0;">{{ 'Edit Post' if post else 'New Post' }}</h1>
+    <a href="/admin/blog" style="color:#94a3b8; text-decoration:none; font-size:0.85rem;">&larr; Back to Blog Manager</a>
+  </div>
+</div>
+
+<div class="blog-editor">
+  <!-- Left column: Content -->
+  <div class="blog-editor__main">
+    <input type="text" class="blog-editor__title-input" id="postTitle" placeholder="Post title..."
+      value="{{ post.title if post else '' }}" oninput="autoSlug()" />
+
+    <div style="display:flex; align-items:center; gap:8px;">
+      <span style="color:#64748b; font-size:0.8rem; flex-shrink:0;">/blog/</span>
+      <input type="text" id="postSlug" placeholder="post-slug" style="flex:1"
+        value="{{ post.slug if post else '' }}" />
+    </div>
+
+    <div style="position:relative;">
+      <textarea class="blog-editor__content-area" id="postContent" placeholder="Write your post content (HTML supported)...">{{ post.content if post else '' }}</textarea>
+      <button onclick="togglePreview()" style="position:absolute; top:8px; right:8px; padding:4px 12px; border-radius:6px; border:1px solid rgba(255,255,255,0.1); background:rgba(255,255,255,0.05); color:#94a3b8; font-size:0.72rem; cursor:pointer;">Preview</button>
+    </div>
+
+    <div id="previewPane" style="display:none; background:#fff; color:#334155; padding:24px; border-radius:12px; min-height:200px; font-size:1rem; line-height:1.8;">
+    </div>
+  </div>
+
+  <!-- Right column: Sidebar -->
+  <div class="blog-editor__sidebar">
+
+    <!-- AI Writer -->
+    <div class="blog-editor__panel blog-editor__ai-panel">
+      <h3 style="color:#22c55e;">AI Writer</h3>
+      <label style="font-size:0.72rem; color:#94a3b8; display:block; margin-bottom:4px;">Topic</label>
+      <input type="text" id="aiTopic" placeholder="e.g. How to fix SPF alignment" />
+
+      <label style="font-size:0.72rem; color:#94a3b8; display:block; margin:12px 0 4px;">Target Keyword</label>
+      <input type="text" id="aiKeyword" placeholder="e.g. SPF alignment" />
+
+      <button class="blog-editor__btn blog-editor__btn--ai" onclick="generateWithAI()" id="aiGenerateBtn" style="margin-top:14px;">
+        Generate with AI
+      </button>
+
+      <div class="blog-editor__loading" id="aiLoading">
+        <div style="display:inline-block; width:20px; height:20px; border:2px solid rgba(255,255,255,0.1); border-top-color:#22c55e; border-radius:50%; animation:spin 0.8s linear infinite;"></div>
+        <p style="margin:8px 0 0; font-size:0.8rem;">Generating post...</p>
+      </div>
+
+      {% if suggested_topics %}
+      <div style="margin-top:14px;">
+        <label style="font-size:0.72rem; color:#94a3b8; display:block; margin-bottom:6px;">Suggested Topics</label>
+        {% for topic in suggested_topics %}
+        <button onclick="document.getElementById('aiTopic').value='{{ topic.topic }}';document.getElementById('aiKeyword').value='{{ topic.keyword }}';"
+          style="display:block; width:100%; text-align:left; padding:6px 10px; margin-bottom:4px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); border-radius:6px; color:#e2e8f0; font-size:0.78rem; cursor:pointer;">
+          {{ topic.topic }}
+        </button>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Status -->
+    <div class="blog-editor__panel">
+      <h3>Status</h3>
+      <div style="display:flex; gap:8px;">
+        <button class="blog-editor__btn blog-editor__btn--draft" id="statusDraft" onclick="setStatus('draft')"
+          style="{% if not post or post.status == 'draft' %}background:rgba(245,158,11,0.15); color:#f59e0b; border-color:rgba(245,158,11,0.3);{% endif %}">
+          Draft
+        </button>
+        <button class="blog-editor__btn blog-editor__btn--publish" id="statusPublished" onclick="setStatus('published')"
+          style="{% if post and post.status == 'published' %}opacity:1;{% else %}opacity:0.5;{% endif %}">
+          Published
+        </button>
+      </div>
+      <input type="hidden" id="postStatus" value="{{ post.status if post else 'draft' }}" />
+    </div>
+
+    <!-- Category -->
+    <div class="blog-editor__panel">
+      <h3>Category</h3>
+      <select id="postCategory">
+        <option value="">No category</option>
+      </select>
+    </div>
+
+    <!-- Tags -->
+    <div class="blog-editor__panel">
+      <h3>Tags</h3>
+      <input type="text" id="postTags" placeholder="tag1, tag2, tag3"
+        value="{{ post.tags if post else '' }}" />
+    </div>
+
+    <!-- Featured Image -->
+    <div class="blog-editor__panel">
+      <h3>Featured Image</h3>
+      <input type="text" id="postImage" placeholder="Image URL..."
+        value="{{ post.featured_image if post else '' }}" />
+    </div>
+
+    <!-- SEO -->
+    <div class="blog-editor__panel">
+      <h3 onclick="this.parentElement.querySelector('.seo-fields').classList.toggle('seo-collapsed')" style="cursor:pointer;">
+        SEO Settings <span style="font-size:0.7rem; color:#64748b;">&#9660;</span>
+      </h3>
+      <div class="seo-fields">
+        <label style="font-size:0.72rem; color:#94a3b8; display:block; margin-bottom:4px;">Meta Title</label>
+        <input type="text" id="postMetaTitle" placeholder="Meta title (50-60 chars)"
+          value="{{ post.meta_title if post else '' }}" oninput="updateCharCount(this, 'metaTitleCount', 60)" />
+        <div class="blog-editor__char-count" id="metaTitleCount">0 / 60</div>
+
+        <label style="font-size:0.72rem; color:#94a3b8; display:block; margin:12px 0 4px;">Meta Description</label>
+        <textarea id="postMetaDesc" rows="3" placeholder="Meta description (150-160 chars)"
+          oninput="updateCharCount(this, 'metaDescCount', 160)">{{ post.meta_description if post else '' }}</textarea>
+        <div class="blog-editor__char-count" id="metaDescCount">0 / 160</div>
+
+        <label style="font-size:0.72rem; color:#94a3b8; display:block; margin:12px 0 4px;">Target Keyword</label>
+        <input type="text" id="postKeyword" placeholder="Primary keyword"
+          value="{{ post.target_keyword if post else '' }}" />
+
+        <label style="font-size:0.72rem; color:#94a3b8; display:block; margin:12px 0 4px;">OG Image URL</label>
+        <input type="text" id="postOgImage" placeholder="Open Graph image URL"
+          value="{{ post.og_image if post else '' }}" />
+      </div>
+    </div>
+
+    <!-- Info -->
+    <div class="blog-editor__panel">
+      <h3>Info</h3>
+      <div style="font-size:0.78rem; color:#94a3b8; display:flex; flex-direction:column; gap:4px;">
+        <span>Read time: <strong id="readTimeDisplay">0 min</strong></span>
+        <span>Word count: <strong id="wordCountDisplay">0</strong></span>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="blog-editor__actions">
+      <button class="blog-editor__btn blog-editor__btn--draft" onclick="savePost('draft')">Save Draft</button>
+      <button class="blog-editor__btn blog-editor__btn--publish" onclick="savePost('published')">Publish</button>
+      {% if post %}
+      <button class="blog-editor__btn blog-editor__btn--delete" onclick="deletePost()">Delete</button>
+      {% endif %}
+    </div>
+
+  </div>
+</div>
+
+<style>
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .seo-collapsed { display: none !important; }
+</style>
+
+<script>
+var POST_ID = {{ post.id if post else 'null' }};
+var POST_CATEGORY = '{{ post.category_id if post else '' }}';
+</script>
+<script src="/static/js/admin_blog.js"></script>
+
+</body>
+</html>

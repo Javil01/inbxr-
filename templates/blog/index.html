@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>INBXR Blog — Email Deliverability Tips, Guides &amp; Fixes</title>
+  <meta name="description" content="Email deliverability tips, guides, and fixes — in plain English. Learn how to land in the inbox every time." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body>
+
+{% include 'sections/header.html' %}
+
+<!-- Hero -->
+<div class="blog-hero">
+  <h1>INBXR Blog</h1>
+  <p>Email deliverability tips, guides, and fixes &mdash; in plain English.</p>
+</div>
+
+<!-- Category filters -->
+<div class="blog-filters">
+  <a href="/blog" class="blog-filter-pill{% if not current_category %} blog-filter-pill--active{% endif %}">All</a>
+  {% for cat in categories %}
+  <a href="/blog?category={{ cat.slug }}" class="blog-filter-pill{% if current_category == cat.slug %} blog-filter-pill--active{% endif %}">{{ cat.name }}</a>
+  {% endfor %}
+</div>
+
+<!-- Post grid -->
+<div class="blog-grid">
+  {% for post in posts %}
+  <div class="blog-card">
+    {% if post.featured_image %}
+    <img src="{{ post.featured_image }}" alt="{{ post.title }}" class="blog-card__image" />
+    {% else %}
+    <div class="blog-card__image"></div>
+    {% endif %}
+    <div class="blog-card__body">
+      {% if post.category_name %}
+      <span class="blog-card__category">{{ post.category_name }}</span>
+      {% endif %}
+      <h2 class="blog-card__title"><a href="/blog/{{ post.slug }}">{{ post.title }}</a></h2>
+      <p class="blog-card__excerpt">{{ post.excerpt }}</p>
+      <div class="blog-card__meta">
+        <span>{{ post.published_at[:10] if post.published_at else '' }}</span>
+        <span>{{ post.read_time or '5' }} min read</span>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+{% if not posts %}
+<div style="text-align:center; padding:60px 24px; color:#64748b; font-size:0.95rem;">
+  No posts found. Check back soon!
+</div>
+{% endif %}
+
+<!-- Pagination -->
+{% if total_pages > 1 %}
+<div class="blog-pagination">
+  {% if current_page > 1 %}
+  <a href="/blog?page={{ current_page - 1 }}{% if current_category %}&category={{ current_category }}{% endif %}">&larr; Previous</a>
+  {% endif %}
+  <span style="color:#64748b; font-size:0.85rem;">Page {{ current_page }} of {{ total_pages }}</span>
+  {% if current_page < total_pages %}
+  <a href="/blog?page={{ current_page + 1 }}{% if current_category %}&category={{ current_category }}{% endif %}">Next &rarr;</a>
+  {% endif %}
+</div>
+{% endif %}
+
+<footer class="site-footer">
+  <p>&copy; {{ now().year if now is defined else '2026' }} INBXR &mdash; Free email deliverability tools.</p>
+  <p style="margin-top: 10px; font-size: 0.7rem;"><a href="/privacy" style="color: rgba(255,255,255,0.5); text-decoration: underline;">Privacy Policy</a> &nbsp;&middot;&nbsp; <a href="/terms" style="color: rgba(255,255,255,0.5); text-decoration: underline;">Terms of Service</a></p>
+</footer>
+
+</body>
+</html>

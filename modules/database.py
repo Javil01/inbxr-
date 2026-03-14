@@ -356,4 +356,38 @@ _MIGRATIONS = [
         CREATE INDEX IF NOT EXISTS idx_admin_audit_log_action ON admin_audit_log(action, created_at DESC);
         CREATE INDEX IF NOT EXISTS idx_admin_audit_log_date ON admin_audit_log(created_at DESC);
     """),
+    ("008_blog_system", """
+        CREATE TABLE IF NOT EXISTS blog_categories (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            slug TEXT UNIQUE NOT NULL,
+            created_at TEXT DEFAULT (datetime('now'))
+        );
+
+        CREATE TABLE IF NOT EXISTS blog_posts (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            title TEXT NOT NULL,
+            slug TEXT UNIQUE NOT NULL,
+            content TEXT NOT NULL DEFAULT '',
+            excerpt TEXT DEFAULT '',
+            meta_title TEXT DEFAULT '',
+            meta_description TEXT DEFAULT '',
+            og_image TEXT DEFAULT '',
+            featured_image TEXT DEFAULT '',
+            category_id INTEGER REFERENCES blog_categories(id) ON DELETE SET NULL,
+            tags TEXT DEFAULT '[]',
+            status TEXT DEFAULT 'draft' CHECK(status IN ('draft', 'published')),
+            author TEXT DEFAULT 'INBXR Team',
+            read_time INTEGER DEFAULT 5,
+            keyword_target TEXT DEFAULT '',
+            created_at TEXT DEFAULT (datetime('now')),
+            updated_at TEXT DEFAULT (datetime('now')),
+            published_at TEXT
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_blog_posts_slug ON blog_posts(slug);
+        CREATE INDEX IF NOT EXISTS idx_blog_posts_status ON blog_posts(status);
+        CREATE INDEX IF NOT EXISTS idx_blog_posts_category ON blog_posts(category_id);
+        CREATE INDEX IF NOT EXISTS idx_blog_posts_published ON blog_posts(published_at DESC);
+    """),
 ]

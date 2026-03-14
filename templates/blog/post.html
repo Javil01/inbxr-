@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{ post.meta_title or post.title }} | INBXR Blog</title>
+  <meta name="description" content="{{ post.meta_description }}" />
+  <meta property="og:title" content="{{ post.meta_title or post.title }}" />
+  <meta property="og:description" content="{{ post.meta_description }}" />
+  <meta property="og:image" content="{{ post.og_image or post.featured_image or '/static/images/logo.png' }}" />
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="{{ request.url }}" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/style.css" />
+
+  <!-- Schema.org Article -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "{{ post.meta_title or post.title }}",
+    "description": "{{ post.meta_description }}",
+    "image": "{{ post.og_image or post.featured_image or '/static/images/logo.png' }}",
+    "datePublished": "{{ post.published_at }}",
+    "dateModified": "{{ post.updated_at or post.published_at }}",
+    "author": {
+      "@type": "Organization",
+      "name": "INBXR"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "INBXR",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "/static/images/logo.png"
+      }
+    }
+  }
+  </script>
+
+  {% if post.faq %}
+  <!-- Schema.org FAQPage -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {% for item in post.faq %}
+      {
+        "@type": "Question",
+        "name": "{{ item.question }}",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "{{ item.answer }}"
+        }
+      }{% if not loop.last %},{% endif %}
+      {% endfor %}
+    ]
+  }
+  </script>
+  {% endif %}
+</head>
+<body>
+
+{% include 'sections/header.html' %}
+
+<!-- Breadcrumb -->
+<div class="blog-post">
+  <div class="blog-breadcrumb">
+    <a href="/blog">Blog</a>
+    {% if post.category_name %}
+     &rsaquo; <a href="/blog?category={{ post.category_slug }}">{{ post.category_name }}</a>
+    {% endif %}
+     &rsaquo; {{ post.title }}
+  </div>
+
+  <!-- Article -->
+  <article>
+    {% if post.category_name %}
+    <span class="blog-post__category">{{ post.category_name }}</span>
+    {% endif %}
+
+    <h1>{{ post.title }}</h1>
+
+    <div class="blog-post__meta">
+      {{ post.published_at[:10] if post.published_at else '' }}
+      &nbsp;&middot;&nbsp; {{ post.read_time or '5' }} min read
+      &nbsp;&middot;&nbsp; By {{ post.author or 'INBXR Team' }}
+    </div>
+
+    {% if post.featured_image %}
+    <img src="{{ post.featured_image }}" alt="{{ post.title }}" class="blog-post__featured" />
+    {% endif %}
+
+    <div class="blog-post__content">
+      {{ post.content | safe }}
+    </div>
+
+    {% if post.faq %}
+    <div class="blog-faq">
+      <h2>Frequently Asked Questions</h2>
+      {% for item in post.faq %}
+      <div class="blog-faq__item">
+        <h3>{{ item.question }}</h3>
+        <p>{{ item.answer }}</p>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </article>
+</div>
+
+<!-- Related posts -->
+{% if related_posts %}
+<div class="blog-related">
+  <h2>Keep Reading</h2>
+  <div class="blog-related__grid">
+    {% for rp in related_posts %}
+    <div class="blog-card">
+      {% if rp.featured_image %}
+      <img src="{{ rp.featured_image }}" alt="{{ rp.title }}" class="blog-card__image" />
+      {% else %}
+      <div class="blog-card__image"></div>
+      {% endif %}
+      <div class="blog-card__body">
+        {% if rp.category_name %}
+        <span class="blog-card__category">{{ rp.category_name }}</span>
+        {% endif %}
+        <h2 class="blog-card__title"><a href="/blog/{{ rp.slug }}">{{ rp.title }}</a></h2>
+        <p class="blog-card__excerpt">{{ rp.excerpt }}</p>
+        <div class="blog-card__meta">
+          <span>{{ rp.published_at[:10] if rp.published_at else '' }}</span>
+          <span>{{ rp.read_time or '5' }} min read</span>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<footer class="site-footer">
+  <p>&copy; 2026 INBXR &mdash; Free email deliverability tools.</p>
+  <p style="margin-top: 10px; font-size: 0.7rem;"><a href="/privacy" style="color: rgba(255,255,255,0.5); text-decoration: underline;">Privacy Policy</a> &nbsp;&middot;&nbsp; <a href="/terms" style="color: rgba(255,255,255,0.5); text-decoration: underline;">Terms of Service</a></p>
+</footer>
+
+</body>
+</html>

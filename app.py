@@ -130,6 +130,9 @@ app.register_blueprint(billing_bp)
 from blueprints.team_routes import team_bp
 app.register_blueprint(team_bp)
 
+from blueprints.blog_routes import blog_bp
+app.register_blueprint(blog_bp)
+
 from modules.scheduler import init_scheduler
 init_scheduler(app)
 
@@ -305,6 +308,7 @@ _VERIFICATION_EXEMPT_PREFIXES = (
     "/static/",
     "/admin",
     "/webhook",
+    "/blog",
 )
 
 _VERIFICATION_EXEMPT_PATHS = {
