@@ -354,6 +354,46 @@
       contentArea.addEventListener('input', calculateReadTime);
     }
 
+    // Upload featured image
+    window.uploadImage = function(input) {
+      var file = input.files[0];
+      if (!file) return;
+      var uploading = document.getElementById('imageUploading');
+      uploading.style.display = 'block';
+
+      var formData = new FormData();
+      formData.append('file', file);
+
+      fetch('/admin/api/media/upload', {
+        method: 'POST',
+        body: formData
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(d) {
+        uploading.style.display = 'none';
+        if (d.ok && d.url) {
+          document.getElementById('postImage').value = d.url;
+          document.getElementById('imagePreviewImg').src = d.url;
+          document.getElementById('imagePreview').style.display = 'block';
+        } else {
+          alert(d.error || 'Upload failed');
+        }
+      })
+      .catch(function() {
+        uploading.style.display = 'none';
+        alert('Upload failed');
+      });
+
+      input.value = '';
+    };
+
+    // Remove featured image
+    window.removeImage = function() {
+      document.getElementById('postImage').value = '';
+      document.getElementById('imagePreview').style.display = 'none';
+      document.getElementById('imagePreviewImg').src = '';
+    };
+
     // Initialize
     loadEditorCategories();
     calculateReadTime();
