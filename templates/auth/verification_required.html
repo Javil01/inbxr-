@@ -5,10 +5,11 @@
 <p style="margin-bottom:16px;color:var(--text-muted, #888);">
   To use INBXR tools, please verify your email address.
   We sent a verification link to <strong>{{ current_user_email }}</strong>.
+  Please also check your <strong>spam/junk folder</strong> if you don't see it within a few minutes.
 </p>
 
 {% if request.args.get('resent') %}
-<div class="auth-alert auth-alert--success">Verification email resent. Check your inbox (and spam folder).</div>
+<div class="auth-alert auth-alert--success">Verification email resent. Check your inbox and spam/junk folder.</div>
 {% endif %}
 
 <form method="POST" action="/resend-verification" style="margin-bottom:16px;">
