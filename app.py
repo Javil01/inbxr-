@@ -453,18 +453,31 @@ def health_check():
 
 @app.route('/health/smtp')
 def smtp_health():
-    """Diagnostic: check SMTP config and connectivity (admin only)."""
+    """Diagnostic: check email config and connectivity (admin only)."""
     if not _is_admin():
         return jsonify({'error': 'unauthorized'}), 403
-    from modules.mailer import is_configured, SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_FROM
+    from modules.mailer import is_configured, SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_FROM, BREVO_API_KEY
     info = {
         'configured': is_configured(),
-        'host': SMTP_HOST,
-        'port': SMTP_PORT,
-        'user': SMTP_USER[:6] + '...' if SMTP_USER else '',
+        'method': 'brevo_api' if BREVO_API_KEY else 'smtp',
         'from': SMTP_FROM,
     }
-    if is_configured():
+    if BREVO_API_KEY:
+        info['api_key'] = BREVO_API_KEY[:12] + '...'
+        from http.client import HTTPSConnection
+        try:
+            conn = HTTPSConnection("api.brevo.com", timeout=10)
+            conn.request("GET", "/v3/account", headers={"api-key": BREVO_API_KEY, "Accept": "application/json"})
+            resp = conn.getresponse()
+            body = resp.read().decode()
+            conn.close()
+            info['connection'] = 'ok' if resp.status == 200 else f'error: {resp.status} {body[:100]}'
+        except Exception as e:
+            info['connection'] = f'error: {e}'
+    elif SMTP_HOST:
+        info['host'] = SMTP_HOST
+        info['port'] = SMTP_PORT
+        info['user'] = SMTP_USER[:6] + '...' if SMTP_USER else ''
         import smtplib
         try:
             if SMTP_PORT == 465:

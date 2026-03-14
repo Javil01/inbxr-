@@ -1,15 +1,17 @@
 """
 INBXR — Email Sending
-SMTP-based transactional email for verification, password resets, and alerts.
+Uses Brevo HTTP API (primary) with SMTP fallback for transactional email.
 Configure via environment variables:
-  SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM
+  BREVO_API_KEY (preferred) or SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM
 """
 
 import os
+import json
 import logging
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from http.client import HTTPSConnection
 
 logger = logging.getLogger('inbxr.mailer')
 
@@ -17,21 +19,56 @@ SMTP_HOST = os.environ.get("SMTP_HOST", "")
 SMTP_PORT = int(os.environ.get("SMTP_PORT", "587"))
 SMTP_USER = os.environ.get("SMTP_USER", "")
 SMTP_PASS = os.environ.get("SMTP_PASS", "")
-SMTP_FROM = os.environ.get("SMTP_FROM", "noreply@inbxr.com")
+SMTP_FROM = os.environ.get("SMTP_FROM", "noreply@inbxr.us")
+BREVO_API_KEY = os.environ.get("BREVO_API_KEY", "")
 BASE_URL = os.environ.get("BASE_URL", "https://inbxr.us")
 
 
 def is_configured():
-    """Check if SMTP credentials are set."""
-    return bool(SMTP_HOST and SMTP_USER and SMTP_PASS)
+    """Check if email sending credentials are set."""
+    return bool(BREVO_API_KEY or (SMTP_HOST and SMTP_USER and SMTP_PASS))
 
 
-def _send(to_email, subject, html_body, text_body=None):
-    """Send an email via SMTP. Returns True on success, False on failure."""
-    if not is_configured():
-        logger.info("SMTP not configured. Would send to %s: %s", to_email, subject)
+def _send_via_api(to_email, subject, html_body, text_body=None):
+    """Send email via Brevo HTTP API (works on Railway where SMTP is blocked)."""
+    payload = {
+        "sender": {"email": SMTP_FROM, "name": "INBXR"},
+        "to": [{"email": to_email}],
+        "subject": subject,
+        "htmlContent": html_body,
+    }
+    if text_body:
+        payload["textContent"] = text_body
+
+    try:
+        conn = HTTPSConnection("api.brevo.com", timeout=15)
+        conn.request(
+            "POST",
+            "/v3/smtp/email",
+            body=json.dumps(payload),
+            headers={
+                "api-key": BREVO_API_KEY,
+                "Content-Type": "application/json",
+                "Accept": "application/json",
+            },
+        )
+        resp = conn.getresponse()
+        body = resp.read().decode()
+        conn.close()
+
+        if resp.status in (200, 201):
+            logger.info("Brevo API: email sent to %s (subject: %s)", to_email, subject)
+            return True
+        else:
+            logger.error("Brevo API error %s sending to %s: %s", resp.status, to_email, body)
+            return False
+    except Exception as e:
+        logger.error("Brevo API network error sending to %s: %s", to_email, e)
         return False
 
+
+def _send_via_smtp(to_email, subject, html_body, text_body=None):
+    """Send email via SMTP (works locally, may be blocked on some hosts)."""
     msg = MIMEMultipart("alternative")
     msg["From"] = SMTP_FROM
     msg["To"] = to_email
@@ -60,8 +97,22 @@ def _send(to_email, subject, html_body, text_body=None):
         logger.error("SMTP error sending to %s: %s", to_email, e)
         return False
     except OSError as e:
-        logger.error("Network error sending to %s: %s", to_email, e)
+        logger.error("SMTP network error sending to %s: %s", to_email, e)
         return False
+
+
+def _send(to_email, subject, html_body, text_body=None):
+    """Send an email. Uses Brevo API if available, falls back to SMTP."""
+    if not is_configured():
+        logger.info("Email not configured. Would send to %s: %s", to_email, subject)
+        return False
+
+    # Prefer Brevo HTTP API (works on Railway)
+    if BREVO_API_KEY:
+        return _send_via_api(to_email, subject, html_body, text_body)
+
+    # Fall back to SMTP (works locally)
+    return _send_via_smtp(to_email, subject, html_body, text_body)
 
 
 def send_verification_email(to_email, token):
