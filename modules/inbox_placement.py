@@ -96,7 +96,16 @@ def check_rate_limit() -> bool:
 # ══════════════════════════════════════════════════════
 
 def load_seed_accounts():
-    """Load seed accounts from config file."""
+    """Load seed accounts from config file or SEED_ACCOUNTS env var."""
+    # Try env var first (for Railway/production where config file is gitignored)
+    env_seeds = os.environ.get("SEED_ACCOUNTS", "")
+    if env_seeds:
+        try:
+            return json.loads(env_seeds)
+        except (json.JSONDecodeError, ValueError):
+            logger.error("Failed to parse SEED_ACCOUNTS env var")
+            return []
+    # Fall back to config file (local development)
     if not os.path.exists(CONFIG_PATH):
         return []
     try:
