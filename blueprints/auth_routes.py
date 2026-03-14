@@ -4,7 +4,10 @@ Registration, login, logout, account management, password reset.
 """
 
 import re
+import logging
 from flask import Blueprint, render_template, request, redirect, url_for, jsonify, session
+
+logger = logging.getLogger('inbxr.auth')
 
 from modules.auth import (
     create_user, authenticate, login_user, logout_user,
@@ -47,7 +50,10 @@ def signup():
     # Send verification email
     from modules.mailer import send_verification_email, is_configured
     if is_configured() and user.get("verification_token"):
-        send_verification_email(email, user["verification_token"])
+        result = send_verification_email(email, user["verification_token"])
+        logger.info("Verification email sent to %s: %s", email, result)
+    elif not is_configured():
+        logger.warning("SMTP not configured — verification email NOT sent for %s", email)
 
     login_user(user)
     next_url = request.args.get("next", "/dashboard")
@@ -180,12 +186,18 @@ def forgot_password():
         return render_template("auth/forgot_password.html", error=None, success=False, active_page="")
 
     email = (request.form.get("email") or "").strip()
+    logger.info("Password reset requested for: %s", email)
     # Always show success to prevent email enumeration
     token = create_reset_token(email)
     if token:
         from modules.mailer import send_password_reset_email, is_configured
         if is_configured():
-            send_password_reset_email(email, token)
+            result = send_password_reset_email(email, token)
+            logger.info("Password reset email sent to %s: %s", email, result)
+        else:
+            logger.warning("SMTP not configured — password reset email NOT sent for %s", email)
+    else:
+        logger.info("No user found for %s (no email sent)", email)
     return render_template("auth/forgot_password.html", error=None, success=True, active_page="")
 
 
