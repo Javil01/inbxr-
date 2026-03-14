@@ -36,6 +36,11 @@ def _send_via_api(to_email, subject, html_body, text_body=None):
         "to": [{"email": to_email}],
         "subject": subject,
         "htmlContent": html_body,
+        "headers": {
+            "X-Mailer": "INBXR Transactional",
+            "List-Unsubscribe": f"<mailto:{SMTP_FROM}?subject=unsubscribe>",
+        },
+        "tags": ["transactional"],
     }
     if text_body:
         payload["textContent"] = text_body
