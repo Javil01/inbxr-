@@ -451,6 +451,34 @@ def health_check():
     return jsonify({'status': 'ok'}), 200
 
 
+@app.route('/health/smtp')
+def smtp_health():
+    """Diagnostic: check SMTP config and connectivity (admin only)."""
+    if not _is_admin():
+        return jsonify({'error': 'unauthorized'}), 403
+    from modules.mailer import is_configured, SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_FROM
+    info = {
+        'configured': is_configured(),
+        'host': SMTP_HOST,
+        'port': SMTP_PORT,
+        'user': SMTP_USER[:6] + '...' if SMTP_USER else '',
+        'from': SMTP_FROM,
+    }
+    if is_configured():
+        import smtplib
+        try:
+            server = smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=10)
+            server.ehlo()
+            server.starttls()
+            server.ehlo()
+            server.login(SMTP_USER, os.environ.get('SMTP_PASS', ''))
+            server.quit()
+            info['connection'] = 'ok'
+        except Exception as e:
+            info['connection'] = f'error: {e}'
+    return jsonify(info)
+
+
 # ══════════════════════════════════════════════════════
 #  HELPERS
 # ══════════════════════════════════════════════════════
