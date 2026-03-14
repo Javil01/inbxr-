@@ -451,6 +451,31 @@ def health_check():
     return jsonify({'status': 'ok'}), 200
 
 
+@app.route('/health/imap')
+def imap_health():
+    """Diagnostic: check IMAP connectivity to seed accounts (admin only)."""
+    if not _is_admin():
+        return jsonify({'error': 'unauthorized'}), 403
+    from modules.inbox_placement import load_seed_accounts
+    import imaplib
+    accounts = load_seed_accounts()
+    if not accounts:
+        return jsonify({'error': 'no seed accounts found', 'config_path': 'config/seed_accounts.json'})
+    results = []
+    for a in accounts:
+        provider = a.get('provider', '')
+        hosts = {'gmail': 'imap.gmail.com', 'yahoo': 'imap.mail.yahoo.com', 'outlook': 'outlook.office365.com'}
+        host = a.get('imap_host', hosts.get(provider, ''))
+        try:
+            imap = imaplib.IMAP4_SSL(host, 993, timeout=10)
+            imap.login(a['username'], a['password'])
+            imap.logout()
+            results.append({'email': a['email'], 'status': 'ok'})
+        except Exception as e:
+            results.append({'email': a['email'], 'status': f'error: {e}'})
+    return jsonify({'accounts': results})
+
+
 @app.route('/health/smtp')
 def smtp_health():
     """Diagnostic: check email config and connectivity (admin only)."""
