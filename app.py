@@ -467,10 +467,13 @@ def smtp_health():
     if is_configured():
         import smtplib
         try:
-            server = smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=10)
-            server.ehlo()
-            server.starttls()
-            server.ehlo()
+            if SMTP_PORT == 465:
+                server = smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT, timeout=10)
+            else:
+                server = smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=10)
+                server.ehlo()
+                server.starttls()
+                server.ehlo()
             server.login(SMTP_USER, os.environ.get('SMTP_PASS', ''))
             server.quit()
             info['connection'] = 'ok'

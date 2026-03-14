@@ -42,13 +42,19 @@ def _send(to_email, subject, html_body, text_body=None):
     msg.attach(MIMEText(html_body, "html", "utf-8"))
 
     try:
-        with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=10) as server:
-            server.ehlo()
-            if SMTP_PORT != 25:
-                server.starttls()
+        if SMTP_PORT == 465:
+            with smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT, timeout=10) as server:
                 server.ehlo()
-            server.login(SMTP_USER, SMTP_PASS)
-            server.sendmail(SMTP_FROM, to_email, msg.as_string())
+                server.login(SMTP_USER, SMTP_PASS)
+                server.sendmail(SMTP_FROM, to_email, msg.as_string())
+        else:
+            with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=10) as server:
+                server.ehlo()
+                if SMTP_PORT != 25:
+                    server.starttls()
+                    server.ehlo()
+                server.login(SMTP_USER, SMTP_PASS)
+                server.sendmail(SMTP_FROM, to_email, msg.as_string())
         return True
     except smtplib.SMTPException as e:
         logger.error("SMTP error sending to %s: %s", to_email, e)
