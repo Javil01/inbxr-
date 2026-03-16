@@ -1,8 +1,4 @@
 {% if tracking_tags and tracking_tags.head %}{{ tracking_tags.head | safe }}{% endif %}
-<link rel="icon" href="/static/images/favicon.svg" type="image/svg+xml">
-<link rel="icon" href="/static/images/favicon-32.png" sizes="32x32" type="image/png">
-<link rel="icon" href="/static/images/favicon.ico" sizes="16x16 32x32 64x64">
-<link rel="apple-touch-icon" href="/static/images/apple-touch-icon.png">
 <meta name="csrf-token" content="{{ csrf_token() }}">
 <script>if(new URLSearchParams(location.search).get('embed')==='1'){document.documentElement.classList.add('embedded');}</script>
 <header class="site-header">
