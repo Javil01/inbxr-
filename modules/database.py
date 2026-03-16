@@ -54,6 +54,7 @@ def init_db():
     conn.commit()
     _run_migrations(conn)
     _seed_blog_posts(conn)
+    _fix_cta_markers(conn)
 
 
 def _run_migrations(conn):
@@ -699,3 +700,23 @@ _MIGRATIONS = [
           AND slug IS NOT NULL AND slug != '';
     """),
 ]
+
+
+def _fix_cta_markers(conn):
+    """Replace [CTA:/path] markers in blog post content with actual URLs."""
+    import re as _re
+    rows = conn.execute(
+        "SELECT id, content FROM blog_posts WHERE content LIKE '%[CTA:%'"
+    ).fetchall()
+    for row in rows:
+        content = row["content"]
+        # Replace href="[CTA:/path]" with href="/path"
+        content = _re.sub(r'href="\[CTA:(/[^\]]*)\]"', r'href="\1"', content)
+        content = _re.sub(r"href='\[CTA:(/[^\]]*)\]'", r"href='\1'", content)
+        # Replace standalone [CTA:/path] markers with nothing (already linked)
+        content = _re.sub(r'\[CTA:/[^\]]*\]', '', content)
+        # Fix /email-test links to /
+        content = content.replace('href="/email-test"', 'href="/"')
+        conn.execute("UPDATE blog_posts SET content=? WHERE id=?", (content, row["id"]))
+    if rows:
+        conn.commit()
