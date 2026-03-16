@@ -123,6 +123,7 @@
   window.__dashStats = {{ stats | tojson }};
   window.__dashCredits = {{ credits | tojson }};
   window.__userTier = {{ (session.get('tier', 'free') | tojson) }};
+  window.__onboarding = {{ ob_status | tojson }};
 </script>
 <script src="/static/js/dashboard.js"></script>
 </body>

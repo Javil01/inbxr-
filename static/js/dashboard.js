@@ -221,6 +221,7 @@ function buildOverviewShell(s) {
   var c = window.__dashCredits || {};
   return '<div class="dash-view">' +
     buildCreditsBar(c) +
+    buildOnboardingCard() +
     '<h2 class="dash-view__title">Overview</h2>' +
     '<div class="db-stats">' +
       statCardHtml('statTotal', s.total_checks || 0, 'Total Tests') +
@@ -894,57 +895,62 @@ function gradeClass(grade) {
 })();
 
 // ══════════════════════════════════════════════════════
-//  ONBOARDING WIZARD (Feature 1)
+//  ONBOARDING SYSTEM
 // ══════════════════════════════════════════════════════
-function showOnboardingWizard() {
-  // Only show once per user
-  if (localStorage.getItem('inbxr_onboarded')) return;
-  if (!window.__isNewUser && (window.__dashStats || {}).total_checks > 0) return;
 
-  var overlay = document.createElement('div');
-  overlay.className = 'onboard-overlay';
-  overlay.innerHTML =
-    '<div class="onboard-modal">' +
-      '<button class="onboard-close" id="onboardClose">&times;</button>' +
-      '<div class="onboard-header">' +
-        '<svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" width="40" height="40"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>' +
-        '<h2>Welcome to INBXR!</h2>' +
-        '<p>Get your first deliverability insights in under 2 minutes.</p>' +
+var OB_ICONS = {
+  mail:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 5l10 8 10-8"/></svg>',
+  zap:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>',
+  shield: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',
+  eye:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>',
+  type:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>',
+  check:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg>'
+};
+
+function buildOnboardingCard() {
+  var ob = window.__onboarding;
+  if (!ob || ob.all_complete || ob.dismissed) return '';
+
+  var stepsHtml = '';
+  ob.steps.forEach(function(step) {
+    var done = step.completed;
+    stepsHtml += '<div class="ob-step ' + (done ? 'ob-step--done' : 'ob-step--pending') + '">' +
+      '<span class="ob-step__icon">' + (done ? OB_ICONS.check : (OB_ICONS[step.icon] || OB_ICONS.zap)) + '</span>' +
+      '<div class="ob-step__body">' +
+        '<strong>' + esc(step.title) + '</strong>' +
+        '<p>' + esc(step.desc) + '</p>' +
       '</div>' +
-      '<div class="onboard-steps" id="onboardSteps">' +
-        onboardStep(1, true, 'Run Your First Email Test',
-          'Send an email to a test address and get instant SPF, DKIM, DMARC, spam risk, and inbox placement results.',
-          '/', 'Start Email Test') +
-        onboardStep(2, false, 'Check Your Sender Reputation',
-          'Enter your domain to see authentication records, blocklist status, and overall sender health score.',
-          '/sender', 'Check Domain') +
-        onboardStep(3, false, 'Set Up Domain Monitoring',
-          'Add your domain to get automated alerts when you land on a blocklist or your DNS auth records change.',
-          '/blacklist-monitor', 'Add Monitor') +
-      '</div>' +
-      '<div class="onboard-footer">' +
-        '<button class="onboard-skip" id="onboardSkip">Skip for now</button>' +
-      '</div>' +
+      (done ? '' : '<a href="' + step.href + '" class="ob-step__cta ob-step__link">' + esc(step.cta) + ' &rarr;</a>') +
     '</div>';
+  });
 
-  document.body.appendChild(overlay);
+  return '<div class="ob-card" id="obCard">' +
+    '<div class="ob-card__header">' +
+      '<div>' +
+        '<h3 class="ob-card__title">Getting Started</h3>' +
+        '<span class="ob-card__progress">' + ob.done + ' of ' + ob.total + ' complete</span>' +
+      '</div>' +
+      '<button class="ob-card__dismiss" id="obDismiss" title="Dismiss">&times;</button>' +
+    '</div>' +
+    '<div class="ob-card__bar"><div class="ob-card__bar-fill" style="width:' + ob.pct + '%"></div></div>' +
+    '<div class="ob-card__steps">' + stepsHtml + '</div>' +
+  '</div>';
+}
 
-  function dismiss() {
-    localStorage.setItem('inbxr_onboarded', '1');
-    overlay.classList.add('onboard-overlay--exit');
-    setTimeout(function() { overlay.remove(); }, 300);
+function wireOnboardingCard() {
+  var dismissBtn = document.getElementById('obDismiss');
+  if (dismissBtn) {
+    dismissBtn.addEventListener('click', function() {
+      fetch('/api/onboarding/dismiss', { method: 'POST' });
+      var card = document.getElementById('obCard');
+      if (card) { card.style.opacity = '0'; setTimeout(function() { card.remove(); }, 300); }
+    });
   }
-
-  document.getElementById('onboardClose').addEventListener('click', dismiss);
-  document.getElementById('onboardSkip').addEventListener('click', dismiss);
-  overlay.addEventListener('click', function(e) { if (e.target === overlay) dismiss(); });
-
-  // CTA buttons — load tool in dashboard and dismiss
-  overlay.querySelectorAll('.onboard-step__cta').forEach(function(btn) {
+  // Wire CTA links to load tools in dashboard
+  document.querySelectorAll('.ob-step__link').forEach(function(btn) {
     btn.addEventListener('click', function(e) {
       e.preventDefault();
       var href = this.getAttribute('href');
-      dismiss();
       var match = document.querySelector('.dash-nav__item[data-tool="' + href + '"]');
       if (match) {
         setActiveNav(match);
@@ -956,15 +962,68 @@ function showOnboardingWizard() {
   });
 }
 
-function onboardStep(num, active, title, desc, href, btnText) {
-  return '<div class="onboard-step' + (active ? ' onboard-step--active' : '') + '">' +
-    '<span class="onboard-step__num">' + num + '</span>' +
-    '<div class="onboard-step__body">' +
-      '<h3>' + esc(title) + '</h3>' +
-      '<p>' + esc(desc) + '</p>' +
-      '<a href="' + href + '" class="onboard-step__cta">' + esc(btnText) + ' &rarr;</a>' +
-    '</div>' +
-  '</div>';
+function showWelcomeModal() {
+  if (!window.__isNewUser) return;
+  var ob = window.__onboarding;
+  if (!ob) return;
+
+  var overlay = document.createElement('div');
+  overlay.className = 'onboard-overlay';
+  overlay.innerHTML =
+    '<div class="onboard-modal">' +
+      '<button class="onboard-close" id="obWelcomeClose">&times;</button>' +
+      '<div class="onboard-header">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="#15c182" stroke-width="2" width="44" height="44"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>' +
+        '<h2>Welcome to INBXR!</h2>' +
+        '<p>Your email deliverability command center. Here\'s how to get the most out of it:</p>' +
+      '</div>' +
+      '<div class="onboard-steps">' +
+        '<div class="onboard-step onboard-step--active">' +
+          '<span class="onboard-step__num">1</span>' +
+          '<div class="onboard-step__body">' +
+            '<h3>Run an Email Test</h3>' +
+            '<p>Send a real email and get instant SPF, DKIM, DMARC, spam risk, and content analysis.</p>' +
+          '</div>' +
+        '</div>' +
+        '<div class="onboard-step">' +
+          '<span class="onboard-step__num">2</span>' +
+          '<div class="onboard-step__body">' +
+            '<h3>Check Your Domain</h3>' +
+            '<p>Verify your authentication setup and get an A-F sender health grade with fix instructions.</p>' +
+          '</div>' +
+        '</div>' +
+        '<div class="onboard-step">' +
+          '<span class="onboard-step__num">3</span>' +
+          '<div class="onboard-step__body">' +
+            '<h3>Set Up Monitoring</h3>' +
+            '<p>Get automated alerts when you land on a blocklist or your DNS auth records change.</p>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="onboard-footer">' +
+        '<a href="/" class="ob-welcome__cta" id="obWelcomeStart">Start Email Test &rarr;</a>' +
+        '<button class="onboard-skip" id="obWelcomeSkip">I\'ll explore on my own</button>' +
+      '</div>' +
+    '</div>';
+
+  document.body.appendChild(overlay);
+
+  function dismiss() {
+    overlay.classList.add('onboard-overlay--exit');
+    setTimeout(function() { overlay.remove(); }, 300);
+  }
+
+  document.getElementById('obWelcomeClose').addEventListener('click', dismiss);
+  document.getElementById('obWelcomeSkip').addEventListener('click', dismiss);
+  overlay.addEventListener('click', function(e) { if (e.target === overlay) dismiss(); });
+
+  document.getElementById('obWelcomeStart').addEventListener('click', function(e) {
+    e.preventDefault();
+    dismiss();
+    var match = document.querySelector('.dash-nav__item[data-tool="/"]');
+    if (match) { setActiveNav(match); loadToolInDashboard('/'); }
+    else { window.location.href = '/'; }
+  });
 }
 
 // ══════════════════════════════════════════════════════
@@ -1026,4 +1085,5 @@ function loadDomainHealth() {
 
 // ── Boot ──
 renderOverview();
-showOnboardingWizard();
+wireOnboardingCard();
+showWelcomeModal();

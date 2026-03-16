@@ -22,5 +22,6 @@
 {% include 'sections/email_test_footer.html' %}
 
 <script src="/static/js/email_test.js?v={{ range(1000,9999) | random }}"></script>
+<script>if(window.__showFirstUseHint)__showFirstUseHint('email_test','.et-send-form','Tip: Copy the token, paste it at the end of your subject line, then send your email to the test address. Results appear here in seconds.');</script>
 </body>
 </html>

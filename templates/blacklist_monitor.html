@@ -17,5 +17,6 @@
 {% include 'sections/blacklist_monitor_footer.html' %}
 
 <script src="/static/js/blacklist_monitor.js?v={{ range(1000,9999) | random }}"></script>
+<script>if(window.__showFirstUseHint)__showFirstUseHint('blacklist','#blmAddForm','Tip: Add your sending domain to get automatic scans against 110+ blocklists every 6 hours. You\'ll be alerted if anything changes.');</script>
 </body>
 </html>

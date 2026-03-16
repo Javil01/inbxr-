@@ -10106,7 +10106,7 @@ a.et-next-step:hover {
 }
 
 /* ══════════════════════════════════════════════════════
-   ONBOARDING WIZARD
+   ONBOARDING — Welcome Modal
    ══════════════════════════════════════════════════════ */
 .onboard-overlay {
   position: fixed; inset: 0; z-index: 10000;
@@ -10135,28 +10135,109 @@ a.et-next-step:hover {
   border-radius: 12px; border: 1px solid rgba(255,255,255,0.06);
   background: rgba(255,255,255,0.02); transition: all 0.2s;
 }
-.onboard-step--active { border-color: rgba(34,197,94,0.3); background: rgba(34,197,94,0.05); }
+.onboard-step--active { border-color: rgba(21,193,130,0.3); background: rgba(21,193,130,0.05); }
 .onboard-step__num {
   flex-shrink: 0; width: 28px; height: 28px; border-radius: 50%;
   background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.5);
   display: flex; align-items: center; justify-content: center;
   font-size: 0.8rem; font-weight: 600;
 }
-.onboard-step--active .onboard-step__num { background: #22c55e; color: #fff; }
+.onboard-step--active .onboard-step__num { background: var(--brand, #15c182); color: #fff; }
 .onboard-step__body h3 { font-size: 0.92rem; font-weight: 600; color: #fff; margin: 0 0 4px; }
-.onboard-step__body p { font-size: 0.82rem; color: rgba(255,255,255,0.55); margin: 0 0 8px; line-height: 1.5; }
-.onboard-step__cta {
-  display: inline-block; font-size: 0.82rem; font-weight: 600;
-  color: #22c55e; text-decoration: none;
-}
-.onboard-step__cta:hover { text-decoration: underline; }
-.onboard-footer { text-align: center; margin-top: 20px; }
+.onboard-step__body p { font-size: 0.82rem; color: rgba(255,255,255,0.55); margin: 0; line-height: 1.5; }
+.onboard-footer { text-align: center; margin-top: 24px; display: flex; flex-direction: column; gap: 12px; align-items: center; }
 .onboard-skip {
   background: none; border: none; color: rgba(255,255,255,0.35);
   font-size: 0.82rem; cursor: pointer;
 }
 .onboard-skip:hover { color: rgba(255,255,255,0.6); }
+.ob-welcome__cta {
+  display: inline-block; padding: 12px 32px; border-radius: 10px;
+  background: var(--brand, #15c182); color: #fff; font-weight: 700;
+  font-size: 0.92rem; text-decoration: none; transition: transform 0.15s;
+}
+.ob-welcome__cta:hover { transform: scale(1.03); }
 @keyframes fadeOut { to { opacity: 0; } }
+
+/* ══════════════════════════════════════════════════════
+   ONBOARDING — Getting Started Card (Dashboard)
+   ══════════════════════════════════════════════════════ */
+.ob-card {
+  background: var(--card-bg, #0f172a); border: 1px solid rgba(21,193,130,0.2);
+  border-radius: 16px; padding: 24px; margin-bottom: 20px;
+  transition: opacity 0.3s;
+}
+.ob-card__header {
+  display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px;
+}
+.ob-card__title {
+  font-size: 1.05rem; font-weight: 700; color: #fff; margin: 0 0 2px;
+}
+.ob-card__progress {
+  font-size: 0.78rem; color: var(--brand, #15c182); font-weight: 600;
+}
+.ob-card__dismiss {
+  background: none; border: none; color: rgba(255,255,255,0.3);
+  font-size: 1.3rem; cursor: pointer; line-height: 1; padding: 0;
+}
+.ob-card__dismiss:hover { color: rgba(255,255,255,0.6); }
+.ob-card__bar {
+  height: 6px; background: rgba(255,255,255,0.06); border-radius: 3px;
+  margin-bottom: 18px; overflow: hidden;
+}
+.ob-card__bar-fill {
+  height: 100%; background: var(--brand, #15c182); border-radius: 3px;
+  transition: width 0.6s ease;
+}
+.ob-card__steps { display: flex; flex-direction: column; gap: 10px; }
+
+.ob-step {
+  display: flex; align-items: center; gap: 14px; padding: 14px 16px;
+  border-radius: 10px; border: 1px solid rgba(255,255,255,0.06);
+  background: rgba(255,255,255,0.02); transition: all 0.2s;
+}
+.ob-step--pending { border-color: rgba(255,255,255,0.08); }
+.ob-step--pending:hover { border-color: rgba(21,193,130,0.25); background: rgba(21,193,130,0.03); }
+.ob-step--done { opacity: 0.5; }
+.ob-step__icon {
+  flex-shrink: 0; width: 34px; height: 34px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.5);
+}
+.ob-step--done .ob-step__icon {
+  background: rgba(21,193,130,0.15); color: var(--brand, #15c182);
+}
+.ob-step--pending .ob-step__icon { color: rgba(255,255,255,0.6); }
+.ob-step__body { flex: 1; min-width: 0; }
+.ob-step__body strong {
+  display: block; font-size: 0.88rem; font-weight: 600; color: #fff; margin-bottom: 2px;
+}
+.ob-step--done .ob-step__body strong { text-decoration: line-through; color: rgba(255,255,255,0.5); }
+.ob-step__body p {
+  font-size: 0.78rem; color: rgba(255,255,255,0.45); margin: 0; line-height: 1.4;
+}
+.ob-step__cta {
+  flex-shrink: 0; font-size: 0.78rem; font-weight: 600;
+  color: var(--brand, #15c182); text-decoration: none; white-space: nowrap;
+}
+.ob-step__cta:hover { text-decoration: underline; }
+
+/* ── First-Use Hints ── */
+.fu-hint {
+  position: absolute; top: -8px; left: 50%; transform: translateX(-50%) translateY(-100%);
+  background: var(--card-bg, #0f172a); border: 1px solid rgba(21,193,130,0.3);
+  border-radius: 10px; padding: 14px 18px; z-index: 100;
+  max-width: 320px; width: max-content;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+  animation: fadeSlideUp 0.3s ease;
+}
+.fu-hint p { font-size: 0.82rem; color: rgba(255,255,255,0.7); margin: 0 0 10px; line-height: 1.5; }
+.fu-hint__close {
+  background: none; border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 6px; padding: 4px 14px; color: rgba(255,255,255,0.5);
+  font-size: 0.75rem; cursor: pointer;
+}
+.fu-hint__close:hover { color: #fff; border-color: rgba(255,255,255,0.2); }
 
 /* ══════════════════════════════════════════════════════
    DOMAIN HEALTH CARD (Dashboard)

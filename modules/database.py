@@ -610,4 +610,7 @@ _MIGRATIONS = [
         CREATE INDEX IF NOT EXISTS idx_blog_posts_category ON blog_posts(category_id);
         CREATE INDEX IF NOT EXISTS idx_blog_posts_published ON blog_posts(published_at DESC);
     """),
+    ("013_onboarding", """
+        ALTER TABLE users ADD COLUMN onboarding_dismissed_at TEXT;
+    """),
 ]

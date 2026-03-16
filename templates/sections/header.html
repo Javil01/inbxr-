@@ -143,6 +143,21 @@
   setInterval(pollAlerts,60000);
 })();
 </script>
+<script>
+window.__showFirstUseHint=function(k,sel,msg){
+  var sk='inbxr_hint_'+k;
+  if(localStorage.getItem(sk))return;
+  setTimeout(function(){
+    var t=document.querySelector(sel);if(!t)return;
+    var h=document.createElement('div');h.className='fu-hint';
+    h.innerHTML='<p>'+msg+'</p><button class="fu-hint__close">Got it</button>';
+    t.style.position='relative';t.appendChild(h);
+    h.querySelector('.fu-hint__close').addEventListener('click',function(){
+      localStorage.setItem(sk,'1');h.remove();
+    });
+  },800);
+};
+</script>
 {% endif %}
 {% if tracking_tags and tracking_tags.body %}{{ tracking_tags.body | safe }}{% endif %}
 

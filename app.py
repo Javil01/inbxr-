@@ -1943,13 +1943,35 @@ def dashboard():
         "subject_limit": get_tier_limit(tier_name, "subject_tests_per_day"),
     }
 
+    from modules.onboarding import get_onboarding_status
+    ob_status = get_onboarding_status(user_id)
+
     resp = render_template("dashboard.html",
                            stats=stats,
                            credits=credits,
+                           ob_status=ob_status,
                            is_admin=_is_admin(),
                            active_page="dashboard")
     session.pop("is_new_signup", None)
     return resp
+
+
+@app.route("/api/onboarding")
+def api_onboarding():
+    if not session.get("user_id"):
+        return jsonify({"error": "Not authenticated"}), 401
+    from modules.onboarding import get_onboarding_status
+    status = get_onboarding_status(session["user_id"])
+    return jsonify(status)
+
+
+@app.route("/api/onboarding/dismiss", methods=["POST"])
+def api_onboarding_dismiss():
+    if not session.get("user_id"):
+        return jsonify({"error": "Not authenticated"}), 401
+    execute("UPDATE users SET onboarding_dismissed_at = datetime('now') WHERE id = ?",
+            (session["user_id"],))
+    return jsonify({"ok": True})
 
 
 @app.route("/subject-scorer")
