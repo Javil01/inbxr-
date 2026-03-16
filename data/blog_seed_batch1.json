@@ -6,13 +6,14 @@
     "excerpt": "Discover the reasons behind emails going to spam and follow our step-by-step guide to improve email deliverability",
     "meta_title": "Why Are My Emails Going to Spam? Fix Emails Going to Spam in 2026",
     "meta_description": "Learn why your emails are going to spam and get actionable tips to fix emails going to spam in 2026",
-    "category_id": 1,
     "tags": "[\"email deliverability\", \"spam filters\", \"email marketing\", \"emails going to spam\", \"inbox placement\"]",
     "status": "published",
     "author": "INBXR Team",
     "read_time": 9,
     "keyword_target": "emails going to spam",
-    "published_at": "2026-03-16 16:20:14"
+    "published_at": "2026-03-16 16:20:14",
+    "featured_image": "/static/images/blog/fix-emails-going-to-spam.png",
+    "og_image": "/static/images/blog/fix-emails-going-to-spam.png"
   },
   {
     "title": "How to Set Up SPF, DKIM, and DMARC Records for Email Authentication",
@@ -21,13 +22,14 @@
     "excerpt": "Improve email deliverability by setting up SPF, DKIM, and DMARC records. Follow our step-by-step guide to secure your email setup and prevent spam.",
     "meta_title": "How to Set Up SPF, DKIM, and DMARC Records for Email Authentication",
     "meta_description": "Learn how to set up SPF DKIM DMARC records to improve email deliverability and authentication. Step-by-step guide for a secure email setup.",
-    "category_id": 2,
     "tags": "[\"SPF\", \"DKIM\", \"DMARC\", \"email authentication\", \"email deliverability\"]",
     "status": "published",
     "author": "INBXR Team",
     "read_time": 8,
     "keyword_target": "how to set up SPF DKIM DMARC",
-    "published_at": "2026-03-16 16:20:27"
+    "published_at": "2026-03-16 16:20:27",
+    "featured_image": "/static/images/blog/how-to-set-up-spf-dkim-dmarc.png",
+    "og_image": "/static/images/blog/how-to-set-up-spf-dkim-dmarc.png"
   },
   {
     "title": "Email Deliverability Checklist: Boost Your Inbox Rates",
@@ -36,13 +38,14 @@
     "excerpt": "Get the ultimate email deliverability checklist to improve your email marketing campaigns and increase inbox placement rates",
     "meta_title": "Email Deliverability Checklist: Boost Your Inbox Rates",
     "meta_description": "Use our comprehensive email deliverability checklist to ensure your emails land in inboxes, not spam folders",
-    "category_id": 1,
     "tags": "[\"email deliverability\", \"email marketing\", \"inbox placement\", \"spam filters\", \"email checklist\"]",
     "status": "published",
     "author": "INBXR Team",
     "read_time": 7,
     "keyword_target": "email deliverability checklist",
-    "published_at": "2026-03-16 16:20:39"
+    "published_at": "2026-03-16 16:20:39",
+    "featured_image": "/static/images/blog/email-deliverability-checklist.png",
+    "og_image": "/static/images/blog/email-deliverability-checklist.png"
   },
   {
     "title": "How to Perform an Email Blacklist Check and Get Delisted",
@@ -51,13 +54,14 @@
     "excerpt": "Discover how to check if your domain is blacklisted and follow our step-by-step guide to get delisted and improve email deliverability",
     "meta_title": "How to Perform an Email Blacklist Check and Get Delisted",
     "meta_description": "Learn how to perform an email blacklist check and get delisted to improve your email deliverability and reputation",
-    "category_id": 3,
     "tags": "[\"email blacklist\", \"email deliverability\", \"domain reputation\", \"blacklist removal\", \"email spam\"]",
     "status": "published",
     "author": "INBXR Team",
     "read_time": 7,
     "keyword_target": "email blacklist check",
-    "published_at": "2026-03-16 16:20:51"
+    "published_at": "2026-03-16 16:20:51",
+    "featured_image": "/static/images/blog/email-blacklist-check-and-removal-guide.png",
+    "og_image": "/static/images/blog/email-blacklist-check-and-removal-guide.png"
   },
   {
     "title": "What is DMARC? A Beginner's Guide to Email Security",
@@ -66,13 +70,14 @@
     "excerpt": "Protect your domain from email spoofing with DMARC. Learn what DMARC is, why you need it, and how to set it up for improved email security.",
     "meta_title": "What is DMARC? A Beginner's Guide to Email Security",
     "meta_description": "Learn what is DMARC and how it helps prevent email spoofing. Discover the importance of DMARC for email security and how to set it up.",
-    "category_id": 2,
     "tags": "[\"DMARC\", \"Email Security\", \"Domain Protection\", \"Spoofing Prevention\", \"Email Authentication\"]",
     "status": "published",
     "author": "INBXR Team",
     "read_time": 7,
     "keyword_target": "what is DMARC",
-    "published_at": "2026-03-16 16:21:03"
+    "published_at": "2026-03-16 16:21:03",
+    "featured_image": "/static/images/blog/what-is-dmarc-email-security.png",
+    "og_image": "/static/images/blog/what-is-dmarc-email-security.png"
   },
   {
     "title": "The Ultimate Email Warm Up Guide: Boosting Sender Reputation",
@@ -81,13 +86,14 @@
     "excerpt": "Discover the importance of email warm up and how it impacts sender reputation, with actionable tips to enhance email deliverability",
     "meta_title": "The Ultimate Email Warm Up Guide: Boosting Sender Reputation",
     "meta_description": "Learn how to build sender reputation from scratch with our comprehensive email warm up guide and improve email deliverability",
-    "category_id": 3,
     "tags": "[\"email warm up\", \"sender reputation\", \"email deliverability\", \"email marketing\", \"domain reputation\"]",
     "status": "published",
     "author": "INBXR Team",
     "read_time": 8,
     "keyword_target": "email warm up guide",
-    "published_at": "2026-03-16 16:21:17"
+    "published_at": "2026-03-16 16:21:17",
+    "featured_image": "/static/images/blog/email-warm-up-guide-sender-reputation.png",
+    "og_image": "/static/images/blog/email-warm-up-guide-sender-reputation.png"
   },
   {
     "title": "50+ Spam Trigger Words in Email: Crafting Safe Subject Lines",
@@ -96,13 +102,14 @@
     "excerpt": "Learn which spam trigger words in email to avoid for better deliverability and engagement, with expert advice on crafting effective subject lines",
     "meta_title": "50+ Spam Trigger Words in Email: Crafting Safe Subject Lines",
     "meta_description": "Discover 50+ spam trigger words in email subject lines to avoid and learn how to craft safe, effective subject lines that boost deliverability",
-    "category_id": 4,
     "tags": "[\"email deliverability\", \"spam trigger words\", \"subject line optimization\", \"email marketing tips\", \"anti-spam laws\"]",
     "status": "published",
     "author": "INBXR Team",
     "read_time": 7,
     "keyword_target": "spam trigger words in email",
-    "published_at": "2026-03-16 16:21:29"
+    "published_at": "2026-03-16 16:21:29",
+    "featured_image": "/static/images/blog/spam-trigger-words-in-email-subject-lines.png",
+    "og_image": "/static/images/blog/spam-trigger-words-in-email-subject-lines.png"
   },
   {
     "title": "BIMI Setup Guide: Boost Email Deliverability with Verified Logos",
@@ -111,13 +118,14 @@
     "excerpt": "Get your logo in Gmail and Apple Mail with our comprehensive BIMI setup guide and improve email deliverability",
     "meta_title": "BIMI Setup Guide: Boost Email Deliverability with Verified Logos",
     "meta_description": "Learn how to set up BIMI with our step-by-step BIMI setup guide and increase brand recognition in Gmail and Apple Mail",
-    "category_id": 2,
     "tags": "[\"BIMI setup\", \"email deliverability\", \"Gmail\", \"Apple Mail\", \"logo verification\"]",
     "status": "published",
     "author": "INBXR Team",
     "read_time": 9,
     "keyword_target": "BIMI setup guide",
-    "published_at": "2026-03-16 16:21:43"
+    "published_at": "2026-03-16 16:21:43",
+    "featured_image": "/static/images/blog/bimi-setup-guide.png",
+    "og_image": "/static/images/blog/bimi-setup-guide.png"
   },
   {
     "title": "Mastering Cold Email Deliverability: Scale Your Campaigns Without Getting Blacklisted",
@@ -126,13 +134,14 @@
     "excerpt": "Discover the secrets to maintaining high cold email deliverability rates and avoiding the blacklist. Get expert advice on email list management and more.",
     "meta_title": "Mastering Cold Email Deliverability: Scale Your Campaigns Without Getting Blacklisted",
     "meta_description": "Learn how to improve cold email deliverability and send at scale without getting blacklisted. Expert tips and strategies for successful email campaigns.",
-    "category_id": 1,
     "tags": "[\"cold email\", \"email deliverability\", \"email marketing\", \"blacklist prevention\", \"email campaigns\"]",
     "status": "published",
     "author": "INBXR Team",
     "read_time": 9,
     "keyword_target": "cold email deliverability",
-    "published_at": "2026-03-16 16:21:57"
+    "published_at": "2026-03-16 16:21:57",
+    "featured_image": "/static/images/blog/cold-email-deliverability-best-practices.png",
+    "og_image": "/static/images/blog/cold-email-deliverability-best-practices.png"
   },
   {
     "title": "Run a Free Email Deliverability Test: Boost Inbox Placement",
@@ -141,12 +150,13 @@
     "excerpt": "Discover how a free email deliverability test can help you identify and fix issues that prevent your emails from reaching the inbox",
     "meta_title": "Run a Free Email Deliverability Test: Boost Inbox Placement",
     "meta_description": "Use a free email deliverability test to ensure your emails reach the inbox. Learn how to check and improve your deliverability rates",
-    "category_id": 1,
     "tags": "[\"email deliverability\", \"free email deliverability test\", \"inbox placement\", \"email marketing\", \"deliverability rates\"]",
     "status": "published",
     "author": "INBXR Team",
     "read_time": 7,
     "keyword_target": "free email deliverability test",
-    "published_at": "2026-03-16 16:22:32"
+    "published_at": "2026-03-16 16:22:32",
+    "featured_image": "/static/images/blog/free-email-deliverability-test.png",
+    "og_image": "/static/images/blog/free-email-deliverability-test.png"
   }
 ]

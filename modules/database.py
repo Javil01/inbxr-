@@ -120,15 +120,31 @@ def _seed_blog_posts(conn):
                 ).fetchone()
                 if existing:
                     continue
+                # Auto-generate featured image if not in seed data
+                featured = p.get("featured_image") or ""
+                og_img = p.get("og_image") or ""
+                if not featured:
+                    try:
+                        from modules.blog_image import generate_blog_image
+                        img_path = generate_blog_image(
+                            p["title"], p["slug"],
+                            keyword=p.get("keyword_target", ""))
+                        featured = f"/static/{img_path}"
+                        og_img = featured
+                    except Exception:
+                        pass
+
                 conn.execute(
                     """INSERT INTO blog_posts
                        (title, slug, content, excerpt, meta_title, meta_description,
-                        tags, status, author, read_time, keyword_target, published_at)
-                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, COALESCE(?, datetime('now')))""",
+                        featured_image, og_image, tags, status, author, read_time,
+                        keyword_target, published_at)
+                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, COALESCE(?, datetime('now')))""",
                     (
                         p["title"], p["slug"], p.get("content", ""),
                         p.get("excerpt", ""), p.get("meta_title", p["title"]),
-                        p.get("meta_description", ""), p.get("tags", "[]"),
+                        p.get("meta_description", ""), featured, og_img,
+                        p.get("tags", "[]"),
                         p.get("status", "published"), p.get("author", "INBXR Team"),
                         p.get("read_time", 5), p.get("keyword_target", ""),
                         p.get("published_at"),

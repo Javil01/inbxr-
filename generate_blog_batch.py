@@ -26,6 +26,7 @@ except ImportError:
 
 from modules import database as db
 from modules.blog_ai import generate_blog_post_long, BlogAIError
+from modules.blog_image import generate_blog_image
 
 # ── SEO Topic Batch ──
 # High-intent keywords that drive organic traffic to INBXR tools.
@@ -117,18 +118,29 @@ def post_exists(slug):
     return row is not None
 
 
-def save_post(data, category_id):
+def save_post(data, category_id, category_name=""):
     """Save generated blog post to database as published."""
     tags_json = json.dumps(data.get("tags", []))
     word_count = len(re.sub(r'<[^>]+>', '', data.get("content", "")).split())
     read_time = max(1, round(word_count / 200))
 
+    # Generate featured image
+    featured_image = ""
+    try:
+        img_path = generate_blog_image(
+            data["title"], data["slug"],
+            category=category_name,
+            keyword=data.get("keyword_target", ""))
+        featured_image = f"/static/{img_path}"
+    except Exception as e:
+        print(f"           Image gen failed: {e}")
+
     cur = db.execute(
         """INSERT INTO blog_posts
            (title, slug, content, excerpt, meta_title, meta_description,
-            category_id, tags, status, author, read_time, keyword_target,
-            published_at)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'published', 'INBXR Team', ?, ?,
+            featured_image, og_image, category_id, tags, status, author,
+            read_time, keyword_target, published_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'published', 'INBXR Team', ?, ?,
                    datetime('now'))""",
         (
             data["title"],
@@ -137,6 +149,8 @@ def save_post(data, category_id):
             data.get("excerpt", ""),
             data["title"],
             data.get("meta_description", ""),
+            featured_image,
+            featured_image,
             category_id,
             tags_json,
             read_time,
@@ -203,7 +217,7 @@ def main():
 
             category_id = get_or_create_category(topic["category"])
             data["keyword_target"] = topic["keyword"]
-            post_id = save_post(data, category_id)
+            post_id = save_post(data, category_id, category_name=topic["category"])
 
             # Add to existing posts for cross-linking in subsequent posts
             existing_posts.insert(0, {"title": data["title"], "slug": data["slug"]})
