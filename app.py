@@ -2075,8 +2075,10 @@ def email_test_check():
 
 @app.route("/dns-generator")
 def dns_generator():
-    """Redirect to Domain Health which now generates fix records automatically."""
-    return redirect("/domain-health", code=302)
+    """Redirect to Sender Check which handles DNS generation."""
+    qs = request.query_string.decode()
+    target = "/sender" + ("?" + qs if qs else "")
+    return redirect(target, code=302)
 
 
 @app.route("/bimi")

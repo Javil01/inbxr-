@@ -384,6 +384,18 @@ _MIGRATIONS = [
         );
         CREATE INDEX IF NOT EXISTS idx_dns_snapshots_monitor ON dns_monitor_snapshots(monitor_id, scanned_at DESC);
     """),
+    ("012_fix_blog_crosslinks", """
+        UPDATE blog_posts SET content = REPLACE(
+            content,
+            '/blog/breaking-into-your-customers-inbox-the-best-way-to-ensure-email-deliverability',
+            '/blog/break-into-the-inbox-mastering-email-deliverability-to-land-in-the-primary-inbox-every-time'
+        ) WHERE content LIKE '%/blog/breaking-into-your-customers-inbox%';
+        UPDATE blog_posts SET content = REPLACE(
+            content,
+            '/blog/how-to-avoid-gmails-promotions-tab-and-improve-email-deliverability',
+            '/blog/break-into-the-inbox-mastering-email-deliverability-to-land-in-the-primary-inbox-every-time'
+        ) WHERE content LIKE '%/blog/how-to-avoid-gmails-promotions-tab%';
+    """),
     ("011_seed_blog_posts", """
         INSERT OR IGNORE INTO blog_posts
             (title, slug, content, excerpt, meta_title, meta_description, tags, status, author, read_time, keyword_target, published_at, created_at, updated_at)
