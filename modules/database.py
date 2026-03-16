@@ -384,6 +384,24 @@ _MIGRATIONS = [
         );
         CREATE INDEX IF NOT EXISTS idx_dns_snapshots_monitor ON dns_monitor_snapshots(monitor_id, scanned_at DESC);
     """),
+    ("010_fix_blog_links", """
+        UPDATE blog_posts SET content = REPLACE(content, 'href="/dns-generator"', 'href="/sender"')
+            WHERE content LIKE '%href="/dns-generator"%';
+        UPDATE blog_posts SET content = REPLACE(content, 'href="/domain-health"', 'href="/sender"')
+            WHERE content LIKE '%href="/domain-health"%';
+        UPDATE blog_posts SET content = REPLACE(content, 'href="/full-audit"', 'href="/sender"')
+            WHERE content LIKE '%href="/full-audit"%';
+        UPDATE blog_posts SET content = REPLACE(content, 'href="/email-test"', 'href="/"')
+            WHERE content LIKE '%href="/email-test"%';
+        UPDATE blog_posts SET content = REPLACE(content, "href='/dns-generator'", "href='/sender'")
+            WHERE content LIKE "%href='/dns-generator'%";
+        UPDATE blog_posts SET content = REPLACE(content, "href='/domain-health'", "href='/sender'")
+            WHERE content LIKE "%href='/domain-health'%";
+        UPDATE blog_posts SET content = REPLACE(content, "href='/full-audit'", "href='/sender'")
+            WHERE content LIKE "%href='/full-audit'%";
+        UPDATE blog_posts SET content = REPLACE(content, "href='/email-test'", "href='/'")
+            WHERE content LIKE "%href='/email-test'%";
+    """),
     ("008_blog_system", """
         CREATE TABLE IF NOT EXISTS blog_categories (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
