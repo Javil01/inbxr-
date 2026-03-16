@@ -80,7 +80,11 @@ def _seed_blog_posts(conn):
     """Seed blog posts from JSON files in data/ directory. Skips existing slugs."""
     import json as _json
     import re as _re
-    seed_dir = _DB_DIR
+    # Check both the repo's data/ dir and the DB dir (may differ on Railway)
+    repo_data_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data")
+    seed_dirs = [repo_data_dir]
+    if _DB_DIR != repo_data_dir:
+        seed_dirs.append(_DB_DIR)
     # Also seed default blog categories
     for cat_name in ("Deliverability", "Authentication", "Reputation", "Content"):
         cat_slug = _re.sub(r'[^a-z0-9]+', '-', cat_name.lower()).strip('-')
@@ -94,36 +98,43 @@ def _seed_blog_posts(conn):
             )
     conn.commit()
 
-    for fname in sorted(os.listdir(seed_dir)):
-        if not fname.startswith("blog_seed_") or not fname.endswith(".json"):
+    seen_files = set()
+    for seed_dir in seed_dirs:
+        if not os.path.isdir(seed_dir):
             continue
-        fpath = os.path.join(seed_dir, fname)
-        try:
-            with open(fpath, "r", encoding="utf-8") as f:
-                posts = _json.load(f)
-        except Exception:
-            continue
-        for p in posts:
-            existing = conn.execute(
-                "SELECT id FROM blog_posts WHERE slug=?", (p["slug"],)
-            ).fetchone()
-            if existing:
+        for fname in sorted(os.listdir(seed_dir)):
+            if not fname.startswith("blog_seed_") or not fname.endswith(".json"):
                 continue
-            conn.execute(
-                """INSERT INTO blog_posts
-                   (title, slug, content, excerpt, meta_title, meta_description,
-                    tags, status, author, read_time, keyword_target, published_at)
-                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, COALESCE(?, datetime('now')))""",
-                (
-                    p["title"], p["slug"], p.get("content", ""),
-                    p.get("excerpt", ""), p.get("meta_title", p["title"]),
-                    p.get("meta_description", ""), p.get("tags", "[]"),
-                    p.get("status", "published"), p.get("author", "INBXR Team"),
-                    p.get("read_time", 5), p.get("keyword_target", ""),
-                    p.get("published_at"),
+            if fname in seen_files:
+                continue
+            seen_files.add(fname)
+            fpath = os.path.join(seed_dir, fname)
+            try:
+                with open(fpath, "r", encoding="utf-8") as f:
+                    posts = _json.load(f)
+            except Exception:
+                continue
+            for p in posts:
+                existing = conn.execute(
+                    "SELECT id FROM blog_posts WHERE slug=?", (p["slug"],)
+                ).fetchone()
+                if existing:
+                    continue
+                conn.execute(
+                    """INSERT INTO blog_posts
+                       (title, slug, content, excerpt, meta_title, meta_description,
+                        tags, status, author, read_time, keyword_target, published_at)
+                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, COALESCE(?, datetime('now')))""",
+                    (
+                        p["title"], p["slug"], p.get("content", ""),
+                        p.get("excerpt", ""), p.get("meta_title", p["title"]),
+                        p.get("meta_description", ""), p.get("tags", "[]"),
+                        p.get("status", "published"), p.get("author", "INBXR Team"),
+                        p.get("read_time", 5), p.get("keyword_target", ""),
+                        p.get("published_at"),
+                    )
                 )
-            )
-        conn.commit()
+            conn.commit()
 
 
 # ── Schema ──────────────────────────────────────────────
