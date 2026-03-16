@@ -219,13 +219,20 @@ def generate_blog_image(title, slug, category=None, keyword=None):
     subtitle = "Free tools to fix your email deliverability"
     draw.text((80, subtitle_y), subtitle, fill=TEXT_MUTED + (255,), font=subtitle_font)
 
-    # ── Logo in bottom-left ──
+    # ── Logo in bottom-left (white version) ──
     try:
         logo = Image.open(_LOGO_PATH).convert("RGBA")
         # Scale logo to ~140px wide
         logo_w = 140
         logo_h = int(logo.height * (logo_w / logo.width))
         logo = logo.resize((logo_w, logo_h), Image.LANCZOS)
+        # Convert all non-transparent pixels to white
+        pixels = logo.load()
+        for py in range(logo.height):
+            for px in range(logo.width):
+                r, g, b, a = pixels[px, py]
+                if a > 0:
+                    pixels[px, py] = (255, 255, 255, a)
         logo_y = HEIGHT - logo_h - 40
         img.paste(logo, (80, logo_y), logo)
     except Exception:
