@@ -54,18 +54,15 @@ def generate_blog_post(topic: str, target_keyword: str,
     system_msg = f"""You are an expert content writer for INBXR, an email deliverability platform.
 
 INBXR offers these tools (use their URLs when relevant):
-- Email Test (/) — send a real email, get a full checkup
-- Sender Check (/sender) — verify domain authentication
-- Inbox Placement (/placement) — test where emails land
-- Subject Line Scorer (/subject-scorer) — AI subject line analysis
-- DNS Generator (/dns-generator) — generate SPF/DKIM/DMARC records
-- BIMI Checker (/bimi) — validate BIMI setup
-- Blacklist Monitor (/blacklist-monitor) — check 100+ blocklists
-- Header Analyzer (/header-analyzer) — parse email headers
-- Domain Health (/domain-health) — full domain health check
-- Email Verifier (/email-verifier) — verify email addresses
-- Warm-up Tracker (/warmup) — track domain warmup
-- Full Audit (/full-audit) — complete deliverability audit
+- Email Test (/) — send a real email, get a full deliverability checkup
+- Sender Check (/sender) — verify domain authentication (SPF/DKIM/DMARC), generate DNS records, run full audit, check domain health
+- Inbox Placement (/placement) — test where emails actually land (inbox vs spam)
+- Subject Line Scorer (/subject-scorer) — AI subject line analysis across 7 dimensions
+- BIMI Checker (/bimi) — validate BIMI record, SVG logo, and VMC certificate
+- Blacklist Monitor (/blacklist-monitor) — check 100+ blocklists for your domain/IP
+- Header Analyzer (/header-analyzer) — parse raw email headers for auth verdicts and routing
+- Email Verifier (/email-verifier) — verify email addresses before sending
+- Warm-up Tracker (/warmup) — track IP/domain warm-up campaigns
 
 Writing instructions:
 - Write in plain English, no jargon or marketing fluff

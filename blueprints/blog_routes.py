@@ -22,17 +22,14 @@ _PER_PAGE = 12
 
 _TOOL_MAP = {
     '/':                  ('Email Test',        'Send a real email and get a full deliverability checkup'),
-    '/sender':            ('Sender Check',      'Verify your domain authentication setup'),
+    '/sender':            ('Sender Check',      'Verify your domain authentication and generate DNS records'),
     '/placement':         ('Inbox Placement',   'Test where your emails actually land'),
     '/subject-scorer':    ('Subject Line Scorer','Score your subject line for spam triggers'),
-    '/dns-generator':     ('DNS Generator',     'Generate SPF, DKIM, and DMARC records'),
     '/bimi':              ('BIMI Checker',      'Validate your BIMI setup'),
     '/blacklist-monitor': ('Blacklist Monitor', 'Check if you\'re on any blocklists'),
     '/header-analyzer':   ('Header Analyzer',   'Parse and analyze email headers'),
-    '/domain-health':     ('Domain Health',     'Get a full domain health report'),
     '/email-verifier':    ('Email Verifier',    'Verify email addresses before sending'),
     '/warmup':            ('Warm-up Tracker',   'Track your domain warm-up progress'),
-    '/full-audit':        ('Full Audit',        'Run a complete deliverability audit'),
 }
 
 
@@ -51,6 +48,22 @@ def _process_ctas(content):
             f'</div>'
         )
     return re.sub(r'\[CTA:(\/[\w-]*)\]', replace_cta, content)
+
+
+# Redirect URLs that should point to /sender
+_LINK_REDIRECTS = {
+    '/dns-generator': '/sender',
+    '/domain-health': '/sender',
+    '/full-audit': '/sender',
+    '/email-test': '/',
+}
+
+def _fix_legacy_links(content):
+    """Rewrite old redirect URLs in blog HTML to their canonical destinations."""
+    for old, new in _LINK_REDIRECTS.items():
+        content = content.replace(f'href="{old}"', f'href="{new}"')
+        content = content.replace(f"href='{old}'", f"href='{new}'")
+    return content
 
 
 # ── Admin auth helper ────────────────────────────────────
@@ -165,8 +178,9 @@ def blog_post(slug):
                 [post["id"]] + like_params,
             )
 
-    # Process CTA markers in content
+    # Process CTA markers and fix legacy links
     content = _process_ctas(post["content"] or "")
+    content = _fix_legacy_links(content)
 
     return render_template(
         "blog/post.html",
@@ -182,9 +196,8 @@ def sitemap():
     """XML sitemap for SEO — static pages + published blog posts."""
     static_pages = [
         "/", "/sender", "/placement", "/subject-scorer",
-        "/dns-generator", "/bimi", "/blacklist-monitor",
-        "/header-analyzer", "/domain-health", "/email-verifier",
-        "/warmup", "/full-audit", "/blog", "/pricing",
+        "/bimi", "/blacklist-monitor", "/header-analyzer",
+        "/email-verifier", "/warmup", "/blog", "/pricing",
         "/privacy", "/terms",
     ]
 
