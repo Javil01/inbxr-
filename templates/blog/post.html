@@ -118,7 +118,7 @@
   <h2>Keep Reading</h2>
   <div class="blog-related__grid">
     {% for rp in related_posts %}
-    <div class="blog-card">
+    <a href="/blog/{{ rp.slug }}" class="blog-card">
       {% if rp.featured_image %}
       <img src="{{ rp.featured_image }}" alt="{{ rp.title }}" class="blog-card__image" />
       {% else %}
@@ -128,14 +128,14 @@
         {% if rp.category_name %}
         <span class="blog-card__category">{{ rp.category_name }}</span>
         {% endif %}
-        <h2 class="blog-card__title"><a href="/blog/{{ rp.slug }}">{{ rp.title }}</a></h2>
+        <h2 class="blog-card__title">{{ rp.title }}</h2>
         <p class="blog-card__excerpt">{{ rp.excerpt }}</p>
         <div class="blog-card__meta">
           <span>{{ rp.published_at[:10] if rp.published_at else '' }}</span>
           <span>{{ rp.read_time or '5' }} min read</span>
         </div>
       </div>
-    </div>
+    </a>
     {% endfor %}
   </div>
 </div>

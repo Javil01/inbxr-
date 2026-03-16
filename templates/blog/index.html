@@ -30,26 +30,24 @@
 <!-- Post grid -->
 <div class="blog-grid">
   {% for post in posts %}
-  <div class="blog-card">
-    <a href="/blog/{{ post.slug }}" class="blog-card__image-link">
+  <a href="/blog/{{ post.slug }}" class="blog-card">
     {% if post.featured_image %}
       <img src="{{ post.featured_image }}" alt="{{ post.title }}" class="blog-card__image" />
     {% else %}
       <div class="blog-card__image"></div>
     {% endif %}
-    </a>
     <div class="blog-card__body">
       {% if post.category_name %}
       <span class="blog-card__category">{{ post.category_name }}</span>
       {% endif %}
-      <h2 class="blog-card__title"><a href="/blog/{{ post.slug }}">{{ post.title }}</a></h2>
+      <h2 class="blog-card__title">{{ post.title }}</h2>
       <p class="blog-card__excerpt">{{ post.excerpt }}</p>
       <div class="blog-card__meta">
         <span>{{ post.published_at[:10] if post.published_at else '' }}</span>
         <span>{{ post.read_time or '5' }} min read</span>
       </div>
     </div>
-  </div>
+  </a>
   {% endfor %}
 </div>
 

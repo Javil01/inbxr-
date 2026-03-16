@@ -10027,7 +10027,7 @@ a.et-next-step:hover {
 
 .blog-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px; max-width: 1200px; margin: 0 auto; padding: 24px; }
 
-.blog-card { background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden; transition: transform 0.2s, box-shadow 0.2s; }
+.blog-card { display: block; text-decoration: none; color: inherit; background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden; transition: transform 0.2s, box-shadow 0.2s; cursor: pointer; }
 .blog-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.08); }
 .blog-card__image-link { display: block; text-decoration: none; }
 .blog-card__image { width: 100%; aspect-ratio: 16/9; object-fit: cover; background: linear-gradient(135deg, #0c1a3a 0%, #16a34a 100%); }
