@@ -66,13 +66,15 @@ INBXR offers these tools (use their URLs when relevant):
 
 Writing instructions:
 - Write in plain English, no jargon or marketing fluff
-- 1500-2000 words
-- Structure: H1 title, intro paragraph with target keyword, H2/H3 sections, conclusion
+- CRITICAL: The post MUST be 1500-2000 words. This is non-negotiable. Each H2 section should be 200-300 words minimum.
+- Structure: intro paragraph (100+ words), then 5-7 H2 sections (each 200-300 words with H3 subsections), then conclusion (100+ words), then FAQ
 - Formula: Problem → Why it happens → How to fix → CTA to relevant tool
-- Insert [CTA:tool-path] markers (e.g. [CTA:/dns-generator]) where a call-to-action to a relevant INBXR tool makes sense
+- Insert [CTA:tool-path] markers (e.g. [CTA:/sender]) where a call-to-action to a relevant INBXR tool makes sense. Include at least 3 CTAs.
 - Target keyword in title, first paragraph, one H2, and naturally 1-2% throughout
-- Include an FAQ section at the end with 3-5 questions and answers
+- Include an FAQ section at the end with 3-5 questions and answers (each answer 50+ words)
 - Generate HTML output (h2, h3, p, ul, li, strong, a tags — no h1, the title is separate)
+- Include real examples, statistics, and actionable steps — not generic advice
+- Use bullet lists and numbered lists where helpful
 {internal_links_context}
 
 IMPORTANT: Return ONLY valid JSON. No markdown, no code fences, no explanation outside the JSON.
@@ -104,18 +106,21 @@ Return a JSON object with exactly these keys:
         raise BlogAIError(f"Blog generation failed: {str(e)[:100]}")
 
 
-def _call_api(system_msg: str, user_msg: str, cfg: dict) -> str:
+def _call_api(system_msg: str, user_msg: str, cfg: dict,
+              max_tokens: int = 8192, json_mode: bool = True) -> str:
     """Call the Groq/OpenAI-compatible API."""
-    payload = json.dumps({
+    body_dict = {
         "model": cfg["model"],
         "messages": [
             {"role": "system", "content": system_msg},
             {"role": "user", "content": user_msg},
         ],
         "temperature": 0.7,
-        "max_tokens": 4096,
-        "response_format": {"type": "json_object"},
-    })
+        "max_tokens": max_tokens,
+    }
+    if json_mode:
+        body_dict["response_format"] = {"type": "json_object"}
+    payload = json.dumps(body_dict)
 
     ctx = ssl.create_default_context()
     conn = HTTPSConnection(cfg["api_host"], 443, timeout=_TIMEOUT, context=ctx)
@@ -196,6 +201,132 @@ def _parse_response(raw: str) -> dict:
         "total_tokens": usage.get("total_tokens", 0),
     }
 
+    return result
+
+
+def generate_blog_post_long(topic: str, target_keyword: str,
+                            existing_posts: list = None) -> dict:
+    """Two-pass blog generation for longer posts (1200+ words).
+
+    Pass 1: Generate metadata (title, slug, meta, tags, FAQ) as JSON.
+    Pass 2: Generate full HTML content without JSON constraints for longer output.
+    """
+    cfg = _get_config()
+    if not cfg["api_key"]:
+        raise BlogAIError("AI blog writer not available — GROQ_API_KEY not configured")
+
+    internal_links_context = ""
+    if existing_posts:
+        links = "\n".join(f"- \"{p['title']}\" -> /blog/{p['slug']}"
+                          for p in existing_posts[:10])
+        internal_links_context = f"\n\nExisting blog posts you can link to internally:\n{links}"
+
+    # ── Pass 1: Metadata ──
+    meta_system = f"""You are an SEO content strategist for INBXR, an email deliverability platform.
+Generate metadata for a blog post. Return ONLY valid JSON.
+
+Return a JSON object with exactly these keys:
+{{
+  "title": "SEO-optimized blog post title with target keyword",
+  "slug": "url-friendly-slug-with-keyword",
+  "meta_description": "150-160 character meta description with target keyword",
+  "excerpt": "200 character excerpt for listing pages",
+  "tags": ["tag1", "tag2", "tag3", "tag4", "tag5"],
+  "faq": [
+    {{"q": "Detailed question about the topic?", "a": "Comprehensive 50-80 word answer with actionable advice."}},
+    {{"q": "Another question?", "a": "Another detailed answer."}},
+    {{"q": "Third question?", "a": "Third detailed answer."}},
+    {{"q": "Fourth question?", "a": "Fourth detailed answer."}}
+  ],
+  "outline": ["H2 Section 1 Title", "H2 Section 2 Title", "H2 Section 3 Title", "H2 Section 4 Title", "H2 Section 5 Title", "H2 Section 6 Title"]
+}}"""
+
+    meta_user = f"Topic: {topic}\nTarget keyword: {target_keyword}"
+
+    start = time.time()
+    try:
+        raw_meta = _call_api(meta_system, meta_user, cfg, max_tokens=2048)
+        meta = _parse_response(raw_meta)
+    except Exception as e:
+        raise BlogAIError(f"Metadata generation failed: {str(e)[:100]}")
+
+    outline = meta.get("outline", [])
+    outline_text = "\n".join(f"- {s}" for s in outline) if outline else "Use 6 logical H2 sections"
+
+    # ── Pass 2: Full HTML content ──
+    content_system = f"""You are an expert content writer for INBXR, an email deliverability platform.
+Write a COMPLETE, LONG blog post in HTML. This is the FULL article — write every section in detail.
+
+INBXR tools (link to these with [CTA:path] markers):
+- Email Test (/) — send a real email, get a full deliverability checkup
+- Sender Check (/sender) — verify SPF/DKIM/DMARC, generate DNS records, audit domain
+- Inbox Placement (/placement) — test inbox vs spam landing
+- Subject Line Scorer (/subject-scorer) — AI subject line analysis
+- BIMI Checker (/bimi) — validate BIMI record and VMC
+- Blacklist Monitor (/blacklist-monitor) — check 100+ blocklists
+- Header Analyzer (/header-analyzer) — parse raw email headers
+- Email Verifier (/email-verifier) — verify email addresses
+- Warm-up Tracker (/warmup) — track warm-up campaigns
+{internal_links_context}
+
+REQUIREMENTS:
+- Output ONLY HTML tags: h2, h3, p, ul, ol, li, strong, em, a. No h1, no divs, no classes.
+- Write 1500-2000 words MINIMUM. Each H2 section must be 200+ words.
+- Start with a 100+ word intro paragraph (no heading).
+- Include 6+ H2 sections with detailed, actionable content.
+- Use real examples, specific numbers, and step-by-step instructions.
+- Insert [CTA:/path] markers for 3-4 relevant INBXR tools.
+- End with a conclusion H2 section.
+- Target keyword "{target_keyword}" in the intro and at least 2 H2 headings.
+- Do NOT wrap in markdown code fences. Output raw HTML only."""
+
+    content_user = f"""Write the full blog post for: "{meta.get('title', topic)}"
+Target keyword: {target_keyword}
+
+Follow this outline:
+{outline_text}
+
+Remember: 1500-2000 words minimum. Write each section thoroughly with examples and actionable steps."""
+
+    try:
+        raw_content = _call_api(content_system, content_user, cfg,
+                                max_tokens=8192, json_mode=False)
+        # Extract content from non-JSON response
+        data = json.loads(raw_content)
+        choices = data.get("choices", [])
+        if not choices:
+            raise BlogAIError("No choices in content response")
+        html_content = choices[0].get("message", {}).get("content", "")
+        if not html_content:
+            raise BlogAIError("Empty content response")
+
+        # Clean up any markdown code fences
+        html_content = re.sub(r'^```html?\s*', '', html_content.strip())
+        html_content = re.sub(r'\s*```$', '', html_content.strip())
+
+        # Token usage from content pass
+        usage = data.get("usage", {})
+    except BlogAIError:
+        raise
+    except Exception as e:
+        raise BlogAIError(f"Content generation failed: {str(e)[:100]}")
+
+    result = {
+        "title": meta.get("title", topic),
+        "slug": meta.get("slug", re.sub(r'[^a-z0-9]+', '-', topic.lower()).strip('-')),
+        "meta_description": meta.get("meta_description", ""),
+        "excerpt": meta.get("excerpt", ""),
+        "content": html_content,
+        "tags": meta.get("tags", []),
+        "faq": meta.get("faq", []),
+        "elapsed_ms": round((time.time() - start) * 1000),
+        "model": cfg["model"],
+        "usage": {
+            "prompt_tokens": usage.get("prompt_tokens", 0),
+            "completion_tokens": usage.get("completion_tokens", 0),
+            "total_tokens": usage.get("total_tokens", 0),
+        },
+    }
     return result
 
 
