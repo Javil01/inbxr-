@@ -368,12 +368,12 @@
       fetch("/api/history/" + id)
         .then(function(r) { return r.json(); })
         .then(function(data) {
-          if (data.error) { alert(data.error); return; }
+          if (data.error) { showToast(data.error, 'error'); return; }
           modalTitle.textContent = toolLabel(data.tool) + " — " + (data.input_summary || "Result #" + data.id);
           modalJson.textContent = JSON.stringify(data.result_json, null, 2);
           modal.style.display = "flex";
         })
-        .catch(function() { alert("Failed to load result."); });
+        .catch(function() { showToast("Failed to load result.", "error"); });
     }
 
     if (delBtn) {
@@ -390,10 +390,10 @@
               emptyEl.style.display = "block";
             }
           } else {
-            alert(data.error || "Delete failed.");
+            showToast(data.error || "Delete failed.", "error");
           }
         })
-        .catch(function() { alert("Delete failed."); });
+        .catch(function() { showToast("Delete failed.", "error"); });
     }
   });
 

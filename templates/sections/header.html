@@ -1,6 +1,21 @@
 {% if tracking_tags and tracking_tags.head %}{{ tracking_tags.head | safe }}{% endif %}
 <meta name="csrf-token" content="{{ csrf_token() }}">
 <script>if(new URLSearchParams(location.search).get('embed')==='1'){document.documentElement.classList.add('embedded');}</script>
+<!-- Toast notification system -->
+<div class="toast-container" id="toastContainer"></div>
+<script>
+window.showToast=function(msg,type,duration){
+  type=type||'error';duration=duration||4500;
+  var c=document.getElementById('toastContainer');if(!c)return;
+  var icons={error:'\u2718',success:'\u2714',warning:'\u26A0',info:'\u2139'};
+  var t=document.createElement('div');t.className='toast toast--'+type;
+  t.innerHTML='<span class="toast__icon">'+icons[type]+'</span><span class="toast__msg">'+msg+'</span><button class="toast__close">&times;</button>';
+  c.appendChild(t);
+  function dismiss(){t.classList.add('toast--exit');setTimeout(function(){if(t.parentNode)t.remove();},250);}
+  var timer=setTimeout(dismiss,duration);
+  t.querySelector('.toast__close').addEventListener('click',function(){clearTimeout(timer);dismiss();});
+};
+</script>
 <header class="site-header">
   <div class="header-inner">
     <a href="/" class="logo">

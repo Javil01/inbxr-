@@ -48,14 +48,14 @@ $('#blmAddForm').addEventListener('submit', async e => {
     const data = await res.json();
 
     if (!data.ok) {
-      alert(data.error || 'Failed to add domain.');
+      showToast(data.error || 'Failed to add domain.', 'error');
     } else {
       $('#blmDomain').value = '';
       $('#blmIp').value = '';
       await loadDomains();
     }
   } catch (err) {
-    alert('Network error. Please try again.');
+    showToast('Network error. Please try again.', 'error');
   } finally {
     btn.disabled = false;
     $('.btn-text', btn).textContent = 'Add Domain';
@@ -156,7 +156,7 @@ async function scanSingle(domain, btn) {
     const data = await res.json();
 
     if (!data.ok) {
-      alert(data.error || 'Scan failed.');
+      showToast(data.error || 'Scan failed.', 'error');
     }
 
     await loadDomains();
@@ -166,7 +166,7 @@ async function scanSingle(domain, btn) {
       showDetail(domain);
     }
   } catch (err) {
-    alert('Network error during scan.');
+    showToast('Network error during scan.', 'error');
   } finally {
     $('#blmLoading').classList.add('hidden');
     if (btn) {
@@ -198,7 +198,7 @@ $('#blmScanAll').addEventListener('click', async () => {
     }
     await loadDomains();
   } catch (err) {
-    alert('Error during scan.');
+    showToast('Error during scan.', 'error');
   } finally {
     $('#blmLoading').classList.add('hidden');
     btn.disabled = false;
@@ -220,10 +220,10 @@ async function removeDomain(domain) {
       body: JSON.stringify({ domain }),
     });
     const data = await res.json();
-    if (!data.ok) alert(data.error || 'Failed to remove.');
+    if (!data.ok) showToast(data.error || 'Failed to remove.', 'error');
     await loadDomains();
   } catch {
-    alert('Network error.');
+    showToast('Network error.', 'error');
   }
 }
 

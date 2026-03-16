@@ -190,7 +190,7 @@
         .filter(function(l) { return l && l.indexOf('@') !== -1; });
 
       if (!lines.length) {
-        alert('No emails provided. Upload a file or paste emails.');
+        showToast('No emails provided. Upload a file or paste emails.', 'warning');
         startBtn.disabled = false;
         startBtn.textContent = 'Verify Emails';
         return;
@@ -209,7 +209,7 @@
   function handleResponse(resp) {
     return resp.json().then(function(data) {
       if (!resp.ok) {
-        alert(data.error || 'Something went wrong.');
+        showToast(data.error || 'Something went wrong.', 'error');
         startBtn.disabled = false;
         startBtn.textContent = 'Verify Emails';
         return;
@@ -221,7 +221,7 @@
   }
 
   function handleError(err) {
-    alert('Upload failed: ' + err.message);
+    showToast('Upload failed: ' + err.message, 'error');
     startBtn.disabled = false;
     startBtn.textContent = 'Verify Emails';
   }

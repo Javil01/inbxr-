@@ -605,13 +605,13 @@
     if (!confirm('Suspend this user? They will not be able to use the platform.')) return;
     fetch('/admin/api/users/' + uid + '/suspend', { method: 'POST' })
       .then(function(r) { return r.json(); })
-      .then(function(d) { if (d.ok) openProfile(uid); else alert(d.error || 'Failed'); });
+      .then(function(d) { if (d.ok) openProfile(uid); else showToast(d.error || 'Failed', 'error'); });
   };
 
   window.reactivateUser = function(uid) {
     fetch('/admin/api/users/' + uid + '/reactivate', { method: 'POST' })
       .then(function(r) { return r.json(); })
-      .then(function(d) { if (d.ok) openProfile(uid); else alert(d.error || 'Failed'); });
+      .then(function(d) { if (d.ok) openProfile(uid); else showToast(d.error || 'Failed', 'error'); });
   };
 
   window.toggleFlag = function(uid, flag, add) {
@@ -666,7 +666,7 @@
       body: JSON.stringify({ tier: newTier })
     }).then(function(r) { return r.json(); }).then(function(d) {
       if (d.ok) loadUsers();
-      else alert(d.error || 'Failed');
+      else showToast(d.error || 'Failed', 'error');
     });
   };
 

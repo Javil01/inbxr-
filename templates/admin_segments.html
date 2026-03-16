@@ -246,7 +246,7 @@
 
   document.getElementById('bulkApply').addEventListener('click', function() {
     var tier = document.getElementById('bulkTier').value;
-    if (!tier) { alert('Select a tier first.'); return; }
+    if (!tier) { showToast('Select a tier first.', 'warning'); return; }
     if (!confirm('Change ' + selectedIds.size + ' users to ' + tier + '?')) return;
 
     fetch('/admin/api/users/bulk-tier', {
@@ -255,7 +255,7 @@
       body: JSON.stringify({ user_ids: Array.from(selectedIds), tier: tier })
     }).then(function(r) { return r.json(); }).then(function(d) {
       if (d.ok) {
-        alert('Updated ' + d.updated + ' users.');
+        showToast('Updated ' + d.updated + ' users.', 'success');
         selectedIds.clear();
         updateBulkBar();
         // Reload segments
@@ -263,7 +263,7 @@
           segmentData = nd;
           renderTab(currentTab);
         });
-      } else { alert(d.error || 'Failed.'); }
+      } else { showToast(d.error || 'Failed.', 'error'); }
     });
   });
 

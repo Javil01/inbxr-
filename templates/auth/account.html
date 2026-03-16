@@ -98,7 +98,7 @@
 function openPortal() {
   fetch('/billing/customer-portal', {method:'POST', headers:{'Content-Type':'application/json'}})
     .then(function(r){return r.json();})
-    .then(function(d){if(d.url) window.location.href=d.url; else alert(d.error||'Failed');});
+    .then(function(d){if(d.url) window.location.href=d.url; else showToast(d.error||'Failed','error');});
 }
 const fullKey = {{ (user.api_key or '')|tojson }};
 let keyVisible = false;
@@ -113,7 +113,7 @@ function regenApiKey() {
   fetch('{{ url_for("auth.regenerate_api_key") }}', {method:'POST',headers:{'Content-Type':'application/json'}})
     .then(r=>r.json()).then(d=>{
       if(d.ok) location.reload();
-      else alert(d.error||'Failed');
+      else showToast(d.error||'Failed','error');
     });
 }
 document.getElementById('changePassForm')?.addEventListener('submit', function(e) {

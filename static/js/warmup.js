@@ -49,7 +49,7 @@ $('#warmupCreateForm').addEventListener('submit', async e => {
     const data = await res.json();
 
     if (!data.ok) {
-      alert(data.error || 'Failed to create campaign.');
+      showToast(data.error || 'Failed to create campaign.', 'error');
     } else {
       $('#warmupDomain').value = '';
       $('#warmupEsp').value = '';
@@ -57,7 +57,7 @@ $('#warmupCreateForm').addEventListener('submit', async e => {
       await loadCampaigns();
     }
   } catch (err) {
-    alert('Network error. Please try again.');
+    showToast('Network error. Please try again.', 'error');
   } finally {
     btn.disabled = false;
     $('.btn-text', btn).textContent = 'Start Warm-up';
@@ -160,14 +160,14 @@ async function showCampaignDetail(id) {
     const campaign = await campaignRes.json();
 
     if (!campaign) {
-      alert('Campaign not found.');
+      showToast('Campaign not found.', 'error');
       backToList();
       return;
     }
 
     renderCampaignDetail(campaign);
   } catch (err) {
-    alert('Failed to load campaign.');
+    showToast('Failed to load campaign.', 'error');
     backToList();
   }
 }
@@ -368,7 +368,7 @@ $('#warmupLogForm').addEventListener('submit', async e => {
     const data = await res.json();
 
     if (!data.ok) {
-      alert(data.error || 'Failed to log day.');
+      showToast(data.error || 'Failed to log day.', 'error');
     } else {
       $('#warmupSentCount').value = '';
       $('#warmupNotes').value = '';
@@ -376,7 +376,7 @@ $('#warmupLogForm').addEventListener('submit', async e => {
       await showCampaignDetail(currentCampaignId);
     }
   } catch (err) {
-    alert('Network error.');
+    showToast('Network error.', 'error');
   } finally {
     btn.disabled = false;
     $('.btn-text', btn).textContent = 'Log Day';
@@ -395,10 +395,10 @@ async function updateStatus(id, status) {
       body: JSON.stringify({ campaign_id: id, status }),
     });
     const data = await res.json();
-    if (!data.ok) alert(data.error || 'Failed.');
+    if (!data.ok) showToast(data.error || 'Failed.', 'error');
     await loadCampaigns();
   } catch {
-    alert('Network error.');
+    showToast('Network error.', 'error');
   }
 }
 
@@ -413,10 +413,10 @@ async function deleteCampaign(id) {
       method: 'DELETE',
     });
     const data = await res.json();
-    if (!data.ok) alert(data.error || 'Failed.');
+    if (!data.ok) showToast(data.error || 'Failed.', 'error');
     await loadCampaigns();
   } catch {
-    alert('Network error.');
+    showToast('Network error.', 'error');
   }
 }
 

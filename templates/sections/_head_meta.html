@@ -2,3 +2,17 @@
   <link rel="icon" href="/static/images/favicon-32.png" sizes="32x32" type="image/png">
   <link rel="icon" href="/static/images/favicon.ico" sizes="16x16 32x32 64x64">
   <link rel="apple-touch-icon" href="/static/images/apple-touch-icon.png">
+  {% if canonical_url %}<link rel="canonical" href="{{ canonical_url }}">{% endif %}
+  {% if page_description %}<meta name="description" content="{{ page_description }}">{% endif %}
+  {% if page_description %}
+  <meta property="og:title" content="{{ page_title or 'INBXR' }}">
+  <meta property="og:description" content="{{ page_description }}">
+  <meta property="og:url" content="{{ canonical_url or 'https://inbxr.us' }}">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="https://inbxr.us/static/images/og-default.png">
+  <meta property="og:site_name" content="INBXR">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{{ page_title or 'INBXR' }}">
+  <meta name="twitter:description" content="{{ page_description }}">
+  <meta name="twitter:image" content="https://inbxr.us/static/images/og-default.png">
+  {% endif %}

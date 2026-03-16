@@ -73,9 +73,9 @@
         .then(function(r) { return r.json(); })
         .then(function(d) {
           if (d.ok) loadPosts();
-          else alert(d.error || 'Failed to delete');
+          else showToast(d.error || 'Failed to delete', 'error');
         })
-        .catch(function() { alert('Network error'); });
+        .catch(function() { showToast('Network error', 'error'); });
     };
 
     function loadCategories() {
@@ -110,7 +110,7 @@
       .then(function(r) { return r.json(); })
       .then(function(d) {
         if (d.ok) { input.value = ''; loadCategories(); }
-        else alert(d.error || 'Failed');
+        else showToast(d.error || 'Failed', 'error');
       });
     };
 
@@ -120,7 +120,7 @@
         .then(function(r) { return r.json(); })
         .then(function(d) {
           if (d.ok) loadCategories();
-          else alert(d.error || 'Failed');
+          else showToast(d.error || 'Failed', 'error');
         });
     };
 
@@ -216,8 +216,8 @@
         og_image: document.getElementById('postOgImage').value.trim()
       };
 
-      if (!payload.title) { alert('Title is required'); return; }
-      if (!payload.slug) { alert('Slug is required'); return; }
+      if (!payload.title) { showToast('Title is required', 'warning'); return; }
+      if (!payload.slug) { showToast('Slug is required', 'warning'); return; }
 
       var method = (typeof POST_ID !== 'undefined' && POST_ID) ? 'PUT' : 'POST';
       var url = (typeof POST_ID !== 'undefined' && POST_ID)
@@ -245,10 +245,10 @@
             }
           }
         } else {
-          alert(d.error || 'Failed to save');
+          showToast(d.error || 'Failed to save', 'error');
         }
       })
-      .catch(function() { alert('Network error'); });
+      .catch(function() { showToast('Network error', 'error'); });
     };
 
     // Delete post (editor page)
@@ -259,7 +259,7 @@
         .then(function(r) { return r.json(); })
         .then(function(d) {
           if (d.ok) window.location.href = '/admin/blog';
-          else alert(d.error || 'Failed');
+          else showToast(d.error || 'Failed', 'error');
         });
     };
 
@@ -267,7 +267,7 @@
     window.generateWithAI = function() {
       var topic = document.getElementById('aiTopic').value.trim();
       var keyword = document.getElementById('aiKeyword').value.trim();
-      if (!topic) { alert('Enter a topic first'); return; }
+      if (!topic) { showToast('Enter a topic first', 'warning'); return; }
 
       var btn = document.getElementById('aiGenerateBtn');
       var loading = document.getElementById('aiLoading');
@@ -286,7 +286,7 @@
         btn.style.opacity = '1';
         loading.style.display = 'none';
 
-        if (d.error) { alert(d.error); return; }
+        if (d.error) { showToast(d.error, 'error'); return; }
 
         // Populate fields
         if (d.title) { titleInput.value = d.title; autoSlug(); }
@@ -305,7 +305,7 @@
         btn.disabled = false;
         btn.style.opacity = '1';
         loading.style.display = 'none';
-        alert('Failed to generate. Check API connection.');
+        showToast('Failed to generate. Check API connection.', 'error');
       });
     };
 
@@ -376,12 +376,12 @@
           document.getElementById('imagePreviewImg').src = d.url;
           document.getElementById('imagePreview').style.display = 'block';
         } else {
-          alert(d.error || 'Upload failed');
+          showToast(d.error || 'Upload failed', 'error');
         }
       })
       .catch(function() {
         uploading.style.display = 'none';
-        alert('Upload failed');
+        showToast('Upload failed', 'error');
       });
 
       input.value = '';
@@ -421,7 +421,7 @@
         btn.style.opacity = '1';
         loading.style.display = 'none';
 
-        if (!d.ok) { alert(d.error || 'Failed to rewrite'); return; }
+        if (!d.ok) { showToast(d.error || 'Failed to rewrite', 'error'); return; }
 
         document.getElementById('nlSubject').value = d.subject || '';
         document.getElementById('nlPreview').value = d.preview_text || '';
@@ -435,7 +435,7 @@
         btn.disabled = false;
         btn.style.opacity = '1';
         loading.style.display = 'none';
-        alert('Failed to rewrite. Check API connection.');
+        showToast('Failed to rewrite. Check API connection.', 'error');
       });
     };
 

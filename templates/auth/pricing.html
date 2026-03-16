@@ -188,9 +188,9 @@
       .then(function(r) { return r.json(); })
       .then(function(d) {
         if (d.url) window.location.href = d.url;
-        else { alert(d.error || 'Something went wrong.'); location.reload(); }
+        else { showToast(d.error || 'Something went wrong.', 'error'); location.reload(); }
       })
-      .catch(function() { alert('Network error. Please try again.'); location.reload(); });
+      .catch(function() { showToast('Network error. Please try again.', 'error'); location.reload(); });
     });
   });
 })();

@@ -9,6 +9,7 @@ import os
 import json
 import logging
 import smtplib
+import time
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from http.client import HTTPSConnection
@@ -45,31 +46,43 @@ def _send_via_api(to_email, subject, html_body, text_body=None):
     if text_body:
         payload["textContent"] = text_body
 
-    try:
-        conn = HTTPSConnection("api.brevo.com", timeout=15)
-        conn.request(
-            "POST",
-            "/v3/smtp/email",
-            body=json.dumps(payload),
-            headers={
-                "api-key": BREVO_API_KEY,
-                "Content-Type": "application/json",
-                "Accept": "application/json",
-            },
-        )
-        resp = conn.getresponse()
-        body = resp.read().decode()
-        conn.close()
+    for attempt in range(3):
+        try:
+            conn = HTTPSConnection("api.brevo.com", timeout=15)
+            try:
+                conn.request(
+                    "POST",
+                    "/v3/smtp/email",
+                    body=json.dumps(payload),
+                    headers={
+                        "api-key": BREVO_API_KEY,
+                        "Content-Type": "application/json",
+                        "Accept": "application/json",
+                    },
+                )
+                resp = conn.getresponse()
+                body = resp.read().decode()
+            finally:
+                conn.close()
 
-        if resp.status in (200, 201):
-            logger.info("Brevo API: email sent to %s (subject: %s)", to_email, subject)
-            return True
-        else:
-            logger.error("Brevo API error %s sending to %s: %s", resp.status, to_email, body)
+            if resp.status in (200, 201):
+                logger.info("Brevo API: email sent to %s (subject: %s)", to_email, subject)
+                return True
+            elif resp.status >= 500 and attempt < 2:
+                logger.warning("Brevo API server error %s (attempt %d), retrying", resp.status, attempt + 1)
+                time.sleep(1 * (attempt + 1))
+                continue
+            else:
+                logger.error("Brevo API error %s sending to %s: %s", resp.status, to_email, body)
+                return False
+        except Exception as e:
+            if attempt < 2:
+                logger.warning("Brevo API network error (attempt %d): %s, retrying", attempt + 1, e)
+                time.sleep(1 * (attempt + 1))
+                continue
+            logger.error("Brevo API network error sending to %s: %s", to_email, e)
             return False
-    except Exception as e:
-        logger.error("Brevo API network error sending to %s: %s", to_email, e)
-        return False
+    return False
 
 
 def _send_via_smtp(to_email, subject, html_body, text_body=None):

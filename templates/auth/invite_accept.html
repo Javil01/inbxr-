@@ -30,7 +30,7 @@
     fetch('/api/team/invite/{{ token }}/decline', {method:'POST'})
       .then(function(r){return r.json();}).then(function(d){
         if (d.ok) { window.location.href = '/'; }
-        else { alert(d.error); }
+        else { showToast(d.error, 'error'); }
       });
   }
   </script>

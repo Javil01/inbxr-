@@ -169,28 +169,28 @@
   window.removeMember = function(uid) {
     if (!confirm('Remove this member?')) return;
     fetch('/api/team/members/'+uid, {method:'DELETE'}).then(function(r){return r.json();}).then(function(d){
-      if (d.ok) loadTeam(); else alert(d.error);
+      if (d.ok) loadTeam(); else showToast(d.error, 'error');
     });
   };
   window.changeRole = function(uid, role) {
     fetch('/api/team/members/'+uid, {method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({role:role})})
-      .then(function(r){return r.json();}).then(function(d){ if (d.ok) loadTeam(); else alert(d.error); });
+      .then(function(r){return r.json();}).then(function(d){ if (d.ok) loadTeam(); else showToast(d.error, 'error'); });
   };
   window.cancelInvite = function(id) {
     fetch('/api/team/invite/'+id, {method:'DELETE'}).then(function(r){return r.json();}).then(function(d){
-      if (d.ok) loadTeam(); else alert(d.error);
+      if (d.ok) loadTeam(); else showToast(d.error, 'error');
     });
   };
   window.deleteTeam = function() {
     if (!confirm('Delete this team? All members will be removed. This cannot be undone.')) return;
     fetch('/api/team', {method:'DELETE'}).then(function(r){return r.json();}).then(function(d){
-      if (d.ok) location.reload(); else alert(d.error);
+      if (d.ok) location.reload(); else showToast(d.error, 'error');
     });
   };
   window.leaveTeam = function() {
     if (!confirm('Leave this team?')) return;
     fetch('/api/team/leave', {method:'POST'}).then(function(r){return r.json();}).then(function(d){
-      if (d.ok) location.reload(); else alert(d.error);
+      if (d.ok) location.reload(); else showToast(d.error, 'error');
     });
   };
 
@@ -239,12 +239,12 @@
   });
   window.acceptInvite = function(token) {
     fetch('/api/team/invite/'+token+'/accept', {method:'POST'}).then(function(r){return r.json();}).then(function(d){
-      if (d.ok) location.reload(); else alert(d.error);
+      if (d.ok) location.reload(); else showToast(d.error, 'error');
     });
   };
   window.declineInvite = function(token) {
     fetch('/api/team/invite/'+token+'/decline', {method:'POST'}).then(function(r){return r.json();}).then(function(d){
-      if (d.ok) location.reload(); else alert(d.error);
+      if (d.ok) location.reload(); else showToast(d.error, 'error');
     });
   };
   {% endif %}

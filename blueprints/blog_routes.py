@@ -139,6 +139,9 @@ def blog_index():
         total_pages=total_pages,
         total_posts=total,
         active_page="blog",
+        page_title="Blog — INBXR",
+        page_description="Email deliverability tips, guides, and best practices from the INBXR team.",
+        canonical_url="https://inbxr.us/blog",
     )
 
 

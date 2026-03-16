@@ -231,4 +231,7 @@ def pricing():
         tiers=tiers,
         user=user,
         active_page="pricing",
+        page_title="Pricing — INBXR",
+        page_description="Simple, transparent pricing for email deliverability tools. Start free, upgrade when you need more.",
+        canonical_url="https://inbxr.us/pricing",
     )

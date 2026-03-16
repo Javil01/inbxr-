@@ -102,13 +102,13 @@ $('#ssScoreBtn').addEventListener('click', async () => {
     const data = await res.json();
 
     if (!res.ok || data.error) {
-      alert(data.error || 'Scoring failed.');
+      showToast(data.error || 'Scoring failed.', 'error');
       return;
     }
 
     renderResults(data);
   } catch (err) {
-    alert('Network error. Please try again.');
+    showToast('Network error. Please try again.', 'error');
   } finally {
     btn.disabled = false;
     $('.btn-text', btn).textContent = 'Score & Compare';

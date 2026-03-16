@@ -396,7 +396,10 @@ def add_security_headers(response):
     response.headers['X-Frame-Options'] = 'SAMEORIGIN'
     response.headers['X-XSS-Protection'] = '1; mode=block'
     response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
-    response.headers['Content-Security-Policy'] = "upgrade-insecure-requests"
+    response.headers['Content-Security-Policy'] = "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com https://connect.facebook.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https: blob:; connect-src 'self' https://www.google-analytics.com https://region1.google-analytics.com; frame-ancestors 'self'; object-src 'none'; upgrade-insecure-requests"
+    # Cache static assets
+    if request.path.startswith('/static/'):
+        response.headers['Cache-Control'] = 'public, max-age=2592000'  # 30 days
     return response
 
 
@@ -408,6 +411,7 @@ def not_found(e):
 
 @app.errorhandler(500)
 def server_error(e):
+    logger.exception("Unhandled 500 error: %s", e)
     return render_template('errors/500.html'), 500
 
 
@@ -415,6 +419,58 @@ def server_error(e):
 @app.route('/health')
 def health_check():
     return jsonify({'status': 'ok'}), 200
+
+
+@app.route('/robots.txt')
+def robots_txt():
+    """Serve robots.txt for search engines."""
+    content = """User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /admin/
+Disallow: /api/
+Disallow: /dashboard
+Disallow: /account
+Disallow: /monitors
+Disallow: /team
+
+Sitemap: https://inbxr.us/sitemap.xml
+"""
+    return app.response_class(content.strip(), mimetype='text/plain')
+
+
+@app.route('/sitemap.xml')
+def sitemap_xml():
+    """Generate dynamic sitemap.xml."""
+    from modules.database import fetch_all
+    pages = [
+        ('/', '1.0', 'weekly'),
+        ('/analyzer', '0.9', 'weekly'),
+        ('/sender', '0.9', 'weekly'),
+        ('/placement', '0.8', 'weekly'),
+        ('/subject-scorer', '0.8', 'monthly'),
+        ('/bimi', '0.7', 'monthly'),
+        ('/header-analyzer', '0.7', 'monthly'),
+        ('/blacklist-monitor', '0.7', 'monthly'),
+        ('/email-verifier', '0.8', 'monthly'),
+        ('/warmup', '0.6', 'monthly'),
+        ('/blog', '0.8', 'daily'),
+        ('/pricing', '0.7', 'monthly'),
+        ('/support', '0.5', 'monthly'),
+    ]
+    xml = ['<?xml version="1.0" encoding="UTF-8"?>']
+    xml.append('<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">')
+    for path, priority, freq in pages:
+        xml.append(f'  <url><loc>https://inbxr.us{path}</loc><priority>{priority}</priority><changefreq>{freq}</changefreq></url>')
+    # Add blog posts
+    try:
+        posts = fetch_all("SELECT slug, updated_at FROM blog_posts WHERE status='published' ORDER BY updated_at DESC")
+        for p in posts:
+            xml.append(f'  <url><loc>https://inbxr.us/blog/{p["slug"]}</loc><priority>0.6</priority><changefreq>monthly</changefreq></url>')
+    except Exception:
+        pass
+    xml.append('</urlset>')
+    return app.response_class('\n'.join(xml), mimetype='application/xml')
 
 
 @app.route('/health/imap')
@@ -1636,7 +1692,8 @@ def admin_api_media_upload():
     if ext not in ALLOWED_EXT:
         url = None
     else:
-        safe_name = f"{int(_time.time())}_{fname.replace(' ', '_')}"
+        from werkzeug.utils import secure_filename as _sec_fn
+        safe_name = f"{int(_time.time())}_{_sec_fn(fname)}"
         f.save(_os.path.join(upload_dir, safe_name))
         url = f"/static/uploads/{safe_name}"
     if not url:
@@ -1809,28 +1866,40 @@ def admin_settings():
 def index():
     return render_template("email_test.html",
                            is_admin=_is_admin(),
-                           active_page="index")
+                           active_page="index",
+                           page_title="INBXR — Free Email Deliverability Tools",
+                           page_description="Test your emails before you send. INBXR checks spam risk, sender reputation, inbox placement, and copy quality — all free.",
+                           canonical_url="https://inbxr.us/")
 
 
 @app.route("/analyzer")
 def analyzer():
     return render_template("index.html",
                            is_admin=_is_admin(),
-                           active_page="analyzer")
+                           active_page="analyzer",
+                           page_title="Email Analyzer — INBXR",
+                           page_description="Paste your email copy and get instant spam risk scoring, copy analysis, readability metrics, and AI-powered rewrite suggestions.",
+                           canonical_url="https://inbxr.us/analyzer")
 
 
 @app.route("/sender")
 def sender():
     return render_template("sender.html",
                            is_admin=_is_admin(),
-                           active_page="sender")
+                           active_page="sender",
+                           page_title="Sender Reputation Check — INBXR",
+                           page_description="Check your domain's email authentication (SPF, DKIM, DMARC), scan 100+ blocklists, and get DNS fix records — all in one tool.",
+                           canonical_url="https://inbxr.us/sender")
 
 
 @app.route("/support")
 def support_page():
     return render_template("support.html",
                            is_admin=_is_admin(),
-                           active_page="support")
+                           active_page="support",
+                           page_title="Help & Support — INBXR",
+                           page_description="Get help with INBXR tools. FAQ, AI support chat, and contact information.",
+                           canonical_url="https://inbxr.us/support")
 
 
 @app.route("/privacy")
@@ -1978,7 +2047,10 @@ def api_onboarding_dismiss():
 def subject_scorer():
     return render_template("subject_scorer.html",
                            is_admin=_is_admin(),
-                           active_page="subject_scorer")
+                           active_page="subject_scorer",
+                           page_title="Subject Line Scorer — INBXR",
+                           page_description="A/B test up to 10 subject lines across 7 dimensions. Get scores, rankings, and actionable tips to boost open rates.",
+                           canonical_url="https://inbxr.us/subject-scorer")
 
 
 @app.route("/score-subjects", methods=["POST"])
@@ -2107,14 +2179,20 @@ def dns_generator():
 def bimi():
     return render_template("bimi_checker.html",
                            is_admin=_is_admin(),
-                           active_page="bimi")
+                           active_page="bimi",
+                           page_title="BIMI Checker — INBXR",
+                           page_description="Validate your BIMI record, SVG logo, and VMC certificate. Check if your brand logo will appear in email inboxes.",
+                           canonical_url="https://inbxr.us/bimi")
 
 
 @app.route("/placement")
 def placement():
     return render_template("placement.html",
                            is_admin=_is_admin(),
-                           active_page="placement")
+                           active_page="placement",
+                           page_title="Inbox Placement Test — INBXR",
+                           page_description="Send a test email and see exactly where it lands — inbox, spam, or promotions — across Gmail, Yahoo, and Outlook.",
+                           canonical_url="https://inbxr.us/placement")
 
 
 @app.route("/placement/start", methods=["POST"])
@@ -2219,7 +2297,10 @@ def placement_cleanup():
 def header_analyzer():
     return render_template("header_analyzer.html",
                            is_admin=_is_admin(),
-                           active_page="header_analyzer")
+                           active_page="header_analyzer",
+                           page_title="Email Header Analyzer — INBXR",
+                           page_description="Paste raw email headers and get authentication verdicts, routing details, TLS analysis, and delivery delay breakdowns.",
+                           canonical_url="https://inbxr.us/header-analyzer")
 
 
 @app.route("/analyze-headers", methods=["POST"])
@@ -3094,7 +3175,10 @@ def full_audit_check():
 def blacklist_monitor():
     return render_template("blacklist_monitor.html",
                            is_admin=_is_admin(),
-                           active_page="blacklist_monitor")
+                           active_page="blacklist_monitor",
+                           page_title="Blacklist Monitor — INBXR",
+                           page_description="Monitor your domains against 100+ email blocklists. Get alerts when your domain gets listed or delisted.",
+                           canonical_url="https://inbxr.us/blacklist-monitor")
 
 
 @app.route("/blacklist-monitor/add", methods=["POST"])
@@ -3169,7 +3253,10 @@ def blm_history(domain):
 def warmup():
     return render_template("warmup.html",
                            is_admin=_is_admin(),
-                           active_page="warmup")
+                           active_page="warmup",
+                           page_title="Warm-up Tracker — INBXR",
+                           page_description="Track your IP and domain warm-up campaigns with daily volume logging, progress charts, and best-practice guidance.",
+                           canonical_url="https://inbxr.us/warmup")
 
 
 @app.route("/warmup/create", methods=["POST"])
@@ -3254,7 +3341,10 @@ def warmup_delete(campaign_id):
 def email_verifier():
     return render_template("email_verifier.html",
                            is_admin=_is_admin(),
-                           active_page="email_verifier")
+                           active_page="email_verifier",
+                           page_title="Email Verifier — INBXR",
+                           page_description="Verify any email address instantly. Check syntax, MX records, disposable status, and SMTP mailbox existence.",
+                           canonical_url="https://inbxr.us/email-verifier")
 
 
 @app.route("/api/verify-email", methods=["POST"])

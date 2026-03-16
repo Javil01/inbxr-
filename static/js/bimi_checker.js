@@ -82,7 +82,7 @@ $('#bimiForm').addEventListener('submit', async e => {
 
     const data = await resp.json();
     if (!resp.ok) {
-      alert(data.error || 'BIMI check failed.');
+      showToast(data.error || 'BIMI check failed.', 'error');
       $('#bimiLoading').classList.add('hidden');
       $('#bimiFormCard').classList.remove('hidden');
       return;
@@ -90,7 +90,7 @@ $('#bimiForm').addEventListener('submit', async e => {
 
     renderBimiResults(data, domain, selector);
   } catch (err) {
-    alert('Request failed: ' + err.message);
+    showToast('Request failed: ' + err.message, 'error');
     $('#bimiLoading').classList.add('hidden');
     $('#bimiFormCard').classList.remove('hidden');
   } finally {
@@ -222,7 +222,7 @@ $('#bimiGenerateForm').addEventListener('submit', async e => {
   $('#bimiLogoUrl').style.borderColor = '';
 
   if (!domain) {
-    alert('Please run a BIMI check first, or enter a domain above.');
+    showToast('Please run a BIMI check first, or enter a domain above.', 'warning');
     return;
   }
 
@@ -242,7 +242,7 @@ $('#bimiGenerateForm').addEventListener('submit', async e => {
 
     const data = await resp.json();
     if (!resp.ok) {
-      alert(data.error || 'Generation failed.');
+      showToast(data.error || 'Generation failed.', 'error');
       return;
     }
 
@@ -255,7 +255,7 @@ $('#bimiGenerateForm').addEventListener('submit', async e => {
     initCopyButtons();
     $('#bimiGenResult').scrollIntoView({ behavior: 'smooth', block: 'start' });
   } catch (err) {
-    alert('Request failed: ' + err.message);
+    showToast('Request failed: ' + err.message, 'error');
   } finally {
     btn.disabled = false;
     btnText.classList.remove('hidden');

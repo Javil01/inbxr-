@@ -59,7 +59,7 @@
       if (!res.ok) throw new Error(data.error || "Verification failed");
       renderResults(data);
     } catch (err) {
-      alert(err.message || "Something went wrong. Please try again.");
+      showToast(err.message || "Something went wrong. Please try again.", 'error');
       resetForm();
     } finally {
       stopLoadingMessages();

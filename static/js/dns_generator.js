@@ -86,13 +86,13 @@ $('#dnsForm').addEventListener('submit', async e => {
 
     const data = await resp.json();
     if (!resp.ok) {
-      alert(data.error || 'Generation failed.');
+      showToast(data.error || 'Generation failed.', 'error');
       return;
     }
 
     renderResults(data);
   } catch (err) {
-    alert('Request failed: ' + err.message);
+    showToast('Request failed: ' + err.message, 'error');
   } finally {
     btn.disabled = false;
     btnText.classList.remove('hidden');
