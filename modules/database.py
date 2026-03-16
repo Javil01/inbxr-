@@ -356,6 +356,34 @@ _MIGRATIONS = [
         CREATE INDEX IF NOT EXISTS idx_admin_audit_log_action ON admin_audit_log(action, created_at DESC);
         CREATE INDEX IF NOT EXISTS idx_admin_audit_log_date ON admin_audit_log(created_at DESC);
     """),
+    ("009_alert_preferences", """
+        CREATE TABLE IF NOT EXISTS alert_preferences (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL UNIQUE,
+            blocklist_alerts INTEGER DEFAULT 1,
+            dns_auth_alerts INTEGER DEFAULT 1,
+            digest_frequency TEXT DEFAULT 'instant' CHECK(digest_frequency IN ('instant', 'daily', 'weekly', 'off')),
+            email_notifications INTEGER DEFAULT 1,
+            last_digest_at TEXT,
+            created_at TEXT DEFAULT (datetime('now')),
+            updated_at TEXT DEFAULT (datetime('now')),
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        );
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_alert_prefs_user ON alert_preferences(user_id);
+
+        CREATE TABLE IF NOT EXISTS dns_monitor_snapshots (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            monitor_id INTEGER NOT NULL,
+            spf_record TEXT,
+            dkim_valid INTEGER,
+            dmarc_record TEXT,
+            dmarc_policy TEXT,
+            issues TEXT DEFAULT '[]',
+            scanned_at TEXT DEFAULT (datetime('now')),
+            FOREIGN KEY (monitor_id) REFERENCES user_monitors(id) ON DELETE CASCADE
+        );
+        CREATE INDEX IF NOT EXISTS idx_dns_snapshots_monitor ON dns_monitor_snapshots(monitor_id, scanned_at DESC);
+    """),
     ("008_blog_system", """
         CREATE TABLE IF NOT EXISTS blog_categories (
             id INTEGER PRIMARY KEY AUTOINCREMENT,

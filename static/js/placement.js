@@ -548,6 +548,7 @@ function renderResults(data) {
 
   // Recommendations
   renderRecommendations(data.recommendations || []);
+  renderPlacementUpgradeNudge(data);
 }
 
 // ══════════════════════════════════════════════════════
@@ -653,6 +654,38 @@ function showStepError(step, msg) {
     card.prepend(el);
   }
   setTimeout(() => el.remove(), 8000);
+}
+
+// ══════════════════════════════════════════════════════
+//  UPGRADE NUDGE (Free-to-Paid)
+// ══════════════════════════════════════════════════════
+function renderPlacementUpgradeNudge(data) {
+  const tier = window.__userTier || 'free';
+  if (tier !== 'free') return;
+
+  const container = $('#placementRecs');
+  if (!container) return;
+
+  const summary = data.summary || {};
+  const spamCount = summary.spam || 0;
+
+  let contextLine = 'Get alerted instantly if your inbox placement changes.';
+  if (spamCount > 0) {
+    contextLine = spamCount + ' email' + (spamCount > 1 ? 's' : '') + ' landed in spam. Pro alerts you when placement changes so you can act fast.';
+  }
+
+  container.insertAdjacentHTML('beforeend', `
+    <div class="upgrade-nudge" style="margin-top:20px">
+      <div class="upgrade-nudge__icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><path d="M22 6l-10 7L2 6"/></svg>
+      </div>
+      <div class="upgrade-nudge__body">
+        <h3 class="upgrade-nudge__title">Never Miss a Placement Change</h3>
+        <p class="upgrade-nudge__text">${escHtml(contextLine)}</p>
+        <p class="upgrade-nudge__text"><strong>&#128196; PDF Reports</strong> — Download placement test results to share with your team.</p>
+        <a href="/pricing" class="upgrade-nudge__cta">Upgrade to Pro &rarr;</a>
+      </div>
+    </div>`);
 }
 
 // ══════════════════════════════════════════════════════

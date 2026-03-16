@@ -455,9 +455,11 @@ function renderFullReport(data) {
   // ── Full Audit CTA (auto-extract domain from received email) ──
   setupFullAuditCTA(data);
   renderNextSteps(data);
+  renderUpgradeNudges(data);
+  renderEmailPreview(data);
 
   // Show all sections with staggered reveal
-  const revealSections = ['#etAssessment', '#etHeaderGrades', '#etTransport', '#etIdentity', '#etScores', '#etReadability', '#etReputation', '#etAudit', '#etFullAuditCta', '#etNextSteps', '#etRawHeaders'];
+  const revealSections = ['#etAssessment', '#etHeaderGrades', '#etTransport', '#etIdentity', '#etScores', '#etReadability', '#etReputation', '#etAudit', '#etFullAuditCta', '#etNextSteps', '#etUpgradeNudge', '#etEmailPreview', '#etRawHeaders'];
   revealSections.forEach((s, i) => {
     const el = $(s);
     if (el && el.style.display !== 'none') {
@@ -1491,4 +1493,149 @@ function renderNextSteps(data) {
           <span class="et-next-step__btn">${escHtml(a.btn)} &rarr;</span>
         </a>`).join('')}
     </div>`;
+}
+
+// ══════════════════════════════════════════════════════
+//  UPGRADE NUDGES (Feature 2 — Free-to-Paid Conversion)
+// ══════════════════════════════════════════════════════
+function renderUpgradeNudges(data) {
+  const el = $('#etUpgradeNudge');
+  if (!el) return;
+
+  const tier = window.__userTier || 'free';
+  if (tier !== 'free') { el.style.display = 'none'; return; }
+
+  const nudges = [];
+  const placement = data.placement || {};
+  const spam = data.spam || {};
+
+  if (placement.placement === 'spam' || spam.score >= 40) {
+    nudges.push({
+      icon: '&#128276;',
+      title: 'Get Alerted If This Gets Worse',
+      text: 'Pro monitors your domain 24/7 and sends instant alerts when your emails hit spam or you land on a blocklist.',
+    });
+  }
+
+  nudges.push({
+    icon: '&#128196;',
+    title: 'Download This Report as PDF',
+    text: 'Save and share this analysis with your team. Pro includes downloadable PDF reports for every test.',
+  });
+
+  nudges.push({
+    icon: '&#128202;',
+    title: 'Track Your Score Over Time',
+    text: 'See how your deliverability changes day-by-day with trend charts, history, and domain health dashboards.',
+  });
+
+  el.style.display = '';
+  el.innerHTML = `
+    <div class="upgrade-nudge">
+      <div class="upgrade-nudge__icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+      </div>
+      <div class="upgrade-nudge__body">
+        <h3 class="upgrade-nudge__title">Get More From Your Results</h3>
+        ${nudges.map(n => `
+          <p class="upgrade-nudge__text"><strong>${n.icon} ${n.title}</strong> &mdash; ${escHtml(n.text)}</p>
+        `).join('')}
+        <a href="/pricing" class="upgrade-nudge__cta">Upgrade to Pro &rarr;</a>
+      </div>
+    </div>`;
+}
+
+// ══════════════════════════════════════════════════════
+//  EMAIL PREVIEW (Feature 4 — How Email Looks Across Clients)
+// ══════════════════════════════════════════════════════
+function renderEmailPreview(data) {
+  const el = $('#etEmailPreview');
+  if (!el) return;
+
+  const content = data.content || {};
+  const htmlBody = data.html_body || content.body_html || '';
+  const textBody = content.body_text || content.body_snippet || '';
+
+  if (!htmlBody && !textBody) { el.style.display = 'none'; return; }
+
+  const from = content.from_header || content.sender_email || 'sender@example.com';
+  const subject = content.clean_subject || content.subject || 'No subject';
+  const providers = [
+    { name: 'Gmail', icon: 'G', bg: '#f8f9fa', font: 'Arial, sans-serif' },
+    { name: 'Outlook', icon: 'O', bg: '#f3f2f1', font: 'Segoe UI, sans-serif' },
+    { name: 'Apple Mail', icon: 'A', bg: '#ffffff', font: '-apple-system, sans-serif' },
+  ];
+
+  const warnings = [];
+  if (data.spam && data.spam.score >= 40) {
+    warnings.push('High spam score — this email may be filtered before it reaches the inbox.');
+  }
+  const placement = data.placement || {};
+  if (placement.tab && placement.tab !== 'primary') {
+    warnings.push('Gmail sorted this into the "' + placement.tab + '" tab instead of Primary.');
+  }
+  if (!htmlBody) {
+    warnings.push('No HTML version detected — email will render as plain text.');
+  }
+
+  el.style.display = '';
+  el.innerHTML = `
+    <h3 class="et-section-title">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18" style="vertical-align:middle;margin-right:6px"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/></svg>
+      Email Preview
+    </h3>
+    <div class="email-preview-section">
+      <div class="email-preview-tabs" id="previewTabs">
+        ${providers.map((p, i) => `
+          <button class="email-preview-tab${i === 0 ? ' email-preview-tab--active' : ''}" data-provider="${i}">${escHtml(p.name)}</button>
+        `).join('')}
+      </div>
+      <div id="previewContent"></div>
+      ${warnings.length ? `
+        <div class="email-preview-warnings">
+          ${warnings.map(w => `
+            <div class="email-preview-warning">
+              <span class="email-preview-warning__icon">&#9888;</span>
+              <span>${escHtml(w)}</span>
+            </div>`).join('')}
+        </div>` : ''}
+    </div>`;
+
+  function showProvider(idx) {
+    const p = providers[idx];
+    const previewEl = document.getElementById('previewContent');
+    const bodyContent = htmlBody
+      ? htmlBody
+      : '<pre style="white-space:pre-wrap;font-family:monospace;font-size:13px;margin:0;">' + escHtml(textBody) + '</pre>';
+    previewEl.innerHTML = `
+      <div class="email-preview-provider-label">${escHtml(p.name)} Preview</div>
+      <div class="email-preview-frame">
+        <div class="email-preview-chrome" style="background:${p.bg};font-family:${p.font}">
+          <div class="email-preview-dots">
+            <span class="email-preview-dot email-preview-dot--red"></span>
+            <span class="email-preview-dot email-preview-dot--yellow"></span>
+            <span class="email-preview-dot email-preview-dot--green"></span>
+          </div>
+          <span class="email-preview-from" style="font-family:${p.font}">${escHtml(from)}</span>
+        </div>
+        <div class="email-preview-body" style="font-family:${p.font}">
+          <div style="padding:0 0 8px;border-bottom:1px solid #e2e8f0;margin-bottom:12px;">
+            <strong style="font-size:1rem;">${escHtml(subject)}</strong><br>
+            <span style="font-size:0.8rem;color:#64748b;">From: ${escHtml(from)}</span>
+          </div>
+          <div class="email-preview-html">${bodyContent}</div>
+        </div>
+      </div>`;
+    previewEl.querySelectorAll('.email-preview-html script').forEach(s => s.remove());
+  }
+
+  showProvider(0);
+
+  document.getElementById('previewTabs').addEventListener('click', (e) => {
+    const tab = e.target.closest('.email-preview-tab');
+    if (!tab) return;
+    $$('.email-preview-tab', el).forEach(t => t.classList.remove('email-preview-tab--active'));
+    tab.classList.add('email-preview-tab--active');
+    showProvider(parseInt(tab.dataset.provider));
+  });
 }

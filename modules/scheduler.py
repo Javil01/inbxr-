@@ -14,47 +14,7 @@ logger = logging.getLogger(__name__)
 _scheduler = None
 
 
-def init_scheduler(app):
-    """Initialize and start the background scheduler."""
-    global _scheduler
-
-    if _scheduler is not None:
-        return
-
-    _scheduler = BackgroundScheduler(daemon=True)
-
-    # Job 1: Scan all monitored domains for paid users every 6 hours
-    _scheduler.add_job(
-        _scheduled_scan_all,
-        IntervalTrigger(hours=6),
-        id="scheduled_blocklist_scan",
-        name="Blocklist Scan (all users)",
-        replace_existing=True,
-        next_run_time=None,  # Don't run immediately on startup
-    )
-
-    # Job 2: Clean up old usage logs daily
-    _scheduler.add_job(
-        _scheduled_cleanup,
-        IntervalTrigger(hours=24),
-        id="daily_log_cleanup",
-        name="Daily Log Cleanup",
-        replace_existing=True,
-        next_run_time=None,
-    )
-
-    # Job 3: SQLite database backup every hour
-    _scheduler.add_job(
-        _scheduled_backup,
-        IntervalTrigger(hours=1),
-        id="hourly_db_backup",
-        name="Hourly DB Backup",
-        replace_existing=True,
-        next_run_time=None,
-    )
-
-    _scheduler.start()
-    logger.info("[SCHEDULER] Started with %d jobs", len(_scheduler.get_jobs()))
+# ── Job functions (must be defined before init_scheduler) ──
 
 
 def _scheduled_scan_all():
@@ -103,6 +63,137 @@ def _scheduled_backup():
         logger.info("[SCHEDULER] Database backup completed")
     except Exception as e:
         logger.error("[SCHEDULER] Database backup failed: %s", e)
+
+
+def _scheduled_dns_scan():
+    """Scan DNS auth for all monitored domains of paid users."""
+    from modules.dns_monitor import scan_all_monitored_dns
+
+    try:
+        result = scan_all_monitored_dns()
+        logger.info("[SCHEDULER] DNS scan: %d scanned, %d alerted",
+                     result["scanned"], result["alerted"])
+    except Exception as e:
+        logger.error("[SCHEDULER] DNS scan failed: %s", e)
+
+
+def _scheduled_daily_digest():
+    """Send daily digest emails."""
+    from modules.alerts import send_digest_emails
+
+    try:
+        sent = send_digest_emails("daily")
+        logger.info("[SCHEDULER] Daily digest: sent %d emails", sent)
+    except Exception as e:
+        logger.error("[SCHEDULER] Daily digest failed: %s", e)
+
+
+def _scheduled_weekly_digest():
+    """Send weekly digest emails."""
+    from modules.alerts import send_digest_emails
+
+    try:
+        sent = send_digest_emails("weekly")
+        logger.info("[SCHEDULER] Weekly digest: sent %d emails", sent)
+    except Exception as e:
+        logger.error("[SCHEDULER] Weekly digest failed: %s", e)
+
+
+def _scheduled_alert_cleanup():
+    """Clean up old read alerts."""
+    from modules.alerts import cleanup_old_alerts
+
+    try:
+        cleanup_old_alerts(90)
+        logger.info("[SCHEDULER] Old alerts cleaned up")
+    except Exception as e:
+        logger.error("[SCHEDULER] Alert cleanup failed: %s", e)
+
+
+# ── Scheduler init ─────────────────────────────────────
+
+
+def init_scheduler(app):
+    """Initialize and start the background scheduler."""
+    global _scheduler
+
+    if _scheduler is not None:
+        return
+
+    _scheduler = BackgroundScheduler(daemon=True)
+
+    # Job 1: Scan all monitored domains for paid users every 6 hours
+    _scheduler.add_job(
+        _scheduled_scan_all,
+        IntervalTrigger(hours=6),
+        id="scheduled_blocklist_scan",
+        name="Blocklist Scan (all users)",
+        replace_existing=True,
+        next_run_time=None,  # Don't run immediately on startup
+    )
+
+    # Job 2: Clean up old usage logs daily
+    _scheduler.add_job(
+        _scheduled_cleanup,
+        IntervalTrigger(hours=24),
+        id="daily_log_cleanup",
+        name="Daily Log Cleanup",
+        replace_existing=True,
+        next_run_time=None,
+    )
+
+    # Job 3: SQLite database backup every hour
+    _scheduler.add_job(
+        _scheduled_backup,
+        IntervalTrigger(hours=1),
+        id="hourly_db_backup",
+        name="Hourly DB Backup",
+        replace_existing=True,
+        next_run_time=None,
+    )
+
+    # Job 4: DNS auth scan every 12 hours
+    _scheduler.add_job(
+        _scheduled_dns_scan,
+        IntervalTrigger(hours=12),
+        id="scheduled_dns_scan",
+        name="DNS Auth Scan (all users)",
+        replace_existing=True,
+        next_run_time=None,
+    )
+
+    # Job 5: Daily digest emails
+    _scheduler.add_job(
+        _scheduled_daily_digest,
+        IntervalTrigger(hours=24),
+        id="daily_digest",
+        name="Daily Alert Digest",
+        replace_existing=True,
+        next_run_time=None,
+    )
+
+    # Job 6: Weekly digest emails
+    _scheduler.add_job(
+        _scheduled_weekly_digest,
+        IntervalTrigger(days=7),
+        id="weekly_digest",
+        name="Weekly Alert Digest",
+        replace_existing=True,
+        next_run_time=None,
+    )
+
+    # Job 7: Clean up old read alerts every 24 hours
+    _scheduler.add_job(
+        _scheduled_alert_cleanup,
+        IntervalTrigger(hours=24),
+        id="alert_cleanup",
+        name="Old Alert Cleanup",
+        replace_existing=True,
+        next_run_time=None,
+    )
+
+    _scheduler.start()
+    logger.info("[SCHEDULER] Started with %d jobs", len(_scheduler.get_jobs()))
 
 
 def get_scheduler_status():

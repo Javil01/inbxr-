@@ -56,6 +56,7 @@ def signup():
         logger.warning("SMTP not configured — verification email NOT sent for %s", email)
 
     login_user(user)
+    session["is_new_signup"] = True
     next_url = request.args.get("next", "/dashboard")
     return redirect(next_url)
 

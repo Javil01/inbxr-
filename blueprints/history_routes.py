@@ -37,8 +37,9 @@ def history_page():
 
     user_id = session["user_id"]
     team_id = session.get("team_id")
+    tier = session.get("user_tier", "free")
     stats = get_history_stats(user_id, team_id=team_id)
-    return render_template("auth/history.html", stats=stats)
+    return render_template("auth/history.html", stats=stats, has_pdf=has_feature(tier, "pdf_reports"))
 
 
 @history_bp.route("/api/history")

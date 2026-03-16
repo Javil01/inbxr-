@@ -136,6 +136,28 @@ function renderOverview() {
     }
     renderRecentList(data.results || [], 'overviewRecent');
   });
+
+  // Domain health
+  loadDomainHealth();
+
+  // Trend filter buttons
+  setTimeout(function() {
+    var filters = document.getElementById('trendFilters');
+    if (filters) {
+      filters.addEventListener('click', function(e) {
+        var btn = e.target.closest('.dash-trend-btn');
+        if (!btn) return;
+        $$('.dash-trend-btn', filters).forEach(function(b) { b.classList.remove('dash-trend-btn--active'); });
+        btn.classList.add('dash-trend-btn--active');
+        var days = parseInt(btn.dataset.days) || 30;
+        var chart = document.getElementById('overviewChart');
+        if (chart) chart.innerHTML = '<div class="dash-loading-sm"><div class="loading-ring"></div></div>';
+        apiFetch('/api/history/trend?days=' + days).then(function(d) {
+          if (d && d.trend) renderTrendChart(d.trend, 'overviewChart');
+        });
+      });
+    }
+  }, 0);
 }
 
 function buildCreditsBar(c) {
@@ -208,10 +230,18 @@ function buildOverviewShell(s) {
     '</div>' +
     buildQuickActions() +
     buildAssistantTeaser() +
+    buildDomainHealthCard() +
     '<div class="dash-row">' +
       '<div class="dash-card dash-card--wide">' +
-        '<h3 class="dash-card__title">Score Trend (30 days)</h3>' +
-        '<div id="overviewChart" class="db-chart" style="min-height:140px"><div class="dash-loading-sm"><div class="loading-ring"></div></div></div>' +
+        '<div class="dash-card__header dash-card__header--row">' +
+          '<h3 class="dash-card__title">Score Trend</h3>' +
+          '<div class="dash-trend-filters" id="trendFilters">' +
+            '<button class="dash-trend-btn dash-trend-btn--active" data-days="7">7d</button>' +
+            '<button class="dash-trend-btn" data-days="30">30d</button>' +
+            '<button class="dash-trend-btn" data-days="90">90d</button>' +
+          '</div>' +
+        '</div>' +
+        '<div id="overviewChart" class="db-chart" style="min-height:160px"><div class="dash-loading-sm"><div class="loading-ring"></div></div></div>' +
       '</div>' +
       '<div class="dash-card">' +
         '<h3 class="dash-card__title">Tests by Tool</h3>' +
@@ -280,13 +310,30 @@ function renderTrendChart(trend, containerId) {
   }
 
   var maxScore = 100;
-  var html = '<div class="db-chart__bars">';
+  var scores = trend.map(function(t) { return t.avg_score || 0; });
+  var avg = Math.round(scores.reduce(function(a, b) { return a + b; }, 0) / scores.length);
+  var latest = scores[scores.length - 1];
+  var prev = scores.length > 1 ? scores[scores.length - 2] : latest;
+  var diff = latest - prev;
+  var diffLabel = diff > 0 ? '+' + diff : '' + diff;
+  var diffColor = diff >= 0 ? '#22c55e' : '#ef4444';
+
+  var html = '<div class="db-trend-summary">' +
+    '<span class="db-trend-avg">Avg: <strong>' + avg + '</strong></span>' +
+    '<span class="db-trend-latest">Latest: <strong>' + latest + '</strong></span>' +
+    (diff !== 0 ? '<span class="db-trend-diff" style="color:' + diffColor + '">' + diffLabel + ' vs prior day</span>' : '') +
+  '</div>';
+
+  html += '<div class="db-chart__bars">';
   trend.forEach(function(t, i) {
-    var h = ((t.avg_score || 0) / maxScore) * 100;
+    var score = t.avg_score || 0;
+    var h = (score / maxScore) * 100;
     var day = shortDate(t.day);
-    html += '<div class="db-chart__group" style="animation-delay:' + (i * 30) + 'ms" title="' + esc(t.day) + ': avg ' + (t.avg_score || 0) + ' (' + t.count + ' tests)">' +
+    var barColor = score >= 70 ? '#22c55e' : score >= 40 ? '#f59e0b' : '#ef4444';
+    html += '<div class="db-chart__group" style="animation-delay:' + (i * 30) + 'ms">' +
+      '<div class="db-chart__tooltip">' + score + '<br><small>' + t.count + ' test' + (t.count !== 1 ? 's' : '') + '</small></div>' +
       '<div class="db-chart__bar-pair">' +
-        '<div class="db-chart__bar db-chart__bar--score" style="height:' + h + '%"></div>' +
+        '<div class="db-chart__bar db-chart__bar--score" style="height:' + h + '%;background:' + barColor + '"></div>' +
       '</div>' +
       '<span class="db-chart__date">' + day + '</span>' +
     '</div>';
@@ -846,5 +893,137 @@ function gradeClass(grade) {
   }
 })();
 
+// ══════════════════════════════════════════════════════
+//  ONBOARDING WIZARD (Feature 1)
+// ══════════════════════════════════════════════════════
+function showOnboardingWizard() {
+  // Only show once per user
+  if (localStorage.getItem('inbxr_onboarded')) return;
+  if (!window.__isNewUser && (window.__dashStats || {}).total_checks > 0) return;
+
+  var overlay = document.createElement('div');
+  overlay.className = 'onboard-overlay';
+  overlay.innerHTML =
+    '<div class="onboard-modal">' +
+      '<button class="onboard-close" id="onboardClose">&times;</button>' +
+      '<div class="onboard-header">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" width="40" height="40"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>' +
+        '<h2>Welcome to INBXR!</h2>' +
+        '<p>Get your first deliverability insights in under 2 minutes.</p>' +
+      '</div>' +
+      '<div class="onboard-steps" id="onboardSteps">' +
+        onboardStep(1, true, 'Run Your First Email Test',
+          'Send an email to a test address and get instant SPF, DKIM, DMARC, spam risk, and inbox placement results.',
+          '/', 'Start Email Test') +
+        onboardStep(2, false, 'Check Your Sender Reputation',
+          'Enter your domain to see authentication records, blocklist status, and overall sender health score.',
+          '/sender', 'Check Domain') +
+        onboardStep(3, false, 'Set Up Domain Monitoring',
+          'Add your domain to get automated alerts when you land on a blocklist or your DNS auth records change.',
+          '/blacklist-monitor', 'Add Monitor') +
+      '</div>' +
+      '<div class="onboard-footer">' +
+        '<button class="onboard-skip" id="onboardSkip">Skip for now</button>' +
+      '</div>' +
+    '</div>';
+
+  document.body.appendChild(overlay);
+
+  function dismiss() {
+    localStorage.setItem('inbxr_onboarded', '1');
+    overlay.classList.add('onboard-overlay--exit');
+    setTimeout(function() { overlay.remove(); }, 300);
+  }
+
+  document.getElementById('onboardClose').addEventListener('click', dismiss);
+  document.getElementById('onboardSkip').addEventListener('click', dismiss);
+  overlay.addEventListener('click', function(e) { if (e.target === overlay) dismiss(); });
+
+  // CTA buttons — load tool in dashboard and dismiss
+  overlay.querySelectorAll('.onboard-step__cta').forEach(function(btn) {
+    btn.addEventListener('click', function(e) {
+      e.preventDefault();
+      var href = this.getAttribute('href');
+      dismiss();
+      var match = document.querySelector('.dash-nav__item[data-tool="' + href + '"]');
+      if (match) {
+        setActiveNav(match);
+        loadToolInDashboard(href);
+      } else {
+        window.location.href = href;
+      }
+    });
+  });
+}
+
+function onboardStep(num, active, title, desc, href, btnText) {
+  return '<div class="onboard-step' + (active ? ' onboard-step--active' : '') + '">' +
+    '<span class="onboard-step__num">' + num + '</span>' +
+    '<div class="onboard-step__body">' +
+      '<h3>' + esc(title) + '</h3>' +
+      '<p>' + esc(desc) + '</p>' +
+      '<a href="' + href + '" class="onboard-step__cta">' + esc(btnText) + ' &rarr;</a>' +
+    '</div>' +
+  '</div>';
+}
+
+// ══════════════════════════════════════════════════════
+//  DOMAIN HEALTH CARD (Feature 3)
+// ══════════════════════════════════════════════════════
+function buildDomainHealthCard() {
+  return '<div class="dash-card">' +
+    '<div class="dash-card__header">' +
+      '<h3 class="dash-card__title">Domain Health</h3>' +
+    '</div>' +
+    '<div id="domainHealthOverview"><div class="dash-loading-sm"><div class="loading-ring"></div></div></div>' +
+  '</div>';
+}
+
+function loadDomainHealth() {
+  apiFetch('/api/monitors').then(function(data) {
+    var container = document.getElementById('domainHealthOverview');
+    if (!container) return;
+    if (!data || !data.monitors || !data.monitors.length) {
+      container.innerHTML = '<div class="dash-domain-health-empty">' +
+        '<p>No domains monitored yet.</p>' +
+        '<a href="/blacklist-monitor" class="dash-tool-link">Add a domain to track health &rarr;</a>' +
+      '</div>';
+      return;
+    }
+
+    var html = '<div class="dash-domain-grid">';
+    data.monitors.forEach(function(m) {
+      var last = m.last_scan || {};
+      var listed = last.listed_count || 0;
+      var total = last.total_checked || 0;
+      var clean = total - listed;
+      var pct = total > 0 ? Math.round((clean / total) * 100) : 100;
+      var color = listed === 0 ? '#22c55e' : listed <= 2 ? '#f59e0b' : '#ef4444';
+      var label = listed === 0 ? 'Healthy' : listed <= 2 ? 'Warning' : 'Critical';
+
+      html += '<div class="dash-domain-card">' +
+        '<div class="dash-domain-card__header">' +
+          '<strong>' + esc(m.domain) + '</strong>' +
+          '<span class="dash-domain-badge" style="background:' + color + '20;color:' + color + '">' + label + '</span>' +
+        '</div>' +
+        '<div class="dash-domain-score">' +
+          '<svg viewBox="0 0 36 36" class="dash-domain-ring" width="52" height="52">' +
+            '<path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="3"/>' +
+            '<path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="' + color + '" stroke-width="3" stroke-dasharray="' + pct + ', 100" stroke-linecap="round"/>' +
+          '</svg>' +
+          '<span class="dash-domain-pct" style="color:' + color + '">' + pct + '%</span>' +
+        '</div>' +
+        '<div class="dash-domain-meta">' +
+          '<span>' + (listed === 0 ? 'Clean on all blocklists' : listed + ' blocklist' + (listed > 1 ? 's' : '')) + '</span>' +
+          '<span>' + formatDate(last.checked_at || m.last_checked_at) + '</span>' +
+        '</div>' +
+      '</div>';
+    });
+    html += '</div>';
+    container.innerHTML = html;
+  });
+}
+
 // ── Boot ──
 renderOverview();
+showOnboardingWizard();

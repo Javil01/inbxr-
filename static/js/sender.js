@@ -167,6 +167,7 @@ function renderResults(data) {
   // ── Recommendations ──
   renderRecommendations(recommendations);
   renderNextSteps(data);
+  renderSenderUpgradeNudge(data);
 
   // Re-check button
   const recheckBtn = $('#recheckBtn');
@@ -814,6 +815,42 @@ $('#recheckBtn').addEventListener('click', () => {
     $('#senderForm').dispatchEvent(new Event('submit'));
   }
 });
+
+// ══════════════════════════════════════════════════════
+//  UPGRADE NUDGE (Free-to-Paid)
+// ══════════════════════════════════════════════════════
+function renderSenderUpgradeNudge(data) {
+  const el = $('#senderUpgradeNudge');
+  if (!el) return;
+  const tier = window.__userTier || 'free';
+  if (tier !== 'free') { el.classList.add('hidden'); return; }
+
+  const auth = data.auth || {};
+  const rep = data.reputation || {};
+  const issues = (auth.categories || []).filter(c => c.status === 'fail' || c.status === 'missing');
+  const listed = rep.listed_count || 0;
+
+  let contextText = 'Pro monitors your domain around the clock and alerts you instantly when something changes.';
+  if (issues.length > 0) {
+    contextText = `You have ${issues.length} auth issue${issues.length > 1 ? 's' : ''}. Pro sends you alerts when these get fixed — or if new issues appear.`;
+  } else if (listed > 0) {
+    contextText = `You're listed on ${listed} blocklist${listed > 1 ? 's' : ''}. Pro tracks your delisting progress and alerts you if you get relisted.`;
+  }
+
+  el.classList.remove('hidden');
+  el.innerHTML = `
+    <div class="upgrade-nudge">
+      <div class="upgrade-nudge__icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      </div>
+      <div class="upgrade-nudge__body">
+        <h3 class="upgrade-nudge__title">Monitor This Domain 24/7</h3>
+        <p class="upgrade-nudge__text">${escHtml(contextText)}</p>
+        <p class="upgrade-nudge__text"><strong>&#128196; PDF Reports</strong> — Download and share this sender check with your team.</p>
+        <a href="/pricing" class="upgrade-nudge__cta">Upgrade to Pro &rarr;</a>
+      </div>
+    </div>`;
+}
 
 // ── Auto-run from URL params ──────────────────────────
 const _params = new URLSearchParams(window.location.search);

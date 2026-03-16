@@ -82,6 +82,159 @@ def get_unread_count(user_id):
     return row["cnt"] if row else 0
 
 
+def get_alert_preferences(user_id):
+    """Get alert preferences for a user. Creates defaults if missing."""
+    row = fetchone(
+        "SELECT * FROM alert_preferences WHERE user_id = ?", (user_id,)
+    )
+    if row:
+        return row
+    # Return defaults (don't create yet — created on first save)
+    return {
+        "user_id": user_id,
+        "blocklist_alerts": 1,
+        "dns_auth_alerts": 1,
+        "digest_frequency": "instant",
+        "email_notifications": 1,
+        "last_digest_at": None,
+    }
+
+
+def save_alert_preferences(user_id, prefs):
+    """Save alert preferences. Creates or updates."""
+    existing = fetchone("SELECT id FROM alert_preferences WHERE user_id = ?", (user_id,))
+    if existing:
+        execute(
+            """UPDATE alert_preferences
+               SET blocklist_alerts = ?, dns_auth_alerts = ?,
+                   digest_frequency = ?, email_notifications = ?,
+                   updated_at = datetime('now')
+               WHERE user_id = ?""",
+            (
+                int(prefs.get("blocklist_alerts", True)),
+                int(prefs.get("dns_auth_alerts", True)),
+                prefs.get("digest_frequency", "instant"),
+                int(prefs.get("email_notifications", True)),
+                user_id,
+            ),
+        )
+    else:
+        execute(
+            """INSERT INTO alert_preferences
+               (user_id, blocklist_alerts, dns_auth_alerts, digest_frequency, email_notifications)
+               VALUES (?, ?, ?, ?, ?)""",
+            (
+                user_id,
+                int(prefs.get("blocklist_alerts", True)),
+                int(prefs.get("dns_auth_alerts", True)),
+                prefs.get("digest_frequency", "instant"),
+                int(prefs.get("email_notifications", True)),
+            ),
+        )
+
+
+def should_send_email_alert(user_id):
+    """Check if this user should receive email alerts (tier + preferences)."""
+    from modules.tiers import has_feature
+    from modules.auth import get_user_by_id
+
+    user = get_user_by_id(user_id)
+    if not user:
+        return False
+
+    if not has_feature(user["tier"], "email_alerts"):
+        return False
+
+    prefs = get_alert_preferences(user_id)
+    return bool(prefs.get("email_notifications", True))
+
+
+def send_digest_emails(frequency):
+    """Send digest emails for users with the given frequency ('daily' or 'weekly').
+    Collects unread alerts since last digest and sends a summary email.
+    """
+    from modules.mailer import _send, is_configured, BASE_URL
+
+    if not is_configured():
+        return 0
+
+    users = fetchall(
+        """SELECT ap.user_id, ap.last_digest_at, u.email, u.display_name, u.tier
+           FROM alert_preferences ap
+           JOIN users u ON u.id = ap.user_id
+           WHERE ap.digest_frequency = ? AND ap.email_notifications = 1""",
+        (frequency,),
+    )
+
+    sent = 0
+    for user in users:
+        from modules.tiers import has_feature
+        if not has_feature(user["tier"], "email_alerts"):
+            continue
+
+        since = user["last_digest_at"] or "2000-01-01"
+        alerts = fetchall(
+            """SELECT * FROM alerts WHERE user_id = ? AND created_at > ?
+               ORDER BY created_at DESC LIMIT 50""",
+            (user["user_id"], since),
+        )
+
+        if not alerts:
+            continue
+
+        # Build digest HTML
+        name = user["display_name"] or user["email"].split("@")[0]
+        rows_html = ""
+        for a in alerts[:20]:
+            icon = "🔴" if "listed" in a.get("alert_type", "") else "🔵"
+            rows_html += f'<tr><td style="padding:8px 12px;font-size:13px;">{icon} {a["title"]}</td><td style="padding:8px 12px;font-size:12px;color:#64748b;">{a["created_at"][:16]}</td></tr>'
+
+        remaining = len(alerts) - 20
+        extra = f'<p style="color:#64748b;font-size:13px;">...and {remaining} more alerts</p>' if remaining > 0 else ""
+
+        html = f"""
+        <div style="font-family:Inter,sans-serif;max-width:480px;margin:0 auto;padding:32px 24px;">
+          <h2 style="color:#0c1a3a;margin:0 0 8px;">Your {frequency.title()} Alert Digest</h2>
+          <p style="color:#334155;font-size:15px;line-height:1.6;">
+            Hey {name}, here's a summary of your recent alerts.
+          </p>
+          <table style="width:100%;border-collapse:collapse;margin:16px 0;">
+            <thead><tr style="background:#f1f5f9;">
+              <th style="padding:8px 12px;text-align:left;font-size:13px;">Alert</th>
+              <th style="padding:8px 12px;text-align:left;font-size:13px;">Time</th>
+            </tr></thead>
+            <tbody>{rows_html}</tbody>
+          </table>
+          {extra}
+          <a href="{BASE_URL}/monitors" style="display:inline-block;background:#16a34a;color:#fff;padding:10px 24px;border-radius:999px;text-decoration:none;font-weight:600;font-size:14px;margin:12px 0;">View All Alerts</a>
+          <p style="color:#94a3b8;font-size:12px;margin-top:24px;">
+            INBXR — Email Intelligence Platform<br>
+            <a href="{BASE_URL}/monitors" style="color:#94a3b8;">Manage alert preferences</a>
+          </p>
+        </div>
+        """
+        text = f"Your {frequency} alert digest — {len(alerts)} new alerts. View at {BASE_URL}/monitors"
+
+        if _send(user["email"], f"INBXR {frequency.title()} Digest — {len(alerts)} Alert(s)", html, text):
+            execute(
+                "UPDATE alert_preferences SET last_digest_at = datetime('now') WHERE user_id = ?",
+                (user["user_id"],),
+            )
+            sent += 1
+
+    logger.info("[DIGEST] Sent %d %s digest emails", sent, frequency)
+    return sent
+
+
+def cleanup_old_alerts(days=90):
+    """Delete read alerts older than N days."""
+    execute(
+        "DELETE FROM alerts WHERE is_read = 1 AND created_at < datetime('now', ?)",
+        (f'-{days} days',),
+    )
+    logger.info("[ALERTS] Cleaned up read alerts older than %d days", days)
+
+
 def send_blocklist_alert(user_id, domain, newly_listed, newly_delisted):
     """Create an in-app alert and send an email notification for blocklist changes."""
     from modules.auth import get_user_by_id
@@ -109,9 +262,19 @@ def send_blocklist_alert(user_id, domain, newly_listed, newly_delisted):
         "newly_delisted": newly_delisted,
     }
 
+    # Check blocklist alert preference
+    prefs = get_alert_preferences(user_id)
+    if not prefs.get("blocklist_alerts", True):
+        return
+
     create_alert(user_id, alert_type, title, message, data)
 
-    # Send email notification
+    # Send email notification (only if instant + email enabled + tier allows)
+    if not should_send_email_alert(user_id):
+        return
+    if prefs.get("digest_frequency") != "instant":
+        return  # Will be included in digest
+
     user = get_user_by_id(user_id)
     if not user or not is_configured():
         return

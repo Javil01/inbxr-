@@ -17,6 +17,23 @@
   <div id="monitorList" class="monitor-list">
     <p style="color:var(--text-3);text-align:center;padding:32px 0;">Loading monitors...</p>
   </div>
+
+  <!-- Alert Preferences -->
+  <div style="margin-top:40px;border-top:1px solid rgba(255,255,255,0.06);padding-top:24px;">
+    <h3 style="margin:0 0 16px;">Alert Preferences</h3>
+    <div id="alertPrefs" style="opacity:0.5;">Loading preferences...</div>
+  </div>
+
+  <!-- Recent Alerts -->
+  <div style="margin-top:32px;border-top:1px solid rgba(255,255,255,0.06);padding-top:24px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <h3 style="margin:0;">Recent Alerts</h3>
+      <button class="btn btn--small btn--outline" onclick="markAllRead()">Mark All Read</button>
+    </div>
+    <div id="alertList">
+      <p style="color:var(--text-3);text-align:center;padding:24px 0;">Loading alerts...</p>
+    </div>
+  </div>
 </div>
 
 <style>
@@ -79,6 +96,7 @@
           </div>
           <div class="monitor-card__actions">
             <button class="btn btn--small btn--outline" onclick="toggleHistory(${m.id})">History</button>
+            <button class="btn btn--small btn--outline" onclick="dnsCheck(${m.id}, this)">DNS Check</button>
             <button class="btn btn--small btn--primary" onclick="scanDomain(${m.id}, this)">Scan Now</button>
             <button class="btn btn--small btn--danger" onclick="removeDomain(${m.id})">Remove</button>
           </div>
@@ -153,7 +171,116 @@
     });
   };
 
+  /* ── DNS Check ── */
+  window.dnsCheck = function(id, btn) {
+    btn.disabled = true; btn.textContent = 'Checking...';
+    fetch('/api/monitors/' + id + '/dns-check', {method: 'POST'}).then(r => r.json()).then(data => {
+      btn.disabled = false; btn.textContent = 'DNS Check';
+      if (!data.ok) { alert(data.error || 'DNS check failed.'); return; }
+      let msg = 'DNS Auth Results for ' + data.domain + ':\n\n';
+      msg += 'SPF: ' + (data.spf.record ? 'Found' : 'MISSING') + '\n';
+      msg += 'DKIM: ' + (data.dkim.valid ? 'Valid' : 'NOT FOUND') + '\n';
+      msg += 'DMARC: ' + (data.dmarc.record ? 'Policy: ' + (data.dmarc.policy || 'none') : 'MISSING') + '\n';
+      if (data.issues.length) {
+        msg += '\nIssues:\n';
+        data.issues.forEach(i => msg += '- [' + i.severity.toUpperCase() + '] ' + i.message + '\n');
+      } else {
+        msg += '\nNo issues found.';
+      }
+      alert(msg);
+    }).catch(() => { btn.disabled = false; btn.textContent = 'DNS Check'; });
+  };
+
+  /* ── Alert Preferences ── */
+  function loadPrefs() {
+    fetch('/api/alerts/preferences').then(r => r.json()).then(data => {
+      if (!data.ok) return;
+      const p = data.preferences;
+      const canEmail = data.email_available;
+      const el = document.getElementById('alertPrefs');
+      el.style.opacity = '1';
+      el.innerHTML = `
+        <div style="display:grid;gap:12px;max-width:480px;">
+          <label style="display:flex;align-items:center;gap:10px;cursor:pointer;">
+            <input type="checkbox" id="prefBlocklist" ${p.blocklist_alerts ? 'checked' : ''} onchange="savePrefs()">
+            <span>Blocklist change alerts</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:10px;cursor:pointer;">
+            <input type="checkbox" id="prefDns" ${p.dns_auth_alerts ? 'checked' : ''} onchange="savePrefs()">
+            <span>DNS authentication alerts (SPF/DKIM/DMARC)</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:10px;cursor:pointer;">
+            <input type="checkbox" id="prefEmail" ${p.email_notifications ? 'checked' : ''} onchange="savePrefs()" ${canEmail ? '' : 'disabled'}>
+            <span>Email notifications ${canEmail ? '' : '<span style="color:#f59e0b;font-size:0.8rem;">(Pro/Agency only)</span>'}</span>
+          </label>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <label for="prefDigest">Email frequency:</label>
+            <select id="prefDigest" onchange="savePrefs()" style="background:var(--card-bg);color:var(--text-1);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:6px 12px;" ${canEmail ? '' : 'disabled'}>
+              <option value="instant" ${p.digest_frequency==='instant'?'selected':''}>Instant</option>
+              <option value="daily" ${p.digest_frequency==='daily'?'selected':''}>Daily digest</option>
+              <option value="weekly" ${p.digest_frequency==='weekly'?'selected':''}>Weekly digest</option>
+              <option value="off" ${p.digest_frequency==='off'?'selected':''}>Off</option>
+            </select>
+          </div>
+          <p id="prefStatus" style="color:var(--text-3);font-size:0.8rem;margin:0;"></p>
+        </div>`;
+    });
+  }
+
+  window.savePrefs = function() {
+    const payload = {
+      blocklist_alerts: document.getElementById('prefBlocklist').checked,
+      dns_auth_alerts: document.getElementById('prefDns').checked,
+      email_notifications: document.getElementById('prefEmail').checked,
+      digest_frequency: document.getElementById('prefDigest').value,
+    };
+    fetch('/api/alerts/preferences', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(payload)
+    }).then(r => r.json()).then(data => {
+      const st = document.getElementById('prefStatus');
+      if (st) { st.textContent = data.ok ? 'Saved.' : (data.error || 'Error'); setTimeout(() => st.textContent = '', 2000); }
+    });
+  };
+
+  /* ── Alerts List ── */
+  function loadAlerts() {
+    fetch('/api/alerts?limit=20').then(r => r.json()).then(data => {
+      if (!data.ok) return;
+      const el = document.getElementById('alertList');
+      if (!data.alerts.length) {
+        el.innerHTML = '<p style="color:var(--text-3);text-align:center;padding:24px 0;">No alerts yet. Alerts will appear here when your monitored domains have changes.</p>';
+        return;
+      }
+      el.innerHTML = data.alerts.map(a => {
+        const unread = !a.is_read ? 'border-left:3px solid #22c55e;' : '';
+        const icon = a.alert_type.includes('listed') ? '<span style="color:#dc2626;">&#9679;</span>' :
+                     a.alert_type.includes('dns') ? '<span style="color:#f59e0b;">&#9679;</span>' :
+                     '<span style="color:#22c55e;">&#9679;</span>';
+        return `<div style="padding:12px 16px;${unread}background:rgba(255,255,255,0.02);border-radius:8px;margin-bottom:8px;cursor:pointer;" onclick="markAlertRead(${a.id}, this)">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-weight:600;font-size:0.9rem;">${icon} ${a.title}</span>
+            <span style="color:var(--text-3);font-size:0.75rem;">${fmt(a.created_at)}</span>
+          </div>
+          ${a.message ? '<p style="color:var(--text-2);font-size:0.82rem;margin:4px 0 0;">' + a.message + '</p>' : ''}
+        </div>`;
+      }).join('');
+    });
+  }
+
+  window.markAlertRead = function(id, el) {
+    fetch('/api/alerts/' + id + '/read', {method: 'POST'});
+    if (el) el.style.borderLeft = '';
+  };
+
+  window.markAllRead = function() {
+    fetch('/api/alerts/read', {method: 'POST'}).then(() => loadAlerts());
+  };
+
   loadMonitors();
+  loadPrefs();
+  loadAlerts();
   setInterval(loadMonitors, 60000);
 })();
 </script>

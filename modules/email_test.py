@@ -634,6 +634,8 @@ def run_full_analysis(raw_bytes: bytes, placement: str, folder: str,
             "from_header": content["from_header"],
             "has_html": content["has_html"],
             "has_plain": content["has_plain"],
+            "body_html": body if content["has_html"] else "",
+            "body_snippet": body[:500] if not content["has_html"] else "",
         },
     }
 

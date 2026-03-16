@@ -429,7 +429,7 @@ def track_page_view(response):
 def add_security_headers(response):
     """Add security headers to every response."""
     response.headers['X-Content-Type-Options'] = 'nosniff'
-    response.headers['X-Frame-Options'] = 'DENY'
+    response.headers['X-Frame-Options'] = 'SAMEORIGIN'
     response.headers['X-XSS-Protection'] = '1; mode=block'
     response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
     response.headers['Content-Security-Policy'] = "upgrade-insecure-requests"
@@ -2179,11 +2179,13 @@ def dashboard():
         "subject_limit": get_tier_limit(tier_name, "subject_tests_per_day"),
     }
 
-    return render_template("dashboard.html",
+    resp = render_template("dashboard.html",
                            stats=stats,
                            credits=credits,
                            is_admin=_is_admin(),
                            active_page="dashboard")
+    session.pop("is_new_signup", None)
+    return resp
 
 
 @app.route("/subject-scorer")

@@ -384,6 +384,192 @@ def _html_subject_scoring(result):
     return "\n".join(sections)
 
 
+def _html_email_test(result):
+    """Build HTML sections for full email test results."""
+    sections = []
+
+    # Placement summary
+    placement = _safe_get(result, "placement") or {}
+    if placement:
+        folder = placement.get("folder", placement.get("placement", "unknown"))
+        provider = placement.get("provider", "")
+        tab = placement.get("tab", "")
+        p_status = folder.lower()
+        color = GREEN if p_status == "inbox" else RED if p_status in ("spam", "trash") else AMBER
+        tab_html = f' &middot; Tab: <strong>{tab}</strong>' if tab and tab != "None" else ""
+        sections.append(f"""
+        <div class="section">
+            <h3>Inbox Placement</h3>
+            <div class="score-grid">
+                <div class="score-card">
+                    <div class="score-value" style="color:{color};">{folder.title()}</div>
+                    <div class="score-label">Landed In</div>
+                </div>
+                {"<div class='score-card'><div class='score-value'>" + provider.title() + "</div><div class='score-label'>Provider</div></div>" if provider else ""}
+                {"<div class='score-card'><div class='score-value'>" + tab.title() + "</div><div class='score-label'>Gmail Tab</div></div>" if tab and tab != 'None' else ""}
+            </div>
+        </div>""")
+
+    # Authentication header grades
+    header_grades = _safe_get(result, "header_grades") or []
+    if header_grades:
+        rows = ""
+        for hg in header_grades:
+            if not isinstance(hg, dict):
+                continue
+            label = hg.get("label", "")
+            status = hg.get("status", "")
+            verdict = hg.get("verdict", "")
+            detail = hg.get("detail", "")
+            color = _status_color(status)
+            rows += f"""
+            <tr>
+                <td style="font-weight:600;">{label}</td>
+                <td style="color:{color};font-weight:600;">{status.title()}</td>
+                <td>{verdict}</td>
+                <td style="font-size:12px;color:#475569;">{detail[:120]}</td>
+            </tr>"""
+        sections.append(f"""
+        <div class="section">
+            <h3>Email Authentication &amp; Headers</h3>
+            <table class="data-table">
+                <thead><tr><th>Check</th><th>Status</th><th>Verdict</th><th>Details</th></tr></thead>
+                <tbody>{rows}</tbody>
+            </table>
+        </div>""")
+
+    # Spam / Copy / Readability scores
+    score_cards = ""
+    for key, label in [("spam", "Spam"), ("copy", "Copy"), ("readability", "Readability")]:
+        section_data = _safe_get(result, key) or {}
+        if isinstance(section_data, dict):
+            s = section_data.get("score")
+            g = section_data.get("grade")
+            if s is not None:
+                color = _score_color(s)
+                score_cards += f"""
+                <div class="score-card">
+                    <div class="score-value" style="color:{color};">{s}<span style="font-size:14px;color:#94a3b8;">{"/" + str(g) if g else ""}</span></div>
+                    <div class="score-label">{label}</div>
+                </div>"""
+    if score_cards:
+        sections.append(f'<div class="section"><h3>Content Analysis</h3><div class="score-grid">{score_cards}</div></div>')
+
+    # Spam issues
+    spam_data = _safe_get(result, "spam") or {}
+    spam_issues = spam_data.get("issues") or []
+    if spam_issues:
+        items = ""
+        for issue in spam_issues[:15]:
+            if isinstance(issue, dict):
+                text = issue.get("text", issue.get("message", str(issue)))
+                severity = issue.get("severity", "")
+                color = RED if str(severity).lower() == "high" else AMBER
+            else:
+                text = str(issue)
+                color = AMBER
+            items += f'<li style="color:{color};">{text}</li>'
+        sections.append(f'<div class="section"><h3>Spam Issues</h3><ul class="issue-list">{items}</ul></div>')
+
+    # Spam triggers
+    triggers = spam_data.get("triggers") or []
+    if triggers:
+        trigger_list = ", ".join(str(t) for t in triggers[:20])
+        sections.append(f'<div class="section"><h3>Spam Triggers</h3><p style="color:{RED};">{trigger_list}</p></div>')
+
+    # Transport / TLS
+    transport = _safe_get(result, "headers", "transport") or {}
+    if transport:
+        tls_used = transport.get("tls_used", False)
+        tls_ver = transport.get("tls_version", "")
+        hops = transport.get("hop_count", "")
+        sender_ip = transport.get("sender_ip", "")
+        tls_color = GREEN if tls_used else RED
+        sections.append(f"""
+        <div class="section">
+            <h3>Transport Security</h3>
+            <table class="data-table">
+                <thead><tr><th>Property</th><th>Value</th></tr></thead>
+                <tbody>
+                    <tr><td>TLS Encryption</td><td style="color:{tls_color};font-weight:600;">{"Yes" if tls_used else "No"}{" — " + tls_ver if tls_ver else ""}</td></tr>
+                    {"<tr><td>Sender IP</td><td>" + sender_ip + "</td></tr>" if sender_ip else ""}
+                    {"<tr><td>Hop Count</td><td>" + str(hops) + "</td></tr>" if hops else ""}
+                </tbody>
+            </table>
+        </div>""")
+
+    # Audit summary (passed/warnings/failed)
+    audit = _safe_get(result, "audit") or {}
+    if audit:
+        for category, label, color in [("failed", "Failed Checks", RED), ("warnings", "Warnings", AMBER), ("passed", "Passed Checks", GREEN)]:
+            items_list = audit.get(category) or []
+            if items_list:
+                items_html = ""
+                for item in items_list[:10]:
+                    text = item.get("text", item.get("label", str(item))) if isinstance(item, dict) else str(item)
+                    items_html += f'<li style="color:{color};">{text}</li>'
+                sections.append(f'<div class="section"><h3>{label}</h3><ul>{items_html}</ul></div>')
+
+    return "\n".join(sections)
+
+
+def _html_placement_test(result):
+    """Build HTML sections for inbox placement test results."""
+    sections = []
+
+    results_list = _safe_get(result, "results") or _safe_get(result, "placements") or []
+    if isinstance(results_list, list) and results_list:
+        rows = ""
+        inbox_count = 0
+        total = len(results_list)
+        for r in results_list:
+            if isinstance(r, dict):
+                provider = r.get("provider", r.get("label", ""))
+                folder = r.get("folder", r.get("placement", "unknown"))
+                tab = r.get("tab", "")
+                f_lower = str(folder).lower()
+                if f_lower == "inbox":
+                    inbox_count += 1
+                color = GREEN if f_lower == "inbox" else RED if f_lower in ("spam", "trash") else AMBER
+                tab_html = f" ({tab})" if tab and tab != "None" else ""
+                rows += f"""
+                <tr>
+                    <td style="font-weight:600;">{provider}</td>
+                    <td style="color:{color};font-weight:600;">{folder.title()}{tab_html}</td>
+                </tr>"""
+
+        pct = int(inbox_count / total * 100) if total else 0
+        pct_color = GREEN if pct >= 80 else AMBER if pct >= 50 else RED
+        sections.append(f"""
+        <div class="section">
+            <h3>Placement Summary</h3>
+            <div class="score-grid">
+                <div class="score-card">
+                    <div class="score-value" style="color:{pct_color};">{pct}%</div>
+                    <div class="score-label">Inbox Rate</div>
+                </div>
+                <div class="score-card">
+                    <div class="score-value">{inbox_count}/{total}</div>
+                    <div class="score-label">Inboxed</div>
+                </div>
+            </div>
+        </div>
+        <div class="section">
+            <h3>Provider Breakdown</h3>
+            <table class="data-table">
+                <thead><tr><th>Provider</th><th>Placement</th></tr></thead>
+                <tbody>{rows}</tbody>
+            </table>
+        </div>""")
+
+    # If there's auth data embedded
+    auth_sections = _html_domain_check(result)
+    if auth_sections.strip():
+        sections.append(auth_sections)
+
+    return "\n".join(sections)
+
+
 def generate_report_html(result_data, tool, domain_or_input, created_at=None, grade=None, score=None):
     """
     Generate a styled HTML report from check results.
@@ -412,7 +598,11 @@ def generate_report_html(result_data, tool, domain_or_input, created_at=None, gr
 
     # Build tool-specific sections
     tool_lower = (tool or "").lower()
-    if "domain" in tool_lower or "reputation" in tool_lower or "auth" in tool_lower or "deliverability" in tool_lower:
+    if tool_lower == "email_test":
+        body_sections = _html_email_test(result_data)
+    elif tool_lower == "placement_test":
+        body_sections = _html_placement_test(result_data)
+    elif "domain" in tool_lower or "reputation" in tool_lower or "auth" in tool_lower or "deliverability" in tool_lower:
         body_sections = _html_domain_check(result_data)
     elif "copy" in tool_lower or "spam" in tool_lower or "analyz" in tool_lower or "readability" in tool_lower:
         body_sections = _html_copy_analysis(result_data)
@@ -423,7 +613,7 @@ def generate_report_html(result_data, tool, domain_or_input, created_at=None, gr
     else:
         # Generic: try all section builders, keep what has content
         parts = []
-        for builder in (_html_domain_check, _html_copy_analysis, _html_email_verification, _html_subject_scoring):
+        for builder in (_html_email_test, _html_placement_test, _html_domain_check, _html_copy_analysis, _html_email_verification, _html_subject_scoring):
             s = builder(result_data)
             if s.strip():
                 parts.append(s)
@@ -1005,6 +1195,213 @@ def _pdf_subject_scoring(result, styles, story, page_width):
     story.append(Spacer(1, 10))
 
 
+def _pdf_email_test(result, styles, story, page_width):
+    """Add email test sections to the PDF story."""
+    # Placement summary
+    placement = _safe_get(result, "placement") or {}
+    if placement:
+        folder = placement.get("folder", placement.get("placement", "unknown"))
+        provider = placement.get("provider", "")
+        tab = placement.get("tab", "")
+        p_status = folder.lower()
+        color = GREEN if p_status == "inbox" else RED if p_status in ("spam", "trash") else AMBER
+
+        cells = [Paragraph(
+            f'<font color="{color}" size="16"><b>{folder.title()}</b></font><br/>'
+            f'<font color="{GRAY}" size="8">Landed In</font>',
+            ParagraphStyle("pCell", alignment=TA_CENTER, fontSize=10, leading=20)
+        )]
+        if provider:
+            cells.append(Paragraph(
+                f'<font size="14"><b>{provider.title()}</b></font><br/>'
+                f'<font color="{GRAY}" size="8">Provider</font>',
+                ParagraphStyle("prCell", alignment=TA_CENTER, fontSize=10, leading=20)
+            ))
+        if tab and tab != "None":
+            cells.append(Paragraph(
+                f'<font size="14"><b>{tab.title()}</b></font><br/>'
+                f'<font color="{GRAY}" size="8">Gmail Tab</font>',
+                ParagraphStyle("tCell", alignment=TA_CENTER, fontSize=10, leading=20)
+            ))
+
+        story.append(Paragraph("Inbox Placement", styles["SectionHead"]))
+        t = Table([cells], colWidths=[page_width / len(cells)] * len(cells))
+        t.setStyle(TableStyle([
+            ("BACKGROUND", (0, 0), (-1, -1), HexColor(LIGHT_BG)),
+            ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+            ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+            ("TOPPADDING", (0, 0), (-1, -1), 14),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 14),
+        ]))
+        story.append(t)
+        story.append(Spacer(1, 10))
+
+    # Header grades table
+    header_grades = _safe_get(result, "header_grades") or []
+    if header_grades:
+        story.append(Paragraph("Email Authentication &amp; Headers", styles["SectionHead"]))
+        rows = []
+        for hg in header_grades:
+            if not isinstance(hg, dict):
+                continue
+            label = hg.get("label", "")
+            status = hg.get("status", "")
+            verdict = hg.get("verdict", "")
+            detail = hg.get("detail", "")
+            color = _status_color(status)
+            rows.append([
+                Paragraph(f"<b>{label}</b>", styles["CellText"]),
+                _colored_text(status.title(), color, bold=True),
+                Paragraph(str(verdict)[:60], styles["CellText"]),
+                Paragraph(str(detail)[:80], styles["CellText"]),
+            ])
+        story.append(_make_table(
+            ["Check", "Status", "Verdict", "Details"], rows,
+            col_widths=[100, 60, 120, page_width - 280 - 80]
+        ))
+        story.append(Spacer(1, 10))
+
+    # Content scores
+    score_items = []
+    for key, label in [("spam", "Spam"), ("copy", "Copy"), ("readability", "Readability")]:
+        section_data = _safe_get(result, key) or {}
+        if isinstance(section_data, dict):
+            s = section_data.get("score")
+            if s is not None:
+                score_items.append((label, s))
+
+    if score_items:
+        story.append(Paragraph("Content Analysis", styles["SectionHead"]))
+        cells = []
+        for label, val in score_items:
+            color = _score_color(val)
+            cells.append(Paragraph(
+                f'<font color="{color}" size="16"><b>{val}</b></font><br/>'
+                f'<font color="{GRAY}" size="8">{label}</font>',
+                ParagraphStyle("csCell", alignment=TA_CENTER, fontSize=10, leading=20)
+            ))
+        t = Table([cells], colWidths=[page_width / len(cells)] * len(cells))
+        t.setStyle(TableStyle([
+            ("BACKGROUND", (0, 0), (-1, -1), HexColor(LIGHT_BG)),
+            ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+            ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+            ("TOPPADDING", (0, 0), (-1, -1), 14),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 14),
+        ]))
+        story.append(t)
+        story.append(Spacer(1, 10))
+
+    # Spam issues
+    spam_data = _safe_get(result, "spam") or {}
+    spam_issues = spam_data.get("issues") or []
+    if spam_issues:
+        story.append(Paragraph("Spam Issues", styles["SectionHead"]))
+        for issue in spam_issues[:15]:
+            if isinstance(issue, dict):
+                text = issue.get("text", issue.get("message", str(issue)))
+                severity = issue.get("severity", "")
+                color = RED if str(severity).lower() == "high" else AMBER
+            else:
+                text = str(issue)
+                color = AMBER
+            story.append(Paragraph(f'<font color="{color}">&bull;</font> {text}', styles["BodyText14"]))
+        story.append(Spacer(1, 10))
+
+    # Transport
+    transport = _safe_get(result, "headers", "transport") or {}
+    if transport:
+        story.append(Paragraph("Transport Security", styles["SectionHead"]))
+        tls_used = transport.get("tls_used", False)
+        tls_ver = transport.get("tls_version", "")
+        sender_ip = transport.get("sender_ip", "")
+        tls_color = GREEN if tls_used else RED
+        rows = [
+            [Paragraph("<b>TLS Encryption</b>", styles["CellText"]),
+             _colored_text("Yes" + (f" — {tls_ver}" if tls_ver else "") if tls_used else "No", tls_color, bold=True)],
+        ]
+        if sender_ip:
+            rows.append([Paragraph("<b>Sender IP</b>", styles["CellText"]),
+                         Paragraph(sender_ip, styles["CellText"])])
+        story.append(_make_table(["Property", "Value"], rows,
+                                 col_widths=[140, page_width - 140 - 80]))
+        story.append(Spacer(1, 10))
+
+    # Audit summary
+    audit = _safe_get(result, "audit") or {}
+    for category, label in [("failed", "Failed Checks"), ("warnings", "Warnings")]:
+        items_list = audit.get(category) or []
+        if items_list:
+            story.append(Paragraph(label, styles["SectionHead"]))
+            color = RED if category == "failed" else AMBER
+            for item in items_list[:10]:
+                text = item.get("text", item.get("label", str(item))) if isinstance(item, dict) else str(item)
+                story.append(Paragraph(f'<font color="{color}">&bull;</font> {text}', styles["BodyText14"]))
+            story.append(Spacer(1, 10))
+
+
+def _pdf_placement_test(result, styles, story, page_width):
+    """Add placement test sections to the PDF story."""
+    results_list = _safe_get(result, "results") or _safe_get(result, "placements") or []
+    if not isinstance(results_list, list) or not results_list:
+        return
+
+    inbox_count = 0
+    total = len(results_list)
+    rows = []
+    for r in results_list:
+        if not isinstance(r, dict):
+            continue
+        provider = r.get("provider", r.get("label", ""))
+        folder = r.get("folder", r.get("placement", "unknown"))
+        tab = r.get("tab", "")
+        f_lower = str(folder).lower()
+        if f_lower == "inbox":
+            inbox_count += 1
+        color = GREEN if f_lower == "inbox" else RED if f_lower in ("spam", "trash") else AMBER
+        tab_text = f" ({tab})" if tab and tab != "None" else ""
+        rows.append([
+            Paragraph(f"<b>{provider}</b>", styles["CellText"]),
+            _colored_text(f"{folder.title()}{tab_text}", color, bold=True),
+        ])
+
+    pct = int(inbox_count / total * 100) if total else 0
+    pct_color = GREEN if pct >= 80 else AMBER if pct >= 50 else RED
+
+    # Summary cards
+    story.append(Paragraph("Placement Summary", styles["SectionHead"]))
+    cells = [
+        Paragraph(
+            f'<font color="{pct_color}" size="16"><b>{pct}%</b></font><br/>'
+            f'<font color="{GRAY}" size="8">Inbox Rate</font>',
+            ParagraphStyle("irCell", alignment=TA_CENTER, fontSize=10, leading=20)
+        ),
+        Paragraph(
+            f'<font size="14"><b>{inbox_count}/{total}</b></font><br/>'
+            f'<font color="{GRAY}" size="8">Inboxed</font>',
+            ParagraphStyle("inCell", alignment=TA_CENTER, fontSize=10, leading=20)
+        ),
+    ]
+    t = Table([cells], colWidths=[page_width / 2] * 2)
+    t.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, -1), HexColor(LIGHT_BG)),
+        ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+        ("TOPPADDING", (0, 0), (-1, -1), 14),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 14),
+    ]))
+    story.append(t)
+    story.append(Spacer(1, 10))
+
+    # Provider breakdown
+    story.append(Paragraph("Provider Breakdown", styles["SectionHead"]))
+    story.append(_make_table(["Provider", "Placement"], rows,
+                             col_widths=[page_width / 2, page_width / 2]))
+    story.append(Spacer(1, 10))
+
+    # Auth data if present
+    _pdf_domain_check(result, styles, story, page_width)
+
+
 def generate_report(result_data, tool, domain_or_input, created_at=None, grade=None, score=None):
     """
     Generate a PDF report from check results.
@@ -1101,7 +1498,11 @@ def generate_report(result_data, tool, domain_or_input, created_at=None, grade=N
 
     # ── Tool-specific content ──
     tool_lower = (tool or "").lower()
-    if "domain" in tool_lower or "reputation" in tool_lower or "auth" in tool_lower or "deliverability" in tool_lower:
+    if tool_lower == "email_test":
+        _pdf_email_test(result_data, styles, story, page_width)
+    elif tool_lower == "placement_test":
+        _pdf_placement_test(result_data, styles, story, page_width)
+    elif "domain" in tool_lower or "reputation" in tool_lower or "auth" in tool_lower or "deliverability" in tool_lower:
         _pdf_domain_check(result_data, styles, story, page_width)
     elif "copy" in tool_lower or "spam" in tool_lower or "analyz" in tool_lower or "readability" in tool_lower:
         _pdf_copy_analysis(result_data, styles, story, page_width)
@@ -1110,7 +1511,7 @@ def generate_report(result_data, tool, domain_or_input, created_at=None, grade=N
     elif "subject" in tool_lower:
         _pdf_subject_scoring(result_data, styles, story, page_width)
     else:
-        for builder in (_pdf_domain_check, _pdf_copy_analysis, _pdf_email_verification, _pdf_subject_scoring):
+        for builder in (_pdf_email_test, _pdf_placement_test, _pdf_domain_check, _pdf_copy_analysis, _pdf_email_verification, _pdf_subject_scoring):
             builder(result_data, styles, story, page_width)
 
     # ── Footer ──

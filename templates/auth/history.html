@@ -36,6 +36,8 @@
   <label for="tool-filter" class="history-filter__lbl">Filter by tool:</label>
   <select id="tool-filter" class="history-filter__sel">
     <option value="">All Tools</option>
+    <option value="email_test">Email Test</option>
+    <option value="placement_test">Placement Test</option>
     <option value="copy_analysis">Copy Analysis</option>
     <option value="domain_check">Domain Check</option>
     <option value="email_verify">Email Verify</option>
@@ -158,6 +160,16 @@
     transition: background 0.15s;
   }
   .history-table .btn-sm:hover { background: var(--bg-1, #f8fafc); }
+  .history-table .btn-pdf {
+    color: var(--brand, #22c55e); border-color: var(--brand-muted);
+    margin-right: 4px; font-weight: 600;
+  }
+  .history-table .btn-pdf:hover { background: var(--brand-muted); }
+  .history-table .btn-pdf-locked {
+    color: var(--text-4, #aaa); border-color: var(--border);
+    margin-right: 4px; cursor: pointer; opacity: 0.6;
+  }
+  .history-table .btn-pdf-locked:hover { opacity: 1; }
   .history-table .btn-del {
     color: var(--red, #dc2626); border-color: var(--red-muted);
     margin-left: 4px;
@@ -231,7 +243,11 @@
   const modalTitle = document.getElementById("modal-title");
   const modalJson = document.getElementById("modal-json");
 
+  var canDownloadPdf = {{ 'true' if has_pdf else 'false' }};
+
   const TOOL_LABELS = {
+    "email_test": "Email Test",
+    "placement_test": "Placement Test",
     "copy_analysis": "Copy Analysis",
     "domain_check": "Domain Check",
     "email_verify": "Email Verify",
@@ -291,6 +307,10 @@
             ? r.score
             : '<span style="color:var(--text-4,#aaa)">--</span>';
 
+          var pdfBtn = canDownloadPdf
+            ? '<button class="btn-sm btn-pdf" data-pdf="' + r.id + '">PDF</button>'
+            : '<button class="btn-sm btn-pdf-locked" data-upgrade="1" title="Pro plan required">PDF</button>';
+
           tr.innerHTML =
             '<td><span class="tool-badge">' + toolLabel(r.tool) + '</span></td>' +
             '<td class="input-text" title="' + (r.input_summary || "").replace(/"/g, "&quot;") + '">' + (r.input_summary || "--") + '</td>' +
@@ -298,6 +318,7 @@
             '<td>' + scoreHtml + '</td>' +
             '<td class="date-text">' + formatDate(r.created_at) + '</td>' +
             '<td>' +
+              pdfBtn +
               '<button class="btn-sm" data-view="' + r.id + '">View</button>' +
               '<button class="btn-sm btn-del" data-del="' + r.id + '">Del</button>' +
             '</td>';
@@ -325,6 +346,22 @@
   tbody.addEventListener("click", function(e) {
     var viewBtn = e.target.closest("[data-view]");
     var delBtn = e.target.closest("[data-del]");
+
+    var pdfBtn = e.target.closest("[data-pdf]");
+    var upgradeBtn = e.target.closest("[data-upgrade]");
+
+    if (pdfBtn) {
+      var id = pdfBtn.getAttribute("data-pdf");
+      window.open("/api/report/" + id + "/pdf", "_blank");
+      return;
+    }
+
+    if (upgradeBtn) {
+      if (confirm("PDF reports are available on Pro and Agency plans. View pricing?")) {
+        window.location.href = "/pricing";
+      }
+      return;
+    }
 
     if (viewBtn) {
       var id = viewBtn.getAttribute("data-view");

@@ -120,7 +120,8 @@
           : '<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" style="margin-bottom:12px;"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>' +
             '<h3 style="font-size:1.15rem;font-weight:700;margin:0 0 8px;">Plan Limit Reached</h3>' +
             '<p style="font-size:0.9rem;color:rgba(255,255,255,0.7);margin:0 0 20px;line-height:1.6;">' + (d.error || 'You\'ve hit your rate limit for today.') + '</p>' +
-            '<a href="' + d.upgrade_url + '" style="display:inline-block;padding:12px 28px;background:#f59e0b;color:#000;font-weight:700;border-radius:999px;text-decoration:none;font-size:0.95rem;">View Plans</a>'
+            '<a href="' + d.upgrade_url + '" style="display:inline-block;padding:12px 28px;background:#f59e0b;color:#000;font-weight:700;border-radius:999px;text-decoration:none;font-size:0.95rem;">View Plans</a>' +
+            '<p style="font-size:0.78rem;color:rgba(255,255,255,0.45);margin-top:12px;">Pro includes automated alerts, DNS monitoring &amp; AI insights</p>'
         ) +
       '</div>';
     document.body.appendChild(overlay);
@@ -129,6 +130,7 @@
 })();
 </script>
 {% if session.get('user_id') %}
+<script>window.__userTier={{ (current_user_tier or 'free')|tojson }};window.__isNewUser={{ (session.get('is_new_signup', false))|tojson }};</script>
 <script>
 (function(){
   function pollAlerts(){

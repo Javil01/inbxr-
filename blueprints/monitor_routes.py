@@ -11,7 +11,11 @@ from modules.monitoring import (
     add_user_monitor, remove_user_monitor, get_user_monitors,
     scan_user_domain, get_monitor_history,
 )
-from modules.alerts import get_alerts, mark_read, mark_all_read, get_unread_count
+from modules.alerts import (
+    get_alerts, mark_read, mark_all_read, get_unread_count,
+    get_alert_preferences, save_alert_preferences,
+)
+from modules.tiers import has_feature
 
 monitor_bp = Blueprint("monitors", __name__)
 
@@ -137,3 +141,89 @@ def unread_count():
     user = get_current_user()
     count = get_unread_count(user["id"])
     return jsonify({"count": count})
+
+
+# ── Alert Preferences ─────────────────────────────────
+
+@monitor_bp.route("/api/alerts/preferences", methods=["GET"])
+@login_required
+def get_preferences():
+    """Get alert preferences for the current user."""
+    user = get_current_user()
+    prefs = get_alert_preferences(user["id"])
+    can_email = has_feature(user["tier"], "email_alerts")
+    return jsonify({
+        "ok": True,
+        "preferences": {
+            "blocklist_alerts": bool(prefs.get("blocklist_alerts", True)),
+            "dns_auth_alerts": bool(prefs.get("dns_auth_alerts", True)),
+            "digest_frequency": prefs.get("digest_frequency", "instant"),
+            "email_notifications": bool(prefs.get("email_notifications", True)),
+        },
+        "email_available": can_email,
+        "tier": user["tier"],
+    })
+
+
+@monitor_bp.route("/api/alerts/preferences", methods=["POST"])
+@login_required
+def update_preferences():
+    """Update alert preferences."""
+    user = get_current_user()
+    data = request.get_json(force=True) if request.is_json else {}
+
+    valid_frequencies = ("instant", "daily", "weekly", "off")
+    freq = data.get("digest_frequency", "instant")
+    if freq not in valid_frequencies:
+        return jsonify({"ok": False, "error": "Invalid digest frequency."}), 400
+
+    save_alert_preferences(user["id"], {
+        "blocklist_alerts": data.get("blocklist_alerts", True),
+        "dns_auth_alerts": data.get("dns_auth_alerts", True),
+        "digest_frequency": freq,
+        "email_notifications": data.get("email_notifications", True),
+    })
+    return jsonify({"ok": True})
+
+
+# ── DNS Auth Check (manual trigger) ────────────────────
+
+@monitor_bp.route("/api/monitors/<int:monitor_id>/dns-check", methods=["POST"])
+@login_required
+@tier_required("pro", "agency", "api")
+def dns_check(monitor_id):
+    """Trigger a manual DNS auth check for a monitored domain."""
+    from modules.dns_monitor import scan_domain_dns, save_dns_snapshot, get_previous_snapshot, detect_dns_changes
+    from modules.database import fetchone as _fo
+
+    user = get_current_user()
+    team_id = session.get("team_id")
+
+    if team_id:
+        monitor = _fo(
+            "SELECT * FROM user_monitors WHERE id = ? AND team_id = ?",
+            (monitor_id, team_id),
+        )
+    else:
+        monitor = _fo(
+            "SELECT * FROM user_monitors WHERE id = ? AND user_id = ?",
+            (monitor_id, user["id"]),
+        )
+
+    if not monitor:
+        return jsonify({"ok": False, "error": "Monitor not found."}), 404
+
+    prev = get_previous_snapshot(monitor_id)
+    result = scan_domain_dns(monitor["domain"])
+    save_dns_snapshot(monitor_id, result)
+    changes = detect_dns_changes(prev, result)
+
+    return jsonify({
+        "ok": True,
+        "domain": monitor["domain"],
+        "spf": result["spf"],
+        "dkim": result["dkim"],
+        "dmarc": result["dmarc"],
+        "issues": result["issues"],
+        "changes": changes,
+    })

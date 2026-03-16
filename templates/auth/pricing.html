@@ -2,7 +2,7 @@
 {% block title %}Pricing{% endblock %}
 {% block content %}
 <h1 class="auth-card__title pricing-title">Simple, Transparent Pricing</h1>
-<p class="auth-card__sub">Every tool is free to start. Upgrade for AI-powered insights, higher limits, and team collaboration.</p>
+<p class="auth-card__sub">Every tool is free to start. Upgrade for automated monitoring, AI-powered insights, and proactive alerts that catch deliverability issues before they cost you revenue.</p>
 
 <div class="pricing-grid">
 
@@ -14,9 +14,9 @@
       <span class="pricing-card__amount">$0</span>
       <span class="pricing-card__period">forever</span>
     </div>
-    <p class="pricing-card__desc">Everything you need to get started with email deliverability.</p>
+    <p class="pricing-card__desc">Everything you need to start fixing your deliverability today.</p>
     <ul class="pricing-card__features">
-      <li>{{ t.limits.checks_per_day }} checks/day</li>
+      <li>{{ t.limits.checks_per_day }} checks/day across all tools</li>
       <li>{{ t.limits.email_verifications_per_day }} email verifications/day</li>
       <li>{{ t.limits.placement_tests_per_day }} inbox placement tests/day</li>
       <li>{{ t.limits.subject_tests_per_day }} subject line tests/day</li>
@@ -24,8 +24,8 @@
       <li>{{ t.limits.warmup_campaigns }} warmup campaign</li>
       <li>Full Email Test with auth analysis</li>
       <li>Sender Check (SPF, DKIM, DMARC)</li>
-      <li>Header Analyzer</li>
-      <li>BIMI Checker</li>
+      <li>Header Analyzer &amp; BIMI Checker</li>
+      <li>In-app alerts (manual scans only)</li>
       <li>AI Sales &amp; Technical Support chat</li>
     </ul>
     <div class="pricing-card__action">
@@ -50,7 +50,7 @@
       <span class="pricing-card__amount">${{ t.price_monthly }}</span>
       <span class="pricing-card__period">/month</span>
     </div>
-    <p class="pricing-card__desc">AI-powered guidance and serious limits for growing senders.</p>
+    <p class="pricing-card__desc">Automated monitoring and AI insights for senders who can't afford to land in spam.</p>
     <ul class="pricing-card__features">
       <li><strong>{{ t.limits.checks_per_day }}</strong> checks/day</li>
       <li><strong>{{ t.limits.email_verifications_per_day }}</strong> email verifications/day</li>
@@ -58,13 +58,13 @@
       <li><strong>{{ t.limits.subject_tests_per_day }}</strong> subject line tests/day</li>
       <li><strong>{{ t.limits.blocklist_domains }}</strong> monitored domains</li>
       <li><strong>{{ t.limits.warmup_campaigns }}</strong> warmup campaigns</li>
+      <li class="pricing-card__feature--highlight">Automated blocklist &amp; DNS auth monitoring</li>
+      <li class="pricing-card__feature--highlight">Instant/daily/weekly email alert digests</li>
       <li class="pricing-card__feature--highlight">AI Email Expert — 10 conversations/mo</li>
       <li class="pricing-card__feature--highlight">AI Copy Rewriter</li>
-      <li>Cloud test history</li>
-      <li>PDF reports</li>
+      <li>SPF/DKIM/DMARC change detection</li>
+      <li>Cloud test history &amp; PDF reports</li>
       <li>Bulk email verification (CSV)</li>
-      <li>Scheduled blacklist monitoring</li>
-      <li>Email alerts on listing changes</li>
       <li>Priority support</li>
     </ul>
     <div class="pricing-card__action">
@@ -84,7 +84,7 @@
       <span class="pricing-card__amount">${{ t.price_monthly }}</span>
       <span class="pricing-card__period">/month</span>
     </div>
-    <p class="pricing-card__desc">Full platform access for agencies managing multiple clients.</p>
+    <p class="pricing-card__desc">Full platform for agencies monitoring dozens of client domains around the clock.</p>
     <ul class="pricing-card__features">
       <li><strong>{{ t.limits.checks_per_day }}</strong> checks/day</li>
       <li><strong>{{ t.limits.email_verifications_per_day }}</strong> email verifications/day</li>
@@ -92,12 +92,12 @@
       <li><strong>{{ t.limits.subject_tests_per_day }}</strong> subject line tests/day</li>
       <li><strong>{{ t.limits.blocklist_domains }}</strong> monitored domains</li>
       <li><strong>{{ t.limits.warmup_campaigns }}</strong> warmup campaigns</li>
+      <li class="pricing-card__feature--highlight">Automated alerts for 50 domains</li>
       <li class="pricing-card__feature--highlight">AI Email Expert — Unlimited</li>
       <li class="pricing-card__feature--highlight">AI Copy Rewriter</li>
       <li>Everything in Pro, plus:</li>
       <li>Teams &amp; client workspaces</li>
-      <li>API access</li>
-      <li>Webhooks</li>
+      <li>API access &amp; Webhooks</li>
     </ul>
     <div class="pricing-card__action">
       {% if user and user.tier == 'agency' %}
@@ -140,12 +140,16 @@
         <tr><td>AI Copy Rewriter</td><td>&mdash;</td><td>&#10003;</td><td>&#10003;</td></tr>
         <tr><td>AI Support Chat (Sales &amp; Tech)</td><td>&#10003;</td><td>&#10003;</td><td>&#10003;</td></tr>
 
+        <tr class="pricing-compare__section"><td colspan="4">Monitoring &amp; Alerts</td></tr>
+        <tr><td>Automated Blocklist Monitoring</td><td>&mdash;</td><td>Every 6 hrs</td><td>Every 6 hrs</td></tr>
+        <tr><td>DNS Auth Monitoring (SPF/DKIM/DMARC)</td><td>&mdash;</td><td>Every 12 hrs</td><td>Every 12 hrs</td></tr>
+        <tr><td>Email Alerts (instant/daily/weekly)</td><td>&mdash;</td><td>&#10003;</td><td>&#10003;</td></tr>
+        <tr><td>Alert Preferences &amp; Digest Emails</td><td>&mdash;</td><td>&#10003;</td><td>&#10003;</td></tr>
+
         <tr class="pricing-compare__section"><td colspan="4">Productivity</td></tr>
         <tr><td>Cloud Test History</td><td>&mdash;</td><td>&#10003;</td><td>&#10003;</td></tr>
         <tr><td>PDF Reports</td><td>&mdash;</td><td>&#10003;</td><td>&#10003;</td></tr>
         <tr><td>Bulk Email Verification (CSV)</td><td>&mdash;</td><td>&#10003;</td><td>&#10003;</td></tr>
-        <tr><td>Scheduled Monitoring</td><td>&mdash;</td><td>&#10003;</td><td>&#10003;</td></tr>
-        <tr><td>Email Alerts</td><td>&mdash;</td><td>&#10003;</td><td>&#10003;</td></tr>
 
         <tr class="pricing-compare__section"><td colspan="4">Collaboration &amp; Scale</td></tr>
         <tr><td>Teams &amp; Client Workspaces</td><td>&mdash;</td><td>&mdash;</td><td>&#10003;</td></tr>

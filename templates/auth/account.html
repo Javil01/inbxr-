@@ -66,9 +66,9 @@
 {% if user.tier != 'agency' %}
 <div class="account-upgrade">
   {% if user.tier == 'free' %}
-  <p>Upgrade to <strong>Pro</strong> for cloud history, PDF reports, bulk verification, and more.</p>
+  <p>Upgrade to <strong>Pro</strong> for automated alerts, DNS monitoring, AI insights, cloud history, and more.</p>
   {% elif user.tier == 'pro' %}
-  <p>Upgrade to <strong>Agency</strong> for API access, teams, webhooks, and unlimited scale.</p>
+  <p>Upgrade to <strong>Agency</strong> for 50 monitored domains, teams, API access, and unlimited AI conversations.</p>
   {% endif %}
   <a href="{{ url_for('auth.pricing') }}" class="auth-btn">View Plans</a>
 </div>
