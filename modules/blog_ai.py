@@ -199,6 +199,75 @@ def _parse_response(raw: str) -> dict:
     return result
 
 
+def rewrite_for_newsletter(title: str, html_content: str) -> dict:
+    """Rewrite a blog post into newsletter format matching the InBoXr Beehiiv style.
+
+    Returns dict with subject, preview_text, and body (HTML).
+    """
+    cfg = _get_config()
+    if not cfg["api_key"]:
+        raise BlogAIError("AI not available — GROQ_API_KEY not configured")
+
+    # Strip HTML tags to get plain text for the AI
+    import re as _re
+    plain = _re.sub(r'<[^>]+>', '', html_content)
+    plain = _re.sub(r'\s+', ' ', plain).strip()
+
+    system_msg = """You are the writer behind InBoXr, a daily email marketing newsletter.
+
+Your voice and style:
+- Direct, punchy, conversational — like texting a smart friend who happens to be an email expert
+- Short paragraphs (1-3 sentences max). Lots of line breaks.
+- Bold claims and provocative hooks. Challenge assumptions. ("Stop being so nice... you're losing sales.")
+- Use "you" constantly. Make it personal.
+- No corporate speak. No jargon dumps. No filler.
+- Lead with the problem/pain point, then pivot to the fix
+- Use bold (**text**) for emphasis on key phrases
+- End with a clear, single CTA — link to the relevant INBXR tool
+- Shorter than the blog post — aim for 400-600 words
+- Tone: confident, slightly edgy, helpful. You're the friend who tells hard truths.
+
+INBXR tool links to use (pick the most relevant 1-2):
+- https://www.inbxr.us/ — Email Test
+- https://www.inbxr.us/sender — Sender Check (auth, DNS, audit)
+- https://www.inbxr.us/placement — Inbox Placement
+- https://www.inbxr.us/subject-scorer — Subject Line Scorer
+- https://www.inbxr.us/blacklist-monitor — Blacklist Monitor
+- https://www.inbxr.us/email-verifier — Email Verifier
+- https://www.inbxr.us/bimi — BIMI Checker
+
+Format the body as simple HTML suitable for Beehiiv (p, strong, a, br, ul, li tags only — no h1/h2/h3, no divs, no classes).
+
+IMPORTANT: Return ONLY valid JSON. No markdown fences, no explanation.
+
+Return a JSON object with exactly these keys:
+{
+  "subject": "Newsletter subject line — punchy, curiosity-driven, under 50 chars",
+  "preview_text": "Preview text for email clients — 40-90 chars",
+  "body": "Full newsletter HTML body"
+}"""
+
+    user_msg = f"Rewrite this blog post for the InBoXr newsletter:\n\nTitle: {title}\n\nContent:\n{plain[:3000]}"
+
+    start = time.time()
+    try:
+        raw = _call_api(system_msg, user_msg, cfg)
+        parsed = _parse_response(raw)
+        # Only keep the newsletter fields
+        result = {
+            "subject": parsed.get("subject", title),
+            "preview_text": parsed.get("preview_text", ""),
+            "body": parsed.get("body", parsed.get("content", "")),
+            "elapsed_ms": round((time.time() - start) * 1000),
+        }
+        return result
+    except BlogAIError:
+        raise
+    except Exception as e:
+        logger.exception("Newsletter rewrite failed")
+        raise BlogAIError(f"Newsletter rewrite failed: {str(e)[:100]}")
+
+
 def suggest_topics() -> list:
     """Return a list of 10 high-potential blog topics for email deliverability."""
     return [

@@ -404,6 +404,33 @@ def admin_generate_post():
     return jsonify({"ok": True, **result})
 
 
+@blog_bp.route("/admin/api/blog/newsletter", methods=["POST"])
+def admin_newsletter_rewrite():
+    """Rewrite a blog post into newsletter format for Beehiiv."""
+    if not _is_admin():
+        return jsonify({"error": "Unauthorized"}), 401
+
+    data = request.get_json(force=True, silent=True) or {}
+    post_id = data.get("post_id")
+    title = (data.get("title") or "").strip()
+    content = (data.get("content") or "").strip()
+
+    # If post_id provided, load from DB
+    if post_id and not content:
+        post = fetchone("SELECT title, content FROM blog_posts WHERE id = ?", (post_id,))
+        if not post:
+            return jsonify({"ok": False, "error": "Post not found."}), 404
+        title = title or post["title"]
+        content = post["content"]
+
+    if not content:
+        return jsonify({"ok": False, "error": "Content is required."}), 400
+
+    from modules.blog_ai import rewrite_for_newsletter
+    result = rewrite_for_newsletter(title, content)
+    return jsonify({"ok": True, **result})
+
+
 # ── Category endpoints ───────────────────────────────────
 
 @blog_bp.route("/admin/api/blog/categories", methods=["GET"])

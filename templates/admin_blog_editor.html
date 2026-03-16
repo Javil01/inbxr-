@@ -158,6 +158,22 @@
       </div>
     </div>
 
+    <!-- Newsletter -->
+    {% if post %}
+    <div class="blog-editor__panel blog-editor__ai-panel">
+      <h3 style="color:#a78bfa;">Newsletter Cross-Post</h3>
+      <p style="font-size:0.75rem; color:#94a3b8; margin-bottom:10px;">Rewrite this post for the InBoXr Beehiiv newsletter — punchy, direct, conversational.</p>
+      <button class="blog-editor__btn" onclick="rewriteForNewsletter()" id="nlBtn"
+        style="width:100%; text-align:center; background:rgba(167,139,250,0.15); color:#a78bfa; border-color:rgba(167,139,250,0.3);">
+        Convert to Newsletter
+      </button>
+      <div id="nlLoading" style="display:none; text-align:center; padding:10px;">
+        <div style="display:inline-block; width:20px; height:20px; border:2px solid rgba(255,255,255,0.1); border-top-color:#a78bfa; border-radius:50%; animation:spin 0.8s linear infinite;"></div>
+        <p style="margin:8px 0 0; font-size:0.8rem; color:#94a3b8;">Rewriting for newsletter...</p>
+      </div>
+    </div>
+    {% endif %}
+
     <!-- Actions -->
     <div class="blog-editor__actions">
       <button class="blog-editor__btn blog-editor__btn--draft" onclick="savePost('draft')">Save Draft</button>
@@ -167,6 +183,43 @@
       {% endif %}
     </div>
 
+  </div>
+</div>
+
+<!-- Newsletter Result Modal -->
+<div id="nlModal" style="display:none; position:fixed; inset:0; z-index:1000; background:rgba(0,0,0,0.7); display:none; align-items:center; justify-content:center;">
+  <div style="background:#1e293b; border:1px solid rgba(255,255,255,0.1); border-radius:16px; max-width:680px; width:90%; max-height:85vh; overflow:auto; padding:28px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+      <h2 style="font-size:1.1rem; font-weight:700; color:#a78bfa; margin:0;">Newsletter Version</h2>
+      <button onclick="closeNlModal()" style="background:none; border:none; color:#94a3b8; font-size:1.3rem; cursor:pointer;">&times;</button>
+    </div>
+
+    <div style="margin-bottom:14px;">
+      <label style="font-size:0.72rem; color:#94a3b8; display:block; margin-bottom:4px; text-transform:uppercase; letter-spacing:0.5px;">Subject Line</label>
+      <div style="display:flex; gap:8px;">
+        <input type="text" id="nlSubject" readonly style="flex:1; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.1); border-radius:8px; padding:10px 14px; color:#e2e8f0; font-size:0.9rem;" />
+        <button onclick="copyField('nlSubject')" style="padding:8px 16px; border-radius:8px; border:1px solid rgba(167,139,250,0.3); background:rgba(167,139,250,0.1); color:#a78bfa; font-size:0.78rem; cursor:pointer; white-space:nowrap;">Copy</button>
+      </div>
+    </div>
+
+    <div style="margin-bottom:14px;">
+      <label style="font-size:0.72rem; color:#94a3b8; display:block; margin-bottom:4px; text-transform:uppercase; letter-spacing:0.5px;">Preview Text</label>
+      <div style="display:flex; gap:8px;">
+        <input type="text" id="nlPreview" readonly style="flex:1; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.1); border-radius:8px; padding:10px 14px; color:#e2e8f0; font-size:0.9rem;" />
+        <button onclick="copyField('nlPreview')" style="padding:8px 16px; border-radius:8px; border:1px solid rgba(167,139,250,0.3); background:rgba(167,139,250,0.1); color:#a78bfa; font-size:0.78rem; cursor:pointer; white-space:nowrap;">Copy</button>
+      </div>
+    </div>
+
+    <div style="margin-bottom:14px;">
+      <label style="font-size:0.72rem; color:#94a3b8; display:block; margin-bottom:4px; text-transform:uppercase; letter-spacing:0.5px;">Newsletter Body (HTML)</label>
+      <textarea id="nlBody" readonly rows="12" style="width:100%; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.1); border-radius:8px; padding:12px 14px; color:#e2e8f0; font-family:'Courier New',monospace; font-size:0.8rem; resize:vertical;"></textarea>
+      <div style="display:flex; gap:8px; margin-top:8px;">
+        <button onclick="copyField('nlBody')" style="padding:8px 16px; border-radius:8px; border:1px solid rgba(167,139,250,0.3); background:rgba(167,139,250,0.1); color:#a78bfa; font-size:0.78rem; cursor:pointer;">Copy HTML</button>
+        <button onclick="toggleNlPreview()" id="nlPreviewBtn" style="padding:8px 16px; border-radius:8px; border:1px solid rgba(255,255,255,0.1); background:rgba(255,255,255,0.04); color:#94a3b8; font-size:0.78rem; cursor:pointer;">Preview</button>
+      </div>
+    </div>
+
+    <div id="nlRendered" style="display:none; background:#fff; color:#334155; padding:24px; border-radius:10px; font-size:0.95rem; line-height:1.7; margin-top:10px;"></div>
   </div>
 </div>
 

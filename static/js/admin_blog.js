@@ -394,6 +394,90 @@
       document.getElementById('imagePreviewImg').src = '';
     };
 
+    // Newsletter rewrite
+    window.rewriteForNewsletter = function() {
+      var btn = document.getElementById('nlBtn');
+      var loading = document.getElementById('nlLoading');
+      btn.disabled = true;
+      btn.style.opacity = '0.5';
+      loading.style.display = 'block';
+
+      var payload = {};
+      if (typeof POST_ID !== 'undefined' && POST_ID) {
+        payload.post_id = POST_ID;
+      }
+      // Also send current editor content in case it's been modified
+      payload.title = titleInput.value.trim();
+      payload.content = document.getElementById('postContent').value;
+
+      fetch('/admin/api/blog/newsletter', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(d) {
+        btn.disabled = false;
+        btn.style.opacity = '1';
+        loading.style.display = 'none';
+
+        if (!d.ok) { alert(d.error || 'Failed to rewrite'); return; }
+
+        document.getElementById('nlSubject').value = d.subject || '';
+        document.getElementById('nlPreview').value = d.preview_text || '';
+        document.getElementById('nlBody').value = d.body || '';
+        document.getElementById('nlRendered').style.display = 'none';
+        document.getElementById('nlPreviewBtn').textContent = 'Preview';
+        var modal = document.getElementById('nlModal');
+        modal.style.display = 'flex';
+      })
+      .catch(function() {
+        btn.disabled = false;
+        btn.style.opacity = '1';
+        loading.style.display = 'none';
+        alert('Failed to rewrite. Check API connection.');
+      });
+    };
+
+    window.closeNlModal = function() {
+      document.getElementById('nlModal').style.display = 'none';
+    };
+
+    window.copyField = function(id) {
+      var el = document.getElementById(id);
+      var text = el.value || el.textContent;
+      navigator.clipboard.writeText(text).then(function() {
+        var btn = el.parentElement.querySelector('button[onclick*="copyField"]') ||
+                  el.nextElementSibling;
+        if (btn) {
+          var orig = btn.textContent;
+          btn.textContent = 'Copied!';
+          setTimeout(function() { btn.textContent = orig; }, 1500);
+        }
+      });
+    };
+
+    window.toggleNlPreview = function() {
+      var rendered = document.getElementById('nlRendered');
+      var btn = document.getElementById('nlPreviewBtn');
+      if (rendered.style.display === 'none') {
+        rendered.innerHTML = document.getElementById('nlBody').value;
+        rendered.style.display = 'block';
+        btn.textContent = 'Hide Preview';
+      } else {
+        rendered.style.display = 'none';
+        btn.textContent = 'Preview';
+      }
+    };
+
+    // Close modal on backdrop click
+    var nlModal = document.getElementById('nlModal');
+    if (nlModal) {
+      nlModal.addEventListener('click', function(e) {
+        if (e.target === nlModal) closeNlModal();
+      });
+    }
+
     // Initialize
     loadEditorCategories();
     calculateReadTime();
