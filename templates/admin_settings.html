@@ -20,7 +20,7 @@
     .as-field input, .as-field textarea {
       width: 100%; background: rgba(255,255,255,0.04); border: 1px solid var(--border-1);
       border-radius: var(--r-sm); padding: 10px 14px; color: var(--text-1);
-      font-family: 'Courier New', monospace; font-size: 0.82rem;
+      font-family: 'Inter', sans-serif; font-size: 0.85rem;
     }
     .as-field textarea { min-height: 80px; resize: vertical; }
     .as-field input:focus, .as-field textarea:focus { border-color: var(--brand); outline: none; }
@@ -36,11 +36,11 @@
       padding: 12px 24px; border-radius: var(--r-lg); font-weight: 600; font-size: 0.88rem;
       display: none; z-index: 1000;
     }
-    .as-token-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .as-token-field { display: flex; align-items: center; gap: 8px; }
-    .as-token-field label { min-width: 120px; font-size: 0.75rem; color: var(--text-2); margin: 0; }
-    .as-token-field input { flex: 1; }
-    .as-color-preview { width: 28px; height: 28px; border-radius: 6px; border: 1px solid var(--border-1); flex-shrink: 0; }
+    .as-copy-row { display: grid; grid-template-columns: 200px 1fr; gap: 12px; align-items: start; margin-bottom: 12px; }
+    .as-copy-key { font-size: 0.78rem; font-weight: 600; color: var(--text-2); padding-top: 10px; }
+    .as-copy-val { width: 100%; background: rgba(255,255,255,0.04); border: 1px solid var(--border-1); border-radius: var(--r-sm); padding: 10px 14px; color: var(--text-1); font-family: 'Inter', sans-serif; font-size: 0.85rem; }
+    .as-copy-val:focus { border-color: var(--brand); outline: none; }
+    @media (max-width: 600px) { .as-copy-row { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
@@ -49,6 +49,16 @@
     <div class="as-header">
       <a href="/admin">&larr; Dashboard</a>
       <h1>Site Settings</h1>
+    </div>
+
+    <!-- Site Copy -->
+    <div class="as-card">
+      <h2>Site Copy</h2>
+      <p class="as-desc">Edit marketing copy across the site. Changes apply immediately on save.</p>
+
+      <div id="siteCopyFields"></div>
+
+      <button class="as-save-btn" onclick="saveSiteCopy()">Save Site Copy</button>
     </div>
 
     <!-- Tracking Tags -->
@@ -82,57 +92,6 @@
 
       <button class="as-save-btn" onclick="saveTracking()">Save Tracking Tags</button>
     </div>
-
-    <!-- Design Tokens -->
-    <div class="as-card">
-      <h2>Global Design Tokens</h2>
-      <p class="as-desc">Override CSS custom properties site-wide. Changes apply to all pages immediately.</p>
-
-      <div class="as-token-grid" id="tokenGrid">
-        <div class="as-token-field">
-          <label>--brand</label>
-          <input type="color" class="as-color-preview" data-token="--brand" value="#2563eb" onchange="syncTokenColor(this)" />
-          <input type="text" data-token="--brand" value="#2563eb" class="as-token-input" />
-        </div>
-        <div class="as-token-field">
-          <label>--brand-hover</label>
-          <input type="color" class="as-color-preview" data-token="--brand-hover" value="#1d4ed8" onchange="syncTokenColor(this)" />
-          <input type="text" data-token="--brand-hover" value="#1d4ed8" class="as-token-input" />
-        </div>
-        <div class="as-token-field">
-          <label>--green</label>
-          <input type="color" class="as-color-preview" data-token="--green" value="#22c55e" onchange="syncTokenColor(this)" />
-          <input type="text" data-token="--green" value="#22c55e" class="as-token-input" />
-        </div>
-        <div class="as-token-field">
-          <label>--red</label>
-          <input type="color" class="as-color-preview" data-token="--red" value="#ef4444" onchange="syncTokenColor(this)" />
-          <input type="text" data-token="--red" value="#ef4444" class="as-token-input" />
-        </div>
-        <div class="as-token-field">
-          <label>--bg-body</label>
-          <input type="color" class="as-color-preview" data-token="--bg-body" value="#050a14" onchange="syncTokenColor(this)" />
-          <input type="text" data-token="--bg-body" value="#050a14" class="as-token-input" />
-        </div>
-        <div class="as-token-field">
-          <label>--card-bg</label>
-          <input type="color" class="as-color-preview" data-token="--card-bg" value="#0f172a" onchange="syncTokenColor(this)" />
-          <input type="text" data-token="--card-bg" value="#0f172a" class="as-token-input" />
-        </div>
-        <div class="as-token-field">
-          <label>--text-1</label>
-          <input type="color" class="as-color-preview" data-token="--text-1" value="#dbeafe" onchange="syncTokenColor(this)" />
-          <input type="text" data-token="--text-1" value="#dbeafe" class="as-token-input" />
-        </div>
-        <div class="as-token-field">
-          <label>--text-2</label>
-          <input type="color" class="as-color-preview" data-token="--text-2" value="#94a3b8" onchange="syncTokenColor(this)" />
-          <input type="text" data-token="--text-2" value="#94a3b8" class="as-token-input" />
-        </div>
-      </div>
-
-      <button class="as-save-btn" onclick="saveTokens()" style="margin-top:16px;">Save Design Tokens</button>
-    </div>
   </div>
 
   <div class="as-toast" id="toast">Saved!</div>
@@ -146,32 +105,55 @@
       setTimeout(function() { toast.style.display = 'none'; }, 2500);
     }
 
-    // Load settings on page load
+    /* ── Site Copy ── */
+    var COPY_KEYS = [
+      { key: 'hero_headline',         label: 'Homepage Hero Headline' },
+      { key: 'hero_subheadline',      label: 'Homepage Hero Subheadline' },
+      { key: 'hero_cta_text',         label: 'Homepage CTA Button' },
+      { key: 'analyzer_headline',     label: 'Analyzer Hero Headline' },
+      { key: 'sender_headline',       label: 'Sender Check Headline' },
+      { key: 'placement_headline',    label: 'Inbox Placement Headline' },
+      { key: 'pricing_pro_desc',      label: 'Pro Plan Description' },
+      { key: 'pricing_agency_desc',   label: 'Agency Plan Description' },
+      { key: 'footer_tagline',        label: 'Footer Tagline' }
+    ];
+
+    var container = document.getElementById('siteCopyFields');
+    COPY_KEYS.forEach(function(item) {
+      var row = document.createElement('div');
+      row.className = 'as-copy-row';
+      row.innerHTML = '<div class="as-copy-key">' + item.label + '</div>' +
+        '<input class="as-copy-val" data-copy-key="' + item.key + '" placeholder="Default value" />';
+      container.appendChild(row);
+    });
+
+    // Load all settings
     fetch('/admin/api/site-settings').then(function(r) { return r.json(); }).then(function(d) {
       if (!d.ok) return;
       var s = d.settings;
+      // Tracking fields
       if (s.meta_pixel_id) document.getElementById('metaPixelId').value = s.meta_pixel_id;
       if (s.google_tag_id) document.getElementById('googleTagId').value = s.google_tag_id;
       if (s.custom_head_scripts) document.getElementById('customHeadScripts').value = s.custom_head_scripts;
       if (s.custom_body_scripts) document.getElementById('customBodyScripts').value = s.custom_body_scripts;
+      // Site copy fields
+      document.querySelectorAll('[data-copy-key]').forEach(function(inp) {
+        var val = s['copy_' + inp.dataset.copyKey];
+        if (val) inp.value = val;
+      });
     });
 
-    // Load design tokens
-    fetch('/admin/api/theme').then(function(r) { return r.json(); }).then(function(d) {
-      if (!d.ok) return;
-      var theme = d.theme;
-      for (var token in theme) {
-        var inputs = document.querySelectorAll('[data-token="' + token + '"]');
-        inputs.forEach(function(inp) {
-          inp.value = theme[token];
-        });
-      }
-    });
-
-    window.syncTokenColor = function(colorInput) {
-      var token = colorInput.dataset.token;
-      var textInput = colorInput.parentElement.querySelector('input[type="text"][data-token="' + token + '"]');
-      if (textInput) textInput.value = colorInput.value;
+    window.saveSiteCopy = function() {
+      var data = {};
+      document.querySelectorAll('[data-copy-key]').forEach(function(inp) {
+        data['copy_' + inp.dataset.copyKey] = inp.value;
+      });
+      fetch('/admin/api/site-settings', {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(data)
+      }).then(function(r) { return r.json(); }).then(function(d) {
+        if (d.ok) showToast('Site copy saved!');
+      });
     };
 
     window.saveTracking = function() {
@@ -187,24 +169,6 @@
       }).then(function(r) { return r.json(); }).then(function(d) {
         if (d.ok) showToast('Tracking tags saved!');
       });
-    };
-
-    window.saveTokens = function() {
-      var inputs = document.querySelectorAll('.as-token-input');
-      var promises = [];
-      inputs.forEach(function(inp) {
-        var token = inp.dataset.token;
-        var val = inp.value.trim();
-        if (token && val) {
-          promises.push(
-            fetch('/admin/api/theme', {
-              method: 'POST', headers: {'Content-Type': 'application/json'},
-              body: JSON.stringify({ variable: token, value: val })
-            })
-          );
-        }
-      });
-      Promise.all(promises).then(function() { showToast('Design tokens saved!'); });
     };
   })();
   </script>

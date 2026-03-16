@@ -1,17 +1,16 @@
 <div class="tool-hero">
   <div class="tool-hero__inner">
-    <span class="tool-hero__eyebrow"
-      {% if is_admin %}contenteditable="true" data-field="eyebrow"{% endif %}>{{ section.editable_fields.eyebrow }}</span>
-    <h1 class="tool-hero__h1"
-      {% if is_admin %}contenteditable="true" data-field="heading"{% endif %}>{{ section.editable_fields.heading }}</h1>
-    <p class="tool-hero__p"
-      {% if is_admin %}contenteditable="true" data-field="description"{% endif %}>{{ section.editable_fields.description }}</p>
+    <span class="tool-hero__eyebrow">The Inbox Checkup</span>
+    <h1 class="tool-hero__h1">Will This Email Land?</h1>
+    <p class="tool-hero__p">Paste your copy. Get a spam risk score, copy effectiveness grade, readability check, and AI-powered rewrites — before you hit send. No account. No cost. No sending required.</p>
 
     <div class="tool-hero__features">
-      {% for chip in section.editable_fields.chips %}
-      <span class="feature-chip"
-        {% if is_admin %}contenteditable="true" data-field="chips" data-chip-index="{{ loop.index0 }}"{% endif %}>{{ chip }}</span>
-      {% endfor %}
+      <span class="feature-chip">Spam Risk Score</span>
+      <span class="feature-chip">Copy Effectiveness</span>
+      <span class="feature-chip">AI Rewrites</span>
+      <span class="feature-chip">Readability Check</span>
+      <span class="feature-chip">Link Safety</span>
+      <span class="feature-chip">Inbox Preview</span>
     </div>
   </div>
 </div>

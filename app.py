@@ -170,40 +170,6 @@ def _clear_admin_login_failures(ip):
 _ADMIN_SESSION_HOURS = 4
 
 
-def _get_inline_overrides_json(page_name):
-    """Get inline text overrides as a JSON string for injection."""
-    import json as _json
-    from modules.page_config import get_inline_overrides
-    overrides = get_inline_overrides(page_name)
-    return _json.dumps(overrides) if overrides else ""
-
-
-def _get_custom_css(page_name):
-    """Generate a <style> block from saved style overrides for a page."""
-    from modules.page_config import get_page_styles, get_global_theme
-    lines = []
-    # Global theme variables
-    theme = get_global_theme()
-    if theme:
-        parts = []
-        for var, val in theme.items():
-            parts.append(f"  {var}: {val};")
-        lines.append(":root {\n" + "\n".join(parts) + "\n}")
-    # Per-element overrides
-    styles = get_page_styles(page_name)
-    for key, props in styles.items():
-        # key format: "section_id::selector"
-        parts = key.split("::", 1)
-        if len(parts) != 2:
-            continue
-        section_id, selector = parts
-        declarations = []
-        for prop, val in props.items():
-            declarations.append(f"  {prop}: {val};")
-        if declarations:
-            css_selector = f'[data-section-id="{section_id}"] {selector}'
-            lines.append(css_selector + " {\n" + "\n".join(declarations) + "\n}")
-    return "\n".join(lines)
 
 
 _tracking_tags_cache = {"data": None, "ts": 0}
@@ -293,8 +259,6 @@ def inject_user_context():
         "current_team_id": session.get("team_id"),
         "current_team_name": session.get("team_name"),
         "current_team_role": session.get("team_role"),
-        "get_custom_css": _get_custom_css,
-        "get_inline_overrides_json": _get_inline_overrides_json,
         "tracking_tags": _get_tracking_tags(),
     }
 
@@ -787,206 +751,6 @@ def admin_logout():
     return redirect("/")
 
 
-# ══════════════════════════════════════════════════════
-#  ADMIN API ENDPOINTS
-# ══════════════════════════════════════════════════════
-
-@app.route("/admin/api/reorder", methods=["POST"])
-def admin_reorder():
-    if not _is_admin():
-        return jsonify({"ok": False, "error": "Unauthorized"}), 403
-
-    from modules.page_config import update_section_order
-    data = request.get_json(force=True, silent=True)
-    if not data:
-        return jsonify({"ok": False, "error": "Invalid payload"}), 400
-
-    page = data.get("page", "")
-    order = data.get("order", [])
-
-    if not page or not order:
-        return jsonify({"ok": False, "error": "Missing page or order"}), 400
-
-    success = update_section_order(page, order)
-    if not success:
-        return jsonify({"ok": False, "error": "Page not found"}), 404
-    return jsonify({"ok": True})
-
-
-@app.route("/admin/api/update-content", methods=["POST"])
-def admin_update_content():
-    if not _is_admin():
-        return jsonify({"ok": False, "error": "Unauthorized"}), 403
-
-    from modules.page_config import update_section_content
-    data = request.get_json(force=True, silent=True)
-    if not data:
-        return jsonify({"ok": False, "error": "Invalid payload"}), 400
-
-    page = data.get("page", "")
-    section_id = data.get("section_id", "")
-    field = data.get("field", "")
-    value = data.get("value", "")
-
-    if not all([page, section_id, field]):
-        return jsonify({"ok": False, "error": "Missing required fields"}), 400
-
-    success = update_section_content(page, section_id, field, value)
-    if not success:
-        return jsonify({"ok": False, "error": "Section or field not found"}), 404
-    return jsonify({"ok": True})
-
-
-@app.route("/admin/api/update-chip", methods=["POST"])
-def admin_update_chip():
-    if not _is_admin():
-        return jsonify({"ok": False, "error": "Unauthorized"}), 403
-
-    from modules.page_config import load_config, save_config
-    data = request.get_json(force=True, silent=True)
-    if not data:
-        return jsonify({"ok": False, "error": "Invalid payload"}), 400
-
-    page = data.get("page", "")
-    section_id = data.get("section_id", "")
-    field = data.get("field", "")
-    index = data.get("index", 0)
-    value = data.get("value", "")
-
-    cfg = load_config()
-    page_cfg = cfg.get(page)
-    if not page_cfg:
-        return jsonify({"ok": False, "error": "Page not found"}), 404
-
-    for s in page_cfg["sections"]:
-        if s["id"] == section_id:
-            arr = s["editable_fields"].get(field, [])
-            if isinstance(arr, list) and 0 <= index < len(arr):
-                arr[index] = value
-                save_config(cfg)
-                return jsonify({"ok": True})
-            break
-
-    return jsonify({"ok": False, "error": "Field not found"}), 404
-
-
-@app.route("/admin/api/toggle-visibility", methods=["POST"])
-def admin_toggle_visibility():
-    if not _is_admin():
-        return jsonify({"ok": False, "error": "Unauthorized"}), 403
-
-    from modules.page_config import load_config, save_config
-    data = request.get_json(force=True, silent=True)
-    if not data:
-        return jsonify({"ok": False, "error": "Invalid payload"}), 400
-
-    page = data.get("page", "")
-    section_id = data.get("section_id", "")
-    visible = data.get("visible", True)
-
-    cfg = load_config()
-    page_cfg = cfg.get(page)
-    if not page_cfg:
-        return jsonify({"ok": False, "error": "Page not found"}), 404
-
-    for s in page_cfg["sections"]:
-        if s["id"] == section_id:
-            s["visible"] = visible
-            save_config(cfg)
-            return jsonify({"ok": True})
-
-    return jsonify({"ok": False, "error": "Section not found"}), 404
-
-
-@app.route("/admin/api/update-inline", methods=["POST"])
-def admin_update_inline():
-    if not _is_admin():
-        return jsonify({"ok": False, "error": "Unauthorized"}), 403
-    from modules.page_config import update_inline_override
-    data = request.get_json(force=True, silent=True) or {}
-    field_key = data.get("field_key") or data.get("selector", "")
-    ok = update_inline_override(data.get("page", ""), data.get("section_id", ""), field_key, data.get("value", ""))
-    return jsonify({"ok": ok})
-
-
-@app.route("/admin/api/update-styles", methods=["POST"])
-def admin_update_styles():
-    if not _is_admin():
-        return jsonify({"ok": False, "error": "Unauthorized"}), 403
-    from modules.page_config import update_element_styles
-    data = request.get_json(force=True, silent=True) or {}
-    ok = update_element_styles(data.get("page", ""), data.get("section_id", ""), data.get("selector", ""), data.get("styles", {}))
-    return jsonify({"ok": ok})
-
-
-@app.route("/admin/api/update-theme", methods=["POST"])
-def admin_update_theme():
-    if not _is_admin():
-        return jsonify({"ok": False, "error": "Unauthorized"}), 403
-    from modules.page_config import update_global_theme
-    data = request.get_json(force=True, silent=True) or {}
-    ok = update_global_theme(data.get("variable", ""), data.get("value", ""))
-    return jsonify({"ok": ok})
-
-
-@app.route("/admin/api/get-theme", methods=["GET"])
-def admin_get_theme():
-    if not _is_admin():
-        return jsonify({"ok": False, "error": "Unauthorized"}), 403
-    from modules.page_config import get_global_theme
-    return jsonify({"ok": True, "theme": get_global_theme()})
-
-
-@app.route("/admin/api/upload-image", methods=["POST"])
-def admin_upload_image():
-    if not _is_admin():
-        return jsonify({"ok": False, "error": "Unauthorized"}), 403
-    from modules.page_config import save_uploaded_image
-    file = request.files.get("file")
-    if not file:
-        return jsonify({"ok": False, "error": "No file uploaded"}), 400
-    url = save_uploaded_image(file)
-    if not url:
-        return jsonify({"ok": False, "error": "Invalid file type. Allowed: png, jpg, gif, svg, webp"}), 400
-    return jsonify({"ok": True, "url": url})
-
-
-@app.route("/admin/api/section-library", methods=["GET"])
-def admin_section_library():
-    if not _is_admin():
-        return jsonify({"ok": False, "error": "Unauthorized"}), 403
-    from modules.page_config import get_section_library
-    return jsonify({"ok": True, "sections": get_section_library()})
-
-
-@app.route("/admin/api/add-section", methods=["POST"])
-def admin_add_section():
-    if not _is_admin():
-        return jsonify({"ok": False, "error": "Unauthorized"}), 403
-    from modules.page_config import add_section_to_page
-    data = request.get_json(force=True, silent=True) or {}
-    section_id = add_section_to_page(data.get("page", ""), data.get("type", ""), data.get("position", 0))
-    if not section_id:
-        return jsonify({"ok": False, "error": "Failed to add section"}), 400
-    return jsonify({"ok": True, "section_id": section_id})
-
-
-@app.route("/admin/api/remove-section", methods=["POST"])
-def admin_remove_section():
-    if not _is_admin():
-        return jsonify({"ok": False, "error": "Unauthorized"}), 403
-    from modules.page_config import remove_section_from_page
-    data = request.get_json(force=True, silent=True) or {}
-    ok = remove_section_from_page(data.get("page", ""), data.get("section_id", ""))
-    return jsonify({"ok": ok})
-
-
-# Map URL-friendly names to config keys (used by SEO, analytics, etc.)
-_PAGE_ALIASES = {"index": "analyzer"}
-
-
-def _resolve_page_name(page_name):
-    return _PAGE_ALIASES.get(page_name, page_name)
 
 
 # ── Admin: User Management ───────────────────────────
@@ -1857,13 +1621,24 @@ def admin_api_media():
 def admin_api_media_upload():
     if not _is_admin():
         return jsonify({"ok": False}), 403
-    from modules.page_config import save_uploaded_image
     from modules.database import execute
     import os as _os
+    import time as _time
     f = request.files.get("file")
     if not f:
         return jsonify({"ok": False, "error": "No file"}), 400
-    url = save_uploaded_image(f)
+    # Save uploaded image
+    ALLOWED_EXT = {".png", ".jpg", ".jpeg", ".gif", ".svg", ".webp"}
+    upload_dir = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "static", "uploads")
+    _os.makedirs(upload_dir, exist_ok=True)
+    fname = f.filename or "upload"
+    ext = _os.path.splitext(fname)[1].lower()
+    if ext not in ALLOWED_EXT:
+        url = None
+    else:
+        safe_name = f"{int(_time.time())}_{fname.replace(' ', '_')}"
+        f.save(_os.path.join(upload_dir, safe_name))
+        url = f"/static/uploads/{safe_name}"
     if not url:
         return jsonify({"ok": False, "error": "Invalid file type"}), 400
     alt_text = request.form.get("alt_text", "")
@@ -1912,6 +1687,10 @@ def admin_api_media_delete(media_id):
         execute("DELETE FROM media_library WHERE id = ?", (media_id,))
     return jsonify({"ok": True})
 
+
+_PAGE_ALIASES = {"index": "analyzer"}
+def _resolve_page_name(n):
+    return _PAGE_ALIASES.get(n, n)
 
 # ── SEO Panel ────────────────────────────────────────
 
@@ -2028,36 +1807,21 @@ def admin_settings():
 
 @app.route("/")
 def index():
-    from modules.page_config import get_page_sections
-    sections = get_page_sections("email_test")
-    if not _is_admin():
-        sections = [s for s in sections if s.get("visible", True)]
     return render_template("email_test.html",
-                           sections=sections,
                            is_admin=_is_admin(),
                            active_page="index")
 
 
 @app.route("/analyzer")
 def analyzer():
-    from modules.page_config import get_page_sections
-    sections = get_page_sections("analyzer")
-    if not _is_admin():
-        sections = [s for s in sections if s.get("visible", True)]
     return render_template("index.html",
-                           sections=sections,
                            is_admin=_is_admin(),
                            active_page="analyzer")
 
 
 @app.route("/sender")
 def sender():
-    from modules.page_config import get_page_sections
-    sections = get_page_sections("sender")
-    if not _is_admin():
-        sections = [s for s in sections if s.get("visible", True)]
     return render_template("sender.html",
-                           sections=sections,
                            is_admin=_is_admin(),
                            active_page="sender")
 
@@ -2190,12 +1954,7 @@ def dashboard():
 
 @app.route("/subject-scorer")
 def subject_scorer():
-    from modules.page_config import get_page_sections
-    sections = get_page_sections("subject_scorer")
-    if not _is_admin():
-        sections = [s for s in sections if s.get("visible", True)]
     return render_template("subject_scorer.html",
-                           sections=sections,
                            is_admin=_is_admin(),
                            active_page="subject_scorer")
 
@@ -2322,24 +2081,14 @@ def dns_generator():
 
 @app.route("/bimi")
 def bimi():
-    from modules.page_config import get_page_sections
-    sections = get_page_sections("bimi")
-    if not _is_admin():
-        sections = [s for s in sections if s.get("visible", True)]
     return render_template("bimi_checker.html",
-                           sections=sections,
                            is_admin=_is_admin(),
                            active_page="bimi")
 
 
 @app.route("/placement")
 def placement():
-    from modules.page_config import get_page_sections
-    sections = get_page_sections("placement")
-    if not _is_admin():
-        sections = [s for s in sections if s.get("visible", True)]
     return render_template("placement.html",
-                           sections=sections,
                            is_admin=_is_admin(),
                            active_page="placement")
 
@@ -2444,12 +2193,7 @@ def placement_cleanup():
 
 @app.route("/header-analyzer")
 def header_analyzer():
-    from modules.page_config import get_page_sections
-    sections = get_page_sections("header_analyzer")
-    if not _is_admin():
-        sections = [s for s in sections if s.get("visible", True)]
     return render_template("header_analyzer.html",
-                           sections=sections,
                            is_admin=_is_admin(),
                            active_page="header_analyzer")
 
@@ -3324,12 +3068,7 @@ def full_audit_check():
 
 @app.route("/blacklist-monitor")
 def blacklist_monitor():
-    from modules.page_config import get_page_sections
-    sections = get_page_sections("blacklist_monitor")
-    if not _is_admin():
-        sections = [s for s in sections if s.get("visible", True)]
     return render_template("blacklist_monitor.html",
-                           sections=sections,
                            is_admin=_is_admin(),
                            active_page="blacklist_monitor")
 
@@ -3404,12 +3143,7 @@ def blm_history(domain):
 
 @app.route("/warmup")
 def warmup():
-    from modules.page_config import get_page_sections
-    sections = get_page_sections("warmup")
-    if not _is_admin():
-        sections = [s for s in sections if s.get("visible", True)]
     return render_template("warmup.html",
-                           sections=sections,
                            is_admin=_is_admin(),
                            active_page="warmup")
 
@@ -3494,12 +3228,7 @@ def warmup_delete(campaign_id):
 
 @app.route("/email-verifier")
 def email_verifier():
-    from modules.page_config import get_page_sections
-    sections = get_page_sections("email_verifier")
-    if not _is_admin():
-        sections = [s for s in sections if s.get("visible", True)]
     return render_template("email_verifier.html",
-                           sections=sections,
                            is_admin=_is_admin(),
                            active_page="email_verifier")
 

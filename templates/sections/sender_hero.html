@@ -1,23 +1,20 @@
 <div class="sender-hero">
   <div class="sender-hero__inner">
-    <span class="sender-hero__eyebrow"
-      {% if is_admin %}contenteditable="true" data-field="eyebrow"{% endif %}>{{ section.editable_fields.eyebrow }}</span>
-    <h1 class="sender-hero__title"
-      {% if is_admin %}contenteditable="true" data-field="heading"{% endif %}>{{ section.editable_fields.heading }}</h1>
-    <p class="sender-hero__sub"
-      {% if is_admin %}contenteditable="true" data-field="description"{% endif %}>{{ section.editable_fields.description }}</p>
+    <span class="sender-hero__eyebrow">Domain Checkup</span>
+    <h1 class="sender-hero__title">Will Your Domain Land?</h1>
+    <p class="sender-hero__sub">6 auth protocols. 110 blocklists. One report with an A–F grade and copy-paste DNS records to fix every issue. Other tools charge for this — or only check half.</p>
     <div class="sender-hero__details">
       <div class="hero-detail">
-        <strong {% if is_admin %}contenteditable="true" data-field="detail_1_title"{% endif %}>{{ section.editable_fields.detail_1_title }}</strong>
-        <span {% if is_admin %}contenteditable="true" data-field="detail_1_text"{% endif %}>{{ section.editable_fields.detail_1_text }}</span>
+        <strong>6 Auth Protocols</strong>
+        <span>SPF, DKIM, DMARC, BIMI, MTA-STS, and TLS-RPT — checked in parallel. MXToolbox covers 3. GlockApps charges $45/mo.</span>
       </div>
       <div class="hero-detail">
-        <strong {% if is_admin %}contenteditable="true" data-field="detail_2_title"{% endif %}>{{ section.editable_fields.detail_2_title }}</strong>
-        <span {% if is_admin %}contenteditable="true" data-field="detail_2_text"{% endif %}>{{ section.editable_fields.detail_2_text }}</span>
+        <strong>110 Blocklists</strong>
+        <span>Spamhaus, Barracuda, Abusix, Sender Score, and 100+ more. One listing can block your email overnight.</span>
       </div>
       <div class="hero-detail">
-        <strong {% if is_admin %}contenteditable="true" data-field="detail_3_title"{% endif %}>{{ section.editable_fields.detail_3_title }}</strong>
-        <span {% if is_admin %}contenteditable="true" data-field="detail_3_text"{% endif %}>{{ section.editable_fields.detail_3_text }}</span>
+        <strong>Fix It, Don't Just Find It</strong>
+        <span>Every issue comes with a ready-to-paste DNS record. Copy, paste, re-check — ready to land.</span>
       </div>
     </div>
   </div>

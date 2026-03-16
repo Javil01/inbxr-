@@ -7,62 +7,14 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/static/css/style.css?v={{ range(1000,9999) | random }}" />
-  {% if is_admin %}<link rel="stylesheet" href="/static/css/admin.css" />{% endif %}
-  {% set _css = get_custom_css(active_page) %}{% if _css %}<style>{{ _css | safe }}</style>{% endif %}
 </head>
-<body class="sender-page{% if is_admin %} admin-mode{% endif %}"{% if is_admin %} data-page="full_audit"{% endif %}>
+<body class="sender-page">
 
-{% if is_admin %}
-<div class="admin-toolbar">
-  <span class="admin-toolbar__label">
-    <span class="admin-toolbar__dot"></span>
-    Editing Mode
-  </span>
-  <span class="admin-toolbar__sep"></span>
-  <span>Drag sections to reorder &middot; Click text to edit</span>
-  <span class="admin-toolbar__sep"></span>
-  <a href="/admin">Exit Editor</a>
-</div>
-{% endif %}
+{% include 'sections/header.html' %}
+{% include 'sections/full_audit_hero.html' %}
+{% include 'sections/full_audit_tool.html' %}
+{% include 'sections/full_audit_footer.html' %}
 
-<div id="page-sections">
-{% for section in sections %}
-  <div class="page-section{% if is_admin %} editable-section{% endif %}{% if not section.draggable and is_admin %} page-section--locked{% endif %}"
-       data-section-id="{{ section.id }}"
-       data-section-type="{{ section.type }}">
-
-    {% if is_admin and section.draggable %}
-    <div class="section-drag-handle" title="Drag to reorder">&#9776;</div>
-    <button class="section-visibility-btn" title="Toggle visibility">&#128065;</button>
-    {% endif %}
-
-    {% include 'sections/' ~ section.type ~ '.html' %}
-  </div>
-{% endfor %}
-</div>
-
-{% set _overrides = get_inline_overrides_json(active_page) %}
-{% if _overrides %}
-<script>
-(function(){
-  var ov = {{ _overrides | safe }};
-  for (var key in ov) {
-    var parts = key.split('::');
-    var secId = parts[0], sel = parts[1];
-    var sec = document.querySelector('[data-section-id="' + secId + '"]');
-    if (!sec) continue;
-    var el = sec.querySelector(sel);
-    if (el) el.textContent = ov[key];
-  }
-})();
-</script>
-{% endif %}
 <script src="/static/js/full_audit.js?v={{ range(1000,9999) | random }}"></script>
-{% if is_admin %}
-<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
-<script src="/static/js/admin_editor.js"></script>
-<script src="/static/js/admin_style_panel.js"></script>
-<script src="/static/js/admin_sections.js"></script>
-{% endif %}
 </body>
 </html>
