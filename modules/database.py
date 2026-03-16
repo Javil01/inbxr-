@@ -384,6 +384,168 @@ _MIGRATIONS = [
         );
         CREATE INDEX IF NOT EXISTS idx_dns_snapshots_monitor ON dns_monitor_snapshots(monitor_id, scanned_at DESC);
     """),
+    ("011_seed_blog_posts", """
+        INSERT OR IGNORE INTO blog_posts
+            (title, slug, content, excerpt, meta_title, meta_description, tags, status, author, read_time, keyword_target, published_at, created_at, updated_at)
+        VALUES
+        ('Breaking into Your Customer''s Inbox: The Best Way to Ensure Email Deliverability',
+         'breaking-into-your-customers-inbox-the-best-way-to-ensure-email-deliverability',
+         '<h2>Why Your Emails Aren''t Reaching the Inbox</h2>
+<p>You spent hours writing the perfect email. The subject line is sharp, the offer is strong, and the design looks great. But none of that matters if your message lands in spam — or worse, never arrives at all. <strong>Email deliverability</strong> is the difference between your campaign performing and your campaign disappearing.</p>
+<p>The truth is, most senders don''t realize they have a deliverability problem until their open rates crater. ISPs like Gmail, Outlook, and Yahoo are getting smarter about filtering, and if your sending domain isn''t properly authenticated or your reputation has taken a hit, your emails will quietly vanish.</p>
+
+<h2>The Three Pillars of Email Deliverability</h2>
+<p>Getting into the inbox comes down to three things: <strong>authentication</strong>, <strong>reputation</strong>, and <strong>content quality</strong>. Miss any one of them and you''ll struggle.</p>
+
+<h3>1. Domain Authentication (SPF, DKIM, DMARC)</h3>
+<p>Authentication tells receiving servers that you are who you say you are. Without it, ISPs have no reason to trust your emails.</p>
+<ul>
+<li><strong>SPF</strong> — Specifies which servers are allowed to send on behalf of your domain</li>
+<li><strong>DKIM</strong> — Adds a cryptographic signature to prove the email wasn''t tampered with in transit</li>
+<li><strong>DMARC</strong> — Tells ISPs what to do when SPF or DKIM fails (quarantine, reject, or do nothing)</li>
+</ul>
+<p>Most deliverability problems start here. A missing or misconfigured SPF record, a broken DKIM signature, or a DMARC policy set to <code>p=none</code> all weaken your sending reputation. You can <a href="/sender">verify your domain authentication</a> in seconds to see exactly where you stand and get copy-paste DNS records to fix any issues.</p>
+
+[CTA:/sender]
+
+<h3>2. Sender Reputation</h3>
+<p>Even with perfect authentication, a bad reputation will sink your emails. ISPs track your sending behavior over time — bounce rates, spam complaints, engagement levels, and whether you''re on any blocklists.</p>
+<p>If you''re sending to stale lists full of invalid addresses, your bounce rate spikes and ISPs start throttling you. If recipients mark your emails as spam, that''s an even stronger negative signal. And if your domain or IP ends up on a blocklist, many servers will reject your emails outright.</p>
+<p>The fix: <a href="/blacklist-monitor">monitor your domain against 100+ blocklists</a> regularly, and <a href="/email-verifier">verify email addresses</a> before sending to keep your bounce rate under 2%.</p>
+
+[CTA:/blacklist-monitor]
+
+<h3>3. Content Quality</h3>
+<p>Spam filters scan your email content for red flags — excessive capitalization, too many links, spammy phrases like "ACT NOW" or "100% FREE," and missing unsubscribe links. Even well-intentioned emails can trip these filters if the copy isn''t clean.</p>
+<p>Your subject line matters too. It''s the first thing both the recipient and the spam filter see. A misleading or overly aggressive subject line can get you filtered before the email is even opened. Use the <a href="/subject-scorer">Subject Line Scorer</a> to test your subjects across 7 dimensions before you hit send.</p>
+
+[CTA:/subject-scorer]
+
+<h2>How to Test Your Email Deliverability</h2>
+<p>The best way to know if your emails will reach the inbox is to test before you send to your full list. Here''s a practical workflow:</p>
+
+<h3>Step 1: Run an Email Test</h3>
+<p>Send your email to a test address and get a full diagnostic report — authentication verdicts, spam score, header analysis, and a preview of how it renders in Gmail, Outlook, and Apple Mail. This catches problems before your subscribers ever see them.</p>
+
+[CTA:/]
+
+<h3>Step 2: Check Inbox Placement</h3>
+<p>Authentication can pass and your content can look clean, but your email might still land in spam for certain providers. <a href="/placement">Inbox placement testing</a> sends your email to real seed accounts across Gmail, Outlook, and Yahoo to show you exactly where it lands — inbox, spam, or promotions tab.</p>
+
+[CTA:/placement]
+
+<h3>Step 3: Analyze Your Headers</h3>
+<p>If something looks off, <a href="/header-analyzer">analyzing your email headers</a> reveals the full routing path — which servers handled your email, whether TLS was used, authentication results at each hop, and where delays occurred. It''s the best way to diagnose delivery issues that aren''t obvious from the outside.</p>
+
+<h2>Building Long-Term Deliverability</h2>
+<p>Testing before each campaign is important, but sustainable <strong>email deliverability</strong> requires ongoing habits:</p>
+<ul>
+<li><strong>Warm up new domains and IPs gradually</strong> — Don''t blast 50,000 emails from a fresh domain. Start small and scale up over 2-4 weeks. Use a <a href="/warmup">warm-up tracker</a> to stay on schedule.</li>
+<li><strong>Clean your list regularly</strong> — Remove hard bounces immediately and re-verify inactive addresses every quarter.</li>
+<li><strong>Monitor authentication changes</strong> — DNS records can break silently when someone changes your hosting or ESP. Set up monitoring so you know the moment something changes.</li>
+<li><strong>Watch your engagement metrics</strong> — ISPs weigh engagement heavily. If your open rates drop, segment your list tighter and re-engage or remove inactive subscribers.</li>
+<li><strong>Set up BIMI</strong> — <a href="/bimi">BIMI</a> displays your brand logo next to your emails in supporting inboxes. It requires a verified DMARC policy and boosts both trust and open rates.</li>
+</ul>
+
+<h2>Common Deliverability Mistakes to Avoid</h2>
+<ul>
+<li>Sending from a free email address (gmail.com, yahoo.com) for business email</li>
+<li>Using a shared IP with poor-reputation senders</li>
+<li>Ignoring spam complaints ("it''s just a few")</li>
+<li>Not having an unsubscribe link or making it hard to find</li>
+<li>Buying email lists instead of building them organically</li>
+<li>Setting DMARC to <code>p=none</code> and forgetting about it</li>
+</ul>
+
+<h2>FAQ</h2>
+<h3>What is a good email deliverability rate?</h3>
+<p>A healthy deliverability rate is 95% or higher, meaning at least 95 out of 100 emails reach the inbox (not spam). If you''re below 90%, you likely have authentication or reputation issues that need immediate attention.</p>
+
+<h3>How often should I test my email deliverability?</h3>
+<p>Test before every major campaign, and run a full domain check at least monthly. If you''re sending daily, weekly monitoring of your blocklist status and authentication records is essential.</p>
+
+<h3>Does email authentication guarantee inbox placement?</h3>
+<p>No. Authentication (SPF, DKIM, DMARC) is necessary but not sufficient. ISPs also consider your sender reputation, engagement history, and content quality. Think of authentication as the entry ticket — you still need a good reputation to get the best seat.</p>
+
+<h3>How long does it take to fix a bad sender reputation?</h3>
+<p>It depends on the severity. Minor issues (a few blocklist listings) can be resolved in days. Major reputation damage (high complaint rates, persistent blocklisting) can take 2-8 weeks of consistent good sending behavior to recover from.</p>
+
+<h3>What''s the difference between inbox placement and delivery rate?</h3>
+<p>Delivery rate measures whether the email was accepted by the receiving server (not bounced). Inbox placement measures whether it landed in the inbox vs. spam. You can have a 99% delivery rate but 40% inbox placement if your emails are being accepted but filtered to spam.</p>',
+         'Learn why emails miss the inbox and how to fix it — domain authentication, sender reputation, content quality, and testing workflows for reliable email deliverability.',
+         'Breaking into Your Customer''s Inbox: The Best Way to Ensure Email Deliverability',
+         'Learn the three pillars of email deliverability — authentication, reputation, and content quality — plus a step-by-step testing workflow to ensure your emails reach the inbox.',
+         '["email deliverability","SPF","DKIM","DMARC","inbox placement","sender reputation","spam filters"]',
+         'published',
+         'INBXR Team',
+         8,
+         'email deliverability',
+         datetime('now'),
+         datetime('now'),
+         datetime('now')),
+
+        ('How to Avoid Gmail''s Promotions Tab and Improve Email Deliverability',
+         'how-to-avoid-gmails-promotions-tab-and-improve-email-deliverability',
+         '<h2>Introduction to Gmail''s Promotions Tab</h2>
+<p>Gmail''s Promotions Tab can be a major obstacle for email marketers. When your emails land in this tab, they are less likely to be seen by your subscribers, resulting in lower engagement and conversion rates. In this article, we will explore why emails end up in the Promotions Tab and provide tips on how to avoid it.</p>
+
+<h2>Why Do Emails End Up in the Promotions Tab?</h2>
+<p>Gmail uses algorithms to categorize emails into different tabs. These algorithms look for certain characteristics commonly associated with promotional content, such as keywords, links, and images. If your email contains too many of these characteristics, it may be flagged as promotional.</p>
+
+<h3>Common Characteristics of Promotional Emails</h3>
+<ul>
+<li>Using keywords like ''sale'', ''discount'', or ''limited time offer''</li>
+<li>Including multiple links or URLs</li>
+<li>Using attention-grabbing images or graphics</li>
+<li>Having a high keyword density</li>
+</ul>
+
+<h2>How to Avoid the Promotions Tab and Improve Email Deliverability</h2>
+<p>To avoid the Promotions Tab, you need to make your emails look less promotional and more like personal emails.</p>
+
+<h3>Personalize Your Emails</h3>
+<p>Personalizing your emails can help them look less like promotional content. Use the subscriber''s name, reference their previous purchases or interactions, and use a more conversational tone.</p>
+
+<h3>Use a Clear and Relevant Subject Line</h3>
+<p>Your subject line should be clear, concise, and relevant to the content of your email. Avoid using misleading or attention-grabbing subject lines that may trigger Gmail''s algorithms. Use the <a href="/subject-scorer">Subject Line Scorer</a> to analyze and improve your subject lines.</p>
+
+[CTA:/subject-scorer]
+
+<h3>Optimize Your Email Content</h3>
+<p>Make sure your email content is optimized for deliverability. This includes using a balanced mix of text and images, avoiding spam keywords, and using a clear call-to-action. Use the <a href="/">Email Test</a> to get a full checkup of your email and identify areas for improvement.</p>
+
+[CTA:/]
+
+<h3>Set Up Domain Authentication</h3>
+<p>Setting up domain authentication can help improve your <strong>email deliverability</strong> and avoid the Promotions Tab. Use <a href="/sender">Sender Check</a> to verify your SPF, DKIM, and DMARC records and generate any missing ones.</p>
+
+[CTA:/sender]
+
+<h2>Conclusion</h2>
+<p>Avoiding Gmail''s Promotions Tab requires a combination of personalized content, clear subject lines, and optimized email deliverability. By following these tips and using INBXR''s tools, you can improve your email deliverability and ensure your emails reach your customers'' primary inbox.</p>
+
+<h2>FAQ</h2>
+<h3>How do I know if my emails are going to the Promotions Tab?</h3>
+<p>The easiest way is to run an <a href="/placement">inbox placement test</a> which sends your email to real seed accounts and shows you exactly which tab it lands in.</p>
+
+<h3>Can I request Gmail to move my emails to the Primary Tab?</h3>
+<p>You can''t force it, but you can ask subscribers to drag your email to Primary and click "Yes" when Gmail asks to do this for future messages. This trains the filter for that specific user.</p>
+
+<h3>Does authentication help with the Promotions Tab?</h3>
+<p>Authentication (SPF, DKIM, DMARC) helps with overall deliverability but doesn''t directly control tab placement. Tab sorting is based more on content signals and user engagement patterns.</p>',
+         'Learn why emails end up in Gmail''s Promotions Tab and how to optimize your content, subject lines, and authentication to reach the primary inbox.',
+         'How to Avoid Gmail''s Promotions Tab and Improve Email Deliverability',
+         'Learn why emails land in Gmail''s Promotions Tab and actionable tips to improve email deliverability and reach your subscribers'' primary inbox.',
+         '["email deliverability","Gmail","Promotions Tab","inbox placement","subject lines"]',
+         'published',
+         'INBXR Team',
+         5,
+         'email deliverability',
+         datetime('now'),
+         datetime('now'),
+         datetime('now'))
+        ;
+    """),
     ("010_fix_blog_links", """
         UPDATE blog_posts SET content = REPLACE(content, 'href="/dns-generator"', 'href="/sender"')
             WHERE content LIKE '%href="/dns-generator"%';
