@@ -69,7 +69,7 @@ Writing instructions:
 - CRITICAL: The post MUST be 1500-2000 words. This is non-negotiable. Each H2 section should be 200-300 words minimum.
 - Structure: intro paragraph (100+ words), then 5-7 H2 sections (each 200-300 words with H3 subsections), then conclusion (100+ words), then FAQ
 - Formula: Problem → Why it happens → How to fix → CTA to relevant tool
-- Insert [CTA:tool-path] markers (e.g. [CTA:/sender]) where a call-to-action to a relevant INBXR tool makes sense. Include at least 3 CTAs.
+- Link to relevant INBXR tools using standard HTML anchor tags (e.g. <a href="/sender">Sender Check</a>). Include at least 3 tool links. Do NOT use [CTA:] markers.
 - Target keyword in title, first paragraph, one H2, and naturally 1-2% throughout
 - Include an FAQ section at the end with 3-5 questions and answers (each answer 50+ words)
 - Generate HTML output (h2, h3, p, ul, li, strong, a tags — no h1, the title is separate)
@@ -257,7 +257,7 @@ Return a JSON object with exactly these keys:
     content_system = f"""You are an expert content writer for INBXR, an email deliverability platform.
 Write a COMPLETE, LONG blog post in HTML. This is the FULL article — write every section in detail.
 
-INBXR tools (link to these with [CTA:path] markers):
+INBXR tools (link to these using standard <a href="/path"> tags):
 - Email Test (/) — send a real email, get a full deliverability checkup
 - Sender Check (/sender) — verify SPF/DKIM/DMARC, generate DNS records, audit domain
 - Inbox Placement (/placement) — test inbox vs spam landing
@@ -275,7 +275,7 @@ REQUIREMENTS:
 - Start with a 100+ word intro paragraph (no heading).
 - Include 6+ H2 sections with detailed, actionable content.
 - Use real examples, specific numbers, and step-by-step instructions.
-- Insert [CTA:/path] markers for 3-4 relevant INBXR tools.
+- Link to 3-4 relevant INBXR tools using standard HTML anchor tags (e.g. <a href="/sender">check your authentication</a>). Do NOT use [CTA:] markers.
 - End with a conclusion H2 section.
 - Target keyword "{target_keyword}" in the intro and at least 2 H2 headings.
 - Do NOT wrap in markdown code fences. Output raw HTML only."""
@@ -397,6 +397,53 @@ Return a JSON object with exactly these keys:
     except Exception as e:
         logger.exception("Newsletter rewrite failed")
         raise BlogAIError(f"Newsletter rewrite failed: {str(e)[:100]}")
+
+
+def generate_topic(existing_titles: list = None) -> dict:
+    """Use AI to generate a fresh blog topic that doesn't overlap with existing posts.
+
+    Returns dict with 'topic' and 'keyword' keys.
+    """
+    cfg = _get_config()
+    if not cfg["api_key"]:
+        raise BlogAIError("AI not available — GROQ_API_KEY not configured")
+
+    existing_context = ""
+    if existing_titles:
+        titles = "\n".join(f"- {t}" for t in existing_titles[:30])
+        existing_context = f"\n\nExisting blog posts (DO NOT repeat these topics):\n{titles}"
+
+    system_msg = f"""You are an SEO strategist for INBXR, an email deliverability platform.
+
+Generate ONE new blog topic targeting a high-search-volume keyword in the email marketing/deliverability space.
+
+The topic should be:
+- Actionable and specific (not generic)
+- Targeting a keyword people actually search for
+- Relevant to email deliverability, authentication, inbox placement, sender reputation, or email marketing
+- Different from any existing posts listed below
+{existing_context}
+
+IMPORTANT: Return ONLY valid JSON. No markdown, no explanation.
+
+Return a JSON object with exactly these keys:
+{{
+  "topic": "Full blog post title idea",
+  "keyword": "target SEO keyword (2-4 words)"
+}}"""
+
+    raw = _call_api(system_msg, "Generate one new blog topic.", cfg, max_tokens=256)
+    # Parse manually since _parse_response expects blog post fields
+    try:
+        data = json.loads(raw)
+        content = data.get("choices", [{}])[0].get("message", {}).get("content", "")
+        result = json.loads(content)
+    except (json.JSONDecodeError, IndexError, KeyError):
+        raise BlogAIError("Failed to parse topic response")
+    return {
+        "topic": result.get("topic", result.get("title", "")),
+        "keyword": result.get("keyword", result.get("target_keyword", "")),
+    }
 
 
 def suggest_topics() -> list:
