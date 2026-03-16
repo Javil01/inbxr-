@@ -691,4 +691,11 @@ _MIGRATIONS = [
     ("013_onboarding", """
         ALTER TABLE users ADD COLUMN onboarding_dismissed_at TEXT;
     """),
+    ("014_blog_featured_images", """
+        UPDATE blog_posts
+        SET featured_image = '/static/images/blog/' || slug || '.png',
+            og_image = '/static/images/blog/' || slug || '.png'
+        WHERE (featured_image IS NULL OR featured_image = '')
+          AND slug IS NOT NULL AND slug != '';
+    """),
 ]
