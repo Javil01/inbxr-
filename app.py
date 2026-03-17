@@ -755,6 +755,63 @@ def admin_dashboard():
         "SELECT id, email, display_name, tier, created_at FROM users ORDER BY created_at DESC LIMIT 5"
     )
 
+    # ── Traffic analytics ──
+    traffic_today = fetchone("SELECT COUNT(*) as cnt FROM page_views WHERE created_at > datetime('now', '-1 day')")
+    traffic_week = fetchone("SELECT COUNT(*) as cnt FROM page_views WHERE created_at > datetime('now', '-7 days')")
+    traffic_month = fetchone("SELECT COUNT(*) as cnt FROM page_views WHERE created_at > datetime('now', '-30 days')")
+    unique_today = fetchone("SELECT COUNT(DISTINCT ip_address) as cnt FROM page_views WHERE created_at > datetime('now', '-1 day')")
+    unique_week = fetchone("SELECT COUNT(DISTINCT ip_address) as cnt FROM page_views WHERE created_at > datetime('now', '-7 days')")
+
+    # Page views by page (last 30 days)
+    traffic_by_page = fetchall("""
+        SELECT page_name,
+               COUNT(*) as total,
+               SUM(CASE WHEN created_at > datetime('now', '-1 day') THEN 1 ELSE 0 END) as today,
+               SUM(CASE WHEN created_at > datetime('now', '-7 days') THEN 1 ELSE 0 END) as week,
+               COUNT(DISTINCT ip_address) as unique_visitors
+        FROM page_views
+        WHERE created_at > datetime('now', '-30 days')
+        GROUP BY page_name ORDER BY total DESC LIMIT 20
+    """)
+
+    # Daily traffic trend (last 30 days)
+    traffic_daily = fetchall("""
+        SELECT date(created_at) as day, COUNT(*) as views, COUNT(DISTINCT ip_address) as visitors
+        FROM page_views WHERE created_at > datetime('now', '-30 days')
+        GROUP BY day ORDER BY day
+    """)
+
+    # Top referrers (last 30 days)
+    top_referrers = fetchall("""
+        SELECT referrer, COUNT(*) as cnt
+        FROM page_views
+        WHERE referrer IS NOT NULL AND referrer != '' AND created_at > datetime('now', '-30 days')
+        GROUP BY referrer ORDER BY cnt DESC LIMIT 10
+    """)
+
+    # Tool usage by page (map page names to friendly labels)
+    _page_labels = {
+        "index": "Home / Email Test",
+        "analyzer": "Email Analyzer",
+        "sender": "Sender Check",
+        "placement": "Inbox Placement",
+        "subject-scorer": "Subject Scorer",
+        "bimi": "BIMI Checker",
+        "header-analyzer": "Header Analyzer",
+        "blacklist-monitor": "Blacklist Monitor",
+        "email-verifier": "Email Verifier",
+        "warmup": "Warm-up Tracker",
+        "blog": "Blog",
+        "pricing": "Pricing",
+        "signup": "Signup",
+        "login": "Login",
+        "dashboard": "Dashboard",
+        "support": "Help & Support",
+        "account": "Account",
+    }
+    for p in traffic_by_page:
+        p["label"] = _page_labels.get(p["page_name"], p["page_name"])
+
     # Scheduler status
     try:
         from modules.scheduler import get_scheduler_status
@@ -794,6 +851,14 @@ def admin_dashboard():
         "recent_signups": recent_signups,
         "scheduler": scheduler,
         "services": services,
+        "traffic_today": traffic_today["cnt"] if traffic_today else 0,
+        "traffic_week": traffic_week["cnt"] if traffic_week else 0,
+        "traffic_month": traffic_month["cnt"] if traffic_month else 0,
+        "unique_today": unique_today["cnt"] if unique_today else 0,
+        "unique_week": unique_week["cnt"] if unique_week else 0,
+        "traffic_by_page": traffic_by_page,
+        "traffic_daily": traffic_daily,
+        "top_referrers": top_referrers,
     }
 
     return render_template("admin_dashboard.html", is_admin=True, stats=stats, active_page="admin")

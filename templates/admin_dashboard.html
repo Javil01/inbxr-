@@ -100,6 +100,40 @@
     .ad-btn--red { background: #ef4444; }
 
     #seedResult, #cleanupResult { font-size: 0.78rem; margin-top: 10px; }
+
+    /* ── Traffic section ── */
+    .ad-traffic-stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; margin-bottom: 18px; }
+    .ad-traffic-stat { background: var(--bg-2); border-radius: 10px; padding: 14px 16px; text-align: center; }
+    .ad-traffic-stat__num { font-size: 1.4rem; font-weight: 800; color: var(--brand); display: block; }
+    .ad-traffic-stat__label { font-size: 0.66rem; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.5px; }
+
+    .ad-page-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
+    .ad-page-table th { text-align: left; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-3); padding: 8px 10px; border-bottom: 1px solid var(--border-1); }
+    .ad-page-table td { padding: 8px 10px; border-bottom: 1px solid var(--border-1); }
+    .ad-page-table tr:last-child td { border-bottom: none; }
+    .ad-page-table tr:hover td { background: var(--bg-2); }
+    .ad-page-table td:nth-child(n+2) { text-align: right; font-variant-numeric: tabular-nums; }
+    .ad-page-table th:nth-child(n+2) { text-align: right; }
+
+    .ad-chart-container { position: relative; height: 200px; margin-bottom: 10px; }
+    .ad-chart-bar-wrap { display: flex; align-items: flex-end; gap: 2px; height: 180px; padding-top: 10px; }
+    .ad-chart-bar { flex: 1; min-width: 4px; border-radius: 3px 3px 0 0; background: var(--brand); opacity: 0.7; transition: opacity 0.15s; position: relative; cursor: default; }
+    .ad-chart-bar:hover { opacity: 1; }
+    .ad-chart-bar__tip { display: none; position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%); background: var(--card-bg); border: 1px solid var(--border-1); border-radius: 6px; padding: 4px 8px; font-size: 0.68rem; white-space: nowrap; z-index: 5; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+    .ad-chart-bar:hover .ad-chart-bar__tip { display: block; }
+    .ad-chart-labels { display: flex; gap: 2px; font-size: 0.6rem; color: var(--text-3); }
+    .ad-chart-labels span { flex: 1; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    .ad-ref-row { display: flex; align-items: center; gap: 8px; font-size: 0.76rem; margin-bottom: 5px; }
+    .ad-ref-row__url { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-2); }
+    .ad-ref-row__cnt { font-weight: 700; width: 40px; text-align: right; }
+    .ad-ref-row__bar { width: 80px; height: 5px; background: var(--bg-2); border-radius: 3px; overflow: hidden; flex-shrink: 0; }
+    .ad-ref-row__fill { height: 100%; background: var(--brand); border-radius: 3px; }
+
+    .ad-tab-bar { display: flex; gap: 4px; margin-bottom: 14px; }
+    .ad-tab { padding: 6px 14px; border-radius: 999px; font-size: 0.74rem; font-weight: 600; cursor: pointer; border: 1px solid var(--border-1); background: transparent; color: var(--text-2); transition: all 0.15s; }
+    .ad-tab:hover { border-color: var(--brand); color: var(--brand); }
+    .ad-tab--active { background: var(--brand); color: #fff; border-color: var(--brand); }
   </style>
 </head>
 <body>
@@ -371,6 +405,115 @@
     {% endfor %}
   </div>
   {% endif %}
+
+  <!-- ══════════ TRAFFIC ANALYTICS ══════════ -->
+  <div class="ad-section">
+    <h3 class="ad-section__title">Traffic Analytics</h3>
+
+    <!-- Traffic summary cards -->
+    <div class="ad-traffic-stats">
+      <div class="ad-traffic-stat">
+        <span class="ad-traffic-stat__num">{{ stats.traffic_today }}</span>
+        <span class="ad-traffic-stat__label">Views Today</span>
+      </div>
+      <div class="ad-traffic-stat">
+        <span class="ad-traffic-stat__num">{{ stats.unique_today }}</span>
+        <span class="ad-traffic-stat__label">Visitors Today</span>
+      </div>
+      <div class="ad-traffic-stat">
+        <span class="ad-traffic-stat__num">{{ stats.traffic_week }}</span>
+        <span class="ad-traffic-stat__label">Views (7d)</span>
+      </div>
+      <div class="ad-traffic-stat">
+        <span class="ad-traffic-stat__num">{{ stats.unique_week }}</span>
+        <span class="ad-traffic-stat__label">Visitors (7d)</span>
+      </div>
+      <div class="ad-traffic-stat">
+        <span class="ad-traffic-stat__num">{{ stats.traffic_month }}</span>
+        <span class="ad-traffic-stat__label">Views (30d)</span>
+      </div>
+    </div>
+
+    <div class="ad-row">
+      <!-- Daily traffic chart -->
+      <div class="ad-panel">
+        <h3 class="ad-panel__title">Daily Traffic (30 days)</h3>
+        {% if stats.traffic_daily %}
+        {% set max_day = stats.traffic_daily|map(attribute='views')|max %}
+        <div class="ad-chart-bar-wrap">
+          {% for day in stats.traffic_daily %}
+          <div class="ad-chart-bar" style="height:{{ (day.views / (max_day or 1) * 100)|round }}%">
+            <div class="ad-chart-bar__tip">{{ day.day[5:] }}: {{ day.views }} views / {{ day.visitors }} visitors</div>
+          </div>
+          {% endfor %}
+        </div>
+        <div class="ad-chart-labels">
+          {% for day in stats.traffic_daily %}
+            {% if loop.first or loop.last or loop.index % 7 == 0 %}
+            <span>{{ day.day[5:] }}</span>
+            {% else %}
+            <span></span>
+            {% endif %}
+          {% endfor %}
+        </div>
+        {% else %}
+        <p style="font-size:0.78rem;color:var(--text-3);font-style:italic;">No traffic data yet.</p>
+        {% endif %}
+      </div>
+
+      <!-- Top referrers -->
+      <div class="ad-panel">
+        <h3 class="ad-panel__title">Top Referrers (30d)</h3>
+        {% if stats.top_referrers %}
+        {% set max_ref = stats.top_referrers[0].cnt if stats.top_referrers else 1 %}
+        {% for ref in stats.top_referrers %}
+        <div class="ad-ref-row">
+          <span class="ad-ref-row__url" title="{{ ref.referrer }}">{{ ref.referrer|truncate(50) }}</span>
+          <div class="ad-ref-row__bar">
+            <div class="ad-ref-row__fill" style="width:{{ (ref.cnt / max_ref * 100)|round }}%"></div>
+          </div>
+          <span class="ad-ref-row__cnt">{{ ref.cnt }}</span>
+        </div>
+        {% endfor %}
+        {% else %}
+        <p style="font-size:0.78rem;color:var(--text-3);font-style:italic;">No referrer data yet.</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Page-by-page breakdown table -->
+    <div class="ad-panel" style="margin-top:16px;">
+      <h3 class="ad-panel__title">Traffic by Page (30 days)</h3>
+      {% if stats.traffic_by_page %}
+      <div style="overflow-x:auto;">
+        <table class="ad-page-table">
+          <thead>
+            <tr>
+              <th>Page</th>
+              <th>Today</th>
+              <th>7 Days</th>
+              <th>30 Days</th>
+              <th>Unique Visitors</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for page in stats.traffic_by_page %}
+            <tr>
+              <td><strong>{{ page.label }}</strong> <span style="color:var(--text-3);font-size:0.68rem;">/{{ page.page_name }}</span></td>
+              <td>{{ page.today }}</td>
+              <td>{{ page.week }}</td>
+              <td>{{ page.total }}</td>
+              <td>{{ page.unique_visitors }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <p style="font-size:0.78rem;color:var(--text-3);font-style:italic;">No page view data yet.</p>
+      {% endif %}
+    </div>
+  </div>
 
 </div>
 
