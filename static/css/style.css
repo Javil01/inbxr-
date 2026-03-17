@@ -2224,6 +2224,9 @@ select {
 .dnsbl-name { display: block; font-weight: 600; color: var(--text-1); font-size: 0.8rem; }
 .dnsbl-zone { display: block; font-family: var(--font-mono); font-size: 0.66rem; color: var(--text-3); margin-top: 2px; }
 .dnsbl-info-cell { font-size: 0.73rem; color: var(--text-3); max-width: 200px; line-height: 1.4; }
+.dnsbl-action-cell { white-space: nowrap; }
+.delist-btn { display: inline-block; padding: 4px 10px; background: rgba(239,68,68,0.1); color: #ef4444; border-radius: 999px; font-size: 0.7rem; font-weight: 600; text-decoration: none; transition: background 0.15s; }
+.delist-btn:hover { background: rgba(239,68,68,0.2); }
 .dnsbl-reason { font-size: 0.72rem; color: var(--text-3); display: block; margin-top: 3px; }
 .dnsbl-error { font-size: 0.68rem; color: var(--text-4); display: block; }
 

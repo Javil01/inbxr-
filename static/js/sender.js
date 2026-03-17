@@ -318,7 +318,7 @@ function renderDnsblTable(dnsbl, listedCount) {
 
   if (!dnsbl?.length) {
     summary.textContent = '(no IP provided — domain lists only)';
-    body.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-hint);padding:16px">No blocklist data available.</td></tr>';
+    body.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-hint);padding:16px">No blocklist data available.</td></tr>';
     return;
   }
 
@@ -335,6 +335,9 @@ function renderDnsblTable(dnsbl, listedCount) {
     const reason    = listed && row.reason ? `<br><small class="dnsbl-reason">${escHtml(row.reason.slice(0, 120))}</small>` : '';
     const errNote   = row.error ? `<small class="dnsbl-error">lookup error</small>` : '';
     const wlabel    = WEIGHT_LABEL[row.weight] || row.weight;
+    const delistLink = listed && row.delist
+      ? `<a href="${escHtml(row.delist)}" target="_blank" rel="noopener" class="delist-btn">Request Removal</a>`
+      : (listed ? '<small style="color:var(--text-hint)">Manual</small>' : '');
 
     return `
       <tr class="${listed ? 'dnsbl-row--listed' : ''}">
@@ -346,6 +349,7 @@ function renderDnsblTable(dnsbl, listedCount) {
         <td><span class="type-pill">${row.type === 'ip' ? 'IP' : 'Domain'}</span></td>
         <td><span class="weight-pill weight-pill--${row.weight}">${wlabel}</span></td>
         <td class="dnsbl-info-cell">${escHtml(row.info || '')}</td>
+        <td class="dnsbl-action-cell">${delistLink}</td>
       </tr>`;
   }).join('');
 }
