@@ -423,17 +423,19 @@ def health_check():
 
 @app.route('/blog-images/<path:filename>')
 def serve_blog_image(filename):
-    """Serve blog images from the persistent data directory."""
+    """Serve blog images — checks persistent volume, repo data/, and legacy static/ in order."""
     import os as _os
-    from flask import send_from_directory
-    data_dir = _os.environ.get("INBXR_DATA_DIR", _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "data"))
-    blog_img_dir = _os.path.join(data_dir, "blog_images")
-    # Fall back to legacy static path
-    if not _os.path.exists(_os.path.join(blog_img_dir, filename)):
-        legacy_dir = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "static", "images", "blog")
-        if _os.path.exists(_os.path.join(legacy_dir, filename)):
-            return send_from_directory(legacy_dir, filename)
-    return send_from_directory(blog_img_dir, filename)
+    from flask import send_from_directory, abort
+    base = _os.path.dirname(_os.path.abspath(__file__))
+    search_dirs = [
+        _os.path.join(_os.environ.get("INBXR_DATA_DIR", _os.path.join(base, "data")), "blog_images"),
+        _os.path.join(base, "data", "blog_images"),
+        _os.path.join(base, "static", "images", "blog"),
+    ]
+    for d in search_dirs:
+        if _os.path.exists(_os.path.join(d, filename)):
+            return send_from_directory(d, filename)
+    abort(404)
 
 
 @app.route('/robots.txt')

@@ -55,6 +55,7 @@ def init_db():
     _run_migrations(conn)
     _seed_blog_posts(conn)
     _fix_cta_markers(conn)
+    _fix_blog_image_paths(conn)
 
 
 def _run_migrations(conn):
@@ -720,3 +721,18 @@ def _fix_cta_markers(conn):
         conn.execute("UPDATE blog_posts SET content=? WHERE id=?", (content, row["id"]))
     if rows:
         conn.commit()
+
+
+def _fix_blog_image_paths(conn):
+    """Migrate old /static/images/blog/ paths to /blog-images/ served from persistent volume."""
+    rows = conn.execute(
+        "SELECT id, slug, featured_image FROM blog_posts WHERE featured_image LIKE '/static/images/blog/%'"
+    ).fetchall()
+    for row in rows:
+        new_path = f"/blog-images/{row['slug']}.png"
+        conn.execute("UPDATE blog_posts SET featured_image=?, og_image=? WHERE id=?",
+                     (new_path, new_path, row["id"]))
+    if rows:
+        conn.commit()
+        import logging
+        logging.getLogger('inbxr.database').info("Migrated %d blog image paths to /blog-images/", len(rows))
