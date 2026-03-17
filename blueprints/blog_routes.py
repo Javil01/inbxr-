@@ -135,7 +135,7 @@ def blog_index():
         categories=categories,
         current_category=category_slug,
         current_tag=tag_filter,
-        page=page,
+        current_page=page,
         total_pages=total_pages,
         total_posts=total,
         active_page="blog",
