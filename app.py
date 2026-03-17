@@ -98,7 +98,7 @@ else:
 app.config["MAX_CONTENT_LENGTH"] = 10 * 1024 * 1024
 
 # ── Permanent session lifetime ───────────────────────────
-app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(days=30)
+app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(days=7)
 
 # ── Session cookie security ─────────────────────────────
 app.config['SESSION_COOKIE_SECURE'] = os.environ.get('FLASK_ENV') == 'production'
@@ -137,34 +137,34 @@ from modules.scheduler import init_scheduler
 init_scheduler(app)
 
 # ── Admin credentials (MUST be set via env vars — no defaults) ──
+# ADMIN_PASS_HASH takes priority: store a PBKDF2 hash instead of plaintext.
+# Generate with: python -c "from modules.auth import _hash_password; print(_hash_password('yourpassword'))"
 ADMIN_USER = os.environ.get("ADMIN_USER")
-ADMIN_PASS = os.environ.get("ADMIN_PASS")
+_ADMIN_PASS_HASH = os.environ.get("ADMIN_PASS_HASH", "")
+_ADMIN_PASS_PLAIN = os.environ.get("ADMIN_PASS", "")  # fallback for backwards compat
 
-# ── Admin login rate limiting ──
+# ── Admin login rate limiting (DB-backed, survives restarts) ──
 import time as _time
-_admin_login_failures = {}  # {ip: [timestamp, ...]}
 _ADMIN_RATE_LIMIT_WINDOW = 15 * 60   # 15 minutes
 _ADMIN_RATE_LIMIT_MAX = 5            # max failures before block
 
 def _check_admin_rate_limit(ip):
     """Return True if IP is blocked from admin login."""
-    now = _time.time()
-    attempts = _admin_login_failures.get(ip, [])
-    attempts = [t for t in attempts if now - t < _ADMIN_RATE_LIMIT_WINDOW]
-    _admin_login_failures[ip] = attempts
-    return len(attempts) >= _ADMIN_RATE_LIMIT_MAX
+    from modules.database import fetchone
+    cutoff = _time.time() - _ADMIN_RATE_LIMIT_WINDOW
+    row = fetchone(
+        "SELECT COUNT(*) as cnt FROM admin_audit_log WHERE action = 'login_failed' AND ip_address = ? AND created_at > datetime('now', ?)",
+        (ip, f"-{_ADMIN_RATE_LIMIT_WINDOW} seconds")
+    )
+    return (row["cnt"] if row else 0) >= _ADMIN_RATE_LIMIT_MAX
 
 def _record_admin_login_failure(ip):
-    """Record a failed admin login attempt."""
-    now = _time.time()
-    attempts = _admin_login_failures.get(ip, [])
-    attempts = [t for t in attempts if now - t < _ADMIN_RATE_LIMIT_WINDOW]
-    attempts.append(now)
-    _admin_login_failures[ip] = attempts
+    """Record a failed admin login attempt (logged via _log_admin_action)."""
+    pass  # Failures are already logged in admin_audit_log by _log_admin_action
 
 def _clear_admin_login_failures(ip):
-    """Clear failures on successful login."""
-    _admin_login_failures.pop(ip, None)
+    """No-op — DB-backed rate limiting doesn't need manual clearing."""
+    pass
 
 # ── Admin session expiry ──
 _ADMIN_SESSION_HOURS = 4
@@ -658,7 +658,7 @@ def admin_login():
         return render_template("admin_login.html", error=None)
 
     # Admin login disabled if credentials not configured
-    if not ADMIN_USER or not ADMIN_PASS:
+    if not ADMIN_USER or (not _ADMIN_PASS_HASH and not _ADMIN_PASS_PLAIN):
         _log_admin_action("login_disabled", "Admin login attempted but credentials not configured")
         return render_template("admin_login.html", error="Admin login is disabled. Set ADMIN_USER and ADMIN_PASS environment variables.")
 
@@ -672,7 +672,16 @@ def admin_login():
     username = (request.form.get("username") or "").strip()
     password = (request.form.get("password") or "")
 
-    if username == ADMIN_USER and password == ADMIN_PASS:
+    # Verify admin password — prefer hashed, fallback to plaintext
+    _admin_pw_ok = False
+    if _ADMIN_PASS_HASH and username == ADMIN_USER:
+        from modules.auth import _verify_password
+        _admin_pw_ok = _verify_password(password, _ADMIN_PASS_HASH)
+    elif _ADMIN_PASS_PLAIN and username == ADMIN_USER:
+        import hmac
+        _admin_pw_ok = hmac.compare_digest(password, _ADMIN_PASS_PLAIN)
+
+    if _admin_pw_ok:
         session["is_admin"] = True
         session["admin_login_at"] = _time.time()
         _clear_admin_login_failures(ip)

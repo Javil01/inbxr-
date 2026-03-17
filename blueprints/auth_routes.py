@@ -55,10 +55,17 @@ def signup():
     elif not is_configured():
         logger.warning("SMTP not configured — verification email NOT sent for %s", email)
 
-    login_user(user)
-    session["is_new_signup"] = True
-    next_url = request.args.get("next", "/dashboard")
-    return redirect(next_url)
+    # Don't fully log in until email is verified — redirect to verification page
+    if is_configured() and user.get("verification_token"):
+        session["pending_user_id"] = user["id"]
+        session["is_new_signup"] = True
+        return redirect("/verification-required")
+    else:
+        # No email configured — allow login (dev mode / email disabled)
+        login_user(user)
+        session["is_new_signup"] = True
+        next_url = request.args.get("next", "/dashboard")
+        return redirect(next_url)
 
 
 @auth_bp.route("/login", methods=["GET", "POST"])

@@ -263,10 +263,10 @@ def tier_required(*allowed_tiers):
 
 
 def api_key_required(f):
-    """Decorator: authenticate via API key in header or query param."""
+    """Decorator: authenticate via API key in X-API-Key header only."""
     @functools.wraps(f)
     def wrapper(*args, **kwargs):
-        api_key = request.headers.get("X-API-Key") or request.args.get("api_key")
+        api_key = request.headers.get("X-API-Key")
         if not api_key:
             return jsonify({"error": "API key required. Pass via X-API-Key header."}), 401
         user = get_user_by_api_key(api_key)
