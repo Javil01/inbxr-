@@ -130,7 +130,7 @@ def _seed_blog_posts(conn):
                         img_path = generate_blog_image(
                             p["title"], p["slug"],
                             keyword=p.get("keyword_target", ""))
-                        featured = f"/static/{img_path}"
+                        featured = img_path
                         og_img = featured
                     except Exception:
                         pass

@@ -313,7 +313,7 @@ def admin_create_post():
                 cat_row = fetchone("SELECT name FROM blog_categories WHERE id = ?", (category_id,))
                 cat_name = cat_row["name"] if cat_row else ""
             img_path = generate_blog_image(title, slug, category=cat_name, keyword=keyword_target)
-            featured_image = f"/static/{img_path}"
+            featured_image = img_path
             if not og_image:
                 og_image = featured_image
         except Exception:
@@ -426,8 +426,8 @@ def admin_generate_post():
         img_path = generate_blog_image(result.get("title", topic),
                                        result.get("slug", ""),
                                        keyword=target_keyword)
-        result["featured_image"] = f"/static/{img_path}"
-        result["og_image"] = f"/static/{img_path}"
+        result["featured_image"] = img_path
+        result["og_image"] = img_path
     except Exception:
         pass
 

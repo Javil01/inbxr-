@@ -421,6 +421,21 @@ def health_check():
     return jsonify({'status': 'ok'}), 200
 
 
+@app.route('/blog-images/<path:filename>')
+def serve_blog_image(filename):
+    """Serve blog images from the persistent data directory."""
+    import os as _os
+    from flask import send_from_directory
+    data_dir = _os.environ.get("INBXR_DATA_DIR", _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "data"))
+    blog_img_dir = _os.path.join(data_dir, "blog_images")
+    # Fall back to legacy static path
+    if not _os.path.exists(_os.path.join(blog_img_dir, filename)):
+        legacy_dir = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "static", "images", "blog")
+        if _os.path.exists(_os.path.join(legacy_dir, filename)):
+            return send_from_directory(legacy_dir, filename)
+    return send_from_directory(blog_img_dir, filename)
+
+
 @app.route('/robots.txt')
 def robots_txt():
     """Serve robots.txt for search engines."""

@@ -11,10 +11,14 @@ import textwrap
 from PIL import Image, ImageDraw, ImageFont
 
 # ── Paths ──
-_STATIC_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "static")
+_BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+_STATIC_DIR = os.path.join(_BASE_DIR, "static")
 _IMAGES_DIR = os.path.join(_STATIC_DIR, "images")
-_BLOG_IMG_DIR = os.path.join(_IMAGES_DIR, "blog")
 _LOGO_PATH = os.path.join(_IMAGES_DIR, "logo.png")
+
+# Use persistent data dir on Railway, fall back to static/images/blog locally
+_DATA_DIR = os.environ.get("INBXR_DATA_DIR", os.path.join(_BASE_DIR, "data"))
+_BLOG_IMG_DIR = os.path.join(_DATA_DIR, "blog_images")
 
 # ── Brand colors ──
 BG_COLOR = (15, 23, 42)          # --bg-1 dark navy
@@ -55,6 +59,12 @@ def _get_font(size, bold=False):
             "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
             "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
         ]
+    # Nix store paths (Railway/Nixpacks)
+    import glob as _glob
+    for pattern in (["/nix/store/*/share/fonts/truetype/DejaVuSans-Bold.ttf"] if bold else ["/nix/store/*/share/fonts/truetype/DejaVuSans.ttf"]):
+        matches = _glob.glob(pattern)
+        if matches:
+            candidates.insert(0, matches[0])
     for path in candidates:
         if os.path.exists(path):
             return ImageFont.truetype(path, size)
@@ -255,5 +265,5 @@ def generate_blog_image(title, slug, category=None, keyword=None):
     final.paste(img, (0, 0), img)
     final.save(out_path, "PNG", optimize=True)
 
-    # Return path relative to static/
-    return f"images/blog/{slug}.png"
+    # Return URL path for serving
+    return f"/blog-images/{slug}.png"

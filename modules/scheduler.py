@@ -141,7 +141,7 @@ def _scheduled_daily_blog_post():
         try:
             from modules.blog_image import generate_blog_image
             img_path = generate_blog_image(data["title"], data["slug"], keyword=keyword)
-            featured_image = f"/static/{img_path}"
+            featured_image = img_path  # generate_blog_image now returns full URL path
         except Exception as e:
             logger.warning("[SCHEDULER] Blog image generation failed: %s", e)
 

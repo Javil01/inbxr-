@@ -131,7 +131,7 @@ def save_post(data, category_id, category_name=""):
             data["title"], data["slug"],
             category=category_name,
             keyword=data.get("keyword_target", ""))
-        featured_image = f"/static/{img_path}"
+        featured_image = img_path
     except Exception as e:
         print(f"           Image gen failed: {e}")
 
