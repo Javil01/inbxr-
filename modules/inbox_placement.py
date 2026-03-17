@@ -519,18 +519,22 @@ def generate_recommendations(results: list, summary: dict) -> list:
 
         if promo_results:
             recs.append({
-                "severity": "info",
-                "title": "Delivered to Inbox — But Landing in Promotions Tab",
-                "text": f"Your email reached the inbox on all {total} seeds, but {len(promo_results)} landed in Gmail's Promotions tab instead of Primary. Promotions tab emails see 50-70% lower open rates.",
+                "severity": "warning",
+                "title": "Gmail Promotions Tab — Your Opens Are Taking a Hit",
+                "text": f"Your email reached the inbox on all {total} seeds, but {len(promo_results)} landed in Gmail's Promotions tab instead of Primary. Promotions tab emails get 50-70% lower open rates. Here's exactly how to fix it:",
                 "actions": [
-                    "Reduce HTML complexity — simpler emails are more likely to hit Primary",
-                    "Remove or minimize images and heavy formatting",
-                    "Avoid multiple CTAs and links — keep it to 1-2 max",
-                    "Write in a conversational, personal tone (like a 1-on-1 email)",
-                    "Avoid promotional language: 'buy now', 'limited offer', 'click here'",
-                    "Use the recipient's first name and reference past interactions",
-                    "Send from a personal name (e.g. 'Sarah from Acme') not a brand name",
-                    "Ask engaged subscribers to drag your email to Primary (trains Gmail's filter)",
+                    "Strip heavy HTML — send plain text or minimal formatting, like a real person would write",
+                    "Use only 1 link maximum — multiple links are the #1 signal Gmail uses to classify as Promotions",
+                    "Remove all images or keep just 1 small one — image-heavy emails = marketing email",
+                    "Write like a human — 'Hey [name], quick question...' not 'Dear valued customer'",
+                    "Send from a person's name (e.g. 'Sarah from Acme') not a brand or noreply address",
+                    "Drop promotional words — no 'buy now', 'limited offer', 'exclusive deal', 'discount'",
+                    "Get replies — ask a genuine question; Gmail learns from engagement signals",
+                    "Ask subscribers to drag your email from Promotions to Primary (one-time request — this trains Gmail)",
+                    "Keep your list clean — remove subscribers who haven't opened in 90+ days",
+                    "Send consistently — erratic volume changes trigger Gmail's promotional filters",
+                    "Avoid unsubscribe footers with multiple links — use a single, clean unsubscribe link",
+                    "Test with a plain-text version first — if that hits Primary, add formatting back gradually",
                 ],
             })
         elif social_results:

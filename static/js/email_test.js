@@ -551,19 +551,29 @@ function renderAssessment(data) {
       });
     } else if (placement.placement === 'inbox') {
       if (placement.tab && placement.tab === 'promotions') {
-        info.push({
-          label: 'Inbox Placement',
-          text: 'Delivered to inbox but sorted into Promotions tab.',
-          fix: 'To reach Primary: reduce image-to-text ratio, avoid multiple CTAs, use conversational tone, minimize HTML complexity, and send from a person\'s name rather than a brand.',
+        warnings.push({
+          label: 'Gmail Promotions Tab',
+          text: 'Your email landed in Promotions, not Primary. Promotions emails get 50-70% lower open rates.',
+          fix: 'How to escape the Promotions tab:\n' +
+            '1. Strip heavy HTML — send plain or minimal HTML (like a real person would)\n' +
+            '2. Use only 1 link max — multiple links scream "marketing email"\n' +
+            '3. Remove all images or keep just 1 — image-heavy = promotional\n' +
+            '4. Write like a human — "Hey [name]" not "Dear valued customer"\n' +
+            '5. Send from a person\'s name (e.g. "Sarah from Acme") not a brand\n' +
+            '6. Drop promotional words — no "buy now", "limited offer", "exclusive deal"\n' +
+            '7. Get replies — ask a question, Gmail learns from engagement\n' +
+            '8. Ask subscribers to drag your email to Primary (one-time, trains Gmail)\n' +
+            '9. Keep your list clean — unengaged subscribers hurt placement\n' +
+            '10. Send consistently — erratic volume triggers filters',
         });
       } else if (placement.tab && placement.tab === 'updates') {
         info.push({
-          label: 'Inbox Placement',
+          label: 'Gmail Updates Tab',
           text: 'Delivered to inbox but sorted into Updates tab.',
-          fix: 'Updates tab is typical for transactional/notification emails. To reach Primary: make the content more personal and conversational.',
+          fix: 'Updates tab is typical for transactional/notification emails. To reach Primary: make the content more personal and conversational, avoid subject lines that look like notifications.',
         });
       } else {
-        good.push({ label: 'Inbox Placement', text: `Delivered to ${placement.tab || 'inbox'} — no issues detected.` });
+        good.push({ label: 'Inbox Placement', text: `Delivered to ${placement.tab || 'Primary inbox'} — no issues detected.` });
       }
     }
   }

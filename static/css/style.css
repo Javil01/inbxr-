@@ -8956,10 +8956,13 @@ select.presend-input { cursor: pointer; }
   display: flex; flex-direction: column; gap: 4px;
 }
 .warmup-schedule__row {
-  display: flex; align-items: center; justify-content: space-between;
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
   padding: 10px 16px; border-radius: 8px;
   background: var(--surface); border: 1px solid var(--border);
   transition: all 0.2s;
+}
+.warmup-schedule__tip {
+  flex-basis: 100%; font-size: 0.74rem; color: var(--text-3); line-height: 1.4; padding-left: 2px;
 }
 .warmup-schedule__row--active {
   border-color: var(--accent);
