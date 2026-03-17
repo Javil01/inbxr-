@@ -2216,6 +2216,68 @@ def email_test_check():
 
     analysis["status"] = "found"
 
+    # ── ESP vs Domain diagnostic ──
+    esp_diagnostic = {"verdict": "unknown", "message": "", "details": []}
+    auth_ok = True
+    content_ok = True
+    placement_ok = True
+
+    # Check authentication from header grades
+    header_grades = analysis.get("header_grades", [])
+    for hg in header_grades:
+        label = (hg.get("label") or "").upper()
+        status = (hg.get("status") or "")
+        if label == "SPF" and status == "fail":
+            auth_ok = False
+            esp_diagnostic["details"].append("SPF is failing — this is a domain/DNS issue, not your ESP.")
+        if label == "DKIM" and status == "fail":
+            auth_ok = False
+            esp_diagnostic["details"].append("DKIM is failing — check your DNS records or ESP DKIM setup.")
+        if label == "DMARC" and status == "fail":
+            auth_ok = False
+            esp_diagnostic["details"].append("DMARC is failing — add or fix your DMARC record.")
+
+    # Check reputation blocklists
+    rep_data_diag = analysis.get("reputation", {})
+    if isinstance(rep_data_diag, dict):
+        rep_section = rep_data_diag.get("reputation", rep_data_diag)
+        listed_count_diag = rep_section.get("listed_count", 0) if isinstance(rep_section, dict) else 0
+        if listed_count_diag > 0:
+            auth_ok = False
+            esp_diagnostic["details"].append(f"Your IP is listed on {listed_count_diag} blocklist(s) — this could be your ESP's shared IP.")
+
+    # Check content (spam analysis)
+    spam_diag = analysis.get("spam", {})
+    if isinstance(spam_diag, dict):
+        risk_score = spam_diag.get("score", 0)
+        if risk_score is not None and risk_score > 60:
+            content_ok = False
+            esp_diagnostic["details"].append(f"Spam risk score is {risk_score}/100 — your content has spam triggers.")
+
+    # Check placement
+    placement_diag = analysis.get("placement", {})
+    if isinstance(placement_diag, dict):
+        if placement_diag.get("placement") == "spam" or placement_diag.get("folder") == "spam":
+            placement_ok = False
+
+    if auth_ok and content_ok and not placement_ok:
+        esp_diagnostic["verdict"] = "esp"
+        esp_diagnostic["message"] = "Your domain auth and content look fine, but you're landing in spam. The problem is likely your ESP's shared IP reputation. Consider switching to a dedicated IP or a different provider."
+    elif not auth_ok and content_ok:
+        esp_diagnostic["verdict"] = "domain"
+        esp_diagnostic["message"] = "Your content is fine, but your domain authentication has issues. Fix your DNS records first — this is the most likely cause."
+    elif auth_ok and not content_ok:
+        esp_diagnostic["verdict"] = "content"
+        esp_diagnostic["message"] = "Your domain auth is solid, but your email content is triggering spam filters. Review the spam triggers below and use the AI rewriter to fix them."
+    elif not auth_ok and not content_ok:
+        esp_diagnostic["verdict"] = "both"
+        esp_diagnostic["message"] = "Both your domain auth and email content have issues. Fix your DNS records first, then clean up the content."
+    elif auth_ok and content_ok and placement_ok:
+        esp_diagnostic["verdict"] = "clean"
+        esp_diagnostic["message"] = "Everything looks good. Your domain, content, and inbox placement all check out."
+
+    analysis["esp_diagnostic"] = esp_diagnostic
+
     # Save to history
     if session.get("user_id"):
         from modules.tiers import has_feature
@@ -3233,6 +3295,117 @@ def full_audit_check():
 
 
 # ══════════════════════════════════════════════════════
+#  BULK DOMAIN CHECKER
+# ══════════════════════════════════════════════════════
+
+@app.route("/bulk-domain-check")
+def bulk_domain_check_page():
+    return render_template("bulk_domain_check.html",
+                           is_admin=_is_admin(),
+                           active_page="bulk_domain_check",
+                           page_title="Bulk Domain Checker — INBXR",
+                           page_description="Check up to 10 domains at once. Get instant SPF, DKIM, DMARC, MX, and blocklist health grades for all your sending domains.",
+                           canonical_url="https://inbxr.us/bulk-domain-check")
+
+
+@app.route("/api/bulk-domain-check", methods=["POST"])
+def api_bulk_domain_check():
+    """Check multiple domains at once — quick health summary."""
+    from modules.reputation_checker import check_domain_auth, check_domain_dnsbls
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+    import dns.resolver
+
+    data = request.get_json(force=True)
+    domains = data.get("domains", [])
+
+    # Clean and validate
+    domains = [d.strip().lower() for d in domains if d.strip()]
+    domains = list(dict.fromkeys(domains))  # dedupe preserving order
+
+    if not domains:
+        return jsonify({"error": "No domains provided"}), 400
+    if len(domains) > 10:
+        return jsonify({"error": "Maximum 10 domains"}), 400
+
+    def check_one(domain):
+        result = {"domain": domain, "spf": False, "dkim": False, "dmarc": False, "mx": False, "blocklists_clean": True, "listed_count": 0, "grade": "F", "issues": []}
+        try:
+            # MX check
+            try:
+                mx = dns.resolver.resolve(domain, "MX", lifetime=5)
+                result["mx"] = len(mx) > 0
+            except Exception:
+                result["issues"].append("No MX records")
+
+            # SPF
+            try:
+                txt = dns.resolver.resolve(domain, "TXT", lifetime=5)
+                for r in txt:
+                    if "v=spf1" in str(r):
+                        result["spf"] = True
+                        break
+            except Exception:
+                pass
+            if not result["spf"]:
+                result["issues"].append("Missing SPF")
+
+            # DMARC
+            try:
+                txt = dns.resolver.resolve(f"_dmarc.{domain}", "TXT", lifetime=5)
+                for r in txt:
+                    if "v=DMARC1" in str(r).upper():
+                        result["dmarc"] = True
+                        break
+            except Exception:
+                pass
+            if not result["dmarc"]:
+                result["issues"].append("Missing DMARC")
+
+            # DKIM — try common selectors
+            for sel in ["default", "google", "selector1", "selector2", "k1", "s1", "s2"]:
+                try:
+                    dns.resolver.resolve(f"{sel}._domainkey.{domain}", "TXT", lifetime=3)
+                    result["dkim"] = True
+                    break
+                except Exception:
+                    continue
+            if not result["dkim"]:
+                result["issues"].append("No DKIM found")
+
+            # Quick blocklist check (top 5 critical only)
+            critical_zones = ["dbl.spamhaus.org", "multi.surbl.org", "black.uribl.com"]
+            for zone in critical_zones:
+                try:
+                    dns.resolver.resolve(f"{domain}.{zone}", "A", lifetime=3)
+                    result["blocklists_clean"] = False
+                    result["listed_count"] += 1
+                except Exception:
+                    pass
+            if not result["blocklists_clean"]:
+                result["issues"].append(f"Listed on {result['listed_count']} blocklist(s)")
+
+            # Grade
+            score = sum([result["spf"], result["dkim"], result["dmarc"], result["mx"], result["blocklists_clean"]])
+            result["grade"] = ["F", "D", "C", "B", "A-", "A"][min(score, 5)]
+
+        except Exception as e:
+            result["issues"].append(f"Check failed: {str(e)[:80]}")
+        return result
+
+    results = []
+    with ThreadPoolExecutor(max_workers=5) as pool:
+        futures = {pool.submit(check_one, d): d for d in domains}
+        for f in as_completed(futures):
+            results.append(f.result())
+
+    # Sort by original order
+    domain_order = {d: i for i, d in enumerate(domains)}
+    results.sort(key=lambda r: domain_order.get(r["domain"], 99))
+
+    return jsonify({"ok": True, "results": results})
+
+
+# ══════════════════════════════════════════════════════
 #  BLACKLIST MONITOR PAGE + API
 # ══════════════════════════════════════════════════════
 
@@ -3508,11 +3681,18 @@ def check_reputation():
         except Exception as e:
             return {"connected": False, "cert_expiry": None, "error": str(e)[:100]}
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+    def run_domain_age():
+        from modules.reputation_checker import get_domain_age_info
+        return get_domain_age_info(domain)
+
+    domain_age_data = {}
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=6) as executor:
         future_rep = executor.submit(run_reputation)
         future_bimi = executor.submit(run_bimi)
         future_mx = executor.submit(run_mx)
         future_ssl = executor.submit(run_ssl)
+        future_age = executor.submit(run_domain_age)
 
         try:
             rep_result = future_rep.result(timeout=30)
@@ -3536,6 +3716,12 @@ def check_reputation():
         except Exception:
             logger.exception("Non-fatal: SSL check failed")
             ssl_data = {"connected": False}
+
+        try:
+            domain_age_data = future_age.result(timeout=10)
+        except Exception:
+            logger.exception("Non-fatal: Domain age check failed")
+            domain_age_data = {}
 
     # ── ESP Auto-Detection ──
     esp_info = {"detected": False}
@@ -3695,6 +3881,7 @@ def check_reputation():
     rep_result["bimi"] = bimi_data
     rep_result["ssl"] = ssl_data
     rep_result["fix_records"] = fix_records
+    rep_result["domain_age"] = domain_age_data
 
     log_usage("domain_check")
 

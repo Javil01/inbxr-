@@ -155,6 +155,9 @@ function renderResults(data) {
   // ── Auth grid ──
   renderAuthGrid(auth.categories);
 
+  // ── Domain age indicator ──
+  renderDomainAge(data.domain_age);
+
   // ── DNSBL table ──
   renderDnsblTable(reputation.dnsbl, reputation.listed_count);
 
@@ -352,6 +355,28 @@ function renderDnsblTable(dnsbl, listedCount) {
         <td class="dnsbl-action-cell">${delistLink}</td>
       </tr>`;
   }).join('');
+}
+
+// ── Domain age indicator ──────────────────────────────
+function renderDomainAge(age) {
+  var ageEl = $('#domainAgeInfo');
+  if (!ageEl) return;
+  if (!age || age.domain_age_days === null || age.domain_age_days === undefined) {
+    ageEl.innerHTML = '';
+    return;
+  }
+  var years = Math.floor(age.domain_age_days / 365);
+  var months = Math.floor((age.domain_age_days % 365) / 30);
+  var ageText = years > 0 ? years + 'y ' + months + 'mo' : age.domain_age_days + ' days';
+  var ageColor = age.domain_age_days < 30 ? '#ef4444' : age.domain_age_days < 90 ? '#f59e0b' : '#22c55e';
+  var ageWarning = age.is_new_domain ? '<br><small style="color:#ef4444;">New domain — reputation not yet established. Warm up before bulk sending.</small>' : '';
+  ageEl.innerHTML = '<div style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--bg-2);border-radius:10px;font-size:0.82rem;">' +
+    '<span style="font-size:1.3rem;font-weight:800;color:' + ageColor + ';">' + ageText + '</span>' +
+    '<div><strong>Domain Age</strong>' +
+    (age.created_date ? '<br><small style="color:var(--text-3);">Registered: ' + escHtml(age.created_date) + '</small>' : '') +
+    (age.registrar ? '<br><small style="color:var(--text-3);">Registrar: ' + escHtml(age.registrar) + '</small>' : '') +
+    ageWarning +
+    '</div></div>';
 }
 
 // ── Reputation signals ────────────────────────────────

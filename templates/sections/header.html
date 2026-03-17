@@ -66,13 +66,14 @@ window.showToast=function(msg,type,duration){
         <a href="/blacklist-monitor" class="nav-link{% if active_page == 'blacklist_monitor' %} nav-link--active{% endif %}">Blacklist Monitor</a>
         <a href="/placement"         class="nav-link{% if active_page == 'placement' %} nav-link--active{% endif %}">Inbox Placement</a>
         <div class="nav-dropdown">
-          <button class="nav-link nav-link--dropdown{% if active_page in ['analyzer','email_verifier','subject_scorer','warmup','header_analyzer','bimi'] %} nav-link--active{% endif %}">
+          <button class="nav-link nav-link--dropdown{% if active_page in ['analyzer','email_verifier','subject_scorer','warmup','header_analyzer','bimi','bulk_domain_check'] %} nav-link--active{% endif %}">
             More Tools
             <svg width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </button>
           <div class="nav-dropdown__menu">
             <a href="/analyzer"        class="nav-dropdown__link{% if active_page == 'analyzer' %} nav-dropdown__link--active{% endif %}">Email Analyzer</a>
             <a href="/email-verifier"  class="nav-dropdown__link{% if active_page == 'email_verifier' %} nav-dropdown__link--active{% endif %}">Email Verifier</a>
+            <a href="/bulk-domain-check" class="nav-dropdown__link{% if active_page == 'bulk_domain_check' %} nav-dropdown__link--active{% endif %}">Bulk Domain Check</a>
             <a href="/subject-scorer"  class="nav-dropdown__link{% if active_page == 'subject_scorer' %} nav-dropdown__link--active{% endif %}">Subject Scorer</a>
             <a href="/warmup"          class="nav-dropdown__link{% if active_page == 'warmup' %} nav-dropdown__link--active{% endif %}">Warm-up Tracker</a>
             <a href="/header-analyzer" class="nav-dropdown__link{% if active_page == 'header_analyzer' %} nav-dropdown__link--active{% endif %}">Header Analyzer</a>

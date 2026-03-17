@@ -4,12 +4,15 @@ Performs live DNS lookups for SPF, DKIM, DMARC, BIMI,
 PTR / FCrDNS, parallel DNSBL checks, and SMTP diagnostics.
 """
 
+import json
 import logging
 import re
 import socket
 import smtplib
 import ipaddress
 import time
+from datetime import datetime, timezone
+from http.client import HTTPSConnection
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import dns.resolver
@@ -1366,3 +1369,40 @@ class ReputationChecker:
                 "elapsed_ms":    elapsed_ms,
             },
         }
+
+
+def get_domain_age_info(domain):
+    """Get domain age and registration info via RDAP (free, no library needed)."""
+    result = {"domain_age_days": None, "created_date": None, "registrar": None, "is_new_domain": None}
+
+    try:
+        conn = HTTPSConnection("rdap.org", timeout=8)
+        try:
+            conn.request("GET", f"/domain/{domain}", headers={"Accept": "application/json"})
+            resp = conn.getresponse()
+            if resp.status == 200:
+                data = json.loads(resp.read().decode())
+                # Look for registration event
+                for event in data.get("events", []):
+                    if event.get("eventAction") == "registration":
+                        created = event["eventDate"][:10]
+                        result["created_date"] = created
+                        created_dt = datetime.strptime(created, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+                        age = (datetime.now(timezone.utc) - created_dt).days
+                        result["domain_age_days"] = age
+                        result["is_new_domain"] = age < 30
+                        break
+                # Registrar
+                for entity in data.get("entities", []):
+                    if "registrar" in entity.get("roles", []):
+                        vcard = entity.get("vcardArray", [None, []])[1]
+                        for field in vcard:
+                            if field[0] == "fn":
+                                result["registrar"] = field[3]
+                                break
+        finally:
+            conn.close()
+    except Exception:
+        pass
+
+    return result

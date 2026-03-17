@@ -116,7 +116,7 @@ function showSkeletonLoading() {
   if (!panel) return;
 
   // Hide real content containers
-  ['#etPlacementSummary', '#etAssessment', '#etHeaderGrades', '#etTransport', '#etIdentity', '#etScores', '#etReadability', '#etReputation', '#etAudit', '#etRawHeaders'].forEach(s => {
+  ['#espDiagnostic', '#etPlacementSummary', '#etAssessment', '#etHeaderGrades', '#etTransport', '#etIdentity', '#etScores', '#etReadability', '#etReputation', '#etAudit', '#etRawHeaders'].forEach(s => {
     const el = $(s);
     if (el) el.style.display = 'none';
   });
@@ -190,7 +190,7 @@ function hideSkeletonLoading() {
     setTimeout(() => skeleton.remove(), 300);
   }
   // Restore elements hidden by showSkeletonLoading
-  ['#etPlacementSummary', '#etAssessment', '#etHeaderGrades', '#etTransport', '#etIdentity', '#etScores', '#etReadability', '#etReputation', '#etAudit', '#etRawHeaders'].forEach(s => {
+  ['#espDiagnostic', '#etPlacementSummary', '#etAssessment', '#etHeaderGrades', '#etTransport', '#etIdentity', '#etScores', '#etReadability', '#etReputation', '#etAudit', '#etRawHeaders'].forEach(s => {
     const el = $(s);
     if (el) el.style.display = '';
   });
@@ -425,6 +425,9 @@ function renderFullReport(data) {
       </div>
     </div>`;
 
+  // ── ESP Diagnostic Banner ──
+  renderEspDiagnostic(data.esp_diagnostic);
+
   // ── Header grades ──
   renderHeaderGrades(data.header_grades || []);
 
@@ -459,7 +462,7 @@ function renderFullReport(data) {
   renderEmailPreview(data);
 
   // Show all sections with staggered reveal
-  const revealSections = ['#etAssessment', '#etHeaderGrades', '#etTransport', '#etIdentity', '#etScores', '#etReadability', '#etReputation', '#etAudit', '#etFullAuditCta', '#etNextSteps', '#etUpgradeNudge', '#etEmailPreview', '#etRawHeaders'];
+  const revealSections = ['#espDiagnostic', '#etAssessment', '#etHeaderGrades', '#etTransport', '#etIdentity', '#etScores', '#etReadability', '#etReputation', '#etAudit', '#etFullAuditCta', '#etNextSteps', '#etUpgradeNudge', '#etEmailPreview', '#etRawHeaders'];
   revealSections.forEach((s, i) => {
     const el = $(s);
     if (el && el.style.display !== 'none') {
@@ -472,6 +475,29 @@ function renderFullReport(data) {
     const el = $(s);
     if (el) el.style.display = '';
   });
+}
+
+// ── ESP vs Domain Diagnostic ────────────────────────
+function renderEspDiagnostic(diag) {
+  var diagEl = $('#espDiagnostic');
+  if (!diagEl) return;
+  if (!diag || diag.verdict === 'unknown') {
+    diagEl.style.display = 'none';
+    return;
+  }
+  var diagColors = {clean:'#22c55e', domain:'#ef4444', content:'#f59e0b', esp:'#ef4444', both:'#ef4444'};
+  var diagIcons = {clean:'&#10003;', domain:'&#9888;', content:'&#9888;', esp:'&#9888;', both:'&#10007;'};
+  var diagLabels = {clean:'All Clear', domain:'Domain Issue', content:'Content Issue', esp:'ESP Issue', both:'Multiple Issues'};
+  var color = diagColors[diag.verdict] || '#64748b';
+  diagEl.innerHTML = '<div style="padding:16px;border-radius:12px;border:1px solid ' + color + '30;background:' + color + '08;margin-bottom:20px;">' +
+    '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">' +
+      '<span style="font-size:1.2rem;color:' + color + ';">' + (diagIcons[diag.verdict] || '') + '</span>' +
+      '<strong style="font-size:0.92rem;">Diagnosis: ' + (diagLabels[diag.verdict] || diag.verdict) + '</strong>' +
+    '</div>' +
+    '<p style="font-size:0.85rem;color:var(--text-2);margin:0 0 8px;">' + escHtml(diag.message) + '</p>' +
+    (diag.details && diag.details.length ? '<ul style="font-size:0.78rem;color:var(--text-3);margin:0;padding-left:18px;">' + diag.details.map(function(d){ return '<li>' + escHtml(d) + '</li>'; }).join('') + '</ul>' : '') +
+  '</div>';
+  diagEl.style.display = 'block';
 }
 
 // ── Assessment summary ─────────────────────────────

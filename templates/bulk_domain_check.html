@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bulk Domain Checker — INBXR</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/style.css?v={{ range(1000,9999) | random }}" />
+  {% include 'sections/_head_meta.html' %}
+</head>
+<body>
+
+{% include 'sections/header.html' %}
+
+<div class="sender-hero">
+  <div class="sender-hero__inner">
+    <span class="sender-hero__eyebrow">Check All Your Domains at Once</span>
+    <h1 class="sender-hero__title">Managing 10 Domains and Checking Them One by One?</h1>
+    <p class="sender-hero__sub">Paste up to 10 domains. Get an instant health grade for each — SPF, DKIM, DMARC, MX, and blocklist status. Built for cold emailers managing multiple sending domains.</p>
+  </div>
+</div>
+
+<div style="max-width:800px;margin:0 auto;padding:24px;">
+  <div class="card" style="padding:24px;">
+    <label style="font-weight:600;font-size:0.88rem;display:block;margin-bottom:8px;">Enter domains (one per line, up to 10)</label>
+    <textarea id="domainInput" class="form-input" rows="6" placeholder="domain1.com&#10;domain2.com&#10;domain3.com" style="resize:vertical;font-family:monospace;font-size:0.85rem;width:100%;"></textarea>
+    <button class="btn-analyze" id="bulkCheckBtn" onclick="runBulkCheck()" style="margin-top:12px;">
+      Check All Domains
+    </button>
+  </div>
+
+  <div id="bulkResults" style="display:none;margin-top:24px;">
+    <h3 style="font-size:1rem;font-weight:700;margin:0 0 16px;">Results</h3>
+    <div id="bulkGrid" class="bulk-domain-grid"></div>
+  </div>
+</div>
+
+<footer class="site-footer">
+  <p>&copy; 2026 INBXR &mdash; Free email deliverability tools.</p>
+  <p style="margin-top:10px;font-size:0.7rem;"><a href="/privacy" style="color:rgba(255,255,255,0.5);text-decoration:underline;">Privacy Policy</a> &nbsp;&middot;&nbsp; <a href="/terms" style="color:rgba(255,255,255,0.5);text-decoration:underline;">Terms of Service</a></p>
+</footer>
+
+<script>
+function runBulkCheck() {
+  var btn = document.getElementById('bulkCheckBtn');
+  var input = document.getElementById('domainInput').value.trim();
+  var domains = input.split(/[\n,]+/).map(function(d){ return d.trim(); }).filter(Boolean);
+  if (!domains.length) { showToast('Enter at least one domain', 'warning'); return; }
+  if (domains.length > 10) { showToast('Maximum 10 domains', 'warning'); return; }
+
+  btn.disabled = true;
+  btn.textContent = 'Checking ' + domains.length + ' domains...';
+  document.getElementById('bulkResults').style.display = 'none';
+
+  fetch('/api/bulk-domain-check', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({domains: domains})
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(data){
+    btn.disabled = false;
+    btn.textContent = 'Check All Domains';
+    if (data.error) { showToast(data.error, 'error'); return; }
+
+    var grid = document.getElementById('bulkGrid');
+    var results = data.results || [];
+    grid.innerHTML = results.map(function(r){
+      var gradeColor = {'A':'#22c55e','A-':'#22c55e','B':'#3b82f6','C':'#f59e0b','D':'#f97316','F':'#ef4444'}[r.grade] || '#ef4444';
+      var checks = [
+        {label:'MX', ok:r.mx},
+        {label:'SPF', ok:r.spf},
+        {label:'DKIM', ok:r.dkim},
+        {label:'DMARC', ok:r.dmarc},
+        {label:'Blocklists', ok:r.blocklists_clean}
+      ];
+      var checksHtml = checks.map(function(c){
+        return '<span style="display:inline-flex;align-items:center;gap:4px;font-size:0.76rem;">' +
+          '<span style="color:' + (c.ok ? '#22c55e' : '#ef4444') + ';">' + (c.ok ? '&#10003;' : '&#10007;') + '</span>' +
+          c.label + '</span>';
+      }).join(' ');
+      var issuesHtml = r.issues.length ? '<div style="margin-top:8px;font-size:0.74rem;color:var(--text-3);">' + r.issues.join(' &middot; ') + '</div>' : '';
+
+      return '<div class="card bulk-domain-card" style="padding:16px;">' +
+        '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">' +
+          '<strong style="font-size:0.92rem;">' + r.domain + '</strong>' +
+          '<span style="font-size:1.3rem;font-weight:800;color:' + gradeColor + ';">' + r.grade + '</span>' +
+        '</div>' +
+        '<div style="display:flex;flex-wrap:wrap;gap:10px;">' + checksHtml + '</div>' +
+        issuesHtml +
+        '<a href="/sender?domain=' + encodeURIComponent(r.domain) + '" style="display:inline-block;margin-top:10px;font-size:0.76rem;color:var(--brand);text-decoration:none;">Run full audit &rarr;</a>' +
+      '</div>';
+    }).join('');
+
+    document.getElementById('bulkResults').style.display = 'block';
+  })
+  .catch(function(){
+    btn.disabled = false;
+    btn.textContent = 'Check All Domains';
+    showToast('Network error. Please try again.', 'error');
+  });
+}
+</script>
+
+</body>
+</html>

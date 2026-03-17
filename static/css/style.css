@@ -2227,6 +2227,11 @@ select {
 .dnsbl-action-cell { white-space: nowrap; }
 .delist-btn { display: inline-block; padding: 4px 10px; background: rgba(239,68,68,0.1); color: #ef4444; border-radius: 999px; font-size: 0.7rem; font-weight: 600; text-decoration: none; transition: background 0.15s; }
 .delist-btn:hover { background: rgba(239,68,68,0.2); }
+
+/* Bulk Domain Checker */
+.bulk-domain-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 14px; }
+.bulk-domain-card { border: 1px solid var(--border-1); border-radius: 12px; transition: border-color 0.15s; }
+.bulk-domain-card:hover { border-color: var(--brand); }
 .dnsbl-reason { font-size: 0.72rem; color: var(--text-3); display: block; margin-top: 3px; }
 .dnsbl-error { font-size: 0.68rem; color: var(--text-4); display: block; }
 
