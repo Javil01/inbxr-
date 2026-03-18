@@ -10051,6 +10051,47 @@ a.et-next-step:hover {
 .blog-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.08); }
 .blog-card__image-link { display: block; text-decoration: none; }
 .blog-card__image { width: 100%; aspect-ratio: 16/9; object-fit: cover; background: linear-gradient(135deg, #0c1a3a 0%, #16a34a 100%); }
+
+/* CSS blog card cover — replaces Pillow-generated images */
+.blog-card__cover {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16/9;
+  background: linear-gradient(160deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+  padding: 24px 24px 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+}
+.blog-card__cover-accent {
+  position: absolute; top: 0; left: 0; right: 0; height: 4px;
+  background: #15c182;
+}
+.blog-card__cover-dots {
+  position: absolute; top: 16px; right: 16px;
+  width: 80px; height: 80px;
+  background-image: radial-gradient(circle, rgba(21,193,130,0.18) 1.5px, transparent 1.5px);
+  background-size: 14px 14px;
+}
+.blog-card__cover-tag {
+  display: inline-block; align-self: flex-start;
+  font-size: 0.6rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em;
+  color: #15c182; background: rgba(21,193,130,0.12); border: 1px solid rgba(21,193,130,0.25);
+  padding: 3px 10px; border-radius: 999px; margin-top: 8px;
+}
+.blog-card__cover-title {
+  font-size: 1rem; font-weight: 700; color: #fff; line-height: 1.35;
+  margin: 10px 0 0; flex: 1; display: flex; align-items: center;
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+}
+.blog-card__cover-brand {
+  font-size: 0.85rem; font-weight: 700; color: rgba(255,255,255,0.7);
+  letter-spacing: -0.01em;
+}
+.blog-card__cover-check {
+  color: #15c182; margin-left: 2px; font-size: 0.9rem;
+}
 .blog-card__body { padding: 20px; }
 .blog-card__category { display: inline-block; font-size: 0.7rem; font-weight: 600; color: #16a34a; background: #f0fdf4; padding: 2px 10px; border-radius: 999px; margin-bottom: 8px; }
 .blog-card__title { font-size: 1.1rem; font-weight: 700; color: #0c1a3a; margin: 0 0 8px; line-height: 1.4; }

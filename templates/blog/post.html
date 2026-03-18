@@ -90,10 +90,6 @@
       &nbsp;&middot;&nbsp; By {{ post.author or 'INBXR Team' }}
     </div>
 
-    {% if post.featured_image %}
-    <img src="{{ post.featured_image }}" alt="{{ post.title }}" class="blog-post__featured" />
-    {% endif %}
-
     <div class="blog-post__content">
       {{ post.content | safe }}
     </div>
@@ -119,11 +115,15 @@
   <div class="blog-related__grid">
     {% for rp in related_posts %}
     <a href="/blog/{{ rp.slug }}" class="blog-card">
-      {% if rp.featured_image %}
-      <img src="{{ rp.featured_image }}" alt="{{ rp.title }}" class="blog-card__image" />
-      {% else %}
-      <div class="blog-card__image"></div>
-      {% endif %}
+      <div class="blog-card__cover">
+        <div class="blog-card__cover-accent"></div>
+        <div class="blog-card__cover-dots"></div>
+        {% if rp.category_name %}
+        <span class="blog-card__cover-tag">{{ rp.category_name }}</span>
+        {% endif %}
+        <h3 class="blog-card__cover-title">{{ rp.title }}</h3>
+        <span class="blog-card__cover-brand">InbXr<span class="blog-card__cover-check">&#9745;</span></span>
+      </div>
       <div class="blog-card__body">
         {% if rp.category_name %}
         <span class="blog-card__category">{{ rp.category_name }}</span>
