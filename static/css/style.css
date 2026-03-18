@@ -10149,32 +10149,154 @@ a.et-next-step:hover {
   padding: 16px; margin-bottom: 8px;
 }
 
-/* Mock elements */
-.tour-mock-btn {
-  display: inline-block; padding: 10px 24px; background: #2563eb; color: #fff;
-  border-radius: 999px; font-size: 0.85rem; font-weight: 600;
+/* ── Tour animations ── */
+
+/* Slide 1: Cursor click */
+.tour-anim[data-anim="click"] { position: relative; overflow: hidden; }
+.tour-anim-btn { display: inline-block; padding: 10px 24px; background: #2563eb; color: #fff; border-radius: 999px; font-size: 0.85rem; font-weight: 600; transition: transform 0.1s; }
+.tour-cursor {
+  position: absolute; bottom: 12px; right: 30%; opacity: 0;
+  transition: transform 0.3s ease;
 }
-.tour-mock-email {
-  display: grid; grid-template-columns: auto 1fr; gap: 4px 10px; text-align: left; font-size: 0.82rem;
+.tour-ripple {
+  position: absolute; bottom: 24px; right: calc(30% + 4px);
+  width: 24px; height: 24px; border-radius: 50%;
+  background: rgba(37,99,235,0.3); opacity: 0;
+  transform: scale(0);
 }
-.tour-mock-email__label { color: #94a3b8; font-weight: 600; }
-.tour-mock-email__val { color: #0f172a; font-family: monospace; font-size: 0.8rem; }
-.tour-mock-checks { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
-.tour-mock-check {
-  padding: 4px 12px; border-radius: 6px; font-size: 0.78rem; font-weight: 600;
+.tour-anim--active .tour-cursor {
+  animation: cursorMove 3s ease-in-out infinite;
 }
-.tour-mock-check--pass { background: #f0fdf4; color: #16a34a; }
-.tour-mock-check--fail { background: #fef2f2; color: #dc2626; }
-.tour-mock-grades { display: flex; gap: 12px; justify-content: center; }
-.tour-mock-grade { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 0.75rem; color: #64748b; }
-.tour-mock-grade__ltr {
-  width: 36px; height: 36px; border-radius: 8px; display: flex;
+.tour-anim--active .tour-ripple {
+  animation: ripplePulse 3s ease-in-out infinite;
+}
+.tour-anim--active .tour-anim-btn {
+  animation: btnPress 3s ease-in-out infinite;
+}
+@keyframes cursorMove {
+  0%,20% { opacity: 0; transform: translate(40px, 20px); }
+  40% { opacity: 1; transform: translate(0, 0); }
+  50% { transform: translate(1px, 1px); }
+  55% { transform: translate(0, 0); }
+  80%,100% { opacity: 0; transform: translate(0, -10px); }
+}
+@keyframes ripplePulse {
+  0%,48% { opacity: 0; transform: scale(0); }
+  50% { opacity: 0.6; transform: scale(0.5); }
+  65% { opacity: 0; transform: scale(2.5); }
+  100% { opacity: 0; transform: scale(0); }
+}
+@keyframes btnPress {
+  0%,48% { transform: scale(1); }
+  50% { transform: scale(0.96); }
+  55% { transform: scale(1.02); }
+  60%,100% { transform: scale(1); }
+}
+
+/* Slide 2: Email compose + typewriter */
+.tour-mock-compose {
+  text-align: left; font-size: 0.8rem;
+}
+.tour-mock-compose__row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 0; border-bottom: 1px solid #e2e8f0;
+}
+.tour-mock-compose__label { color: #94a3b8; font-weight: 600; width: 50px; flex-shrink: 0; }
+.tour-mock-compose__field {
+  color: #0f172a; font-family: 'Inter', sans-serif; min-height: 1.2em;
+  border-right: 2px solid #2563eb; animation: blink 0.6s step-end infinite;
+}
+.tour-mock-compose__body {
+  color: #64748b; padding: 10px 0; min-height: 1.4em; font-size: 0.78rem;
+  border-right: 2px solid transparent;
+}
+.tour-mock-compose__send {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 5px 14px; background: #2563eb; color: #fff;
+  border-radius: 6px; font-size: 0.75rem; font-weight: 600;
+  margin-top: 8px; opacity: 0;
+}
+.tour-anim--active .tour-mock-compose__send {
+  animation: sendAppear 3.5s ease forwards;
+}
+@keyframes blink { 50% { border-color: transparent; } }
+@keyframes sendAppear {
+  0%,70% { opacity: 0; transform: translateY(4px); }
+  80% { opacity: 1; transform: translateY(0); }
+  90% { transform: scale(1.05); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+/* Slide 3: Scan items appearing */
+.tour-mock-scan { display: flex; flex-direction: column; gap: 6px; }
+.tour-scan-item {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 5px 10px; border-radius: 6px; background: #fff;
+  border: 1px solid #e2e8f0; font-size: 0.78rem;
+  opacity: 0; transform: translateX(-10px);
+}
+.tour-scan-label { color: #334155; font-weight: 500; }
+.tour-scan-badge { padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; }
+.tour-scan-badge--pass { background: #f0fdf4; color: #16a34a; }
+.tour-scan-badge--fail { background: #fef2f2; color: #dc2626; }
+.tour-scan-badge--warn { background: #fffbeb; color: #d97706; }
+.tour-anim--active .tour-scan-item {
+  animation: scanIn 0.4s ease forwards;
+  animation-delay: calc(var(--d) * 0.35s);
+}
+.tour-scan-bar { height: 4px; border-radius: 2px; background: #e2e8f0; margin-top: 4px; overflow: hidden; }
+.tour-scan-bar__fill { height: 100%; width: 0; background: #2563eb; border-radius: 2px; }
+.tour-anim--active .tour-scan-bar__fill {
+  animation: barFill 2s ease forwards 0.2s;
+}
+@keyframes scanIn {
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes barFill {
+  to { width: 100%; }
+}
+
+/* Slide 4: Grade cards + score bars */
+.tour-mock-report { display: flex; flex-direction: column; gap: 12px; }
+.tour-grade-row { display: flex; gap: 10px; justify-content: center; }
+.tour-grade-card {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  opacity: 0; transform: scale(0.5) rotateY(90deg);
+}
+.tour-grade-card__ltr {
+  width: 40px; height: 40px; border-radius: 10px; display: flex;
   align-items: center; justify-content: center;
-  font-size: 1rem; font-weight: 700; color: #fff;
+  font-size: 1rem; font-weight: 800; color: #fff;
 }
-.tour-mock-grade--a { background: #16a34a; }
-.tour-mock-grade--b { background: #2563eb; }
-.tour-mock-grade--f { background: #dc2626; }
+.tour-grade-card__name { font-size: 0.7rem; color: #64748b; font-weight: 600; }
+.tour-anim--active .tour-grade-card {
+  animation: gradeFlip 0.5s ease forwards;
+  animation-delay: calc(var(--d) * 0.2s);
+}
+@keyframes gradeFlip {
+  0% { opacity: 0; transform: scale(0.5) rotateY(90deg); }
+  60% { transform: scale(1.1) rotateY(-5deg); }
+  100% { opacity: 1; transform: scale(1) rotateY(0); }
+}
+
+.tour-score-row { display: flex; flex-direction: column; gap: 8px; }
+.tour-score-bar {
+  display: flex; align-items: center; gap: 8px; font-size: 0.75rem;
+  opacity: 0;
+}
+.tour-score-bar__label { width: 70px; color: #64748b; font-weight: 600; flex-shrink: 0; }
+.tour-score-bar__track { flex: 1; height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden; }
+.tour-score-bar__fill { height: 100%; width: 0; border-radius: 4px; }
+.tour-score-bar__val { width: 45px; text-align: right; font-weight: 700; color: #0f172a; }
+.tour-anim--active .tour-score-bar {
+  animation: fadeIn 0.3s ease forwards;
+  animation-delay: calc(var(--d) * 0.2s);
+}
+.tour-anim--active .tour-score-bar__fill {
+  animation: scoreFill 0.8s ease forwards;
+  animation-delay: calc(var(--d) * 0.2s + 0.3s);
+}
+@keyframes scoreFill { to { width: var(--w); } }
 
 /* Nav */
 .tour-nav {

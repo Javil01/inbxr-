@@ -287,8 +287,12 @@
         </div>
         <h3 class="tour-slide__title">Start Your Test</h3>
         <p class="tour-slide__text">Click <strong>"Start Email Test"</strong> to generate a unique test token and a seed email address. This takes one second.</p>
-        <div class="tour-slide__visual">
-          <div class="tour-mock-btn">Start Email Test — It's Free</div>
+        <div class="tour-slide__visual tour-anim" data-anim="click">
+          <div class="tour-mock-btn tour-anim-btn">Start Email Test — It's Free</div>
+          <div class="tour-cursor">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="#0f172a"><path d="M4 0l16 12-7 2 4 8-3 1-4-8-6 5z"/></svg>
+          </div>
+          <div class="tour-ripple"></div>
         </div>
       </div>
 
@@ -298,13 +302,22 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="32" height="32"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 4L12 13 2 4"/></svg>
         </div>
         <h3 class="tour-slide__title">Send Your Email</h3>
-        <p class="tour-slide__text">Copy the <strong>test token</strong> and <strong>seed address</strong>. Open your email client, compose a real email, paste the token in your subject line, and send it to the seed address.</p>
-        <div class="tour-slide__visual">
-          <div class="tour-mock-email">
-            <span class="tour-mock-email__label">To:</span>
-            <span class="tour-mock-email__val">test-xyz@inbxr.us</span>
-            <span class="tour-mock-email__label">Subject:</span>
-            <span class="tour-mock-email__val">INBXR-A1B2C3 My Newsletter</span>
+        <p class="tour-slide__text">Copy the <strong>test token</strong> and <strong>seed address</strong>. Open your email client, paste the token in your subject line, and send it.</p>
+        <div class="tour-slide__visual tour-anim" data-anim="type">
+          <div class="tour-mock-compose">
+            <div class="tour-mock-compose__row">
+              <span class="tour-mock-compose__label">To</span>
+              <span class="tour-mock-compose__field tour-type" data-text="jaytinbx@gmail.com" data-delay="0"></span>
+            </div>
+            <div class="tour-mock-compose__row">
+              <span class="tour-mock-compose__label">Subject</span>
+              <span class="tour-mock-compose__field tour-type" data-text="INBXR-A1B2C3 My Newsletter Subject" data-delay="800"></span>
+            </div>
+            <div class="tour-mock-compose__body tour-type" data-text="Hey! Here's this week's newsletter..." data-delay="2000"></div>
+            <div class="tour-mock-compose__send tour-anim-send">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M22 2L11 13"/><path d="M22 2L15 22l-4-9-9-4z"/></svg>
+              Send
+            </div>
           </div>
         </div>
       </div>
@@ -315,13 +328,15 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="32" height="32"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
         </div>
         <h3 class="tour-slide__title">We Analyze Everything</h3>
-        <p class="tour-slide__text">Click <strong>"Analyze Received Email"</strong> and we fetch your email from the server. We check authentication (SPF, DKIM, DMARC), spam triggers, content quality, blocklists, and more.</p>
-        <div class="tour-slide__visual">
-          <div class="tour-mock-checks">
-            <span class="tour-mock-check tour-mock-check--pass">SPF &#10003;</span>
-            <span class="tour-mock-check tour-mock-check--pass">DKIM &#10003;</span>
-            <span class="tour-mock-check tour-mock-check--fail">DMARC &#10007;</span>
-            <span class="tour-mock-check tour-mock-check--pass">TLS &#10003;</span>
+        <p class="tour-slide__text">Click <strong>"Analyze Received Email"</strong> and we fetch your email from the server. We check authentication, spam triggers, content quality, and blocklists.</p>
+        <div class="tour-slide__visual tour-anim" data-anim="scan">
+          <div class="tour-mock-scan">
+            <div class="tour-scan-item" style="--d:0"><span class="tour-scan-label">SPF Record</span><span class="tour-scan-badge tour-scan-badge--pass">Pass</span></div>
+            <div class="tour-scan-item" style="--d:1"><span class="tour-scan-label">DKIM Signature</span><span class="tour-scan-badge tour-scan-badge--pass">Pass</span></div>
+            <div class="tour-scan-item" style="--d:2"><span class="tour-scan-label">DMARC Policy</span><span class="tour-scan-badge tour-scan-badge--fail">Fail</span></div>
+            <div class="tour-scan-item" style="--d:3"><span class="tour-scan-label">Spam Score</span><span class="tour-scan-badge tour-scan-badge--warn">12/100</span></div>
+            <div class="tour-scan-item" style="--d:4"><span class="tour-scan-label">Blocklists</span><span class="tour-scan-badge tour-scan-badge--pass">Clean</span></div>
+            <div class="tour-scan-bar"><div class="tour-scan-bar__fill"></div></div>
           </div>
         </div>
       </div>
@@ -332,13 +347,27 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="32" height="32"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
         </div>
         <h3 class="tour-slide__title">Get Your Full Report</h3>
-        <p class="tour-slide__text">You'll get a detailed report with <strong>letter grades</strong> for every check, <strong>spam and copy scores</strong>, and <strong>specific fixes</strong> with copy-paste DNS records. Run a Full Audit for even deeper analysis.</p>
-        <div class="tour-slide__visual">
-          <div class="tour-mock-grades">
-            <div class="tour-mock-grade"><span class="tour-mock-grade__ltr tour-mock-grade--a">A</span><span>SPF</span></div>
-            <div class="tour-mock-grade"><span class="tour-mock-grade__ltr tour-mock-grade--a">A</span><span>DKIM</span></div>
-            <div class="tour-mock-grade"><span class="tour-mock-grade__ltr tour-mock-grade--f">F</span><span>DMARC</span></div>
-            <div class="tour-mock-grade"><span class="tour-mock-grade__ltr tour-mock-grade--b">B</span><span>Spam</span></div>
+        <p class="tour-slide__text">You'll get <strong>letter grades</strong>, <strong>spam and copy scores</strong>, and <strong>specific fixes</strong> with copy-paste DNS records to fix every issue.</p>
+        <div class="tour-slide__visual tour-anim" data-anim="grades">
+          <div class="tour-mock-report">
+            <div class="tour-grade-row">
+              <div class="tour-grade-card" style="--d:0"><span class="tour-grade-card__ltr" style="background:#16a34a">A</span><span class="tour-grade-card__name">SPF</span></div>
+              <div class="tour-grade-card" style="--d:1"><span class="tour-grade-card__ltr" style="background:#16a34a">A</span><span class="tour-grade-card__name">DKIM</span></div>
+              <div class="tour-grade-card" style="--d:2"><span class="tour-grade-card__ltr" style="background:#dc2626">F</span><span class="tour-grade-card__name">DMARC</span></div>
+              <div class="tour-grade-card" style="--d:3"><span class="tour-grade-card__ltr" style="background:#2563eb">B+</span><span class="tour-grade-card__name">TLS</span></div>
+            </div>
+            <div class="tour-score-row">
+              <div class="tour-score-bar" style="--d:4">
+                <span class="tour-score-bar__label">Spam Risk</span>
+                <div class="tour-score-bar__track"><div class="tour-score-bar__fill" style="--w:18%; background:#16a34a"></div></div>
+                <span class="tour-score-bar__val">18/100</span>
+              </div>
+              <div class="tour-score-bar" style="--d:5">
+                <span class="tour-score-bar__label">Copy Score</span>
+                <div class="tour-score-bar__track"><div class="tour-score-bar__fill" style="--w:74%; background:#2563eb"></div></div>
+                <span class="tour-score-bar__val">74/100</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -373,10 +402,36 @@
 
   function show(i) {
     current = i;
-    slides.forEach((s,idx) => s.style.display = idx === i ? '' : 'none');
+    slides.forEach((s,idx) => {
+      s.style.display = idx === i ? '' : 'none';
+      if (idx === i) restartAnim(s);
+    });
     dots.forEach((d,idx) => d.classList.toggle('tour-dot--active', idx === i));
     btnBack.classList.toggle('hidden', i === 0);
     btnNext.textContent = i === total - 1 ? 'Got it!' : 'Next';
+  }
+
+  function restartAnim(slide) {
+    // Restart CSS animations by re-adding the class
+    const el = slide.querySelector('.tour-anim');
+    if (!el) return;
+    el.classList.remove('tour-anim--active');
+    void el.offsetWidth; // force reflow
+    el.classList.add('tour-anim--active');
+
+    // Typewriter effect for slide 2
+    slide.querySelectorAll('.tour-type').forEach(function(span) {
+      const text = span.dataset.text || '';
+      const delay = parseInt(span.dataset.delay) || 0;
+      span.textContent = '';
+      let idx = 0;
+      setTimeout(function type() {
+        if (idx < text.length && slide.style.display !== 'none') {
+          span.textContent += text[idx++];
+          setTimeout(type, 30 + Math.random() * 40);
+        }
+      }, delay);
+    });
   }
 
   function open() { overlay.classList.remove('hidden'); show(0); document.body.style.overflow='hidden'; }
