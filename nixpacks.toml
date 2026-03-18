@@ -1,2 +1,0 @@
-[phases.setup]
-nixPkgs = ["python311", "pip", "dejavu_fonts", "liberation_ttf"]
