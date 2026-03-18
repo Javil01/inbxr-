@@ -136,8 +136,15 @@ def _scheduled_daily_blog_post():
             existing_posts=existing,
         )
 
-        # No featured_image needed — blog cards use CSS covers instead of Pillow PNGs
+        # Generate featured image (CSS cover fallback if this fails)
         featured_image = ""
+        try:
+            from modules.blog_image import generate_blog_image
+            img_path = generate_blog_image(data["title"], data["slug"], keyword=keyword)
+            featured_image = img_path
+            logger.info("[SCHEDULER] Blog image generated: %s", featured_image)
+        except Exception as e:
+            logger.exception("[SCHEDULER] Blog image generation failed (CSS cover will be used): %s", e)
 
         # Fix any CTA markers in content
         content = data.get("content", "")
