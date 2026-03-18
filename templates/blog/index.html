@@ -31,17 +31,23 @@
 <div class="blog-grid">
   {% for post in posts %}
   <a href="/blog/{{ post.slug }}" class="blog-card">
-    <div class="blog-card__cover">
-      <div class="blog-card__cover-accent"></div>
-      <div class="blog-card__cover-dots"></div>
-      {% if post.category_name %}
-      <span class="blog-card__cover-tag">{{ post.category_name }}</span>
-      {% elif post.keyword_target %}
-      <span class="blog-card__cover-tag">{{ post.keyword_target }}</span>
-      {% endif %}
-      <h3 class="blog-card__cover-title">{{ post.title }}</h3>
-      <span class="blog-card__cover-brand">InbXr<span class="blog-card__cover-check">&#9745;</span></span>
-    </div>
+    {% if post.featured_image %}
+      <img src="{{ post.featured_image }}" alt="{{ post.title }}" class="blog-card__image"
+           onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" />
+      <div class="blog-card__cover" style="display:none">
+    {% else %}
+      <div class="blog-card__cover">
+    {% endif %}
+        <div class="blog-card__cover-accent"></div>
+        <div class="blog-card__cover-dots"></div>
+        {% if post.category_name %}
+        <span class="blog-card__cover-tag">{{ post.category_name }}</span>
+        {% elif post.keyword_target %}
+        <span class="blog-card__cover-tag">{{ post.keyword_target }}</span>
+        {% endif %}
+        <h3 class="blog-card__cover-title">{{ post.title }}</h3>
+        <span class="blog-card__cover-brand">InbXr<span class="blog-card__cover-check">&#9745;</span></span>
+      </div>
     <div class="blog-card__body">
       {% if post.category_name %}
       <span class="blog-card__category">{{ post.category_name }}</span>
