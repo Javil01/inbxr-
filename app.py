@@ -433,8 +433,11 @@ def serve_blog_image(filename):
         _os.path.join(base, "static", "images", "blog"),
     ]
     for d in search_dirs:
-        if _os.path.exists(_os.path.join(d, filename)):
+        full_path = _os.path.join(d, filename)
+        if _os.path.exists(full_path):
             return send_from_directory(d, filename)
+    app.logger.warning("[BLOG_IMAGE] 404 for %s — searched: %s", filename,
+                       [d for d in search_dirs if _os.path.isdir(d)])
     abort(404)
 
 
@@ -488,6 +491,71 @@ def sitemap_xml():
         pass
     xml.append('</urlset>')
     return app.response_class('\n'.join(xml), mimetype='application/xml')
+
+
+@app.route('/health/blog-images')
+def blog_image_health():
+    """Diagnostic: check blog image generation capability (admin only)."""
+    if not _is_admin():
+        return jsonify({'error': 'unauthorized'}), 403
+    import glob as _glob
+    base = os.path.dirname(os.path.abspath(__file__))
+    data_dir = os.environ.get("INBXR_DATA_DIR", os.path.join(base, "data"))
+    blog_img_dir = os.path.join(data_dir, "blog_images")
+
+    # Check directories
+    dirs_info = {}
+    for label, d in [("data_dir", blog_img_dir),
+                     ("repo_data", os.path.join(base, "data", "blog_images")),
+                     ("static", os.path.join(base, "static", "images", "blog"))]:
+        if os.path.isdir(d):
+            files = os.listdir(d)
+            dirs_info[label] = {"path": d, "exists": True, "files": len(files), "writable": os.access(d, os.W_OK)}
+        else:
+            dirs_info[label] = {"path": d, "exists": False}
+
+    # Check fonts
+    fonts_found = []
+    for pat in ["/nix/store/*/share/fonts/truetype/DejaVuSans.ttf",
+                "/nix/store/*/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+                "/nix/store/*/share/fonts/truetype/DejaVu/DejaVuSans.ttf",
+                "/nix/store/*/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
+                "/nix/store/*/share/fonts/truetype/LiberationSans-Regular.ttf",
+                "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"]:
+        matches = _glob.glob(pat)
+        if matches:
+            fonts_found.extend(matches)
+
+    # Check Pillow
+    try:
+        from PIL import Image as _I
+        pillow_ver = _I.__version__
+    except Exception as e:
+        pillow_ver = f"error: {e}"
+
+    # Check DB for posts with missing images
+    from modules.database import fetchall
+    posts = fetchall("SELECT id, slug, featured_image FROM blog_posts ORDER BY id DESC LIMIT 5")
+    posts_info = []
+    for p in posts:
+        img_url = p["featured_image"]
+        found = False
+        if img_url:
+            fname = img_url.split("/")[-1]
+            for d in [blog_img_dir, os.path.join(base, "data", "blog_images"),
+                      os.path.join(base, "static", "images", "blog")]:
+                if os.path.exists(os.path.join(d, fname)):
+                    found = True
+                    break
+        posts_info.append({"id": p["id"], "slug": p["slug"], "image_url": img_url, "file_exists": found})
+
+    return jsonify({
+        "INBXR_DATA_DIR": data_dir,
+        "directories": dirs_info,
+        "fonts_found": fonts_found[:5],
+        "pillow_version": pillow_ver,
+        "recent_posts": posts_info,
+    })
 
 
 @app.route('/health/imap')

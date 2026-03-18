@@ -3,12 +3,15 @@ INBXR — Blog Featured Image Generator
 Generates branded 1200x630 OG images for blog posts using Pillow.
 """
 
+import logging
 import math
 import os
 import re
 import textwrap
 
 from PIL import Image, ImageDraw, ImageFont
+
+logger = logging.getLogger(__name__)
 
 # ── Paths ──
 _BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -43,31 +46,48 @@ _CATEGORY_ICONS = {
 
 def _get_font(size, bold=False):
     """Get the best available font at given size."""
-    # Try common font paths
+    import glob as _glob
+
+    # Nix store paths (Railway/Nixpacks) — search recursively
+    nix_name = "DejaVuSans-Bold.ttf" if bold else "DejaVuSans.ttf"
+    nix_patterns = [
+        f"/nix/store/*/share/fonts/truetype/{nix_name}",
+        f"/nix/store/*/share/fonts/truetype/dejavu/{nix_name}",
+        f"/nix/store/*/share/fonts/truetype/DejaVu/{nix_name}",
+    ]
+    nix_lib_name = "LiberationSans-Bold.ttf" if bold else "LiberationSans-Regular.ttf"
+    nix_patterns.append(f"/nix/store/*/share/fonts/truetype/{nix_lib_name}")
+    nix_patterns.append(f"/nix/store/*/share/fonts/truetype/liberation/{nix_lib_name}")
+
     candidates = []
+    for pat in nix_patterns:
+        matches = _glob.glob(pat)
+        if matches:
+            candidates.append(matches[0])
+
+    # Standard Linux paths
     if bold:
-        candidates = [
-            "C:/Windows/Fonts/arialbd.ttf",
-            "C:/Windows/Fonts/segoeuib.ttf",
+        candidates += [
             "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
             "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf",
         ]
     else:
-        candidates = [
-            "C:/Windows/Fonts/arial.ttf",
-            "C:/Windows/Fonts/segoeui.ttf",
+        candidates += [
             "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
             "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
         ]
-    # Nix store paths (Railway/Nixpacks)
-    import glob as _glob
-    for pattern in (["/nix/store/*/share/fonts/truetype/DejaVuSans-Bold.ttf"] if bold else ["/nix/store/*/share/fonts/truetype/DejaVuSans.ttf"]):
-        matches = _glob.glob(pattern)
-        if matches:
-            candidates.insert(0, matches[0])
+
+    # Windows paths
+    if bold:
+        candidates += ["C:/Windows/Fonts/arialbd.ttf", "C:/Windows/Fonts/segoeuib.ttf"]
+    else:
+        candidates += ["C:/Windows/Fonts/arial.ttf", "C:/Windows/Fonts/segoeui.ttf"]
+
     for path in candidates:
         if os.path.exists(path):
             return ImageFont.truetype(path, size)
+
+    logger.warning("[BLOG_IMAGE] No system font found, using Pillow default")
     return ImageFont.load_default()
 
 
@@ -169,6 +189,7 @@ def generate_blog_image(title, slug, category=None, keyword=None):
         Relative path from static/ (e.g., 'images/blog/my-slug.png')
     """
     os.makedirs(_BLOG_IMG_DIR, exist_ok=True)
+    logger.info("[BLOG_IMAGE] Generating image for '%s' → %s/%s.png", title, _BLOG_IMG_DIR, slug)
 
     # Use RGBA for semi-transparent elements
     img = Image.new("RGBA", (WIDTH, HEIGHT), BG_COLOR + (255,))
@@ -264,6 +285,9 @@ def generate_blog_image(title, slug, category=None, keyword=None):
     final = Image.new("RGB", (WIDTH, HEIGHT), BG_COLOR)
     final.paste(img, (0, 0), img)
     final.save(out_path, "PNG", optimize=True)
+
+    file_size = os.path.getsize(out_path)
+    logger.info("[BLOG_IMAGE] Saved %s (%d bytes)", out_path, file_size)
 
     # Return URL path for serving
     return f"/blog-images/{slug}.png"
