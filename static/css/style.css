@@ -10102,6 +10102,108 @@ a.et-next-step:hover {
 .blog-card__excerpt { font-size: 0.88rem; color: #64748b; line-height: 1.6; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 .blog-card__meta { display: flex; justify-content: space-between; font-size: 0.75rem; color: #94a3b8; margin-top: 16px; padding-top: 12px; border-top: 1px solid #f1f5f9; }
 
+/* ── Guided Tour ──────────────────────────────────── */
+.et-tour-trigger {
+  display: inline-flex; align-items: center; gap: 6px;
+  margin-top: 12px; padding: 0; border: none; background: none;
+  color: var(--text-3, #94a3b8); font-size: 0.8rem; font-weight: 500;
+  cursor: pointer; transition: color 0.15s;
+}
+.et-tour-trigger:hover { color: var(--brand, #2563eb); }
+.et-tour-trigger svg { opacity: 0.7; }
+
+.tour-overlay {
+  position: fixed; inset: 0; z-index: 9999;
+  background: rgba(0,0,0,0.55); backdrop-filter: blur(4px);
+  display: flex; align-items: center; justify-content: center;
+  padding: 24px; animation: fadeIn 0.2s ease;
+}
+.tour-overlay.hidden { display: none; }
+.tour-modal {
+  background: #fff; border-radius: 16px; max-width: 460px; width: 100%;
+  padding: 32px 28px 24px; position: relative;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+  animation: slideUp 0.3s ease;
+}
+@keyframes slideUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+.tour-close {
+  position: absolute; top: 12px; right: 16px; background: none; border: none;
+  font-size: 1.4rem; color: #94a3b8; cursor: pointer; line-height: 1;
+}
+.tour-close:hover { color: #334155; }
+
+.tour-slide { text-align: center; }
+.tour-slide__icon {
+  width: 56px; height: 56px; border-radius: 14px;
+  display: inline-flex; align-items: center; justify-content: center;
+  margin-bottom: 16px;
+}
+.tour-slide__title {
+  font-size: 1.15rem; font-weight: 700; color: #0f172a; margin: 0 0 8px;
+}
+.tour-slide__text {
+  font-size: 0.88rem; color: #475569; line-height: 1.6; margin: 0 0 20px;
+}
+.tour-slide__visual {
+  background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px;
+  padding: 16px; margin-bottom: 8px;
+}
+
+/* Mock elements */
+.tour-mock-btn {
+  display: inline-block; padding: 10px 24px; background: #2563eb; color: #fff;
+  border-radius: 999px; font-size: 0.85rem; font-weight: 600;
+}
+.tour-mock-email {
+  display: grid; grid-template-columns: auto 1fr; gap: 4px 10px; text-align: left; font-size: 0.82rem;
+}
+.tour-mock-email__label { color: #94a3b8; font-weight: 600; }
+.tour-mock-email__val { color: #0f172a; font-family: monospace; font-size: 0.8rem; }
+.tour-mock-checks { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+.tour-mock-check {
+  padding: 4px 12px; border-radius: 6px; font-size: 0.78rem; font-weight: 600;
+}
+.tour-mock-check--pass { background: #f0fdf4; color: #16a34a; }
+.tour-mock-check--fail { background: #fef2f2; color: #dc2626; }
+.tour-mock-grades { display: flex; gap: 12px; justify-content: center; }
+.tour-mock-grade { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 0.75rem; color: #64748b; }
+.tour-mock-grade__ltr {
+  width: 36px; height: 36px; border-radius: 8px; display: flex;
+  align-items: center; justify-content: center;
+  font-size: 1rem; font-weight: 700; color: #fff;
+}
+.tour-mock-grade--a { background: #16a34a; }
+.tour-mock-grade--b { background: #2563eb; }
+.tour-mock-grade--f { background: #dc2626; }
+
+/* Nav */
+.tour-nav {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-top: 20px; padding-top: 16px; border-top: 1px solid #f1f5f9;
+}
+.tour-dots { display: flex; gap: 6px; }
+.tour-dot {
+  width: 8px; height: 8px; border-radius: 50%; background: #e2e8f0;
+  transition: background 0.2s;
+}
+.tour-dot--active { background: #2563eb; }
+.tour-btns { display: flex; gap: 8px; }
+.tour-btn {
+  padding: 8px 20px; border-radius: 8px; font-size: 0.82rem; font-weight: 600;
+  cursor: pointer; border: none; transition: all 0.15s;
+}
+.tour-btn--back { background: #f1f5f9; color: #475569; }
+.tour-btn--back:hover { background: #e2e8f0; }
+.tour-btn--next { background: #2563eb; color: #fff; }
+.tour-btn--next:hover { background: #1d4ed8; }
+.tour-btn.hidden { display: none; }
+
+@media (max-width: 500px) {
+  .tour-modal { padding: 24px 20px 20px; }
+  .tour-slide__title { font-size: 1rem; }
+  .tour-mock-grades { gap: 8px; }
+}
+
 /* Single post */
 .blog-post { max-width: 760px; margin: 0 auto; padding: 40px 24px 60px; }
 .blog-breadcrumb { font-size: 0.8rem; color: #94a3b8; margin-bottom: 24px; }

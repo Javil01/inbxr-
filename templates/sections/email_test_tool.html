@@ -49,6 +49,10 @@
         <span class="btn-text">Start Email Test — It's Free</span>
         <span class="btn-spinner hidden"></span>
       </button>
+      <button type="button" class="et-tour-trigger" id="openTourBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        How to use this tool
+      </button>
     </div>
   </div>
 
@@ -267,3 +271,132 @@
   </div>
 
 </div>
+
+<!-- ════════════════════════════════════════════════════ -->
+<!--  GUIDED TOUR MODAL                                  -->
+<!-- ════════════════════════════════════════════════════ -->
+<div class="tour-overlay hidden" id="tourOverlay">
+  <div class="tour-modal">
+    <button class="tour-close" id="tourClose">&times;</button>
+    <div class="tour-slides" id="tourSlides">
+
+      <!-- Slide 1 -->
+      <div class="tour-slide" data-step="1">
+        <div class="tour-slide__icon" style="background:rgba(37,99,235,0.08); color:#2563eb;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="32" height="32"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+        </div>
+        <h3 class="tour-slide__title">Start Your Test</h3>
+        <p class="tour-slide__text">Click <strong>"Start Email Test"</strong> to generate a unique test token and a seed email address. This takes one second.</p>
+        <div class="tour-slide__visual">
+          <div class="tour-mock-btn">Start Email Test — It's Free</div>
+        </div>
+      </div>
+
+      <!-- Slide 2 -->
+      <div class="tour-slide" data-step="2">
+        <div class="tour-slide__icon" style="background:rgba(21,193,130,0.08); color:#15c182;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="32" height="32"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 4L12 13 2 4"/></svg>
+        </div>
+        <h3 class="tour-slide__title">Send Your Email</h3>
+        <p class="tour-slide__text">Copy the <strong>test token</strong> and <strong>seed address</strong>. Open your email client, compose a real email, paste the token in your subject line, and send it to the seed address.</p>
+        <div class="tour-slide__visual">
+          <div class="tour-mock-email">
+            <span class="tour-mock-email__label">To:</span>
+            <span class="tour-mock-email__val">test-xyz@inbxr.us</span>
+            <span class="tour-mock-email__label">Subject:</span>
+            <span class="tour-mock-email__val">INBXR-A1B2C3 My Newsletter</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 3 -->
+      <div class="tour-slide" data-step="3">
+        <div class="tour-slide__icon" style="background:rgba(245,158,11,0.08); color:#f59e0b;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="32" height="32"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        </div>
+        <h3 class="tour-slide__title">We Analyze Everything</h3>
+        <p class="tour-slide__text">Click <strong>"Analyze Received Email"</strong> and we fetch your email from the server. We check authentication (SPF, DKIM, DMARC), spam triggers, content quality, blocklists, and more.</p>
+        <div class="tour-slide__visual">
+          <div class="tour-mock-checks">
+            <span class="tour-mock-check tour-mock-check--pass">SPF &#10003;</span>
+            <span class="tour-mock-check tour-mock-check--pass">DKIM &#10003;</span>
+            <span class="tour-mock-check tour-mock-check--fail">DMARC &#10007;</span>
+            <span class="tour-mock-check tour-mock-check--pass">TLS &#10003;</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 4 -->
+      <div class="tour-slide" data-step="4">
+        <div class="tour-slide__icon" style="background:rgba(16,185,129,0.08); color:#10b981;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="32" height="32"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+        </div>
+        <h3 class="tour-slide__title">Get Your Full Report</h3>
+        <p class="tour-slide__text">You'll get a detailed report with <strong>letter grades</strong> for every check, <strong>spam and copy scores</strong>, and <strong>specific fixes</strong> with copy-paste DNS records. Run a Full Audit for even deeper analysis.</p>
+        <div class="tour-slide__visual">
+          <div class="tour-mock-grades">
+            <div class="tour-mock-grade"><span class="tour-mock-grade__ltr tour-mock-grade--a">A</span><span>SPF</span></div>
+            <div class="tour-mock-grade"><span class="tour-mock-grade__ltr tour-mock-grade--a">A</span><span>DKIM</span></div>
+            <div class="tour-mock-grade"><span class="tour-mock-grade__ltr tour-mock-grade--f">F</span><span>DMARC</span></div>
+            <div class="tour-mock-grade"><span class="tour-mock-grade__ltr tour-mock-grade--b">B</span><span>Spam</span></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Progress & nav -->
+    <div class="tour-nav">
+      <div class="tour-dots" id="tourDots">
+        <span class="tour-dot tour-dot--active"></span>
+        <span class="tour-dot"></span>
+        <span class="tour-dot"></span>
+        <span class="tour-dot"></span>
+      </div>
+      <div class="tour-btns">
+        <button class="tour-btn tour-btn--back hidden" id="tourBack">Back</button>
+        <button class="tour-btn tour-btn--next" id="tourNext">Next</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const overlay = document.getElementById('tourOverlay');
+  const slides = document.querySelectorAll('.tour-slide');
+  const dots = document.querySelectorAll('.tour-dot');
+  const btnBack = document.getElementById('tourBack');
+  const btnNext = document.getElementById('tourNext');
+  let current = 0;
+  const total = slides.length;
+
+  function show(i) {
+    current = i;
+    slides.forEach((s,idx) => s.style.display = idx === i ? '' : 'none');
+    dots.forEach((d,idx) => d.classList.toggle('tour-dot--active', idx === i));
+    btnBack.classList.toggle('hidden', i === 0);
+    btnNext.textContent = i === total - 1 ? 'Got it!' : 'Next';
+  }
+
+  function open() { overlay.classList.remove('hidden'); show(0); document.body.style.overflow='hidden'; }
+  function close() { overlay.classList.add('hidden'); document.body.style.overflow=''; localStorage.setItem('inbxr_tour_seen','1'); }
+
+  document.getElementById('openTourBtn').addEventListener('click', open);
+  document.getElementById('tourClose').addEventListener('click', close);
+  overlay.addEventListener('click', function(e){ if(e.target===overlay) close(); });
+  btnNext.addEventListener('click', function(){ current < total-1 ? show(current+1) : close(); });
+  btnBack.addEventListener('click', function(){ if(current > 0) show(current-1); });
+  document.addEventListener('keydown', function(e){
+    if(overlay.classList.contains('hidden')) return;
+    if(e.key==='Escape') close();
+    if(e.key==='ArrowRight') { if(current<total-1) show(current+1); }
+    if(e.key==='ArrowLeft') { if(current>0) show(current-1); }
+  });
+
+  // Auto-show on first visit
+  if(!localStorage.getItem('inbxr_tour_seen')) {
+    setTimeout(open, 1500);
+  }
+})();
+</script>
