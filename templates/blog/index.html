@@ -32,9 +32,6 @@
   {% for post in posts %}
   <a href="/blog/{{ post.slug }}" class="blog-card">
     <div class="blog-card__cover">
-      {% if post.featured_image %}
-      <img src="{{ post.featured_image }}" alt="{{ post.title }}" class="blog-card__cover-img" onerror="this.remove()" />
-      {% endif %}
       <div class="blog-card__cover-accent"></div>
       <div class="blog-card__cover-dots"></div>
       {% if post.category_name %}
