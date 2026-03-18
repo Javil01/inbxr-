@@ -2630,6 +2630,15 @@ select {
   font-size: 0.7rem;
   margin-left: auto;
 }
+.srep-bl-delist {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--brand);
+  text-decoration: none;
+  margin-left: auto;
+  white-space: nowrap;
+}
+.srep-bl-delist:hover { text-decoration: underline; }
 
 @media (max-width: 600px) {
   .srep-overview { flex-direction: column; }

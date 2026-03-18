@@ -1053,11 +1053,23 @@ function renderReputation(data) {
     </div>`;
 
   // Blocklist summary
-  const listed = reputation?.listed_count || 0;
-  if (listed === 0) {
+  const dnsbl = reputation?.dnsbl || [];
+  const listedBls = dnsbl.filter(r => r.listed);
+  const listedCount = reputation?.listed_count || listedBls.length;
+  if (listedCount === 0) {
     html += `<div class="srep-bl-clean"><span class="srep-bl-clean__icon">\u2713</span> Clean across all checked blocklists</div>`;
   } else {
-    html += `<div class="srep-bl-alert"><span class="srep-bl-alert__icon">\u26A0</span> Listed on ${listed} blocklist${listed !== 1 ? 's' : ''}</div>`;
+    html += `
+      <div class="srep-bl-alert"><span class="srep-bl-alert__icon">\u26A0</span> Listed on ${listedCount} blocklist${listedCount !== 1 ? 's' : ''}</div>
+      <div class="srep-bl-listed">
+        ${listedBls.map(r => `
+          <div class="srep-bl-item">
+            <span class="srep-bl-name">${escHtml(r.name)}</span>
+            <span class="srep-bl-zone">${escHtml(r.zone)}</span>
+            ${r.reason ? `<span class="srep-bl-reason">${escHtml(r.reason.slice(0, 100))}</span>` : ''}
+            ${r.delist ? `<a href="${escHtml(r.delist)}" target="_blank" rel="noopener" class="srep-bl-delist">Delist &rarr;</a>` : ''}
+          </div>`).join('')}
+      </div>`;
   }
 
   el.innerHTML = html;

@@ -961,7 +961,8 @@ class ReputationChecker:
     def _query_ip_dnsbl(self, ip_str: str, entry: dict) -> dict:
         result = {"zone": entry["zone"], "name": entry["name"],
                   "type": "ip", "weight": entry["weight"],
-                  "info": entry["info"], "listed": False, "reason": None, "error": None}
+                  "info": entry["info"], "delist": entry.get("delist", ""),
+                  "listed": False, "reason": None, "error": None}
         try:
             ip_obj = ipaddress.ip_address(ip_str)
             if ip_obj.version == 4:
@@ -1005,7 +1006,8 @@ class ReputationChecker:
     def _query_domain_dnsbl(self, domain: str, entry: dict) -> dict:
         result = {"zone": entry["zone"], "name": entry["name"],
                   "type": "domain", "weight": entry["weight"],
-                  "info": entry["info"], "listed": False, "reason": None, "error": None}
+                  "info": entry["info"], "delist": entry.get("delist", ""),
+                  "listed": False, "reason": None, "error": None}
         try:
             query = f"{domain}.{entry['zone']}"
             r = _make_resolver()
@@ -1062,8 +1064,8 @@ class ReputationChecker:
                     entry = futures_map[future]
                     results.append({"zone": entry["zone"], "name": entry["name"],
                                     "type": "?", "weight": entry["weight"],
-                                    "info": entry["info"], "listed": False,
-                                    "reason": None, "error": "timed out"})
+                                    "info": entry["info"], "delist": entry.get("delist", ""),
+                                    "listed": False, "reason": None, "error": "timed out"})
 
         # Sort: listed first, then by weight severity
         weight_order = {"critical": 0, "major": 1, "moderate": 2, "minor": 3}

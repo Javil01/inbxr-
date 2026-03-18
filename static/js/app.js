@@ -1363,6 +1363,7 @@ function renderSenderReputation(data) {
             <span class="srep-bl-name">${escHtml(r.name)}</span>
             <span class="srep-bl-zone">${escHtml(r.zone)}</span>
             ${r.reason ? `<span class="srep-bl-reason">${escHtml(r.reason.slice(0, 100))}</span>` : ''}
+            ${r.delist ? `<a href="${escHtml(r.delist)}" target="_blank" rel="noopener" class="srep-bl-delist">Delist &rarr;</a>` : ''}
           </div>`).join('')}
       </div>`;
   }
