@@ -4054,6 +4054,15 @@ select {
 .btn-ai-rewrite:hover { opacity: 0.9; }
 .btn-ai-rewrite:active { transform: scale(0.98); }
 .btn-ai-rewrite:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-ai-primary {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 8px 16px; border-radius: 8px; border: 1px solid #8b5cf6;
+  background: rgba(139,92,246,0.06); color: #8b5cf6;
+  font-size: 0.78rem; font-weight: 600; cursor: pointer;
+  transition: all 0.15s;
+}
+.btn-ai-primary:hover { background: #8b5cf6; color: #fff; }
+.btn-ai-primary:disabled { opacity: 0.5; cursor: not-allowed; }
 
 /* ── Error ────────────────────────────────────────── */
 .ai-error {

@@ -1549,6 +1549,110 @@ $('#aiRewriteBtn').addEventListener('click', async () => {
   }
 });
 
+// ── Primary Inbox Optimizer (Analyzer page) ──
+$('#aiPrimaryBtn').addEventListener('click', async () => {
+  if (!_aiPayloadCache) return;
+
+  const btn = $('#aiPrimaryBtn');
+  const btnText = $('.btn-text', btn);
+  const spinner = $('.btn-spinner', btn);
+  const errEl = $('#aiPrimaryError');
+  const contentEl = $('#aiPrimaryContent');
+
+  btn.disabled = true;
+  btnText.textContent = 'Optimizing...';
+  spinner.classList.remove('hidden');
+  errEl.classList.add('hidden');
+  contentEl.style.display = 'none';
+
+  try {
+    const res = await fetch('/ai-optimize-primary', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        subject: _aiPayloadCache.subject,
+        body: _aiPayloadCache.body,
+      }),
+    });
+    const data = await res.json();
+
+    if (!res.ok || data.error) {
+      errEl.textContent = data.error || 'Optimization failed.';
+      errEl.classList.remove('hidden');
+      return;
+    }
+
+    contentEl.style.display = '';
+    contentEl.innerHTML = `
+      <div class="ai-block">
+        <h4 class="ai-block__title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M22 2L11 13"/><path d="M22 2L15 22l-4-9-9-4z"/></svg>
+          Primary Inbox Optimized Version
+        </h4>
+        <p style="font-size:0.78rem;color:var(--text-3);margin:0 0 12px">Rewritten to escape Gmail's Promotions tab — stripped marketing language, reduced links, conversational tone.</p>
+      </div>
+      <div class="ai-block">
+        <h4 class="ai-block__title">Optimized Subject</h4>
+        <div class="ai-suggestion" data-copy="${escAttr(data.optimized_subject)}">
+          <span>${escHtml(data.optimized_subject)}</span>
+          <span class="ai-copy-icon">Copy</span>
+        </div>
+      </div>
+      <div class="ai-block">
+        <h4 class="ai-block__title">Optimized Body</h4>
+        <div class="ai-body-rewrite">
+          <pre style="white-space:pre-wrap;word-wrap:break-word;font-family:Inter,sans-serif;font-size:0.82rem;line-height:1.7;margin:0">${escHtml(data.optimized_body)}</pre>
+          <button class="ai-copy-body-btn" data-copy="${escAttr(data.optimized_body)}">Copy Body</button>
+        </div>
+      </div>
+      ${data.changes_made?.length ? `
+      <div class="ai-block">
+        <h4 class="ai-block__title">What We Changed</h4>
+        <ul class="ai-tips-list">
+          ${data.changes_made.map(c => `<li>${escHtml(c)}</li>`).join('')}
+        </ul>
+      </div>` : ''}
+      ${data.before_after?.length ? `
+      <div class="ai-block">
+        <h4 class="ai-block__title">Before &rarr; After</h4>
+        ${data.before_after.map(d => `
+          <div class="po-diff" style="margin-bottom:6px">
+            <span class="po-diff__before">${escHtml(d.before)}</span>
+            <span class="po-diff__arrow">&rarr;</span>
+            <span class="po-diff__after">${escHtml(d.after)}</span>
+          </div>`).join('')}
+      </div>` : ''}
+      ${data.tips?.length ? `
+      <div class="ai-block">
+        <h4 class="ai-block__title">Tips for Staying in Primary</h4>
+        <ul class="ai-tips-list">
+          ${data.tips.map(t => `<li>${escHtml(t)}</li>`).join('')}
+        </ul>
+      </div>` : ''}
+    `;
+
+    // Wire copy buttons
+    contentEl.querySelectorAll('[data-copy]').forEach(el => {
+      el.addEventListener('click', () => {
+        const text = el.dataset.copy;
+        navigator.clipboard.writeText(text).then(() => {
+          const icon = el.querySelector('.ai-copy-icon') || el;
+          const orig = icon.textContent;
+          icon.textContent = 'Copied!';
+          setTimeout(() => { icon.textContent = orig; }, 1500);
+        });
+      });
+    });
+  } catch (err) {
+    errEl.textContent = 'Network error. Please try again.';
+    errEl.classList.remove('hidden');
+  } finally {
+    btn.disabled = false;
+    btnText.textContent = 'Optimize for Primary Inbox';
+    spinner.classList.add('hidden');
+  }
+});
+
 function renderAiRewrite(data) {
   // ── Subject alternatives ──
   const subEl = $('#aiSubjectAlts');

@@ -429,8 +429,15 @@
               <span class="btn-text">Generate AI Rewrite</span>
               <span class="btn-spinner hidden" aria-hidden="true"></span>
             </button>
+            <button type="button" class="btn-ai-primary" id="aiPrimaryBtn" title="Rewrite to escape Gmail's Promotions tab">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M22 2L11 13"/><path d="M22 2L15 22l-4-9-9-4z"/></svg>
+              <span class="btn-text">Optimize for Primary Inbox</span>
+              <span class="btn-spinner hidden" aria-hidden="true"></span>
+            </button>
           </div>
         </div>
+        <div id="aiPrimaryContent" style="display:none"></div>
+        <div id="aiPrimaryError" class="ai-error hidden"></div>
         <div id="aiRewriteContent" style="display:none">
           <div id="aiSubjectAlts"></div>
           <div id="aiOpeningHook"></div>
