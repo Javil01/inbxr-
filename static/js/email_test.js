@@ -1626,29 +1626,25 @@ Thanks!
 function renderSafetyWarning(data) {
   const el = $('#etSafetyWarning');
   if (!el) return;
-  const placement = data.placement || {};
-  // Show when email lands in promotions, spam, or has reputation issues
-  if (placement.tab !== 'promotions' && placement.placement !== 'spam') {
-    el.style.display = 'none';
-    return;
-  }
 
   el.style.display = '';
   el.innerHTML = `
     <div class="safety-card">
       <div class="safety-card__icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
       </div>
       <div class="safety-card__body">
-        <h3 class="safety-card__title">A word of caution about "inbox placement" tools</h3>
-        <p class="safety-card__text">Some tools claim to fix deliverability by using networks of fake accounts to automatically open, click, and engage with your emails. This is called <strong>seed engagement</strong> — and it comes with serious risks:</p>
+        <h3 class="safety-card__title">Beware of tools that promise to "fix" your inbox placement</h3>
+        <p class="safety-card__text">Some deliverability tools use networks of fake accounts to automatically open, click, and reply to your emails — tricking Gmail into thinking real people are engaged. This is called <strong>seed engagement</strong>, and here's why you should avoid it:</p>
         <ul class="safety-card__list">
-          <li><strong>Violates email provider terms of service</strong> — Gmail, Outlook, and Yahoo actively detect and penalize artificial engagement patterns</li>
-          <li><strong>Can permanently damage sender reputation</strong> — if flagged, your domain may be blacklisted with no path to recovery</li>
-          <li><strong>Creates a dependency</strong> — the moment you stop paying, your placement drops back (or worse)</li>
-          <li><strong>Masks real problems</strong> — fake engagement hides authentication failures, content issues, and list hygiene problems that need actual fixes</li>
+          <li><strong>It violates Gmail, Outlook, and Yahoo's terms of service.</strong> These providers are actively detecting artificial engagement patterns. If caught, your domain can be permanently blacklisted.</li>
+          <li><strong>It creates a costly dependency.</strong> The moment you stop paying, your placement drops — often worse than before, because your real engagement metrics were never improved.</li>
+          <li><strong>It masks the actual problems.</strong> If your emails land in spam because of a missing DMARC record or spammy content, fake engagement doesn't fix that — it just hides it until it blows up.</li>
+          <li><strong>The "results" aren't real.</strong> Higher open rates from bot accounts don't translate to revenue. Your actual subscribers are still not seeing your emails.</li>
         </ul>
-        <p class="safety-card__footer"><strong>INBXR's approach:</strong> We show you exactly what's wrong with real data from real mailboxes, and give you the specific fixes to improve deliverability permanently — no fake engagement, no risk to your account.</p>
+        <div class="safety-card__cta">
+          <strong>The sustainable approach:</strong> Fix the real issues. INBXR shows you exactly what email providers see — authentication verdicts, spam triggers, content scores, blocklist status — and gives you the specific steps to fix each one. Real diagnostics, real fixes, permanent results.
+        </div>
       </div>
     </div>`;
 }

@@ -10690,6 +10690,12 @@ a.et-next-step:hover {
   font-size: 0.8rem; color: var(--text-1, #0f172a); margin: 0;
   padding-top: 10px; border-top: 1px solid rgba(239,68,68,0.1); line-height: 1.5;
 }
+.safety-card__cta {
+  font-size: 0.82rem; line-height: 1.6; margin: 0;
+  padding: 12px 16px; border-radius: 8px;
+  background: rgba(21,193,130,0.06); border: 1px solid rgba(21,193,130,0.15);
+  color: var(--text-1, #0f172a);
+}
 
 /* ── Email Preview (Feature 4) ───────────────────── */
 .email-preview-section { margin: 24px 0; }

@@ -171,6 +171,7 @@ function renderResults(data) {
   renderRecommendations(recommendations);
   renderNextSteps(data);
   renderSenderUpgradeNudge(data);
+  renderSenderSafetyWarning();
 
   // Re-check button
   const recheckBtn = $('#recheckBtn');
@@ -877,6 +878,34 @@ function renderSenderUpgradeNudge(data) {
         <p class="upgrade-nudge__text">${escHtml(contextText)}</p>
         <p class="upgrade-nudge__text"><strong>&#128196; PDF Reports</strong> — Download and share this sender check with your team.</p>
         <a href="/pricing" class="upgrade-nudge__cta">Upgrade to Pro &rarr;</a>
+      </div>
+    </div>`;
+}
+
+// ══════════════════════════════════════════════════════
+//  SAFETY WARNING — Seed Engagement Risks
+// ══════════════════════════════════════════════════════
+function renderSenderSafetyWarning() {
+  const el = $('#senderSafetyWarning');
+  if (!el) return;
+  el.style.display = '';
+  el.innerHTML = `
+    <div class="safety-card">
+      <div class="safety-card__icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      </div>
+      <div class="safety-card__body">
+        <h3 class="safety-card__title">Beware of tools that promise to "fix" your inbox placement</h3>
+        <p class="safety-card__text">Some deliverability tools use networks of fake accounts to automatically open, click, and reply to your emails — tricking Gmail into thinking real people are engaged. This is called <strong>seed engagement</strong>, and here's why you should avoid it:</p>
+        <ul class="safety-card__list">
+          <li><strong>It violates Gmail, Outlook, and Yahoo's terms of service.</strong> These providers are actively detecting artificial engagement patterns. If caught, your domain can be permanently blacklisted.</li>
+          <li><strong>It creates a costly dependency.</strong> The moment you stop paying, your placement drops — often worse than before, because your real engagement metrics were never improved.</li>
+          <li><strong>It masks the actual problems.</strong> If your emails land in spam because of a missing DMARC record or spammy content, fake engagement doesn't fix that — it just hides it until it blows up.</li>
+          <li><strong>The "results" aren't real.</strong> Higher open rates from bot accounts don't translate to revenue. Your actual subscribers are still not seeing your emails.</li>
+        </ul>
+        <div class="safety-card__cta">
+          <strong>The sustainable approach:</strong> Fix the real issues. INBXR shows you exactly what email providers see — authentication verdicts, spam triggers, content scores, blocklist status — and gives you the specific steps to fix each one. Real diagnostics, real fixes, permanent results.
+        </div>
       </div>
     </div>`;
 }
