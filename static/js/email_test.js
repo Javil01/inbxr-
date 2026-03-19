@@ -457,12 +457,14 @@ function renderFullReport(data) {
 
   // ── Full Audit CTA (auto-extract domain from received email) ──
   setupFullAuditCTA(data);
+  renderMoveToPrimary(data);
+  renderSafetyWarning(data);
   renderNextSteps(data);
   renderUpgradeNudges(data);
   renderEmailPreview(data);
 
   // Show all sections with staggered reveal
-  const revealSections = ['#espDiagnostic', '#etAssessment', '#etHeaderGrades', '#etTransport', '#etIdentity', '#etScores', '#etReadability', '#etReputation', '#etAudit', '#etFullAuditCta', '#etNextSteps', '#etUpgradeNudge', '#etEmailPreview', '#etRawHeaders'];
+  const revealSections = ['#espDiagnostic', '#etAssessment', '#etHeaderGrades', '#etTransport', '#etIdentity', '#etScores', '#etReadability', '#etReputation', '#etAudit', '#etFullAuditCta', '#etMoveToPrimary', '#etSafetyWarning', '#etNextSteps', '#etUpgradeNudge', '#etEmailPreview', '#etRawHeaders'];
   revealSections.forEach((s, i) => {
     const el = $(s);
     if (el && el.style.display !== 'none') {
@@ -1540,6 +1542,114 @@ function renderNextSteps(data) {
           </div>
           <span class="et-next-step__btn">${escHtml(a.btn)} &rarr;</span>
         </a>`).join('')}
+    </div>`;
+}
+
+// ══════════════════════════════════════════════════════
+//  MOVE TO PRIMARY — Campaign Template Generator
+// ══════════════════════════════════════════════════════
+function renderMoveToPrimary(data) {
+  const el = $('#etMoveToPrimary');
+  if (!el) return;
+  const placement = data.placement || {};
+  if (placement.tab !== 'promotions' && placement.tab !== 'updates') {
+    el.style.display = 'none';
+    return;
+  }
+
+  const tabName = placement.tab === 'promotions' ? 'Promotions' : 'Updates';
+  const template = `Subject: Quick favor — takes 3 seconds
+
+Hey [First Name],
+
+I want to make sure you're seeing my emails!
+
+Gmail may have sorted me into your ${tabName} tab, which means you could be missing updates you signed up for.
+
+Here's how to fix it (takes 3 seconds):
+
+ON DESKTOP:
+1. Open this email in Gmail
+2. Drag it from ${tabName} to your Primary tab
+3. Click "Yes" when Gmail asks to do this for future messages
+
+ON MOBILE:
+1. Open this email in the Gmail app
+2. Tap the three dots (top right)
+3. Tap "Move to" → "Primary"
+
+That's it! You'll never miss an update again.
+
+Thanks!
+[Your Name]`;
+
+  el.style.display = '';
+  el.innerHTML = `
+    <div class="mtp-card">
+      <div class="mtp-header">
+        <div class="mtp-header__icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22"><path d="M22 2L11 13"/><path d="M22 2L15 22l-4-9-9-4z"/></svg>
+        </div>
+        <div>
+          <h3 class="mtp-header__title">Escape the ${escHtml(tabName)} Tab</h3>
+          <p class="mtp-header__desc">Send this email to your subscribers — one real person moving you to Primary is more effective than any automation tool.</p>
+        </div>
+      </div>
+      <div class="mtp-template">
+        <div class="mtp-template__header">
+          <span>Ready-to-send email template</span>
+          <button class="mtp-copy-btn" id="mtpCopyBtn">Copy Template</button>
+        </div>
+        <pre class="mtp-template__body" id="mtpTemplateText">${escHtml(template)}</pre>
+      </div>
+      <div class="mtp-tips">
+        <p class="mtp-tips__title">Why this works better than automation:</p>
+        <ul class="mtp-tips__list">
+          <li><strong>One real subscriber</strong> moving you to Primary trains Gmail permanently for that person</li>
+          <li><strong>Engagement signals compound</strong> — opens and replies from Primary teach Gmail your emails belong there</li>
+          <li><strong>No risk to your account</strong> — this is the method Gmail themselves recommend</li>
+        </ul>
+      </div>
+    </div>`;
+
+  document.getElementById('mtpCopyBtn').addEventListener('click', function() {
+    navigator.clipboard.writeText(document.getElementById('mtpTemplateText').textContent).then(() => {
+      this.textContent = 'Copied!';
+      setTimeout(() => { this.textContent = 'Copy Template'; }, 2000);
+    });
+  });
+}
+
+// ══════════════════════════════════════════════════════
+//  SAFETY WARNING — Seed Engagement Risks
+// ══════════════════════════════════════════════════════
+function renderSafetyWarning(data) {
+  const el = $('#etSafetyWarning');
+  if (!el) return;
+  const placement = data.placement || {};
+  // Show when email lands in promotions, spam, or has reputation issues
+  if (placement.tab !== 'promotions' && placement.placement !== 'spam') {
+    el.style.display = 'none';
+    return;
+  }
+
+  el.style.display = '';
+  el.innerHTML = `
+    <div class="safety-card">
+      <div class="safety-card__icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      </div>
+      <div class="safety-card__body">
+        <h3 class="safety-card__title">A word of caution about "inbox placement" tools</h3>
+        <p class="safety-card__text">Some tools claim to fix deliverability by using networks of fake accounts to automatically open, click, and engage with your emails. This is called <strong>seed engagement</strong> — and it comes with serious risks:</p>
+        <ul class="safety-card__list">
+          <li><strong>Violates email provider terms of service</strong> — Gmail, Outlook, and Yahoo actively detect and penalize artificial engagement patterns</li>
+          <li><strong>Can permanently damage sender reputation</strong> — if flagged, your domain may be blacklisted with no path to recovery</li>
+          <li><strong>Creates a dependency</strong> — the moment you stop paying, your placement drops back (or worse)</li>
+          <li><strong>Masks real problems</strong> — fake engagement hides authentication failures, content issues, and list hygiene problems that need actual fixes</li>
+        </ul>
+        <p class="safety-card__footer"><strong>INBXR's approach:</strong> We show you exactly what's wrong with real data from real mailboxes, and give you the specific fixes to improve deliverability permanently — no fake engagement, no risk to your account.</p>
+      </div>
     </div>`;
 }
 

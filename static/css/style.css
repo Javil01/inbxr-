@@ -10627,6 +10627,70 @@ a.et-next-step:hover {
 }
 .upgrade-nudge__cta:hover { background: #d97706; }
 
+/* ── Move to Primary Card ────────────────────────── */
+.mtp-card {
+  border: 1px solid rgba(37,99,235,0.15); border-radius: 12px;
+  background: #fff; overflow: hidden;
+}
+.mtp-header {
+  display: flex; align-items: flex-start; gap: 14px;
+  padding: 18px 20px; background: rgba(37,99,235,0.04);
+  border-bottom: 1px solid rgba(37,99,235,0.1);
+}
+.mtp-header__icon {
+  flex-shrink: 0; width: 40px; height: 40px; border-radius: 10px;
+  background: rgba(37,99,235,0.08); display: flex; align-items: center;
+  justify-content: center; color: #2563eb;
+}
+.mtp-header__title { font-size: 0.95rem; font-weight: 700; color: var(--text-1, #0f172a); margin: 0 0 2px; }
+.mtp-header__desc { font-size: 0.82rem; color: var(--text-2, #475569); margin: 0; line-height: 1.5; }
+.mtp-template { padding: 16px 20px; }
+.mtp-template__header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 10px; font-size: 0.78rem; color: var(--text-3, #94a3b8); font-weight: 600;
+}
+.mtp-copy-btn {
+  padding: 5px 14px; border-radius: 6px; border: 1px solid #2563eb;
+  background: #fff; color: #2563eb; font-size: 0.75rem; font-weight: 600;
+  cursor: pointer; transition: all 0.15s;
+}
+.mtp-copy-btn:hover { background: #2563eb; color: #fff; }
+.mtp-template__body {
+  background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;
+  padding: 14px 16px; font-size: 0.78rem; line-height: 1.6;
+  color: var(--text-1, #0f172a); white-space: pre-wrap; word-wrap: break-word;
+  font-family: 'Inter', sans-serif; max-height: 260px; overflow-y: auto;
+}
+.mtp-tips { padding: 14px 20px 18px; border-top: 1px solid #f1f5f9; }
+.mtp-tips__title { font-size: 0.8rem; font-weight: 700; color: var(--text-1, #0f172a); margin: 0 0 8px; }
+.mtp-tips__list { margin: 0; padding-left: 18px; font-size: 0.78rem; color: var(--text-2, #475569); line-height: 1.6; }
+.mtp-tips__list li { margin-bottom: 4px; }
+
+/* ── Safety Warning Card ─────────────────────────── */
+.safety-card {
+  display: flex; align-items: flex-start; gap: 14px;
+  padding: 18px 20px; border-radius: 12px;
+  border: 1px solid rgba(239,68,68,0.15);
+  background: rgba(239,68,68,0.03);
+}
+.safety-card__icon {
+  flex-shrink: 0; width: 36px; height: 36px; border-radius: 10px;
+  background: rgba(239,68,68,0.08); display: flex; align-items: center;
+  justify-content: center; color: #ef4444;
+}
+.safety-card__body { flex: 1; }
+.safety-card__title { font-size: 0.9rem; font-weight: 700; color: var(--text-1, #0f172a); margin: 0 0 6px; }
+.safety-card__text { font-size: 0.82rem; color: var(--text-2, #475569); margin: 0 0 10px; line-height: 1.6; }
+.safety-card__list {
+  margin: 0 0 12px; padding-left: 18px;
+  font-size: 0.78rem; color: var(--text-2, #475569); line-height: 1.6;
+}
+.safety-card__list li { margin-bottom: 6px; }
+.safety-card__footer {
+  font-size: 0.8rem; color: var(--text-1, #0f172a); margin: 0;
+  padding-top: 10px; border-top: 1px solid rgba(239,68,68,0.1); line-height: 1.5;
+}
+
 /* ── Email Preview (Feature 4) ───────────────────── */
 .email-preview-section { margin: 24px 0; }
 .email-preview-tabs {
