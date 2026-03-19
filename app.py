@@ -4031,6 +4031,41 @@ def ai_rewrite():
     return jsonify(result)
 
 
+@app.route("/ai-optimize-primary", methods=["POST"])
+def ai_optimize_primary():
+    """AI-powered email optimization for Gmail Primary tab (Pro+ only)."""
+    if not session.get("user_id"):
+        return jsonify({"error": "Please log in to use Primary optimizer.", "signup_url": "/signup"}), 429
+    tier = session.get("tier", "free")
+    if tier not in ("pro", "agency", "api"):
+        return jsonify({"error": "Primary inbox optimizer is available on Pro and Agency plans.", "upgrade_url": "/account"}), 403
+
+    data = request.get_json(force=True, silent=True)
+    if data is None:
+        return jsonify({"error": "Invalid JSON payload"}), 400
+
+    subject = (data.get("subject") or "").strip()
+    body = (data.get("body") or "").strip()
+
+    if not subject and not body:
+        return jsonify({"error": "Subject or body is required."}), 400
+
+    from modules.ai_rewriter import optimize_for_primary, is_available, AIRewriteError
+
+    if not is_available():
+        return jsonify({"error": "AI not available — set GROQ_API_KEY environment variable."}), 503
+
+    try:
+        result = optimize_for_primary(subject=subject, body=body)
+    except AIRewriteError as e:
+        return jsonify({"error": str(e)}), 500
+    except Exception as e:
+        logger.exception("Primary optimization failed")
+        return jsonify({"error": f"Optimization failed: {str(e)[:100]}"}), 500
+
+    return jsonify(result)
+
+
 @app.route("/ai-rewrite/status", methods=["GET"])
 def ai_rewrite_status():
     """Check if AI rewrite is available (requires Pro+ tier)."""

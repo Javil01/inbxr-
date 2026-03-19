@@ -86,6 +86,119 @@ def rewrite_email(subject: str, body: str, industry: str = "General",
         raise AIRewriteError(f"AI rewrite failed: {str(e)[:100]}")
 
 
+def optimize_for_primary(subject: str, body: str) -> dict:
+    """Rewrite email specifically to escape Gmail's Promotions tab.
+
+    Returns dict with optimized_subject, optimized_body, changes_made, and tips.
+    """
+    cfg = _get_config()
+    if not cfg["api_key"]:
+        raise AIRewriteError("AI rewrite not available — GROQ_API_KEY not configured")
+
+    plain_body = _strip_html(body)
+    if len(plain_body) > _MAX_BODY_CHARS:
+        plain_body = plain_body[:_MAX_BODY_CHARS] + "..."
+
+    system_msg = """You are an expert at getting emails past Gmail's Promotions tab filter and into the Primary inbox.
+You know exactly what triggers Promotions tab classification: heavy HTML, multiple links, images, marketing language, brand-heavy sender names, promotional CTAs, and impersonal tone.
+Your job is to rewrite emails so they read like a personal email from a real human — the kind Gmail routes to Primary.
+
+IMPORTANT: Return ONLY valid JSON. No markdown, no code fences."""
+
+    user_msg = f"""Rewrite this email to land in Gmail's PRIMARY tab instead of Promotions.
+
+ORIGINAL SUBJECT: {subject}
+
+ORIGINAL BODY:
+{plain_body}
+
+Rules for Primary inbox optimization:
+1. Strip all heavy HTML — output should be plain text or minimal formatting
+2. Maximum 1 link in the entire email (the most important one)
+3. No images at all
+4. Write like a real person sending to a friend — use "I", "you", first names
+5. Remove ALL marketing buzzwords (exclusive, limited, deal, offer, discount, unbeatable, etc.)
+6. No styled buttons — just a plain text link if needed
+7. Short paragraphs (1-3 sentences each)
+8. Conversational opening (no "Dear valued customer" or brand announcements)
+9. Ask a question to encourage replies (Gmail's #1 engagement signal)
+10. Keep it under 200 words if possible
+
+Return a JSON object with exactly these keys:
+{{
+  "optimized_subject": "A rewritten subject line that sounds personal, not promotional (under 50 chars)",
+  "optimized_body": "The complete rewritten email body as plain text — conversational, personal, one link max, no marketing language",
+  "changes_made": ["List of 4-6 specific changes you made and why each helps escape Promotions"],
+  "before_after": [
+    {{"before": "original phrase or pattern", "after": "what you changed it to", "reason": "why"}},
+    {{"before": "another example", "after": "replacement", "reason": "why"}}
+  ],
+  "primary_score": 85,
+  "tips": ["2-3 additional tips for staying in Primary long-term"]
+}}"""
+
+    prompt_json = json.dumps({"system": system_msg, "user": user_msg})
+
+    start = time.time()
+    try:
+        raw = _call_api(prompt_json)
+        parsed = _parse_response_primary(raw)
+        parsed["elapsed_ms"] = round((time.time() - start) * 1000)
+        parsed["model"] = cfg["model"]
+        return parsed
+    except AIRewriteError:
+        raise
+    except Exception as e:
+        raise AIRewriteError(f"Primary optimization failed: {str(e)[:100]}")
+
+
+def _parse_response_primary(raw: str) -> dict:
+    """Parse the API response for primary inbox optimization."""
+    try:
+        data = json.loads(raw)
+    except json.JSONDecodeError:
+        raise AIRewriteError("Invalid JSON response from API")
+
+    choices = data.get("choices", [])
+    if not choices:
+        raise AIRewriteError("No choices in API response")
+
+    content = choices[0].get("message", {}).get("content", "")
+    if not content:
+        raise AIRewriteError("Empty content in API response")
+
+    try:
+        result = json.loads(content)
+    except json.JSONDecodeError:
+        json_match = re.search(r'\{[\s\S]*\}', content)
+        if json_match:
+            try:
+                result = json.loads(json_match.group())
+            except json.JSONDecodeError:
+                raise AIRewriteError("Could not parse optimization JSON")
+        else:
+            raise AIRewriteError("No JSON found in API response")
+
+    # Ensure expected keys
+    for key in ("optimized_subject", "optimized_body"):
+        if key not in result:
+            result[key] = ""
+    for key in ("changes_made", "before_after", "tips"):
+        if key not in result or not isinstance(result[key], list):
+            result[key] = []
+    if "primary_score" not in result:
+        result["primary_score"] = 0
+
+    usage = data.get("usage", {})
+    result["usage"] = {
+        "prompt_tokens": usage.get("prompt_tokens", 0),
+        "completion_tokens": usage.get("completion_tokens", 0),
+        "total_tokens": usage.get("total_tokens", 0),
+    }
+
+    return result
+
+
 def _build_prompt(subject: str, body: str, industry: str, tone: str,
                   cta_context: str, issue_context: str) -> str:
     """Build the system + user prompt for the rewrite."""

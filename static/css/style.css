@@ -10666,6 +10666,70 @@ a.et-next-step:hover {
 .mtp-tips__list { margin: 0; padding-left: 18px; font-size: 0.78rem; color: var(--text-2, #475569); line-height: 1.6; }
 .mtp-tips__list li { margin-bottom: 4px; }
 
+/* ── Primary Optimizer Card ───────────────────────── */
+.po-card {
+  border: 1px solid rgba(139,92,246,0.15); border-radius: 12px;
+  background: #fff; overflow: hidden;
+}
+.po-header {
+  display: flex; align-items: flex-start; gap: 14px;
+  padding: 18px 20px; background: rgba(139,92,246,0.04);
+  border-bottom: 1px solid rgba(139,92,246,0.1);
+}
+.po-header__icon {
+  flex-shrink: 0; width: 40px; height: 40px; border-radius: 10px;
+  background: rgba(139,92,246,0.08); display: flex; align-items: center;
+  justify-content: center; color: #8b5cf6;
+}
+.po-header__title { font-size: 0.95rem; font-weight: 700; color: var(--text-1, #0f172a); margin: 0 0 2px; }
+.po-header__desc { font-size: 0.82rem; color: var(--text-2, #475569); margin: 0; line-height: 1.5; }
+.po-action { padding: 16px 20px; }
+.po-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 10px 22px; border-radius: 8px; border: none;
+  background: #8b5cf6; color: #fff; font-size: 0.85rem; font-weight: 600;
+  cursor: pointer; transition: all 0.15s; text-decoration: none;
+}
+.po-btn:hover { background: #7c3aed; }
+.po-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.po-btn--upgrade { background: #f59e0b; }
+.po-btn--upgrade:hover { background: #d97706; }
+.po-results { padding: 0 20px 20px; }
+.po-result-section { margin-bottom: 16px; }
+.po-result-label {
+  font-size: 0.75rem; font-weight: 700; color: var(--text-3, #94a3b8);
+  text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 6px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.po-result-value {
+  font-size: 0.88rem; color: var(--text-1, #0f172a); line-height: 1.5;
+  padding: 10px 14px; background: #f8fafc; border: 1px solid #e2e8f0;
+  border-radius: 8px;
+}
+.po-result-value--subject { font-weight: 600; }
+.po-result-body {
+  font-size: 0.82rem; color: var(--text-1, #0f172a); line-height: 1.7;
+  padding: 14px 16px; background: #f8fafc; border: 1px solid #e2e8f0;
+  border-radius: 8px; white-space: pre-wrap; word-wrap: break-word;
+  font-family: 'Inter', sans-serif; max-height: 300px; overflow-y: auto;
+}
+.po-copy-btn { font-size: 0.7rem; }
+.po-changes-list {
+  margin: 0; padding-left: 18px; font-size: 0.82rem;
+  color: var(--text-2, #475569); line-height: 1.7;
+}
+.po-changes-list li { margin-bottom: 4px; }
+.po-diff-list { display: flex; flex-direction: column; gap: 8px; }
+.po-diff {
+  display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;
+  font-size: 0.8rem; padding: 8px 12px; background: #f8fafc;
+  border: 1px solid #e2e8f0; border-radius: 6px;
+}
+.po-diff__before { color: #dc2626; text-decoration: line-through; }
+.po-diff__arrow { color: #94a3b8; flex-shrink: 0; }
+.po-diff__after { color: #16a34a; font-weight: 600; }
+.po-diff__reason { font-size: 0.72rem; color: #94a3b8; width: 100%; }
+
 /* ── Safety Warning Card ─────────────────────────── */
 .safety-card {
   display: flex; align-items: flex-start; gap: 14px;

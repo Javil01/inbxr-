@@ -458,13 +458,14 @@ function renderFullReport(data) {
   // ── Full Audit CTA (auto-extract domain from received email) ──
   setupFullAuditCTA(data);
   renderMoveToPrimary(data);
+  renderPrimaryOptimizer(data);
   renderSafetyWarning(data);
   renderNextSteps(data);
   renderUpgradeNudges(data);
   renderEmailPreview(data);
 
   // Show all sections with staggered reveal
-  const revealSections = ['#espDiagnostic', '#etAssessment', '#etHeaderGrades', '#etTransport', '#etIdentity', '#etScores', '#etReadability', '#etReputation', '#etAudit', '#etFullAuditCta', '#etMoveToPrimary', '#etSafetyWarning', '#etNextSteps', '#etUpgradeNudge', '#etEmailPreview', '#etRawHeaders'];
+  const revealSections = ['#espDiagnostic', '#etAssessment', '#etHeaderGrades', '#etTransport', '#etIdentity', '#etScores', '#etReadability', '#etReputation', '#etAudit', '#etFullAuditCta', '#etMoveToPrimary', '#etPrimaryOptimizer', '#etSafetyWarning', '#etNextSteps', '#etUpgradeNudge', '#etEmailPreview', '#etRawHeaders'];
   revealSections.forEach((s, i) => {
     const el = $(s);
     if (el && el.style.display !== 'none') {
@@ -1618,6 +1619,127 @@ Thanks!
       setTimeout(() => { this.textContent = 'Copy Template'; }, 2000);
     });
   });
+}
+
+// ══════════════════════════════════════════════════════
+//  PRIMARY INBOX OPTIMIZER — AI Content Rewrite
+// ══════════════════════════════════════════════════════
+function renderPrimaryOptimizer(data) {
+  const el = $('#etPrimaryOptimizer');
+  if (!el) return;
+  const placement = data.placement || {};
+  const hasBody = !!(data.email_body || data.body_html);
+  const hasSubject = !!(data.headers?.subject);
+
+  if ((placement.tab !== 'promotions' && placement.tab !== 'updates') || (!hasBody && !hasSubject)) {
+    el.style.display = 'none';
+    return;
+  }
+
+  const tier = window.__userTier || 'free';
+  const isPro = tier === 'pro' || tier === 'agency' || tier === 'api';
+
+  el.style.display = '';
+  el.innerHTML = `
+    <div class="po-card">
+      <div class="po-header">
+        <div class="po-header__icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+        </div>
+        <div>
+          <h3 class="po-header__title">AI Primary Inbox Optimizer</h3>
+          <p class="po-header__desc">Let AI rewrite your email to escape the Promotions tab — strips marketing language, reduces links, makes it sound like a real person wrote it.</p>
+        </div>
+      </div>
+      <div class="po-action">
+        ${isPro
+          ? `<button class="po-btn" id="poOptimizeBtn">
+               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+               Optimize for Primary Inbox
+             </button>`
+          : `<a href="/pricing" class="po-btn po-btn--upgrade">
+               Upgrade to Pro to unlock AI optimizer
+             </a>`
+        }
+      </div>
+      <div class="po-results hidden" id="poResults"></div>
+    </div>`;
+
+  if (isPro) {
+    document.getElementById('poOptimizeBtn').addEventListener('click', async function() {
+      const btn = this;
+      btn.disabled = true;
+      btn.innerHTML = '<span class="btn-spinner"></span> Optimizing...';
+
+      const resultsEl = document.getElementById('poResults');
+      resultsEl.classList.add('hidden');
+
+      try {
+        const resp = await fetch('/ai-optimize-primary', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            subject: data.headers?.subject || '',
+            body: data.email_body || data.body_html || '',
+          }),
+        });
+        const result = await resp.json();
+        if (!resp.ok) throw new Error(result.error || 'Optimization failed');
+
+        resultsEl.classList.remove('hidden');
+        resultsEl.innerHTML = `
+          <div class="po-result-section">
+            <div class="po-result-label">Optimized Subject</div>
+            <div class="po-result-value po-result-value--subject">${escHtml(result.optimized_subject)}</div>
+          </div>
+          <div class="po-result-section">
+            <div class="po-result-label">Optimized Body <button class="mtp-copy-btn po-copy-btn" id="poCopyBody">Copy</button></div>
+            <pre class="po-result-body" id="poBodyText">${escHtml(result.optimized_body)}</pre>
+          </div>
+          ${result.changes_made?.length ? `
+          <div class="po-result-section">
+            <div class="po-result-label">What we changed</div>
+            <ul class="po-changes-list">
+              ${result.changes_made.map(c => `<li>${escHtml(c)}</li>`).join('')}
+            </ul>
+          </div>` : ''}
+          ${result.before_after?.length ? `
+          <div class="po-result-section">
+            <div class="po-result-label">Before &rarr; After</div>
+            <div class="po-diff-list">
+              ${result.before_after.map(d => `
+                <div class="po-diff">
+                  <span class="po-diff__before">${escHtml(d.before)}</span>
+                  <span class="po-diff__arrow">&rarr;</span>
+                  <span class="po-diff__after">${escHtml(d.after)}</span>
+                  <span class="po-diff__reason">${escHtml(d.reason)}</span>
+                </div>`).join('')}
+            </div>` : ''}
+          </div>
+          ${result.tips?.length ? `
+          <div class="po-result-section">
+            <div class="po-result-label">Tips for staying in Primary</div>
+            <ul class="po-changes-list">
+              ${result.tips.map(t => `<li>${escHtml(t)}</li>`).join('')}
+            </ul>
+          </div>` : ''}
+        `;
+
+        document.getElementById('poCopyBody')?.addEventListener('click', function() {
+          navigator.clipboard.writeText(document.getElementById('poBodyText').textContent).then(() => {
+            this.textContent = 'Copied!';
+            setTimeout(() => { this.textContent = 'Copy'; }, 2000);
+          });
+        });
+
+        btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M9 11l3 3L22 4"/></svg> Done!';
+      } catch (err) {
+        btn.disabled = false;
+        btn.innerHTML = 'Optimize for Primary Inbox';
+        if (window.showToast) showToast(err.message, 'error');
+      }
+    });
+  }
 }
 
 // ══════════════════════════════════════════════════════
