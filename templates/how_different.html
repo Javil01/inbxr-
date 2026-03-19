@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{ page_title }}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/style.css?v=20260319b" />
+  {% include 'sections/_head_meta.html' %}
+</head>
+<body class="hd-page">
+
+{% include 'sections/header.html' %}
+
+<!-- ── HERO ──────────────────────────────────────────── -->
+<section class="hd-hero">
+  <div class="hd-hero__inner">
+    <h1 class="hd-hero__title">How INBXR Is Different</h1>
+    <p class="hd-hero__sub">Other tools tell you there's a problem. INBXR rewrites your email to fix it.</p>
+  </div>
+</section>
+
+<!-- ── THE PROBLEM ───────────────────────────────────── -->
+<section class="hd-problem">
+  <div class="hd-problem__inner">
+    <h2 class="hd-section-title">Most Deliverability Tools Fall Into 3 Categories</h2>
+    <p class="hd-section-sub">All of them have tradeoffs that leave you stuck.</p>
+
+    <div class="hd-problem__grid">
+      <div class="hd-problem__card">
+        <div class="hd-problem__price">$0&ndash;30/mo</div>
+        <h3 class="hd-problem__name">Basic Checkers</h3>
+        <p class="hd-problem__desc">Run a test, get a score, figure out the rest yourself. No AI, no content fixes, no ongoing monitoring. You know something is wrong &mdash; but you still have to fix it alone.</p>
+      </div>
+      <div class="hd-problem__card">
+        <div class="hd-problem__price">$129&ndash;500/mo</div>
+        <h3 class="hd-problem__name">Enterprise Platforms</h3>
+        <p class="hd-problem__desc">Powerful but complex, expensive, and built for teams with dedicated email ops staff. If you're a solo founder or small team, you're paying for infrastructure you'll never use.</p>
+      </div>
+      <div class="hd-problem__card hd-problem__card--danger">
+        <div class="hd-problem__price">$5,000+/mo</div>
+        <h3 class="hd-problem__name">Seed Engagement Tools</h3>
+        <p class="hd-problem__desc">Networks of fake accounts that open, click, and reply to your emails &mdash; gaming Gmail's algorithm. Violates provider terms, creates dependency, and masks the real problems killing your deliverability.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── INBXR'S APPROACH ─────────────────────────────── -->
+<section class="hd-approach">
+  <div class="hd-approach__inner">
+    <h2 class="hd-section-title">What INBXR Does Instead</h2>
+    <p class="hd-section-sub">Diagnose real problems. Fix them with AI. No fake engagement. No risk.</p>
+
+    <div class="hd-approach__grid">
+      <div class="hd-feature">
+        <div class="hd-feature__icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24"><rect x="2" y="3" width="20" height="14" rx="2"/><polyline points="8 21 16 21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        </div>
+        <h3>Real diagnostics from real mailboxes</h3>
+        <p>We parse actual IMAP headers &mdash; not DNS lookups. You see the same SPF, DKIM, and DMARC verdicts that Gmail, Outlook, and Yahoo see when they decide where your email goes.</p>
+      </div>
+      <div class="hd-feature">
+        <div class="hd-feature__icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+        </div>
+        <h3>AI rewrites your email to fix it</h3>
+        <p>Promotions tab optimizer, content rewriter, subject line scorer. INBXR doesn't just flag problems &mdash; it generates the fixed version you can copy and send.</p>
+      </div>
+      <div class="hd-feature">
+        <div class="hd-feature__icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M2 10h20"/><path d="M6 14h2"/><path d="M12 14h6"/></svg>
+        </div>
+        <h3>Copy-paste DNS records</h3>
+        <p>SPF failing? DKIM missing? DMARC not enforced? INBXR generates the exact DNS records you need. Copy them, paste them into your DNS provider, done.</p>
+      </div>
+      <div class="hd-feature">
+        <div class="hd-feature__icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        <h3>110+ blocklist monitoring with delist links</h3>
+        <p>We check your IP and domain against 110+ blocklists and give you direct delist links. No digging through support forums to find the right removal form.</p>
+      </div>
+      <div class="hd-feature">
+        <div class="hd-feature__icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        </div>
+        <h3>Promotions tab detection + escape</h3>
+        <p>We detect when your email lands in Promotions instead of Primary. Then our AI generates an optimized version designed to escape &mdash; with the specific changes explained.</p>
+      </div>
+      <div class="hd-feature">
+        <div class="hd-feature__icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        </div>
+        <h3>Free tier, no account required</h3>
+        <p>Run your first test right now. No signup, no credit card, no trial that expires. Create an account when you want saved history, monitoring, and higher limits.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── COMPARISON TABLE ──────────────────────────────── -->
+<section class="hd-compare">
+  <div class="hd-compare__inner">
+    <h2 class="hd-section-title">How INBXR Stacks Up</h2>
+    <p class="hd-section-sub">Category comparison &mdash; not cherry-picked features.</p>
+
+    <div class="et-comp-table-wrap">
+      <table class="et-comp-table">
+        <thead>
+          <tr>
+            <th class="et-comp-feature"></th>
+            <th class="et-comp-us">INBXR</th>
+            <th class="et-comp-them">Basic Checkers</th>
+            <th class="et-comp-them">Enterprise Platforms</th>
+            <th class="et-comp-them">Seed Engagement Tools</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Price</td>
+            <td class="et-comp-us"><span class="et-comp-price et-comp-price--free">Free &ndash; $29/mo</span></td>
+            <td class="et-comp-them"><span class="et-comp-price et-comp-price--paid">$0&ndash;30/mo</span></td>
+            <td class="et-comp-them"><span class="et-comp-price et-comp-price--paid">$129&ndash;500/mo</span></td>
+            <td class="et-comp-them"><span class="et-comp-price et-comp-price--paid">$5,000+/mo</span></td>
+          </tr>
+          <tr>
+            <td>Self-service (no demo call)</td>
+            <td class="et-comp-us"><span class="et-comp-check">&check;</span></td>
+            <td class="et-comp-them"><span class="et-comp-check">&check;</span></td>
+            <td class="et-comp-them"><span class="et-comp-x">&times;</span> Usually not</td>
+            <td class="et-comp-them"><span class="et-comp-x">&times;</span></td>
+          </tr>
+          <tr>
+            <td>AI content fixes</td>
+            <td class="et-comp-us"><span class="et-comp-check">&check;</span></td>
+            <td class="et-comp-them"><span class="et-comp-x">&times;</span></td>
+            <td class="et-comp-them"><span class="et-comp-x">&times;</span></td>
+            <td class="et-comp-them"><span class="et-comp-x">&times;</span></td>
+          </tr>
+          <tr>
+            <td>Real auth verdicts (IMAP)</td>
+            <td class="et-comp-us"><span class="et-comp-check">&check;</span></td>
+            <td class="et-comp-them"><span class="et-comp-x">&times;</span> DNS only</td>
+            <td class="et-comp-them"><span class="et-comp-check">&check;</span></td>
+            <td class="et-comp-them"><span class="et-comp-x">&times;</span></td>
+          </tr>
+          <tr>
+            <td>Blocklist monitoring</td>
+            <td class="et-comp-us"><span class="et-comp-check">&check;</span> 110+ lists</td>
+            <td class="et-comp-them"><span class="et-comp-check">&check;</span> Limited</td>
+            <td class="et-comp-them"><span class="et-comp-check">&check;</span></td>
+            <td class="et-comp-them"><span class="et-comp-x">&times;</span></td>
+          </tr>
+          <tr>
+            <td>Promotions tab detection</td>
+            <td class="et-comp-us"><span class="et-comp-check">&check;</span></td>
+            <td class="et-comp-them"><span class="et-comp-x">&times;</span></td>
+            <td class="et-comp-them"><span class="et-comp-check">&check;</span> Some</td>
+            <td class="et-comp-them"><span class="et-comp-x">&times;</span></td>
+          </tr>
+          <tr>
+            <td>Copy-paste DNS fixes</td>
+            <td class="et-comp-us"><span class="et-comp-check">&check;</span></td>
+            <td class="et-comp-them"><span class="et-comp-x">&times;</span></td>
+            <td class="et-comp-them"><span class="et-comp-x">&times;</span></td>
+            <td class="et-comp-them"><span class="et-comp-x">&times;</span></td>
+          </tr>
+          <tr>
+            <td>Risk to your account</td>
+            <td class="et-comp-us"><span class="et-comp-check" style="color:var(--green)">None</span></td>
+            <td class="et-comp-them"><span class="et-comp-check" style="color:var(--green)">None</span></td>
+            <td class="et-comp-them"><span class="et-comp-check" style="color:var(--green)">None</span></td>
+            <td class="et-comp-them"><span class="et-comp-x" style="color:var(--red)">High</span> TOS violations</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ── SAFETY WARNING ────────────────────────────────── -->
+<section class="hd-warning">
+  <div class="hd-warning__inner">
+    <div class="hd-warning__badge">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      Your reputation matters
+    </div>
+    <h2 class="hd-section-title">Why Seed Engagement Is a Trap</h2>
+    <p class="hd-section-sub">These tools promise inbox placement by gaming the system. Here's what they don't tell you.</p>
+
+    <div class="hd-warning__grid">
+      <div class="hd-warning__card">
+        <div class="hd-warning__card-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+        </div>
+        <h3>Violates provider terms of service</h3>
+        <p>Gmail, Outlook, and Yahoo actively detect artificial engagement. If caught, your domain can be <strong>permanently blacklisted</strong> &mdash; with no appeal process and no path to recovery.</p>
+      </div>
+      <div class="hd-warning__card">
+        <div class="hd-warning__card-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24"><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+        </div>
+        <h3>Creates an expensive dependency</h3>
+        <p>The moment you stop paying, your placement drops &mdash; often <strong>worse than before</strong> you started. Your real engagement metrics were never improved. The tool was a crutch, not a fix.</p>
+      </div>
+      <div class="hd-warning__card">
+        <div class="hd-warning__card-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+        </div>
+        <h3>Masks real deliverability problems</h3>
+        <p>Missing DMARC? Spammy content? Broken authentication? Fake engagement <strong>hides these issues</strong> so you never know they exist &mdash; until they blow up at the worst possible time.</p>
+      </div>
+      <div class="hd-warning__card">
+        <div class="hd-warning__card-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        </div>
+        <h3>Fake metrics, real cost</h3>
+        <p>Higher open rates from bot accounts <strong>don't translate to revenue</strong>. Your actual subscribers are still not seeing your emails. You're paying $5K/mo for vanity metrics.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── CTA ────────────────────────────────────────────── -->
+<section class="hd-cta">
+  <div class="hd-cta__inner">
+    <h2 class="hd-cta__title">Fix your deliverability the right way.</h2>
+    <p class="hd-cta__sub">Real diagnostics. AI-powered fixes. No fake engagement. No risk to your domain.</p>
+    <a href="/" class="hd-cta__btn">Run Your Free Email Test</a>
+    <p class="hd-cta__note">No account required. Results in under 60 seconds.</p>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <p>INBXR &mdash; Real email diagnostics from real mailboxes. Auth verdicts come from actual received headers, not DNS record checks.</p>
+  <p style="margin-top: 10px; font-size: 0.7rem;"><a href="/privacy" style="color: rgba(255,255,255,0.5); text-decoration: underline;">Privacy Policy</a> &nbsp;&middot;&nbsp; <a href="/terms" style="color: rgba(255,255,255,0.5); text-decoration: underline;">Terms of Service</a></p>
+</footer>
+
+</body>
+</html>

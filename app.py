@@ -2075,6 +2075,16 @@ def terms_page():
                            active_page="terms")
 
 
+@app.route("/how-inbxr-is-different")
+def how_different():
+    return render_template("how_different.html",
+                           is_admin=_is_admin(),
+                           active_page="how_different",
+                           page_title="How INBXR Is Different — Email Deliverability Tool Comparison",
+                           page_description="Compare INBXR to basic checkers, enterprise platforms, and seed engagement tools. See why INBXR is the only deliverability tool that diagnoses problems and rewrites your email to fix them.",
+                           canonical_url="https://inbxr.us/how-inbxr-is-different")
+
+
 @app.route("/api/support/chat", methods=["POST"])
 def support_chat_api():
     from modules.support_chat import chat, is_available
