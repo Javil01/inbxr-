@@ -7695,8 +7695,8 @@ a.et-nf-recommend__btn {
   border-bottom: 1px solid var(--border-1);
 }
 .et-value-strip__inner {
-  max-width: 1080px; margin: 0 auto;
-  display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;
+  max-width: 1140px; margin: 0 auto;
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px;
 }
 .et-value-col {
   display: flex; flex-direction: column; align-items: center;
@@ -7730,7 +7730,10 @@ a.et-nf-recommend__btn {
   font-size: 0.84rem; color: var(--text-2); line-height: 1.65;
   margin: 0;
 }
-@media (max-width: 768px) {
+@media (max-width: 900px) {
+  .et-value-strip__inner { grid-template-columns: repeat(2, 1fr); gap: 16px; }
+}
+@media (max-width: 560px) {
   .et-value-strip__inner { grid-template-columns: 1fr; gap: 16px; }
   .et-value-strip { padding: 48px 16px; }
 }
