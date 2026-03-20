@@ -461,9 +461,6 @@
     if(e.key==='ArrowLeft') { if(current>0) show(current-1); }
   });
 
-  // Auto-show on first visit
-  if(!localStorage.getItem('inbxr_tour_seen')) {
-    setTimeout(open, 1500);
-  }
+  // Tour only opens when user clicks the "How to Use" button — no auto-popup
 })();
 </script>
