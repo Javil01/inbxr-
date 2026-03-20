@@ -4062,7 +4062,13 @@ def ai_rewrite():
         return jsonify({"error": "Please log in to use AI rewrite.", "signup_url": "/signup"}), 429
     tier = session.get("user_tier", "free")
     if tier not in ("pro", "agency", "api"):
-        return jsonify({"error": "AI rewrite is available on Pro and Agency plans.", "upgrade_url": "/account"}), 403
+        return jsonify({
+            "error": "AI rewrite is available on Pro and Agency plans.",
+            "upgrade_url": "/account",
+            "upgrade_feature": "AI Copy Rewriter",
+            "upgrade_desc": "Get AI-powered rewrites with tone selection, framework-aware output, and step-mapped results.",
+            "show_upgrade": True,
+        }), 403
 
     data = request.get_json(force=True, silent=True)
     if data is None:
@@ -4104,7 +4110,13 @@ def ai_rewrite_framework():
         return jsonify({"error": "Please log in to use AI rewrite.", "signup_url": "/signup"}), 429
     tier = session.get("user_tier", "free")
     if tier not in ("pro", "agency", "api"):
-        return jsonify({"error": "AI rewrite is available on Pro and Agency plans.", "upgrade_url": "/account"}), 403
+        return jsonify({
+            "error": "Framework rewrites are available on Pro and Agency plans.",
+            "upgrade_url": "/account",
+            "upgrade_feature": "Framework-Aware AI Rewriter",
+            "upgrade_desc": "Rewrite emails using 16 proven copywriting frameworks with step-by-step structure.",
+            "show_upgrade": True,
+        }), 403
 
     data = request.get_json(force=True, silent=True)
     if data is None:

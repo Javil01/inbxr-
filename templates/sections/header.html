@@ -147,6 +147,64 @@ window.showToast=function(msg,type,duration){
   }
 })();
 </script>
+<!-- ── Global Inline Upgrade Modal ── -->
+<div class="upgrade-modal-overlay" id="upgradeModal" style="display:none">
+  <div class="upgrade-modal">
+    <button class="upgrade-modal__close" id="upgradeModalClose">&times;</button>
+    <div class="upgrade-modal__icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="32" height="32"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+    </div>
+    <h3 class="upgrade-modal__title" id="upgradeModalTitle">Unlock Pro Features</h3>
+    <p class="upgrade-modal__desc" id="upgradeModalDesc">AI rewrites, 16 copywriting frameworks, custom builder, automated monitoring, and more.</p>
+    <div class="upgrade-modal__price">
+      <span class="upgrade-modal__amount">$29</span>
+      <span class="upgrade-modal__period">/month</span>
+    </div>
+    <button class="upgrade-modal__cta" id="upgradeModalCta" data-tier="pro">
+      <span class="btn-text">Upgrade to Pro</span>
+      <span class="btn-spinner hidden"></span>
+    </button>
+    <p class="upgrade-modal__note">Cancel anytime. 30-day money-back guarantee.</p>
+    <a href="/pricing" class="upgrade-modal__compare">Compare all plans</a>
+  </div>
+</div>
+<script>
+window.showUpgradeModal = function(opts) {
+  opts = opts || {};
+  var modal = document.getElementById('upgradeModal');
+  if (!modal) return;
+  if (opts.title) document.getElementById('upgradeModalTitle').textContent = opts.title;
+  if (opts.desc) document.getElementById('upgradeModalDesc').textContent = opts.desc;
+  if (opts.tier) document.getElementById('upgradeModalCta').dataset.tier = opts.tier;
+  modal.dataset.returnUrl = opts.returnUrl || window.location.pathname;
+  modal.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+};
+(function(){
+  var modal = document.getElementById('upgradeModal');
+  if (!modal) return;
+  function close(){ modal.style.display='none'; document.body.style.overflow=''; }
+  document.getElementById('upgradeModalClose').addEventListener('click', close);
+  modal.addEventListener('click', function(e){ if(e.target===modal) close(); });
+  document.getElementById('upgradeModalCta').addEventListener('click', function(){
+    var btn = this;
+    var tier = btn.dataset.tier || 'pro';
+    var returnUrl = modal.dataset.returnUrl || '/dashboard';
+    btn.querySelector('.btn-text').textContent = 'Redirecting...';
+    btn.querySelector('.btn-spinner').classList.remove('hidden');
+    btn.disabled = true;
+    fetch('/billing/create-checkout-session', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({tier: tier, return_url: returnUrl})
+    }).then(function(r){return r.json();}).then(function(d){
+      if(d.url) window.location.href = d.url;
+      else { showToast(d.error||'Something went wrong','error'); close(); }
+    }).catch(function(){ showToast('Network error','error'); close(); });
+  });
+})();
+</script>
+
 {% if session.get('user_id') %}
 <script>window.__userTier={{ (current_user_tier or 'free')|tojson }};window.__isNewUser={{ (session.get('is_new_signup', false))|tojson }};window.__userEmail={{ (current_user_email or '')|tojson }};</script>
 <script>

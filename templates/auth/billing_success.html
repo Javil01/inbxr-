@@ -9,8 +9,12 @@
   <h1 class="auth-card__title">You're Upgraded!</h1>
   <p class="auth-card__sub">Your subscription is now active. All premium features are unlocked.</p>
   <div style="margin-top:24px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
-    <a href="{{ url_for('auth.account') }}" class="auth-btn">Go to Account</a>
-    <a href="/" class="auth-btn auth-btn--outline">Start Testing</a>
+    <a href="{{ return_url or '/dashboard' }}" class="auth-btn">Continue Where You Left Off</a>
+    <a href="{{ url_for('auth.account') }}" class="auth-btn auth-btn--outline">Go to Account</a>
   </div>
+  <script>
+  // Auto-redirect after 3 seconds
+  setTimeout(function(){ window.location.href = '{{ return_url or "/dashboard" }}'; }, 3000);
+  </script>
 </div>
 {% endblock %}

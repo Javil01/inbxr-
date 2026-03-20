@@ -5,6 +5,12 @@
 <h1 class="auth-card__title pricing-title">Sales Delivered</h1>
 <p class="auth-card__sub">Deliverability diagnostics + copy intelligence in one platform. Every tool is free to start. Upgrade for AI framework rewrites, custom framework builder, automated monitoring, and proactive alerts.</p>
 
+<div class="pricing-toggle" id="pricingToggle">
+  <span class="pricing-toggle__label pricing-toggle__label--active" data-period="monthly">Monthly</span>
+  <button class="pricing-toggle__switch" id="pricingSwitch" aria-label="Toggle annual pricing"></button>
+  <span class="pricing-toggle__label" data-period="annual">Annual <span class="pricing-toggle__save">Save 20%</span></span>
+</div>
+
 <div class="pricing-grid">
 
   {# ── FREE ── #}
@@ -51,7 +57,7 @@
     <span class="pricing-card__badge">Most Popular</span>
     <h2 class="pricing-card__name">Pro</h2>
     <div class="pricing-card__price">
-      <span class="pricing-card__amount">${{ t.price_monthly }}</span>
+      <span class="pricing-card__amount" data-monthly="{{ t.price_monthly }}" data-annual="{{ (t.price_monthly * 0.8)|int }}">${{ t.price_monthly }}</span>
       <span class="pricing-card__period">/month</span>
     </div>
     <p class="pricing-card__desc">All 16 frameworks, AI copy rewrites, custom framework builder, and automated monitoring. Land in the inbox AND land the sale.</p>
@@ -88,7 +94,7 @@
   <div class="pricing-card{% if user and user.tier == 'agency' %} pricing-card--current{% endif %}">
     <h2 class="pricing-card__name">Agency</h2>
     <div class="pricing-card__price">
-      <span class="pricing-card__amount">${{ t.price_monthly }}</span>
+      <span class="pricing-card__amount" data-monthly="{{ t.price_monthly }}" data-annual="{{ (t.price_monthly * 0.8)|int }}">${{ t.price_monthly }}</span>
       <span class="pricing-card__period">/month</span>
     </div>
     <p class="pricing-card__desc">Everything in Pro plus teams, API access, and webhooks. Full copy intelligence + deliverability for agencies.</p>
@@ -188,6 +194,36 @@
 <script>
 (function(){
   var isLoggedIn = {{ 'true' if user else 'false' }};
+  var isAnnual = false;
+
+  // Annual/monthly toggle
+  var sw = document.getElementById('pricingSwitch');
+  var labels = document.querySelectorAll('.pricing-toggle__label');
+  if (sw) {
+    sw.addEventListener('click', function() {
+      isAnnual = !isAnnual;
+      sw.classList.toggle('pricing-toggle__switch--on', isAnnual);
+      labels.forEach(function(l) {
+        l.classList.toggle('pricing-toggle__label--active',
+          isAnnual ? l.dataset.period === 'annual' : l.dataset.period === 'monthly');
+      });
+      // Update prices
+      document.querySelectorAll('.pricing-card__amount[data-monthly]').forEach(function(el) {
+        var price = isAnnual ? el.dataset.annual : el.dataset.monthly;
+        el.textContent = '$' + price;
+      });
+      // Update period labels
+      document.querySelectorAll('.pricing-card__period').forEach(function(el) {
+        // Only update paid cards (not free)
+        var amountEl = el.previousElementSibling;
+        if (amountEl && amountEl.dataset.monthly) {
+          el.textContent = isAnnual ? '/mo (billed annually)' : '/month';
+        }
+      });
+    });
+  }
+
+  // Upgrade buttons
   document.querySelectorAll('[data-tier]').forEach(function(btn) {
     btn.addEventListener('click', function(e) {
       e.preventDefault();
@@ -201,7 +237,7 @@
       fetch('/billing/create-checkout-session', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({tier: tier})
+        body: JSON.stringify({tier: tier, billing_period: isAnnual ? 'annual' : 'monthly', return_url: '/dashboard'})
       })
       .then(function(r) { return r.json(); })
       .then(function(d) {

@@ -46,7 +46,7 @@
           <div class="fw-locked-overlay">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
             <p>Upgrade to Pro to unlock full step descriptions</p>
-            <a href="/pricing" class="btn-cta btn-cta--sm">View Plans</a>
+            <button type="button" class="btn-cta btn-cta--sm" onclick="if(window.showUpgradeModal)showUpgradeModal({title:'Unlock All 16 Frameworks',desc:'Get full step descriptions, custom framework builder, and apply frameworks to AI rewrites.',returnUrl:'/frameworks'});">Unlock for $29/mo</button>
           </div>
         </div>
       </div>
@@ -114,7 +114,7 @@
     <div class="fw-upsell__content">
       <h3>Build Your Own Frameworks</h3>
       <p>Pro and Agency members can create custom frameworks, fork built-in ones, and apply them to AI rewrites.</p>
-      <a href="/pricing" class="btn-cta btn-cta--sm">Upgrade to Pro</a>
+      <button type="button" class="btn-cta btn-cta--sm" onclick="if(window.showUpgradeModal)showUpgradeModal({title:'Custom Framework Builder',desc:'Create your own copywriting frameworks, fork built-in ones, and apply them to AI rewrites.',returnUrl:'/frameworks'});">Upgrade to Pro — $29/mo</button>
     </div>
   </div>
 </section>

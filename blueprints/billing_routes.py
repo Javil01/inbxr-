@@ -62,15 +62,20 @@ def create_checkout_session():
 
     data = request.get_json(silent=True) or {}
     tier = data.get("tier")
+    return_url = data.get("return_url", "")
     if tier not in ("pro", "agency"):
         return jsonify({"error": "Invalid tier"}), 400
+
+    # Validate return_url (prevent open redirect)
+    if not return_url or not return_url.startswith("/") or return_url.startswith("//"):
+        return_url = "/dashboard"
 
     # If already subscribed, send to Customer Portal for plan changes
     if user.get("stripe_subscription_id"):
         try:
             portal = stripe.billing_portal.Session.create(
                 customer=user["stripe_customer_id"],
-                return_url=url_for("auth.account", _external=True),
+                return_url=request.host_url.rstrip("/") + return_url,
             )
             return jsonify({"url": portal.url})
         except stripe.error.StripeError as e:
@@ -80,12 +85,16 @@ def create_checkout_session():
     if not price_id:
         return jsonify({"error": "Pricing not configured"}), 500
 
+    # Store return URL in session for post-checkout redirect
+    from flask import session as flask_session
+    flask_session["billing_return_url"] = return_url
+
     try:
         checkout_params = {
             "mode": "subscription",
             "line_items": [{"price": price_id, "quantity": 1}],
             "success_url": url_for("billing.success", _external=True) + "?session_id={CHECKOUT_SESSION_ID}",
-            "cancel_url": url_for("auth.pricing", _external=True),
+            "cancel_url": request.host_url.rstrip("/") + return_url,
             "client_reference_id": str(user["id"]),
         }
         # Reuse existing Stripe customer if we have one
@@ -157,7 +166,9 @@ def webhook():
 @login_required
 def success():
     """Post-checkout success page."""
-    return render_template("auth/billing_success.html", active_page="account")
+    from flask import session as flask_session
+    return_url = flask_session.pop("billing_return_url", "/dashboard")
+    return render_template("auth/billing_success.html", active_page="account", return_url=return_url)
 
 
 # ── Webhook Handlers ──────────────────────────────────────

@@ -1783,8 +1783,16 @@ $('#aiRewriteBtn').addEventListener('click', async () => {
     const data = await res.json();
 
     if (!res.ok || data.error) {
-      errEl.textContent = data.error || 'Rewrite failed.';
-      errEl.classList.remove('hidden');
+      if (data.show_upgrade && window.showUpgradeModal) {
+        window.showUpgradeModal({
+          title: data.upgrade_feature || 'Unlock Pro Features',
+          desc: data.upgrade_desc || data.error,
+          returnUrl: window.location.pathname,
+        });
+      } else {
+        errEl.textContent = data.error || 'Rewrite failed.';
+        errEl.classList.remove('hidden');
+      }
       return;
     }
 
