@@ -3,6 +3,7 @@ INBXR — Auth Blueprint
 Registration, login, logout, account management, password reset.
 """
 
+import os
 import re
 import logging
 from flask import Blueprint, render_template, request, redirect, url_for, jsonify, session
@@ -139,6 +140,50 @@ def change_password():
         return jsonify({"error": "Current password is incorrect."}), 400
 
     update_password(user["id"], new_pass)
+    return jsonify({"ok": True})
+
+
+@auth_bp.route("/account/delete", methods=["POST"])
+def delete_account():
+    """Permanently delete the user's account and all associated data."""
+    user = get_current_user()
+    if not user:
+        return jsonify({"error": "Not authenticated."}), 401
+
+    data = request.get_json(force=True, silent=True) or {}
+    if data.get("confirm") != "DELETE":
+        return jsonify({"error": "Please confirm deletion by typing DELETE."}), 400
+
+    user_id = user["id"]
+
+    # Cancel Stripe subscription if active
+    if user.get("stripe_subscription_id"):
+        try:
+            import stripe
+            stripe.api_key = os.environ.get("STRIPE_SECRET_KEY", "")
+            if stripe.api_key:
+                stripe.Subscription.cancel(user["stripe_subscription_id"])
+        except Exception:
+            pass  # best effort — don't block deletion
+
+    # Delete all user data (foreign keys with ON DELETE CASCADE handle most)
+    from modules.database import execute as db_exec
+    db_exec("DELETE FROM user_framework_favorites WHERE user_id = ?", (user_id,))
+    db_exec("DELETE FROM user_frameworks WHERE user_id = ?", (user_id,))
+    db_exec("DELETE FROM framework_usage WHERE user_id = ?", (user_id,))
+    db_exec("DELETE FROM check_history WHERE user_id = ?", (user_id,))
+    db_exec("DELETE FROM usage_log WHERE user_id = ?", (user_id,))
+    db_exec("DELETE FROM alerts WHERE user_id = ?", (user_id,))
+    db_exec("DELETE FROM alert_preferences WHERE user_id = ?", (user_id,))
+    db_exec("DELETE FROM user_monitors WHERE user_id = ?", (user_id,))
+    db_exec("DELETE FROM bulk_jobs WHERE user_id = ?", (user_id,))
+    db_exec("DELETE FROM sessions WHERE user_id = ?", (user_id,))
+    db_exec("DELETE FROM admin_notes WHERE user_id = ?", (user_id,))
+    db_exec("DELETE FROM users WHERE id = ?", (user_id,))
+
+    # Clear session
+    session.clear()
+
     return jsonify({"ok": True})
 
 

@@ -481,7 +481,8 @@ def sitemap_xml():
         ('/blog', '0.8', 'daily'),
         ('/pricing', '0.7', 'monthly'),
         ('/support', '0.5', 'monthly'),
-        ('/how-different', '0.6', 'monthly'),
+        ('/how-inbxr-is-different', '0.6', 'monthly'),
+        ('/bulk-domain-check', '0.7', 'monthly'),
     ]
     xml = ['<?xml version="1.0" encoding="UTF-8"?>']
     xml.append('<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">')
@@ -2214,8 +2215,9 @@ def api_onboarding():
 def api_onboarding_dismiss():
     if not session.get("user_id"):
         return jsonify({"error": "Not authenticated"}), 401
-    execute("UPDATE users SET onboarding_dismissed_at = datetime('now') WHERE id = ?",
-            (session["user_id"],))
+    from modules.database import execute as _exec
+    _exec("UPDATE users SET onboarding_dismissed_at = datetime('now') WHERE id = ?",
+          (session["user_id"],))
     return jsonify({"ok": True})
 
 

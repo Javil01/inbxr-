@@ -94,6 +94,18 @@
   <a href="{{ url_for('auth.logout') }}" class="auth-btn auth-btn--outline auth-btn--danger">Log Out</a>
 </div>
 
+<div class="account-section account-section--danger">
+  <h2 class="account-section__title" style="color:#ef4444;">Delete Account</h2>
+  <p style="font-size:0.85rem;color:rgba(255,255,255,0.55);margin:0 0 12px;">This permanently deletes your account, test history, monitors, custom frameworks, and all associated data. This cannot be undone.</p>
+  <button type="button" class="auth-btn auth-btn--danger" id="deleteAccountBtn">Delete My Account</button>
+  <div id="deleteConfirm" style="display:none;margin-top:16px;">
+    <p style="font-size:0.85rem;color:#ef4444;margin:0 0 12px;">Type <strong>DELETE</strong> to confirm:</p>
+    <input type="text" id="deleteConfirmInput" placeholder="Type DELETE" style="padding:8px 12px;border:1px solid rgba(239,68,68,0.3);border-radius:8px;background:rgba(239,68,68,0.04);color:#fff;font-size:0.9rem;width:200px;" />
+    <button type="button" class="auth-btn auth-btn--danger" id="deleteConfirmBtn" style="margin-left:8px;">Permanently Delete</button>
+  </div>
+  <div id="deleteMsg" class="auth-alert" style="display:none;margin-top:12px;"></div>
+</div>
+
 <script>
 function openPortal() {
   fetch('/billing/customer-portal', {method:'POST', headers:{'Content-Type':'application/json'}})
@@ -116,6 +128,41 @@ function regenApiKey() {
       else showToast(d.error||'Failed','error');
     });
 }
+// Delete account
+document.getElementById('deleteAccountBtn')?.addEventListener('click', function() {
+  document.getElementById('deleteConfirm').style.display = '';
+  this.style.display = 'none';
+});
+document.getElementById('deleteConfirmBtn')?.addEventListener('click', function() {
+  var input = document.getElementById('deleteConfirmInput');
+  var msg = document.getElementById('deleteMsg');
+  if (input.value.trim() !== 'DELETE') {
+    msg.style.display = 'block';
+    msg.className = 'auth-alert auth-alert--error';
+    msg.textContent = 'Please type DELETE to confirm.';
+    return;
+  }
+  this.disabled = true;
+  this.textContent = 'Deleting...';
+  fetch('/account/delete', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({confirm: 'DELETE'})
+  }).then(function(r) { return r.json(); }).then(function(d) {
+    if (d.ok) {
+      window.location.href = '/?deleted=1';
+    } else {
+      msg.style.display = 'block';
+      msg.className = 'auth-alert auth-alert--error';
+      msg.textContent = d.error || 'Failed to delete account.';
+    }
+  }).catch(function() {
+    msg.style.display = 'block';
+    msg.className = 'auth-alert auth-alert--error';
+    msg.textContent = 'Network error. Please try again.';
+  });
+});
+
 document.getElementById('changePassForm')?.addEventListener('submit', function(e) {
   e.preventDefault();
   const msg = document.getElementById('passMsg');

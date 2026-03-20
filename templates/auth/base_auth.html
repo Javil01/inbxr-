@@ -8,7 +8,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/static/css/style.css?v=20260320b" />
   <meta name="csrf-token" content="{{ csrf_token() }}">
-  {% set noindex = True %}
+  {% if not allow_index %}{% set noindex = True %}{% endif %}
   {% include 'sections/_head_meta.html' %}
 </head>
 <body>
@@ -22,7 +22,8 @@
 </main>
 
 <footer class="site-footer" style="text-align:center;padding:32px 20px;font-size:0.8rem;">
-  <p>INBXR — Free email deliverability tools.</p>
+  <p>INBXR — Build an Inbox That Sells.</p>
+  <p style="margin-top: 10px; font-size: 0.7rem;"><a href="/privacy" style="color: rgba(255,255,255,0.5); text-decoration: underline;">Privacy Policy</a> &nbsp;&middot;&nbsp; <a href="/terms" style="color: rgba(255,255,255,0.5); text-decoration: underline;">Terms of Service</a></p>
 </footer>
 
 </body>
