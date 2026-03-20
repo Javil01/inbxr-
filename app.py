@@ -2033,8 +2033,8 @@ def index():
     return render_template("email_test.html",
                            is_admin=_is_admin(),
                            active_page="index",
-                           page_title="INBXR — Free Email Deliverability Tools",
-                           page_description="Test your emails before you send. INBXR checks spam risk, sender reputation, inbox placement, and copy quality — all free.",
+                           page_title="INBXR — Land in the Inbox. Land the Sale.",
+                           page_description="The only email tool that diagnoses deliverability AND fixes your copy. Spam risk scoring, 100-point copy analysis, 16 copywriting frameworks, and AI rewrites — free.",
                            canonical_url="https://inbxr.us/")
 
 
@@ -2043,8 +2043,8 @@ def analyzer():
     return render_template("index.html",
                            is_admin=_is_admin(),
                            active_page="analyzer",
-                           page_title="Email Analyzer — INBXR",
-                           page_description="Paste your email copy and get instant spam risk scoring, copy analysis, readability metrics, and AI-powered rewrite suggestions.",
+                           page_title="Email Copy Analyzer — INBXR",
+                           page_description="Paste your email and get a 100-point copy score, framework detection, spam risk analysis, readability metrics, and AI-powered framework rewrites.",
                            canonical_url="https://inbxr.us/analyzer")
 
 
@@ -2087,8 +2087,8 @@ def how_different():
     return render_template("how_different.html",
                            is_admin=_is_admin(),
                            active_page="how_different",
-                           page_title="How INBXR Is Different — Email Deliverability Tool Comparison",
-                           page_description="Compare INBXR to basic checkers, enterprise platforms, and seed engagement tools. See why INBXR is the only deliverability tool that diagnoses problems and rewrites your email to fix them.",
+                           page_title="How INBXR Is Different — Land in the Inbox. Land the Sale.",
+                           page_description="The only email platform with deliverability diagnostics AND copy intelligence. 100-point copy scoring, 16 copywriting frameworks, AI rewrites, and framework detection — starting at $0.",
                            canonical_url="https://inbxr.us/how-inbxr-is-different")
 
 

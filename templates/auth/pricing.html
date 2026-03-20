@@ -1,8 +1,8 @@
 {% extends "auth/base_auth.html" %}
 {% block title %}Pricing{% endblock %}
 {% block content %}
-<h1 class="auth-card__title pricing-title">Simple, Transparent Pricing</h1>
-<p class="auth-card__sub">Every tool is free to start. Upgrade for AI-powered copy rewrites, 16 copywriting frameworks, custom framework builder, automated monitoring, and proactive alerts.</p>
+<h1 class="auth-card__title pricing-title">Land in the Inbox. Land the Sale.</h1>
+<p class="auth-card__sub">Deliverability diagnostics + copy intelligence in one platform. Every tool is free to start. Upgrade for AI framework rewrites, custom framework builder, automated monitoring, and proactive alerts.</p>
 
 <div class="pricing-grid">
 
@@ -14,7 +14,7 @@
       <span class="pricing-card__amount">$0</span>
       <span class="pricing-card__period">forever</span>
     </div>
-    <p class="pricing-card__desc">Everything you need to start fixing your deliverability today.</p>
+    <p class="pricing-card__desc">Deliverability diagnostics, copy scoring, and 3 proven frameworks — free forever.</p>
     <ul class="pricing-card__features">
       <li>{{ t.limits.checks_per_day }} checks/day across all tools</li>
       <li>{{ t.limits.email_verifications_per_day }} email verifications/day</li>
@@ -53,7 +53,7 @@
       <span class="pricing-card__amount">${{ t.price_monthly }}</span>
       <span class="pricing-card__period">/month</span>
     </div>
-    <p class="pricing-card__desc">Automated monitoring and AI insights for senders who can't afford to land in spam.</p>
+    <p class="pricing-card__desc">All 16 frameworks, AI copy rewrites, custom framework builder, and automated monitoring. Land in the inbox AND land the sale.</p>
     <ul class="pricing-card__features">
       <li><strong>{{ t.limits.checks_per_day }}</strong> checks/day</li>
       <li><strong>{{ t.limits.email_verifications_per_day }}</strong> email verifications/day</li>
@@ -90,7 +90,7 @@
       <span class="pricing-card__amount">${{ t.price_monthly }}</span>
       <span class="pricing-card__period">/month</span>
     </div>
-    <p class="pricing-card__desc">Full platform for agencies monitoring dozens of client domains around the clock.</p>
+    <p class="pricing-card__desc">Everything in Pro plus teams, API access, and webhooks. Full copy intelligence + deliverability for agencies.</p>
     <ul class="pricing-card__features">
       <li><strong>{{ t.limits.checks_per_day }}</strong> checks/day</li>
       <li><strong>{{ t.limits.email_verifications_per_day }}</strong> email verifications/day</li>
