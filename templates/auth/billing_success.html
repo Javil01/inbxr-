@@ -1,20 +1,34 @@
 {% extends "auth/base_auth.html" %}
+{% set allow_index = False %}
 {% block title %}Subscription Activated{% endblock %}
 {% block content %}
 <div style="text-align:center;padding:24px 0;">
-  <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="2" style="margin-bottom:16px;">
+  <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="var(--cta)" stroke-width="2" style="margin-bottom:16px;">
     <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
     <polyline points="22 4 12 14.01 9 11.01"/>
   </svg>
   <h1 class="auth-card__title">You're Upgraded!</h1>
   <p class="auth-card__sub">Your subscription is now active. All premium features are unlocked.</p>
+
+  {% if is_new_account %}
+  <div style="margin:20px 0;padding:16px;background:rgba(34,197,94,0.06);border:1px solid rgba(34,197,94,0.15);border-radius:10px;">
+    <p style="font-size:0.9rem;color:rgba(255,255,255,0.8);margin:0;">We created your account automatically. <strong>Check your email to set your password.</strong></p>
+  </div>
+  {% endif %}
+
   <div style="margin-top:24px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+    {% if session.get('user_id') %}
     <a href="{{ return_url or '/dashboard' }}" class="auth-btn">Continue Where You Left Off</a>
     <a href="{{ url_for('auth.account') }}" class="auth-btn auth-btn--outline">Go to Account</a>
+    {% else %}
+    <a href="/login" class="auth-btn">Log In to Get Started</a>
+    {% endif %}
   </div>
+
+  {% if session.get('user_id') %}
   <script>
-  // Auto-redirect after 3 seconds
   setTimeout(function(){ window.location.href = '{{ return_url or "/dashboard" }}'; }, 3000);
   </script>
+  {% endif %}
 </div>
 {% endblock %}

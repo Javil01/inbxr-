@@ -187,16 +187,10 @@
 
 <script>
 (function(){
-  var isLoggedIn = {{ 'true' if user else 'false' }};
-
-  // Upgrade buttons
+  // Upgrade buttons — no login required, Stripe collects email
   document.querySelectorAll('[data-tier]').forEach(function(btn) {
     btn.addEventListener('click', function(e) {
       e.preventDefault();
-      if (!isLoggedIn) {
-        window.location.href = '/login?next=/pricing';
-        return;
-      }
       var tier = this.dataset.tier;
       this.textContent = 'Redirecting\u2026';
       this.style.pointerEvents = 'none';

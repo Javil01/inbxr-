@@ -50,15 +50,15 @@ TIER_TO_PRICE_ENV = {
 
 
 @billing_bp.route("/create-checkout-session", methods=["POST"])
-@login_required
 def create_checkout_session():
-    """Create a Stripe Checkout session for upgrading."""
+    """Create a Stripe Checkout session. Works for both logged-in and anonymous users."""
     if not _STRIPE_CONFIGURED:
         return _billing_not_configured()
     _ensure_price_map()
-    user = get_current_user()
-    if not user:
-        return jsonify({"error": "Not authenticated"}), 401
+
+    from flask import session as flask_session
+
+    user = get_current_user()  # may be None for anonymous visitors
 
     data = request.get_json(silent=True) or {}
     tier = data.get("tier")
@@ -70,8 +70,8 @@ def create_checkout_session():
     if not return_url or not return_url.startswith("/") or return_url.startswith("//"):
         return_url = "/dashboard"
 
-    # If already subscribed, send to Customer Portal for plan changes
-    if user.get("stripe_subscription_id"):
+    # If logged-in user already subscribed, send to Customer Portal
+    if user and user.get("stripe_subscription_id"):
         try:
             portal = stripe.billing_portal.Session.create(
                 customer=user["stripe_customer_id"],
@@ -86,7 +86,6 @@ def create_checkout_session():
         return jsonify({"error": "Pricing not configured"}), 500
 
     # Store return URL in session for post-checkout redirect
-    from flask import session as flask_session
     flask_session["billing_return_url"] = return_url
 
     try:
@@ -95,13 +94,18 @@ def create_checkout_session():
             "line_items": [{"price": price_id, "quantity": 1}],
             "success_url": url_for("billing.success", _external=True) + "?session_id={CHECKOUT_SESSION_ID}",
             "cancel_url": request.host_url.rstrip("/") + return_url,
-            "client_reference_id": str(user["id"]),
         }
-        # Reuse existing Stripe customer if we have one
-        if user.get("stripe_customer_id"):
-            checkout_params["customer"] = user["stripe_customer_id"]
+
+        if user:
+            # Logged-in user
+            checkout_params["client_reference_id"] = str(user["id"])
+            if user.get("stripe_customer_id"):
+                checkout_params["customer"] = user["stripe_customer_id"]
+            else:
+                checkout_params["customer_email"] = user["email"]
         else:
-            checkout_params["customer_email"] = user["email"]
+            # Anonymous visitor — Stripe will collect their email
+            checkout_params["client_reference_id"] = "new"
 
         session_obj = stripe.checkout.Session.create(**checkout_params)
         return jsonify({"url": session_obj.url})
@@ -163,23 +167,44 @@ def webhook():
 
 
 @billing_bp.route("/success")
-@login_required
 def success():
-    """Post-checkout success page."""
+    """Post-checkout success page. Works for both logged-in and new users."""
     from flask import session as flask_session
+
+    # Try to auto-login new user from Stripe session
+    session_id = request.args.get("session_id")
+    if session_id and not flask_session.get("user_id") and _STRIPE_CONFIGURED:
+        try:
+            checkout = stripe.checkout.Session.retrieve(session_id)
+            email = checkout.get("customer_details", {}).get("email", "")
+            if email:
+                from modules.auth import get_user_by_email, login_user
+                user = get_user_by_email(email)
+                if user:
+                    login_user(user)
+        except Exception:
+            logger.exception("Failed to auto-login after checkout")
+
     return_url = flask_session.pop("billing_return_url", "/dashboard")
-    return render_template("auth/billing_success.html", active_page="account", return_url=return_url)
+    is_new = not flask_session.get("user_id")  # still not logged in = brand new
+    return render_template(
+        "auth/billing_success.html",
+        active_page="account",
+        return_url=return_url,
+        is_new_account=is_new,
+    )
 
 
 # ── Webhook Handlers ──────────────────────────────────────
 
 def _handle_checkout_completed(session_obj):
-    """New subscription created via Checkout."""
-    user_id = session_obj.get("client_reference_id")
+    """New subscription created via Checkout. Handles both existing and new users."""
+    client_ref = session_obj.get("client_reference_id")
     customer_id = session_obj.get("customer")
     subscription_id = session_obj.get("subscription")
+    customer_email = session_obj.get("customer_details", {}).get("email", "")
 
-    if not user_id or not subscription_id:
+    if not subscription_id:
         return
 
     # Fetch subscription to determine tier from price
@@ -187,11 +212,77 @@ def _handle_checkout_completed(session_obj):
     price_id = sub["items"]["data"][0]["price"]["id"]
     tier = PRICE_TO_TIER.get(price_id, "pro")
 
-    update_user_tier(
-        int(user_id), tier,
-        stripe_customer_id=customer_id,
-        stripe_subscription_id=subscription_id,
-    )
+    if client_ref and client_ref != "new":
+        # Existing logged-in user
+        update_user_tier(
+            int(client_ref), tier,
+            stripe_customer_id=customer_id,
+            stripe_subscription_id=subscription_id,
+        )
+    else:
+        # Anonymous checkout — find or create user by email
+        if not customer_email:
+            # Try to get email from Stripe customer
+            try:
+                cust = stripe.Customer.retrieve(customer_id)
+                customer_email = cust.get("email", "")
+            except Exception:
+                pass
+
+        if not customer_email:
+            logger.error("Checkout completed but no email found. customer=%s", customer_id)
+            return
+
+        from modules.auth import get_user_by_email, create_user
+        user = get_user_by_email(customer_email)
+
+        if user:
+            # Existing user who wasn't logged in — just upgrade them
+            update_user_tier(
+                user["id"], tier,
+                stripe_customer_id=customer_id,
+                stripe_subscription_id=subscription_id,
+            )
+        else:
+            # Brand new user — create account with temporary password
+            import secrets as _secrets
+            temp_password = _secrets.token_urlsafe(16)
+            user = create_user(customer_email, temp_password)
+            if not user:
+                logger.error("Failed to create user for checkout email=%s", customer_email)
+                return
+
+            update_user_tier(
+                user["id"], tier,
+                stripe_customer_id=customer_id,
+                stripe_subscription_id=subscription_id,
+            )
+
+            # Mark email as verified (they verified via Stripe payment)
+            execute(
+                "UPDATE users SET email_verified = 1, verification_token = NULL WHERE id = ?",
+                (user["id"],)
+            )
+
+            # Send "Set your password" email
+            try:
+                from modules.auth import create_reset_token
+                token = create_reset_token(customer_email)
+                from modules.mailer import send as send_email
+                base_url = os.environ.get("BASE_URL", "https://inbxr.us")
+                send_email(
+                    to_email=customer_email,
+                    subject="Welcome to INBXR — Set Your Password",
+                    html=f"""<h2>Welcome to INBXR!</h2>
+                    <p>Your <strong>{tier.title()}</strong> subscription is now active.</p>
+                    <p>We created your account automatically. Click below to set your password:</p>
+                    <p><a href="{base_url}/reset-password?token={token}" style="display:inline-block;padding:12px 24px;background:#22c55e;color:#fff;text-decoration:none;border-radius:8px;font-weight:700;">Set My Password</a></p>
+                    <p>Or log in at <a href="{base_url}/login">{base_url}/login</a> using this email and request a password reset.</p>
+                    <p style="color:#888;font-size:0.85rem;">If you didn't make this purchase, please contact us immediately.</p>""",
+                )
+                logger.info("Sent welcome + set-password email to %s", customer_email)
+            except Exception:
+                logger.exception("Failed to send welcome email to %s", customer_email)
 
 
 def _handle_subscription_updated(subscription):
