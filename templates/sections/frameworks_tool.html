@@ -1,0 +1,120 @@
+<section class="fw-lab container">
+  <!-- Decision Tree -->
+  <div class="fw-decision" id="fwDecisionTree">
+    <h2 class="fw-section-title">Which Framework Should You Use?</h2>
+    <p class="fw-section-subtitle">Answer one question to find the right framework for your email.</p>
+    <div class="fw-decision__question" id="fwDecisionQuestion"></div>
+    <div class="fw-decision__options" id="fwDecisionOptions"></div>
+    <div class="fw-decision__result" id="fwDecisionResult" style="display:none">
+      <h3>Recommended Frameworks</h3>
+      <div class="fw-decision__recs" id="fwDecisionRecs"></div>
+      <button type="button" class="btn-secondary" id="fwDecisionReset">Start Over</button>
+    </div>
+  </div>
+
+  <!-- Category Tabs -->
+  <div class="fw-tabs" id="fwTabs">
+    <button class="fw-tab fw-tab--active" data-category="all">All</button>
+    <button class="fw-tab" data-category="master">INBXR Method</button>
+    <button class="fw-tab" data-category="foundational">Foundational</button>
+    <button class="fw-tab" data-category="value_logic">Value &amp; Logic</button>
+    <button class="fw-tab" data-category="story_transformation">Story</button>
+    <button class="fw-tab" data-category="trust_proof">Trust &amp; Proof</button>
+    <button class="fw-tab" data-category="refinement">Refinement</button>
+    <button class="fw-tab" data-category="niche">Niche</button>
+  </div>
+
+  <!-- Framework Grid -->
+  <div class="fw-grid" id="fwGrid"></div>
+
+  <!-- Detail Panel (modal) -->
+  <div class="fw-modal-overlay" id="fwModalOverlay" style="display:none">
+    <div class="fw-modal" id="fwModal">
+      <button class="fw-modal__close" id="fwModalClose">&times;</button>
+      <div class="fw-modal__header">
+        <span class="fw-modal__acronym" id="fwModalAcronym"></span>
+        <div>
+          <h2 class="fw-modal__name" id="fwModalName"></h2>
+          <span class="fw-modal__category" id="fwModalCategory"></span>
+        </div>
+      </div>
+      <p class="fw-modal__desc" id="fwModalDesc"></p>
+      <div class="fw-modal__section">
+        <h3>Steps</h3>
+        <div class="fw-modal__steps" id="fwModalSteps"></div>
+        <div class="fw-modal__locked" id="fwModalLocked" style="display:none">
+          <div class="fw-locked-overlay">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+            <p>Upgrade to Pro to unlock full step descriptions</p>
+            <a href="/pricing" class="btn-cta btn-cta--sm">View Plans</a>
+          </div>
+        </div>
+      </div>
+      <div class="fw-modal__section" id="fwModalWhenSection" style="display:none">
+        <h3>When to Use</h3>
+        <p id="fwModalWhen"></p>
+      </div>
+      <div class="fw-modal__section" id="fwModalDelivSection" style="display:none">
+        <h3>Deliverability Notes</h3>
+        <p id="fwModalDeliv"></p>
+      </div>
+      <div class="fw-modal__section" id="fwModalExampleSection" style="display:none">
+        <h3>Example Output</h3>
+        <pre class="fw-modal__example" id="fwModalExample"></pre>
+      </div>
+      <div class="fw-modal__actions">
+        <button type="button" class="btn-cta" id="fwModalFork" style="display:none">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 3h5v5"/><path d="M21 3L9 15"/><path d="M21 14v5a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h5"/></svg>
+          Fork as Custom
+        </button>
+        <a class="btn-secondary" id="fwModalApply" href="/?framework=" style="display:none">Apply to Rewriter</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- My Frameworks (Pro/Agency) -->
+  <div class="fw-my" id="fwMySection" style="display:none">
+    <h2 class="fw-section-title">My Frameworks</h2>
+    <p class="fw-section-subtitle">Create and manage your custom copywriting frameworks.</p>
+    <div class="fw-my-grid" id="fwMyGrid"></div>
+    <button type="button" class="btn-cta" id="fwCreateBtn">+ Create New Framework</button>
+  </div>
+
+  <!-- Custom Builder (modal) -->
+  <div class="fw-builder-overlay" id="fwBuilderOverlay" style="display:none">
+    <div class="fw-builder" id="fwBuilder">
+      <button class="fw-modal__close" id="fwBuilderClose">&times;</button>
+      <h2 class="fw-builder__title" id="fwBuilderTitle">Create Custom Framework</h2>
+      <form id="fwBuilderForm">
+        <div class="fw-builder__field">
+          <label for="fwBuilderName">Framework Name</label>
+          <input type="text" id="fwBuilderName" maxlength="100" placeholder="e.g. My Sales Framework" required />
+        </div>
+        <div class="fw-builder__field">
+          <label>Steps <span class="fw-builder__hint">(drag to reorder)</span></label>
+          <div class="fw-builder__steps" id="fwBuilderSteps"></div>
+          <button type="button" class="btn-secondary btn-secondary--sm" id="fwBuilderAddStep">+ Add Step</button>
+        </div>
+        <div class="fw-builder__field">
+          <label for="fwBuilderNotes">Notes (optional)</label>
+          <textarea id="fwBuilderNotes" rows="3" placeholder="When to use this framework, tips, etc."></textarea>
+        </div>
+        <input type="hidden" id="fwBuilderId" value="" />
+        <input type="hidden" id="fwBuilderBaseId" value="" />
+        <div class="fw-builder__actions">
+          <button type="submit" class="btn-cta" id="fwBuilderSave">Save Framework</button>
+          <button type="button" class="btn-secondary" id="fwBuilderCancel">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Free tier upsell for builder -->
+  <div class="fw-upsell" id="fwUpsell">
+    <div class="fw-upsell__content">
+      <h3>Build Your Own Frameworks</h3>
+      <p>Pro and Agency members can create custom frameworks, fork built-in ones, and apply them to AI rewrites.</p>
+      <a href="/pricing" class="btn-cta btn-cta--sm">Upgrade to Pro</a>
+    </div>
+  </div>
+</section>

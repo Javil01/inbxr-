@@ -86,6 +86,144 @@ def rewrite_email(subject: str, body: str, industry: str = "General",
         raise AIRewriteError(f"AI rewrite failed: {str(e)[:100]}")
 
 
+def rewrite_with_framework(subject: str, body: str, framework_name: str,
+                           framework_steps: list, tone: str = "professional",
+                           issues: list = None) -> dict:
+    """Generate AI-powered email rewrite structured according to a copywriting framework.
+
+    Args:
+        subject: Original subject line
+        body: Original email body (HTML or plain text)
+        framework_name: Name of the framework (e.g. "PAS")
+        framework_steps: List of step dicts [{key, label, description}]
+        tone: Desired tone
+        issues: Issues found by the analyzer
+
+    Returns dict with subject_alternatives, body_rewrite, framework_applied,
+    step_mapping, and tips.
+    """
+    cfg = _get_config()
+    if not cfg["api_key"]:
+        raise AIRewriteError("AI rewrite not available — GROQ_API_KEY not configured")
+
+    plain_body = _strip_html(body)
+    if len(plain_body) > _MAX_BODY_CHARS:
+        plain_body = plain_body[:_MAX_BODY_CHARS] + "..."
+
+    issue_context = ""
+    if issues:
+        issue_context = "\n".join(f"- {i}" for i in issues[:5])
+
+    # Build step instructions
+    steps_text = "\n".join(
+        f"  {s['key']}. {s['label']}: {s.get('description', '')}"
+        for s in framework_steps
+    )
+
+    tone_desc = {
+        "professional": "confident, clear, and professional",
+        "friendly": "warm, conversational, and approachable",
+        "urgent": "direct, time-sensitive, and action-oriented",
+        "casual": "relaxed, personable, and easy-going",
+        "authoritative": "expert, data-driven, and commanding",
+    }.get(tone, "professional and clear")
+
+    system_msg = f"""You are an expert email copywriter. You structure rewrites according to proven copywriting frameworks.
+You write copy that lands in the primary inbox, gets opened, and drives action.
+You never use spammy language, excessive punctuation, or ALL CAPS.
+
+IMPORTANT: Return ONLY valid JSON. No markdown, no code fences."""
+
+    step_keys_json = json.dumps([{"step_key": s["key"], "step_label": s["label"], "content": f"The rewritten content for the {s['label']} step"} for s in framework_steps])
+
+    user_msg = f"""Rewrite this email using the {framework_name} framework.
+
+ORIGINAL SUBJECT: {subject}
+
+ORIGINAL BODY:
+{plain_body}
+
+FRAMEWORK: {framework_name}
+Follow these steps in order:
+{steps_text}
+
+DESIRED TONE: {tone_desc}
+{f"ISSUES TO FIX:{chr(10)}{issue_context}" if issue_context else ""}
+
+Structure the body rewrite so each section maps to a framework step. Mark each section clearly.
+
+Return a JSON object with exactly these keys:
+{{
+  "subject_alternatives": ["3 alternative subject lines that align with the {framework_name} framework approach"],
+  "body_rewrite": "The complete rewritten email body, with each framework step clearly separated by blank lines",
+  "step_mapping": {step_keys_json},
+  "tips": ["3 specific tips about how this framework was applied and why each choice was made"]
+}}"""
+
+    prompt_json = json.dumps({"system": system_msg, "user": user_msg})
+
+    start = time.time()
+    try:
+        raw = _call_api(prompt_json)
+        parsed = _parse_response_framework(raw)
+        parsed["elapsed_ms"] = round((time.time() - start) * 1000)
+        parsed["model"] = cfg["model"]
+        parsed["tone"] = tone
+        parsed["framework_applied"] = framework_name
+        return parsed
+    except AIRewriteError:
+        raise
+    except Exception as e:
+        raise AIRewriteError(f"Framework rewrite failed: {str(e)[:100]}")
+
+
+def _parse_response_framework(raw: str) -> dict:
+    """Parse the API response for framework-based rewrite."""
+    try:
+        data = json.loads(raw)
+    except json.JSONDecodeError:
+        raise AIRewriteError("Invalid JSON response from API")
+
+    choices = data.get("choices", [])
+    if not choices:
+        raise AIRewriteError("No choices in API response")
+
+    content = choices[0].get("message", {}).get("content", "")
+    if not content:
+        raise AIRewriteError("Empty content in API response")
+
+    try:
+        result = json.loads(content)
+    except json.JSONDecodeError:
+        json_match = re.search(r'\{[\s\S]*\}', content)
+        if json_match:
+            try:
+                result = json.loads(json_match.group())
+            except json.JSONDecodeError:
+                raise AIRewriteError("Could not parse framework rewrite JSON")
+        else:
+            raise AIRewriteError("No JSON found in API response")
+
+    # Ensure expected keys
+    if "subject_alternatives" not in result or not isinstance(result["subject_alternatives"], list):
+        result["subject_alternatives"] = []
+    if "body_rewrite" not in result:
+        result["body_rewrite"] = ""
+    if "step_mapping" not in result or not isinstance(result["step_mapping"], list):
+        result["step_mapping"] = []
+    if "tips" not in result or not isinstance(result["tips"], list):
+        result["tips"] = []
+
+    usage = data.get("usage", {})
+    result["usage"] = {
+        "prompt_tokens": usage.get("prompt_tokens", 0),
+        "completion_tokens": usage.get("completion_tokens", 0),
+        "total_tokens": usage.get("total_tokens", 0),
+    }
+
+    return result
+
+
 def optimize_for_primary(subject: str, body: str) -> dict:
     """Rewrite email specifically to escape Gmail's Promotions tab.
 

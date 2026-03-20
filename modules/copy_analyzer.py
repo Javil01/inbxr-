@@ -768,6 +768,9 @@ class CopyAnalyzer:
         severity_order = {"high": 0, "medium": 1, "low": 2}
         all_flags.sort(key=lambda x: severity_order.get(x.get("impact", "low"), 2))
 
+        # Framework detection
+        framework_detection = self._detect_framework()
+
         return {
             "score": total,
             "label": label,
@@ -779,6 +782,141 @@ class CopyAnalyzer:
             "all_flags": all_flags[:12],
             "all_positives": all_positives[:10],
             "rewrites": rewrites,
+            "framework_detection": framework_detection,
+        }
+
+    def _detect_framework(self) -> dict:
+        """Heuristic framework detection — no AI call needed.
+
+        Scores each framework 0-100 based on structural signals.
+        Returns top match if confidence > 40, else null.
+        """
+        body = self.body_text
+        if not body or _word_count(body) < 30:
+            return None
+
+        body_lower = body.lower()
+        paragraphs = _paragraphs(body)
+        sentences = _sentences(body)
+        n_paras = len(paragraphs)
+        n_sents = len(sentences)
+
+        if n_paras < 2 or n_sents < 3:
+            return None
+
+        # Divide into thirds for structural analysis
+        third = max(1, n_sents // 3)
+        opening = " ".join(sentences[:third]).lower()
+        middle = " ".join(sentences[third:third * 2]).lower()
+        closing = " ".join(sentences[third * 2:]).lower()
+
+        scores = {}
+
+        # ── PAS: pain in opening, agitation in middle, solution in closing
+        pas_score = 0
+        pain_open = sum(1 for p in PAIN_AWARE_PHRASES if re.search(p, opening))
+        if pain_open:
+            pas_score += 30
+        agitate_words = r'(?i)(worse|damage|risk|lose|cost|suffer|fail|miss out|don\'t let|imagine if)'
+        if re.search(agitate_words, middle):
+            pas_score += 25
+        solution_close = sum(1 for p in SOLUTION_PHRASES if re.search(p, closing))
+        if solution_close:
+            pas_score += 30
+        # Bonus: short email (PAS is typically concise)
+        if _word_count(body) < 300:
+            pas_score += 15
+        scores["pas"] = min(100, pas_score)
+
+        # ── AIDA: attention opening, interest middle, desire/benefit, CTA
+        aida_score = 0
+        if re.search(r'(?i)(\?|imagine|picture this|what if|did you know|stop)', sentences[0] if sentences else ""):
+            aida_score += 25
+        interest_words = r'(?i)(here\'s why|the reason|in fact|research shows|studies show|turns out)'
+        if re.search(interest_words, middle):
+            aida_score += 25
+        desire_words = r'(?i)(you\'ll get|you can|you deserve|unlock|transform|achieve|results)'
+        if re.search(desire_words, body_lower):
+            aida_score += 20
+        cta_words = r'(?i)(click|sign up|get started|try|join|download|register|buy|order|claim)'
+        if re.search(cta_words, closing):
+            aida_score += 20
+        if len(self.cta_texts) > 0:
+            aida_score += 10
+        scores["aida"] = min(100, aida_score)
+
+        # ── BAB: before state, after state, bridge
+        bab_score = 0
+        current_state = r'(?i)(right now|currently|today|at the moment|you\'re|most people)'
+        if re.search(current_state, opening):
+            bab_score += 30
+        future_state = r'(?i)(imagine|picture|what if|instead|wouldn\'t it|think about)'
+        if re.search(future_state, middle):
+            bab_score += 30
+        bridge_words = r'(?i)(here\'s how|the answer|the solution|that\'s where|all you need|bridge)'
+        if re.search(bridge_words, closing):
+            bab_score += 30
+        scores["bab"] = min(100, bab_score)
+
+        # ── FAB: feature listing, advantage, benefit/emotion
+        fab_score = 0
+        feature_count = sum(1 for w in FEATURE_WORDS if w in body_lower)
+        if feature_count >= 2:
+            fab_score += 25
+        advantage_words = r'(?i)(which means|so you can|this lets you|enabling|allowing|unlike)'
+        if re.search(advantage_words, body_lower):
+            fab_score += 30
+        benefit_count = sum(1 for w in BENEFIT_WORDS if w in body_lower)
+        if benefit_count >= 2:
+            fab_score += 25
+        scores["fab"] = min(100, fab_score)
+
+        # ── C3PO: context, picture, plausibility, problem, opportunity
+        c3po_score = 0
+        # Context: stats or shared experience in opening
+        if re.search(r'\d+%|\d+ out of \d+|most |every ', opening):
+            c3po_score += 20
+        # Picture: visualization language
+        if re.search(r'(?i)(imagine|picture|what if|think about)', body_lower):
+            c3po_score += 20
+        # Plausibility: proof/data
+        social_proof = sum(1 for p in SOCIAL_PROOF_PATTERNS if re.search(p, body_lower))
+        if social_proof:
+            c3po_score += 20
+        # Problem: naming the obstacle
+        if re.search(r'(?i)(but |the problem|the challenge|the gap|what\'s stopping|the obstacle)', middle):
+            c3po_score += 20
+        # Opportunity: solution CTA
+        if re.search(cta_words, closing):
+            c3po_score += 20
+        scores["c3po"] = min(100, c3po_score)
+
+        # Find the best match
+        if not scores:
+            return None
+
+        best_slug = max(scores, key=scores.get)
+        best_score = scores[best_slug]
+
+        if best_score < 40:
+            return None
+
+        framework_names = {
+            "pas": ("PAS", "Problem → Agitate → Solve"),
+            "aida": ("AIDA", "Attention → Interest → Desire → Action"),
+            "bab": ("BAB", "Before → After → Bridge"),
+            "fab": ("FAB", "Feature → Advantage → Benefit"),
+            "c3po": ("C3PO — The INBXR Method", "Context → Picture → Plausibility → Problem → Opportunity"),
+        }
+
+        name, structure = framework_names.get(best_slug, (best_slug.upper(), ""))
+
+        return {
+            "detected_framework": name,
+            "detected_slug": best_slug,
+            "confidence": best_score,
+            "structural_notes": structure,
+            "suggestion": f"This email follows the {name} pattern ({best_score}% match). View this framework to refine your approach.",
         }
 
     def _generate_rewrites(self, cat_a, cat_b, cat_c, cat_d) -> dict:

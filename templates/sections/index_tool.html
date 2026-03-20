@@ -363,6 +363,8 @@
           <div class="accordion-body open" id="copyRewrites"><div id="rewriteContent"></div></div>
         </div>
       </div>
+      <!-- Framework Detection -->
+      <div id="frameworkDetection" class="fw-detection" style="display:none"></div>
       <!-- Readability Module -->
       <div class="module-block" id="readabilityModule" style="display:none">
         <div class="module-header collapsible" data-collapse="readabilityModule">
@@ -427,6 +429,13 @@
               <option value="urgent">Urgent</option>
               <option value="casual">Casual</option>
               <option value="authoritative">Authoritative</option>
+            </select>
+            <label class="ai-tone-label">Framework:</label>
+            <select id="aiFrameworkSelect" class="ai-tone-select">
+              <option value="">No framework</option>
+              <optgroup label="The INBXR Method" id="aiFrameworkMaster"></optgroup>
+              <optgroup label="Built-in" id="aiFrameworkBuiltin"></optgroup>
+              <optgroup label="My Frameworks" id="aiFrameworkCustom"></optgroup>
             </select>
             <button type="button" class="btn-ai-rewrite" id="aiRewriteBtn">
               <span class="btn-text">Generate AI Rewrite</span>

@@ -54,6 +54,7 @@ def init_db():
     conn.commit()
     _run_migrations(conn)
     _seed_blog_posts(conn)
+    _seed_frameworks(conn)
     _fix_cta_markers(conn)
     _fix_blog_image_paths(conn)
 
@@ -700,7 +701,350 @@ _MIGRATIONS = [
         WHERE (featured_image IS NULL OR featured_image = '')
           AND slug IS NOT NULL AND slug != '';
     """),
+    ("015_framework_lab", """
+        CREATE TABLE IF NOT EXISTS frameworks (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            slug TEXT UNIQUE NOT NULL,
+            acronym TEXT DEFAULT '',
+            category TEXT DEFAULT 'foundational',
+            steps_json TEXT NOT NULL DEFAULT '[]',
+            description TEXT DEFAULT '',
+            when_to_use TEXT DEFAULT '',
+            deliverability_notes TEXT DEFAULT '',
+            example_output TEXT DEFAULT '',
+            decision_tree_tags TEXT DEFAULT '[]',
+            is_builtin INTEGER DEFAULT 1,
+            sort_order INTEGER DEFAULT 100,
+            created_at TEXT DEFAULT (datetime('now'))
+        );
+        CREATE INDEX IF NOT EXISTS idx_frameworks_slug ON frameworks(slug);
+        CREATE INDEX IF NOT EXISTS idx_frameworks_category ON frameworks(category);
+
+        CREATE TABLE IF NOT EXISTS user_frameworks (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            name TEXT NOT NULL,
+            slug TEXT NOT NULL,
+            steps_json TEXT NOT NULL DEFAULT '[]',
+            base_framework_id INTEGER REFERENCES frameworks(id) ON DELETE SET NULL,
+            notes TEXT DEFAULT '',
+            created_at TEXT DEFAULT (datetime('now')),
+            updated_at TEXT DEFAULT (datetime('now')),
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+            UNIQUE(user_id, slug)
+        );
+        CREATE INDEX IF NOT EXISTS idx_user_frameworks_user ON user_frameworks(user_id);
+
+        CREATE TABLE IF NOT EXISTS framework_usage (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER,
+            framework_id INTEGER REFERENCES frameworks(id) ON DELETE SET NULL,
+            user_framework_id INTEGER REFERENCES user_frameworks(id) ON DELETE SET NULL,
+            check_history_id INTEGER REFERENCES check_history(id) ON DELETE SET NULL,
+            action TEXT DEFAULT 'rewrite',
+            created_at TEXT DEFAULT (datetime('now'))
+        );
+        CREATE INDEX IF NOT EXISTS idx_framework_usage_user ON framework_usage(user_id, created_at DESC);
+    """),
 ]
+
+
+def _seed_frameworks(conn):
+    """Seed built-in copywriting frameworks. Skips if already seeded."""
+    import json as _json
+    existing = conn.execute("SELECT COUNT(*) as cnt FROM frameworks WHERE is_builtin = 1").fetchone()
+    if existing and existing["cnt"] >= 16:
+        return
+
+    _frameworks = [
+        {
+            "name": "C3PO — The INBXR Method",
+            "slug": "c3po",
+            "acronym": "C3PO",
+            "category": "master",
+            "sort_order": 1,
+            "description": "INBXR's proprietary 5-step framework for emails that convert. Context → Picture → Plausibility → Problem → Opportunity.",
+            "when_to_use": "Use for any email where you need to move the reader from awareness to action. Works across industries and audience awareness levels.",
+            "deliverability_notes": "Naturally avoids spam triggers because it leads with context and storytelling rather than hype.",
+            "example_output": "Subject: The inbox problem nobody's talking about\n\nContext: 83% of marketing emails never reach the inbox...\nPicture: Imagine your next campaign hitting 98% inbox placement...\nPlausibility: Here's how 200+ senders did exactly that last quarter...\nProblem: But most senders are still guessing at deliverability...\nOpportunity: Start your free INBXR audit today and see where you stand.",
+            "steps_json": _json.dumps([
+                {"key": "C", "label": "Context", "description": "Set the scene. Ground the reader in a relevant situation, stat, or shared experience they instantly recognize."},
+                {"key": "P1", "label": "Picture", "description": "Paint the desired outcome. Help them vividly see what success looks like — make it tangible and emotional."},
+                {"key": "P2", "label": "Plausibility", "description": "Prove it's achievable. Use data, social proof, or a quick case study to make the picture believable."},
+                {"key": "P3", "label": "Problem", "description": "Name the obstacle. Identify the specific gap or mistake standing between them and the picture you painted."},
+                {"key": "O", "label": "Opportunity", "description": "Present your solution as the bridge. Clear CTA that connects the problem to the desired outcome."}
+            ]),
+        },
+        {
+            "name": "AIDA",
+            "slug": "aida",
+            "acronym": "AIDA",
+            "category": "foundational",
+            "sort_order": 10,
+            "description": "The classic marketing framework: grab Attention, build Interest, create Desire, drive Action.",
+            "when_to_use": "Best for audiences with low awareness. Use when you need to introduce a concept from scratch and guide the reader step by step.",
+            "deliverability_notes": "Watch the Attention step — avoid ALL CAPS or clickbait subject lines that trigger spam filters.",
+            "example_output": "Attention: Your emails are landing in spam — and you don't even know it.\nInterest: 1 in 5 marketing emails never reaches the inbox.\nDesire: Imagine knowing exactly where every email lands before you hit send.\nAction: Try INBXR free — your first inbox placement test is on us.",
+            "steps_json": _json.dumps([
+                {"key": "A", "label": "Attention", "description": "Open with a bold hook — a surprising stat, provocative question, or pattern interrupt that stops the scroll."},
+                {"key": "I", "label": "Interest", "description": "Build on the hook with relevant details. Show you understand their world and the stakes involved."},
+                {"key": "D", "label": "Desire", "description": "Make them want the solution. Paint the benefit in emotional, outcome-focused language."},
+                {"key": "A2", "label": "Action", "description": "Clear, specific CTA. Tell them exactly what to do next and make it frictionless."}
+            ]),
+        },
+        {
+            "name": "PAS",
+            "slug": "pas",
+            "acronym": "PAS",
+            "category": "foundational",
+            "sort_order": 11,
+            "description": "Problem → Agitate → Solve. Identify a pain point, twist the knife, then present the relief.",
+            "when_to_use": "Ideal for problem-aware audiences. Use when readers already feel the pain but haven't found a solution.",
+            "deliverability_notes": "The Agitate step can tip into fear-mongering. Keep it empathetic, not alarmist, to avoid spam complaints.",
+            "example_output": "Problem: Your bounce rate is climbing and you don't know why.\nAgitate: Every bounced email damages your sender reputation — and once ISPs flag you, recovery takes months.\nSolve: INBXR monitors your reputation 24/7 and alerts you before damage is done.",
+            "steps_json": _json.dumps([
+                {"key": "P", "label": "Problem", "description": "Identify the reader's pain point clearly. Be specific — vague problems don't resonate."},
+                {"key": "A", "label": "Agitate", "description": "Amplify the pain. Show the consequences of inaction. Make them feel the urgency."},
+                {"key": "S", "label": "Solve", "description": "Present your solution as the clear path to relief. Be direct about what it does and how to get it."}
+            ]),
+        },
+        {
+            "name": "FAB",
+            "slug": "fab",
+            "acronym": "FAB",
+            "category": "value_logic",
+            "sort_order": 20,
+            "description": "Feature → Advantage → Benefit. Translate what your product does into why the reader should care.",
+            "when_to_use": "Best for solution-aware audiences comparing options. Use when you need to differentiate features.",
+            "deliverability_notes": "Feature-heavy emails can feel promotional. Balance with reader-focused benefit language.",
+            "example_output": "Feature: Real-time blocklist monitoring across 110+ databases.\nAdvantage: You'll know within minutes if your domain gets listed — not days.\nBenefit: No more surprise drops in deliverability that tank your campaign ROI.",
+            "steps_json": _json.dumps([
+                {"key": "F", "label": "Feature", "description": "State the feature or capability clearly and concisely."},
+                {"key": "A", "label": "Advantage", "description": "Explain what this feature enables — the functional improvement over alternatives."},
+                {"key": "B", "label": "Benefit", "description": "Connect to the emotional outcome. Answer: 'So what? Why does this matter to ME?'"}
+            ]),
+        },
+        {
+            "name": "4 Ps",
+            "slug": "4ps",
+            "acronym": "4Ps",
+            "category": "value_logic",
+            "sort_order": 21,
+            "description": "Promise → Picture → Proof → Push. Lead with a bold promise, visualize the outcome, prove it, then push to action.",
+            "when_to_use": "Great for launches and promotions where you have strong social proof to back up a bold claim.",
+            "deliverability_notes": "Bold promises can trigger spam filters. Back them with data and avoid superlatives like 'best ever' or 'guaranteed'.",
+            "example_output": "Promise: Get 95%+ inbox placement on your next campaign.\nPicture: Your open rates climb, revenue follows, and you stop worrying about spam.\nProof: 2,400 senders improved placement by an average of 31% in their first month.\nPush: Start your free audit now — see your real inbox rate in 60 seconds.",
+            "steps_json": _json.dumps([
+                {"key": "P1", "label": "Promise", "description": "Lead with a specific, compelling promise. Make it measurable if possible."},
+                {"key": "P2", "label": "Picture", "description": "Help the reader visualize life after the promise is fulfilled."},
+                {"key": "P3", "label": "Proof", "description": "Back it up with data, testimonials, case studies, or credentials."},
+                {"key": "P4", "label": "Push", "description": "Drive to action with urgency or a clear next step."}
+            ]),
+        },
+        {
+            "name": "BAB",
+            "slug": "bab",
+            "acronym": "BAB",
+            "category": "story_transformation",
+            "sort_order": 30,
+            "description": "Before → After → Bridge. Show the current state, the desired state, then bridge the gap with your solution.",
+            "when_to_use": "Perfect for transformation narratives. Use when the gap between current and desired state is clear and emotional.",
+            "deliverability_notes": "Transformation language is natural and conversational — low spam risk.",
+            "example_output": "Before: You're sending 50K emails a month but only 60% reach the inbox.\nAfter: Every email lands where it belongs. Open rates double. Revenue follows.\nBridge: INBXR's deliverability suite finds and fixes the gaps. Start free.",
+            "steps_json": _json.dumps([
+                {"key": "B1", "label": "Before", "description": "Describe the reader's current painful reality. Be specific and empathetic."},
+                {"key": "A", "label": "After", "description": "Paint the transformed state. Make it vivid and desirable."},
+                {"key": "B2", "label": "Bridge", "description": "Position your product/solution as the bridge between Before and After."}
+            ]),
+        },
+        {
+            "name": "Star-Story-Solution",
+            "slug": "star-story-solution",
+            "acronym": "SSS",
+            "category": "story_transformation",
+            "sort_order": 31,
+            "description": "Introduce a Star (character), tell their Story (struggle), reveal the Solution. Narrative-driven persuasion.",
+            "when_to_use": "Use when you have a compelling case study or customer story. Great for building emotional connection.",
+            "deliverability_notes": "Story-driven emails read like personal messages — excellent for inbox placement.",
+            "example_output": "Star: Meet Sarah, an email marketer at a 50-person SaaS company.\nStory: Her campaigns were getting 12% open rates. She spent weeks tweaking subject lines, but the real problem was 40% of her emails were going to spam.\nSolution: After running INBXR's audit, she fixed 3 DNS issues in 10 minutes. Open rates jumped to 28% within two weeks.",
+            "steps_json": _json.dumps([
+                {"key": "S1", "label": "Star", "description": "Introduce a relatable character — could be a customer, the reader themselves, or even you."},
+                {"key": "S2", "label": "Story", "description": "Tell their struggle. Make it specific and relatable. Show the obstacles they faced."},
+                {"key": "S3", "label": "Solution", "description": "Reveal how they solved it (with your product). Show the result."}
+            ]),
+        },
+        {
+            "name": "PAPA",
+            "slug": "papa",
+            "acronym": "PAPA",
+            "category": "trust_proof",
+            "sort_order": 40,
+            "description": "Problem → Advantage → Proof → Action. Similar to PAS but replaces agitation with proof-based advantage.",
+            "when_to_use": "Use when your audience is skeptical and needs evidence more than emotional agitation.",
+            "deliverability_notes": "Proof-heavy emails feel credible. Include specific numbers rather than vague claims.",
+            "example_output": "Problem: Email authentication is confusing and easy to get wrong.\nAdvantage: INBXR checks SPF, DKIM, DMARC, MTA-STS, BIMI, and DANE in one scan — and generates fix records.\nProof: 15,000+ domains audited. Average setup time: 8 minutes.\nAction: Run your free sender check now.",
+            "steps_json": _json.dumps([
+                {"key": "P1", "label": "Problem", "description": "State the problem clearly and specifically."},
+                {"key": "A", "label": "Advantage", "description": "Present your unique advantage — what makes your approach different."},
+                {"key": "P2", "label": "Proof", "description": "Back it up with hard evidence: numbers, testimonials, case studies."},
+                {"key": "A2", "label": "Action", "description": "Clear call to action with low friction."}
+            ]),
+        },
+        {
+            "name": "APP",
+            "slug": "app",
+            "acronym": "APP",
+            "category": "trust_proof",
+            "sort_order": 41,
+            "description": "Agree → Promise → Preview. Start by agreeing with the reader's worldview, promise a solution, preview what's coming.",
+            "when_to_use": "Great for content marketing emails and newsletters. Builds trust before making the ask.",
+            "deliverability_notes": "Agreement-first framing feels personal and non-salesy — great for deliverability.",
+            "example_output": "Agree: You already know email authentication matters — that's not the hard part.\nPromise: The hard part is knowing if your setup actually works. We'll show you in 60 seconds.\nPreview: Enter your domain below and get a full 6-protocol audit with copy-paste fix records.",
+            "steps_json": _json.dumps([
+                {"key": "A1", "label": "Agree", "description": "Start with something the reader already believes. Build rapport through shared understanding."},
+                {"key": "P", "label": "Promise", "description": "Promise to solve the next problem — the thing they haven't figured out yet."},
+                {"key": "P2", "label": "Preview", "description": "Give a taste of what's coming. Tease the value to drive clicks."}
+            ]),
+        },
+        {
+            "name": "5 Cs",
+            "slug": "5cs",
+            "acronym": "5Cs",
+            "category": "refinement",
+            "sort_order": 50,
+            "description": "Clear → Concise → Compelling → Credible → Call to Action. A quality checklist framework for polishing email copy.",
+            "when_to_use": "Use as a refinement pass on any email. Works as a scoring rubric for copy quality.",
+            "deliverability_notes": "Following the 5 Cs naturally produces clean, spam-filter-friendly copy.",
+            "example_output": "Clear: One idea per email. No jargon.\nConcise: Under 200 words. Short paragraphs.\nCompelling: Lead with the reader's outcome, not your feature.\nCredible: Include one specific proof point.\nCall to Action: One button, one action, clear language.",
+            "steps_json": _json.dumps([
+                {"key": "C1", "label": "Clear", "description": "Is the core message immediately obvious? One idea per email."},
+                {"key": "C2", "label": "Concise", "description": "Can anything be cut without losing meaning? Trim ruthlessly."},
+                {"key": "C3", "label": "Compelling", "description": "Does the reader care? Is it focused on their outcome?"},
+                {"key": "C4", "label": "Credible", "description": "Is there proof? Specifics beat generalities."},
+                {"key": "C5", "label": "Call to Action", "description": "Is there one clear next step? Is it easy to take?"}
+            ]),
+        },
+        {
+            "name": "4 Us",
+            "slug": "4us",
+            "acronym": "4Us",
+            "category": "refinement",
+            "sort_order": 51,
+            "description": "Useful → Urgent → Unique → Ultra-specific. A framework for writing subject lines and headlines that get opened.",
+            "when_to_use": "Best for subject lines, headlines, and CTAs. Score each element 1-4 to optimize.",
+            "deliverability_notes": "Ultra-specific language avoids vague spam triggers. Urgency should be genuine, not manufactured.",
+            "example_output": "Useful: 'Fix your SPF record' (solves a real problem)\nUrgent: 'before your next campaign' (time-bound)\nUnique: 'the 3-minute method' (differentiated approach)\nUltra-specific: '3 DNS records, 1 copy-paste fix' (concrete detail)",
+            "steps_json": _json.dumps([
+                {"key": "U1", "label": "Useful", "description": "Does it solve a real problem or provide clear value?"},
+                {"key": "U2", "label": "Urgent", "description": "Is there a genuine reason to act now? Create real, not manufactured, urgency."},
+                {"key": "U3", "label": "Unique", "description": "What makes this different from everything else in their inbox?"},
+                {"key": "U4", "label": "Ultra-specific", "description": "Is it concrete? Numbers, names, and specifics beat vague promises."}
+            ]),
+        },
+        {
+            "name": "4 Es",
+            "slug": "4es",
+            "acronym": "4Es",
+            "category": "refinement",
+            "sort_order": 52,
+            "description": "Engage → Educate → Excite → Encourage. A nurture-focused framework for building relationships over time.",
+            "when_to_use": "Use for welcome sequences, newsletters, and nurture emails where the goal is relationship over immediate conversion.",
+            "deliverability_notes": "Nurture-style emails get high engagement, which boosts sender reputation long-term.",
+            "example_output": "Engage: Quick question — do you know your current inbox placement rate?\nEducate: Most senders assume 90%+ reaches the inbox. The real average is closer to 79%.\nExcite: The good news? The fixes are usually simple — and you can find them in under 2 minutes.\nEncourage: Try a free test right now and see where you actually stand.",
+            "steps_json": _json.dumps([
+                {"key": "E1", "label": "Engage", "description": "Open with a question, story, or hook that pulls the reader in."},
+                {"key": "E2", "label": "Educate", "description": "Share something valuable they didn't know. Build authority."},
+                {"key": "E3", "label": "Excite", "description": "Show them what's possible. Create anticipation."},
+                {"key": "E4", "label": "Encourage", "description": "Gentle nudge to take action. Supportive, not pushy."}
+            ]),
+        },
+        {
+            "name": "SLAP",
+            "slug": "slap",
+            "acronym": "SLAP",
+            "category": "niche",
+            "sort_order": 60,
+            "description": "Stop → Look → Act → Purchase. Interrupt-driven framework for high-urgency promotions.",
+            "when_to_use": "Use for flash sales, limited-time offers, and high-urgency announcements. Not for everyday emails.",
+            "deliverability_notes": "High-urgency language can trigger spam filters. Use sparingly and back urgency with real deadlines.",
+            "example_output": "Stop: Wait — before you send another campaign.\nLook: Your domain just appeared on 2 new blocklists.\nAct: Check your status now (takes 10 seconds).\nPurchase: Upgrade to Pro for 24/7 automated monitoring.",
+            "steps_json": _json.dumps([
+                {"key": "S", "label": "Stop", "description": "Pattern interrupt. Stop the reader mid-scroll with something unexpected."},
+                {"key": "L", "label": "Look", "description": "Direct their attention to the key information or offer."},
+                {"key": "A", "label": "Act", "description": "Tell them exactly what to do right now."},
+                {"key": "P", "label": "Purchase", "description": "Close with the specific purchase or conversion action."}
+            ]),
+        },
+        {
+            "name": "ACCA",
+            "slug": "acca",
+            "acronym": "ACCA",
+            "category": "niche",
+            "sort_order": 61,
+            "description": "Awareness → Comprehension → Conviction → Action. A methodical framework for complex or technical products.",
+            "when_to_use": "Best for B2B, technical products, or when the reader needs education before they can evaluate your offer.",
+            "deliverability_notes": "Educational content builds trust and engagement — ISPs reward this with better placement.",
+            "example_output": "Awareness: Email authentication has 6 protocols — most senders only know 3.\nComprehension: SPF, DKIM, and DMARC are table stakes. MTA-STS, DANE, and BIMI are the new standard.\nConviction: Senders with full auth see 23% higher inbox rates on average.\nAction: Check all 6 protocols in one scan — free, no signup required.",
+            "steps_json": _json.dumps([
+                {"key": "A1", "label": "Awareness", "description": "Introduce the problem or opportunity. Make the reader aware of something they're missing."},
+                {"key": "C", "label": "Comprehension", "description": "Help them understand the details. Educate without overwhelming."},
+                {"key": "C2", "label": "Conviction", "description": "Build belief that this matters and that your solution works. Use proof."},
+                {"key": "A2", "label": "Action", "description": "Clear next step. Make it easy and low-risk."}
+            ]),
+        },
+        {
+            "name": "PRUNE",
+            "slug": "prune",
+            "acronym": "PRUNE",
+            "category": "niche",
+            "sort_order": 62,
+            "description": "Preview → Restate → Underline → Nudge → End. A framework for follow-up and reminder emails.",
+            "when_to_use": "Use for follow-up sequences, abandoned cart, re-engagement, and reminder emails.",
+            "deliverability_notes": "Follow-up emails to engaged contacts perform well. Avoid sending to unengaged segments.",
+            "example_output": "Preview: Remember that deliverability audit you started?\nRestate: Your domain had 3 critical issues that could be hurting your inbox rate.\nUnderline: Every day those issues stay unfixed, more of your emails miss the inbox.\nNudge: It takes 5 minutes to fix. Here's your saved report.\nEnd: Fix it now → [link]",
+            "steps_json": _json.dumps([
+                {"key": "P", "label": "Preview", "description": "Reference the previous interaction or context. Jog their memory."},
+                {"key": "R", "label": "Restate", "description": "Restate the key value or finding from before."},
+                {"key": "U", "label": "Underline", "description": "Emphasize what's at stake. Why should they act now?"},
+                {"key": "N", "label": "Nudge", "description": "Gentle push toward action. Make it feel easy."},
+                {"key": "E", "label": "End", "description": "One clear CTA. Keep it simple."}
+            ]),
+        },
+        {
+            "name": "3 Reasons Why",
+            "slug": "3-reasons-why",
+            "acronym": "3RW",
+            "category": "niche",
+            "sort_order": 63,
+            "description": "Answer three questions: Why this? Why you? Why now? Simple framework for overcoming objections.",
+            "when_to_use": "Use when the reader is considering but hasn't committed. Great for mid-funnel emails.",
+            "deliverability_notes": "Objection-handling emails feel helpful, not salesy — good for engagement.",
+            "example_output": "Why this: Your email deliverability directly controls your revenue.\nWhy us: INBXR is the only tool that checks all 6 auth protocols in one scan.\nWhy now: Gmail's February 2024 sender requirements mean non-compliant domains get throttled.",
+            "steps_json": _json.dumps([
+                {"key": "W1", "label": "Why This", "description": "Why does this problem/solution matter? Establish relevance."},
+                {"key": "W2", "label": "Why You", "description": "Why is your solution the right one? Differentiate from alternatives."},
+                {"key": "W3", "label": "Why Now", "description": "Why should they act today? Create genuine urgency or timeliness."}
+            ]),
+        },
+    ]
+
+    for fw in _frameworks:
+        existing_fw = conn.execute(
+            "SELECT id FROM frameworks WHERE slug = ?", (fw["slug"],)
+        ).fetchone()
+        if existing_fw:
+            continue
+        conn.execute(
+            """INSERT INTO frameworks
+               (name, slug, acronym, category, steps_json, description,
+                when_to_use, deliverability_notes, example_output, sort_order, is_builtin)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)""",
+            (fw["name"], fw["slug"], fw["acronym"], fw["category"],
+             fw["steps_json"], fw["description"], fw["when_to_use"],
+             fw["deliverability_notes"], fw["example_output"], fw["sort_order"])
+        )
+    conn.commit()
 
 
 def _fix_cta_markers(conn):

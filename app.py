@@ -133,6 +133,9 @@ app.register_blueprint(team_bp)
 from blueprints.blog_routes import blog_bp
 app.register_blueprint(blog_bp)
 
+from blueprints.framework_routes import framework_bp
+app.register_blueprint(framework_bp)
+
 from modules.scheduler import init_scheduler
 init_scheduler(app)
 
@@ -474,6 +477,7 @@ def sitemap_xml():
         ('/blacklist-monitor', '0.7', 'monthly'),
         ('/email-verifier', '0.8', 'monthly'),
         ('/warmup', '0.6', 'monthly'),
+        ('/frameworks', '0.8', 'weekly'),
         ('/blog', '0.8', 'daily'),
         ('/pricing', '0.7', 'monthly'),
         ('/support', '0.5', 'monthly'),
@@ -4040,6 +4044,86 @@ def ai_rewrite():
     except Exception as e:
         logger.exception("AI rewrite failed")
         return jsonify({"error": f"Rewrite failed: {str(e)[:100]}"}), 500
+
+    return jsonify(result)
+
+
+@app.route("/ai-rewrite-framework", methods=["POST"])
+def ai_rewrite_framework():
+    """AI-powered email rewrite structured by a copywriting framework (Pro+ only)."""
+    if not session.get("user_id"):
+        return jsonify({"error": "Please log in to use AI rewrite.", "signup_url": "/signup"}), 429
+    tier = session.get("tier", "free")
+    if tier not in ("pro", "agency", "api"):
+        return jsonify({"error": "AI rewrite is available on Pro and Agency plans.", "upgrade_url": "/account"}), 403
+
+    data = request.get_json(force=True, silent=True)
+    if data is None:
+        return jsonify({"error": "Invalid JSON payload"}), 400
+
+    subject = (data.get("subject") or "").strip()
+    body = (data.get("body") or "").strip()
+    tone = (data.get("tone") or "professional").strip()
+    issues = data.get("issues") or []
+    framework_slug = (data.get("framework_slug") or "").strip()
+    user_framework_id = data.get("user_framework_id")
+
+    if not subject and not body:
+        return jsonify({"error": "Subject or body is required."}), 400
+
+    # Resolve framework
+    import json as _json
+    from modules.frameworks import get_framework_by_slug, get_user_framework, log_framework_usage
+    from modules.ai_rewriter import rewrite_with_framework, is_available, AIRewriteError
+
+    if not is_available():
+        return jsonify({"error": "AI rewrite not available — set GROQ_API_KEY environment variable."}), 503
+
+    framework_name = None
+    framework_steps = None
+    fw_id = None
+
+    if user_framework_id:
+        ufw = get_user_framework(session["user_id"], user_framework_id)
+        if not ufw:
+            return jsonify({"error": "Custom framework not found."}), 404
+        framework_name = ufw["name"]
+        framework_steps = _json.loads(ufw["steps_json"]) if ufw["steps_json"] else []
+    elif framework_slug:
+        fw = get_framework_by_slug(framework_slug)
+        if not fw:
+            return jsonify({"error": "Framework not found."}), 404
+        fw_id = fw["id"]
+        framework_name = fw["name"]
+        framework_steps = _json.loads(fw["steps_json"]) if fw["steps_json"] else []
+    else:
+        return jsonify({"error": "framework_slug or user_framework_id is required."}), 400
+
+    if not framework_steps:
+        return jsonify({"error": "Framework has no steps defined."}), 400
+
+    try:
+        result = rewrite_with_framework(
+            subject=subject, body=body,
+            framework_name=framework_name, framework_steps=framework_steps,
+            tone=tone, issues=issues,
+        )
+    except AIRewriteError as e:
+        return jsonify({"error": str(e)}), 500
+    except Exception as e:
+        logger.exception("Framework rewrite failed")
+        return jsonify({"error": f"Rewrite failed: {str(e)[:100]}"}), 500
+
+    # Log usage
+    try:
+        log_framework_usage(
+            user_id=session["user_id"],
+            framework_id=fw_id,
+            user_framework_id=user_framework_id,
+            action="rewrite",
+        )
+    except Exception:
+        pass
 
     return jsonify(result)
 

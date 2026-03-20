@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{ page_title or 'Framework Lab — INBXR' }}</title>
+  <meta name="description" content="{{ page_description or 'Browse 16 proven copywriting frameworks for email marketing.' }}" />
+  <link rel="canonical" href="{{ canonical_url or 'https://inbxr.us/frameworks' }}" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/style.css?v=20260320a" />
+  {% include 'sections/_head_meta.html' %}
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://inbxr.us/"},
+      {"@type": "ListItem", "position": 2, "name": "Framework Lab", "item": "https://inbxr.us/frameworks"}
+    ]
+  }
+  </script>
+</head>
+<body class="frameworks-page">
+
+{% include 'sections/header.html' %}
+{% include 'sections/frameworks_hero.html' %}
+{% include 'sections/frameworks_tool.html' %}
+{% include 'sections/frameworks_footer.html' %}
+
+<script>window.__userTier={{ (current_user_tier or 'free')|tojson }};window.__userId={{ (session.get('user_id', 0))|tojson }};</script>
+<script src="/static/js/frameworks.js"></script>
+</body>
+</html>

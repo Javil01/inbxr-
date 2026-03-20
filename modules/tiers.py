@@ -30,6 +30,7 @@ TIERS = {
             "ai_rewrite": False,
             "ai_support_chat": True,
             "priority_support": False,
+            "framework_builder": False,
         },
     },
     "pro": {
@@ -59,6 +60,7 @@ TIERS = {
             "ai_support_chat": True,
             "webhooks": False,
             "priority_support": True,
+            "framework_builder": True,
         },
     },
     "agency": {
@@ -87,6 +89,7 @@ TIERS = {
             "ai_support_chat": True,
             "webhooks": True,
             "priority_support": True,
+            "framework_builder": True,
         },
     },
     "api": {
@@ -115,6 +118,7 @@ TIERS = {
             "ai_support_chat": True,
             "webhooks": True,
             "priority_support": True,
+            "framework_builder": True,
         },
         "api_pricing": {
             "domain_check": 0.02,

@@ -559,6 +559,25 @@ function renderResults(data, payload) {
   updateBadgeCount('copyFlagCount', (copy.all_flags || []).length);
   renderRewrites(copy.rewrites, payload.subject);
 
+  // ── Framework Detection ──
+  const fwDetect = copy.framework_detection;
+  const fwDetectEl = $('#frameworkDetection');
+  if (fwDetect && fwDetectEl) {
+    fwDetectEl.style.display = '';
+    fwDetectEl.innerHTML = `
+      <div class="fw-detection__card">
+        <span class="fw-detection__icon">&#x1F50D;</span>
+        <div class="fw-detection__info">
+          <strong>Detected: ${escHtml(fwDetect.detected_framework)}</strong>
+          <span class="fw-detection__conf">(${fwDetect.confidence}% match)</span>
+          <p>${escHtml(fwDetect.structural_notes)}</p>
+        </div>
+        <a href="/frameworks#${encodeURIComponent(fwDetect.detected_slug)}" class="fw-detection__link">View framework &rarr;</a>
+      </div>`;
+  } else if (fwDetectEl) {
+    fwDetectEl.style.display = 'none';
+  }
+
   // ── Readability ──
   const readModule = $('#readabilityModule');
   if (data.readability && data.readability.score !== null) {
@@ -1583,10 +1602,61 @@ function initAiRewrite(data, payload) {
       module.style.display = '';
       $('#aiRewriteContent').style.display = 'none';
       $('#aiRewriteError').classList.add('hidden');
+      // Populate framework dropdown
+      _populateFrameworkDropdown();
     } else {
       module.style.display = 'none';
     }
   }).catch(() => { module.style.display = 'none'; });
+}
+
+function _populateFrameworkDropdown() {
+  const sel = $('#aiFrameworkSelect');
+  if (!sel) return;
+  const masterGroup = $('#aiFrameworkMaster');
+  const builtinGroup = $('#aiFrameworkBuiltin');
+  const customGroup = $('#aiFrameworkCustom');
+  if (!masterGroup || !builtinGroup || !customGroup) return;
+
+  // Clear existing options (keep structure)
+  masterGroup.innerHTML = '';
+  builtinGroup.innerHTML = '';
+  customGroup.innerHTML = '';
+
+  // Fetch frameworks
+  fetch('/api/frameworks').then(r => r.json()).then(frameworks => {
+    frameworks.forEach(fw => {
+      if (fw.locked) return; // skip locked frameworks
+      const opt = document.createElement('option');
+      opt.value = 'builtin:' + fw.slug;
+      opt.textContent = fw.acronym + ' — ' + fw.name;
+      if (fw.category === 'master') {
+        masterGroup.appendChild(opt);
+      } else {
+        builtinGroup.appendChild(opt);
+      }
+    });
+  }).catch(() => {});
+
+  // Fetch user custom frameworks if logged in
+  if (window.__userTier && ['pro', 'agency', 'api'].includes(window.__userTier)) {
+    fetch('/api/my-frameworks').then(r => {
+      if (r.ok) return r.json();
+      return [];
+    }).then(myFws => {
+      if (!myFws || !myFws.length) {
+        customGroup.style.display = 'none';
+        return;
+      }
+      customGroup.style.display = '';
+      myFws.forEach(fw => {
+        const opt = document.createElement('option');
+        opt.value = 'custom:' + fw.id;
+        opt.textContent = fw.name;
+        customGroup.appendChild(opt);
+      });
+    }).catch(() => {});
+  }
 }
 
 $('#aiRewriteBtn').addEventListener('click', async () => {
@@ -1615,20 +1685,44 @@ $('#aiRewriteBtn').addEventListener('click', async () => {
   }
 
   const tone = $('#aiToneSelect').value;
+  const fwSelect = $('#aiFrameworkSelect');
+  const fwValue = fwSelect ? fwSelect.value : '';
 
   try {
-    const res = await fetch('/ai-rewrite', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
+    let res;
+    if (fwValue) {
+      // Framework-aware rewrite
+      const payload = {
         subject: _aiPayloadCache.subject,
         body: _aiPayloadCache.body,
-        industry: _aiPayloadCache.industry,
         tone,
-        cta_texts: _aiPayloadCache.cta_texts,
         issues: issues.filter(Boolean),
-      }),
-    });
+      };
+      if (fwValue.startsWith('custom:')) {
+        payload.user_framework_id = parseInt(fwValue.split(':')[1]);
+      } else if (fwValue.startsWith('builtin:')) {
+        payload.framework_slug = fwValue.split(':')[1];
+      }
+      res = await fetch('/ai-rewrite-framework', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+    } else {
+      // Standard rewrite
+      res = await fetch('/ai-rewrite', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          subject: _aiPayloadCache.subject,
+          body: _aiPayloadCache.body,
+          industry: _aiPayloadCache.industry,
+          tone,
+          cta_texts: _aiPayloadCache.cta_texts,
+          issues: issues.filter(Boolean),
+        }),
+      });
+    }
     const data = await res.json();
 
     if (!res.ok || data.error) {
@@ -1798,7 +1892,22 @@ function renderAiRewrite(data) {
 
   // ── Body rewrite ──
   const bodyEl = $('#aiBodyRewrite');
-  if (data.body_rewrite) {
+  if (data.step_mapping && data.step_mapping.length && data.framework_applied) {
+    // Framework-structured output
+    bodyEl.innerHTML = `
+      <div class="ai-block">
+        <h4 class="ai-block__title">Body Rewrite — ${escHtml(data.framework_applied)} Framework</h4>
+        <div class="ai-text-block ai-text-block--body ai-text-block--framework">
+          ${data.step_mapping.map(s => `
+            <div class="ai-fw-step">
+              <span class="ai-fw-step__key">${escHtml(s.step_key)}</span>
+              <span class="ai-fw-step__label">${escHtml(s.step_label)}</span>
+              <p>${escHtml(s.content || '')}</p>
+            </div>`).join('')}
+          <button type="button" class="dns-copy-btn" data-copy="${escAttr(data.body_rewrite)}">Copy All</button>
+        </div>
+      </div>`;
+  } else if (data.body_rewrite) {
     const paragraphs = data.body_rewrite.split(/\n\n+/).filter(Boolean);
     bodyEl.innerHTML = `
       <div class="ai-block">
@@ -1855,8 +1964,49 @@ function renderAiRewrite(data) {
   if (data.elapsed_ms) parts.push(`${data.elapsed_ms}ms`);
   if (data.usage?.total_tokens) parts.push(`${data.usage.total_tokens} tokens`);
   if (data.tone) parts.push(`Tone: ${data.tone}`);
+  if (data.framework_applied) parts.push(`Framework: ${data.framework_applied}`);
   metaEl.textContent = parts.join(' · ');
+
+  // ── "Test This Rewrite" button (Phase 5) ──
+  _addTestRewriteButton(data);
 }
+
+function _addTestRewriteButton(data) {
+  // Remove existing button if any
+  const existing = document.getElementById('testRewriteBtn');
+  if (existing) existing.remove();
+
+  if (!data.body_rewrite) return;
+
+  const bestSubject = (data.subject_alternatives && data.subject_alternatives[0]) || '';
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.id = 'testRewriteBtn';
+  btn.className = 'btn-ai-test-rewrite';
+  btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> Test This Rewrite';
+
+  btn.addEventListener('click', () => {
+    // Populate the analyzer form with the rewrite
+    const subjectInput = $('#subject');
+    const bodyInput = $('#body') || $('#emailBody');
+    if (subjectInput && bestSubject) {
+      subjectInput.value = bestSubject;
+    }
+    if (bodyInput && data.body_rewrite) {
+      bodyInput.value = data.body_rewrite;
+    }
+    // Scroll to form
+    const form = $('#analyzerForm') || $('form');
+    if (form) {
+      form.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      // Pulse animation
+      form.classList.add('highlight-pulse');
+      setTimeout(() => form.classList.remove('highlight-pulse'), 2000);
+    }
+  });
+
+  const metaEl = $('#aiMeta');
+  if (metaEl) metaEl.parentNode.insertBefore(btn, metaEl.nextSibling);
 
 // Click-to-copy for AI suggestions
 document.addEventListener('click', e => {
