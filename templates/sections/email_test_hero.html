@@ -16,46 +16,115 @@
       </div>
 
       <div class="hero-split__visual">
-        <div class="hero-mock">
-          <div class="hero-mock__header">
-            <span class="hero-mock__dot hero-mock__dot--red"></span>
-            <span class="hero-mock__dot hero-mock__dot--yellow"></span>
-            <span class="hero-mock__dot hero-mock__dot--green"></span>
-            <span class="hero-mock__tab">INBXR Report</span>
+        <div class="hero-carousel" id="heroCarousel">
+
+          <!-- Slide 1: INBXR Report -->
+          <div class="hero-slide hero-slide--active" data-slide="0">
+            <div class="hero-mock">
+              <div class="hero-mock__header">
+                <span class="hero-mock__dot hero-mock__dot--red"></span>
+                <span class="hero-mock__dot hero-mock__dot--yellow"></span>
+                <span class="hero-mock__dot hero-mock__dot--green"></span>
+                <span class="hero-mock__tab">INBXR Report</span>
+              </div>
+              <div class="hero-mock__body">
+                <div class="hero-mock__row">
+                  <span class="hero-mock__label">Overall Grade</span>
+                  <span class="hero-mock__grade hero-mock__grade--a">A</span>
+                </div>
+                <div class="hero-mock__row">
+                  <span class="hero-mock__label">Copy Score</span>
+                  <div class="hero-mock__bar"><div class="hero-mock__bar-fill" style="width:87%"></div></div>
+                  <span class="hero-mock__val">87<small>/100</small></span>
+                </div>
+                <div class="hero-mock__row">
+                  <span class="hero-mock__label">Spam Risk</span>
+                  <div class="hero-mock__bar hero-mock__bar--green"><div class="hero-mock__bar-fill hero-mock__bar-fill--green" style="width:12%"></div></div>
+                  <span class="hero-mock__val hero-mock__val--green">Low</span>
+                </div>
+                <div class="hero-mock__divider"></div>
+                <div class="hero-mock__row">
+                  <span class="hero-mock__label">Framework</span>
+                  <span class="hero-mock__badge">PAS Detected</span>
+                </div>
+                <div class="hero-mock__row">
+                  <span class="hero-mock__label">Auth</span>
+                  <span class="hero-mock__checks">
+                    <span class="hero-mock__check hero-mock__check--pass">SPF</span>
+                    <span class="hero-mock__check hero-mock__check--pass">DKIM</span>
+                    <span class="hero-mock__check hero-mock__check--pass">DMARC</span>
+                  </span>
+                </div>
+                <div class="hero-mock__divider"></div>
+                <div class="hero-mock__row hero-mock__row--ai">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/></svg>
+                  <span>AI Rewrite Ready</span>
+                </div>
+              </div>
+            </div>
           </div>
-          <div class="hero-mock__body">
-            <div class="hero-mock__row">
-              <span class="hero-mock__label">Overall Grade</span>
-              <span class="hero-mock__grade hero-mock__grade--a">A</span>
+
+          <!-- Slide 2: Gmail Primary inbox animation -->
+          <div class="hero-slide" data-slide="1">
+            <div class="hero-mock hero-mock--gmail">
+              <div class="hero-mock__header">
+                <span class="hero-mock__dot hero-mock__dot--red"></span>
+                <span class="hero-mock__dot hero-mock__dot--yellow"></span>
+                <span class="hero-mock__dot hero-mock__dot--green"></span>
+                <span class="hero-mock__tab">Gmail</span>
+              </div>
+              <div class="gmail-tabs">
+                <span class="gmail-tab gmail-tab--active">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 4L12 13 2 4"/></svg>
+                  Primary
+                </span>
+                <span class="gmail-tab">Promotions</span>
+                <span class="gmail-tab">Social</span>
+              </div>
+              <div class="gmail-inbox">
+                <div class="gmail-row gmail-row--existing">
+                  <span class="gmail-avatar">JD</span>
+                  <div class="gmail-row__content">
+                    <span class="gmail-row__sender">John Davis</span>
+                    <span class="gmail-row__subject">Q3 Budget Review</span>
+                  </div>
+                  <span class="gmail-row__time">10:42 AM</span>
+                </div>
+                <div class="gmail-row gmail-row--existing">
+                  <span class="gmail-avatar gmail-avatar--blue">AM</span>
+                  <div class="gmail-row__content">
+                    <span class="gmail-row__sender">Anna Martinez</span>
+                    <span class="gmail-row__subject">Re: Launch timeline update</span>
+                  </div>
+                  <span class="gmail-row__time">9:15 AM</span>
+                </div>
+                <div class="gmail-row gmail-row--landing">
+                  <span class="gmail-avatar gmail-avatar--green">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" width="14" height="14"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                  </span>
+                  <div class="gmail-row__content">
+                    <span class="gmail-row__sender gmail-row__sender--new">Your Campaign</span>
+                    <span class="gmail-row__subject gmail-row__subject--new">Exclusive: 3 ways to boost your Q4 pipeline</span>
+                  </div>
+                  <span class="gmail-row__time gmail-row__time--new">Just now</span>
+                  <span class="gmail-row__badge-primary">Primary</span>
+                </div>
+                <div class="gmail-row gmail-row--existing">
+                  <span class="gmail-avatar gmail-avatar--purple">KL</span>
+                  <div class="gmail-row__content">
+                    <span class="gmail-row__sender">Kevin Lee</span>
+                    <span class="gmail-row__subject">Meeting notes from Friday</span>
+                  </div>
+                  <span class="gmail-row__time">Yesterday</span>
+                </div>
+              </div>
             </div>
-            <div class="hero-mock__row">
-              <span class="hero-mock__label">Copy Score</span>
-              <div class="hero-mock__bar"><div class="hero-mock__bar-fill" style="width:87%"></div></div>
-              <span class="hero-mock__val">87<small>/100</small></span>
-            </div>
-            <div class="hero-mock__row">
-              <span class="hero-mock__label">Spam Risk</span>
-              <div class="hero-mock__bar hero-mock__bar--green"><div class="hero-mock__bar-fill hero-mock__bar-fill--green" style="width:12%"></div></div>
-              <span class="hero-mock__val hero-mock__val--green">Low</span>
-            </div>
-            <div class="hero-mock__divider"></div>
-            <div class="hero-mock__row">
-              <span class="hero-mock__label">Framework</span>
-              <span class="hero-mock__badge">PAS Detected</span>
-            </div>
-            <div class="hero-mock__row">
-              <span class="hero-mock__label">Auth</span>
-              <span class="hero-mock__checks">
-                <span class="hero-mock__check hero-mock__check--pass">SPF</span>
-                <span class="hero-mock__check hero-mock__check--pass">DKIM</span>
-                <span class="hero-mock__check hero-mock__check--pass">DMARC</span>
-              </span>
-            </div>
-            <div class="hero-mock__divider"></div>
-            <div class="hero-mock__row hero-mock__row--ai">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/></svg>
-              <span>AI Rewrite Ready</span>
-            </div>
+          </div>
+
+          <!-- Slide indicators -->
+          <div class="hero-carousel__dots">
+            <button class="hero-carousel__dot hero-carousel__dot--active" data-slide="0" aria-label="Slide 1"></button>
+            <button class="hero-carousel__dot" data-slide="1" aria-label="Slide 2"></button>
           </div>
         </div>
       </div>
@@ -63,3 +132,51 @@
 
   </div>
 </div>
+<script>
+(function(){
+  var slides = document.querySelectorAll('.hero-slide');
+  var dots = document.querySelectorAll('.hero-carousel__dot');
+  if (slides.length < 2) return;
+  var current = 0;
+  var total = slides.length;
+  var timer;
+
+  function show(i) {
+    current = i;
+    slides.forEach(function(s, idx) {
+      s.classList.toggle('hero-slide--active', idx === i);
+    });
+    dots.forEach(function(d, idx) {
+      d.classList.toggle('hero-carousel__dot--active', idx === i);
+    });
+    // Re-trigger landing animation on Gmail slide
+    if (i === 1) {
+      var landing = slides[1].querySelector('.gmail-row--landing');
+      if (landing) {
+        landing.style.animation = 'none';
+        void landing.offsetWidth;
+        landing.style.animation = '';
+      }
+      var badge = slides[1].querySelector('.gmail-row__badge-primary');
+      if (badge) {
+        badge.style.animation = 'none';
+        void badge.offsetWidth;
+        badge.style.animation = '';
+      }
+    }
+  }
+
+  function next() { show((current + 1) % total); }
+  function startTimer() { timer = setInterval(next, 5000); }
+  function resetTimer() { clearInterval(timer); startTimer(); }
+
+  dots.forEach(function(dot) {
+    dot.addEventListener('click', function() {
+      show(parseInt(dot.dataset.slide));
+      resetTimer();
+    });
+  });
+
+  startTimer();
+})();
+</script>
