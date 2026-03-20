@@ -462,7 +462,7 @@ Sitemap: https://inbxr.us/sitemap.xml
 @app.route('/sitemap.xml')
 def sitemap_xml():
     """Generate dynamic sitemap.xml."""
-    from modules.database import fetch_all
+    from modules.database import fetchall as fetch_all
     pages = [
         ('/', '1.0', 'weekly'),
         ('/analyzer', '0.9', 'weekly'),
@@ -477,6 +477,7 @@ def sitemap_xml():
         ('/blog', '0.8', 'daily'),
         ('/pricing', '0.7', 'monthly'),
         ('/support', '0.5', 'monthly'),
+        ('/how-different', '0.6', 'monthly'),
     ]
     xml = ['<?xml version="1.0" encoding="UTF-8"?>']
     xml.append('<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">')
@@ -484,9 +485,11 @@ def sitemap_xml():
         xml.append(f'  <url><loc>https://inbxr.us{path}</loc><priority>{priority}</priority><changefreq>{freq}</changefreq></url>')
     # Add blog posts
     try:
-        posts = fetch_all("SELECT slug, updated_at FROM blog_posts WHERE status='published' ORDER BY updated_at DESC")
+        posts = fetch_all("SELECT slug, updated_at, published_at FROM blog_posts WHERE status='published' ORDER BY updated_at DESC")
         for p in posts:
-            xml.append(f'  <url><loc>https://inbxr.us/blog/{p["slug"]}</loc><priority>0.6</priority><changefreq>monthly</changefreq></url>')
+            lastmod = p.get("updated_at") or p.get("published_at") or ""
+            lastmod_tag = f'<lastmod>{lastmod[:10]}</lastmod>' if lastmod else ''
+            xml.append(f'  <url><loc>https://inbxr.us/blog/{p["slug"]}</loc>{lastmod_tag}<priority>0.6</priority><changefreq>monthly</changefreq></url>')
     except Exception:
         pass
     xml.append('</urlset>')

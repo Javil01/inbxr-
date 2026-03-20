@@ -194,40 +194,6 @@ def blog_post(slug):
     )
 
 
-@blog_bp.route("/sitemap.xml")
-def sitemap():
-    """XML sitemap for SEO — static pages + published blog posts."""
-    static_pages = [
-        "/", "/sender", "/placement", "/subject-scorer",
-        "/bimi", "/blacklist-monitor", "/header-analyzer",
-        "/email-verifier", "/warmup", "/blog", "/pricing",
-        "/privacy", "/terms",
-    ]
-
-    posts = fetchall(
-        "SELECT slug, updated_at, published_at FROM blog_posts WHERE status = 'published' ORDER BY published_at DESC"
-    )
-
-    xml_parts = ['<?xml version="1.0" encoding="UTF-8"?>']
-    xml_parts.append('<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">')
-
-    for path in static_pages:
-        xml_parts.append(f"  <url><loc>https://inbxr.com{path}</loc></url>")
-
-    for p in posts:
-        lastmod = p.get("updated_at") or p.get("published_at") or ""
-        if lastmod:
-            lastmod_tag = f"<lastmod>{lastmod[:10]}</lastmod>"
-        else:
-            lastmod_tag = ""
-        xml_parts.append(
-            f"  <url><loc>https://inbxr.com/blog/{p['slug']}</loc>{lastmod_tag}</url>"
-        )
-
-    xml_parts.append("</urlset>")
-    return Response("\n".join(xml_parts), content_type="application/xml")
-
-
 # ── Admin page routes ────────────────────────────────────
 
 @blog_bp.route("/admin/blog")

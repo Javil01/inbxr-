@@ -2,6 +2,7 @@
   <link rel="icon" href="/static/images/favicon-32.png" sizes="32x32" type="image/png">
   <link rel="icon" href="/static/images/favicon.ico" sizes="16x16 32x32 64x64">
   <link rel="apple-touch-icon" href="/static/images/apple-touch-icon.png">
+  {% if noindex %}<meta name="robots" content="noindex, nofollow">{% endif %}
   {% if canonical_url %}<link rel="canonical" href="{{ canonical_url }}">{% endif %}
   {% if page_description %}<meta name="description" content="{{ page_description }}">{% endif %}
   {% if page_description %}

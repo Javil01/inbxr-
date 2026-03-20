@@ -113,7 +113,7 @@
     <div class="blog-editor__panel">
       <h3>Featured Image</h3>
       <div id="imagePreview" style="margin-bottom:10px; {% if not post or not post.featured_image %}display:none;{% endif %}">
-        <img id="imagePreviewImg" src="{{ post.featured_image if post and post.featured_image else '' }}" style="width:100%; border-radius:8px; aspect-ratio:16/9; object-fit:cover;" />
+        <img id="imagePreviewImg" src="{{ post.featured_image if post and post.featured_image else '' }}" alt="{{ post.title if post else 'Featured image preview' }}" loading="lazy" style="width:100%; border-radius:8px; aspect-ratio:16/9; object-fit:cover;" />
         <button onclick="removeImage()" style="margin-top:6px; padding:4px 10px; border-radius:6px; border:1px solid rgba(239,68,68,0.3); background:none; color:#ef4444; font-size:0.72rem; cursor:pointer;">Remove</button>
       </div>
       <input type="file" id="imageUpload" accept="image/*" onchange="uploadImage(this)" style="display:none;" />
