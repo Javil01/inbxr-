@@ -407,6 +407,103 @@ $('#analyzeForm').addEventListener('submit', async e => {
 // ══════════════════════════════════════════════════════
 //  RENDER RESULTS
 // ══════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════
+//  VERDICT SUMMARY — Top-level analysis verdict
+// ══════════════════════════════════════════════════════
+function renderAnalyzerVerdict(data) {
+  const el = $('#analyzerVerdict');
+  if (!el) return;
+
+  const spam = data.spam;
+  const copy = data.copy;
+  const reputation = data.reputation;
+  const audit = data.audit;
+
+  // Determine overall verdict
+  const spamScore = spam ? spam.score : 0;
+  const copyScore = copy ? copy.score : 50;
+  const auditFails = audit?.checks ? audit.checks.filter(c => !c.pass).length : 0;
+
+  let verdict, verdictColor, verdictIcon, verdictDesc;
+
+  if (spamScore >= 60 || auditFails >= 3) {
+    verdict = 'Needs Work';
+    verdictColor = 'var(--color-red)';
+    verdictIcon = '\u2717';
+    verdictDesc = 'Significant issues found that could hurt delivery. Review the critical items below.';
+  } else if (spamScore >= 30 || copyScore < 50 || auditFails >= 1) {
+    verdict = 'Room to Improve';
+    verdictColor = 'var(--color-yellow)';
+    verdictIcon = '\u26A0';
+    verdictDesc = 'Your email is decent but has areas that could be stronger before sending.';
+  } else if (copyScore >= 70 && spamScore <= 15) {
+    verdict = 'Ready to Send';
+    verdictColor = 'var(--color-green)';
+    verdictIcon = '\u2713';
+    verdictDesc = 'Low spam risk and strong copy. This email looks ready for your audience.';
+  } else {
+    verdict = 'Analysis Complete';
+    verdictColor = 'var(--color-blue)';
+    verdictIcon = '\u2139';
+    verdictDesc = 'Review your scores and recommendations below.';
+  }
+
+  // Top recommendation
+  let topRec = '';
+  if (spam && spam.score >= 30 && spam.top_recommendations?.length) {
+    const rec = spam.top_recommendations[0];
+    const recText = rec.recommendation || rec.item || rec;
+    topRec = `<div class="hero-action hero-action--${spamScore >= 60 ? 'critical' : 'warning'}"><span class="hero-action__icon">\u26A0</span><span>${_escHtml(String(recText))}</span></div>`;
+  } else if (copy && copy.score < 50 && copy.weaknesses?.length) {
+    topRec = `<div class="hero-action hero-action--warning"><span class="hero-action__icon">\u26A0</span><span>Weak point: <strong>${_escHtml(copy.weaknesses[0])}</strong></span></div>`;
+  }
+
+  // Score pills
+  const pills = [];
+  if (spam) {
+    const sColor = spam.score <= 20 ? 'var(--color-green)' : spam.score <= 40 ? 'var(--color-yellow)' : 'var(--color-red)';
+    pills.push(`<div class="hero-pill"><span class="hero-pill__label">Spam Risk</span><span class="hero-pill__value" style="color:${sColor}">${spam.score}/100</span></div>`);
+  }
+  if (copy) {
+    const cColor = copy.score >= 70 ? 'var(--color-green)' : copy.score >= 50 ? 'var(--color-yellow)' : 'var(--color-red)';
+    pills.push(`<div class="hero-pill"><span class="hero-pill__label">Copy Score</span><span class="hero-pill__value" style="color:${cColor}">${copy.score}/100</span></div>`);
+  }
+  if (data.readability?.score != null) {
+    const r = data.readability;
+    const rColor = r.score >= 70 ? 'var(--color-green)' : r.score >= 50 ? 'var(--color-yellow)' : 'var(--color-red)';
+    pills.push(`<div class="hero-pill"><span class="hero-pill__label">Readability</span><span class="hero-pill__value" style="color:${rColor}">${r.score}/100</span></div>`);
+  }
+
+  const iconBgMap = {
+    'var(--color-red)': 'rgba(239,68,68,0.1)',
+    'var(--color-yellow)': 'rgba(245,158,11,0.1)',
+    'var(--color-green)': 'rgba(34,197,94,0.1)',
+    'var(--color-blue)': 'rgba(59,130,246,0.1)',
+  };
+  const iconBg = iconBgMap[verdictColor] || 'rgba(59,130,246,0.1)';
+
+  el.innerHTML = `
+    <div class="hero-summary" style="--hero-color:${verdictColor}">
+      <div class="hero-summary__top">
+        <div class="hero-summary__verdict">
+          <span class="hero-summary__icon" style="background:${iconBg}">${verdictIcon}</span>
+          <div class="hero-summary__text">
+            <span class="hero-summary__title">${_escHtml(verdict)}</span>
+            <span class="hero-summary__desc">${_escHtml(verdictDesc)}</span>
+          </div>
+        </div>
+        <div class="hero-summary__pills">${pills.join('')}</div>
+      </div>
+      ${topRec}
+    </div>`;
+  el.style.display = '';
+}
+
+function _escHtml(str) {
+  if (!str) return '';
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
 function renderResults(data, payload) {
   const { spam, copy, meta, reputation } = data;
 
@@ -422,6 +519,9 @@ function renderResults(data, payload) {
   rc.classList.remove('hidden');
 
   if (window.innerWidth < 960) rc.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  // ── Verdict summary (top-level) ──
+  renderAnalyzerVerdict(data);
 
   // ── Pre-Send Audit Banner (top of results) ──
   if (data.audit) {
@@ -2324,6 +2424,8 @@ function showAnalysisProgress() {
   overlay.classList.remove('hidden');
   $('#emptyState').classList.add('hidden');
   $('#resultsContent').classList.add('hidden');
+  const vEl = $('#analyzerVerdict');
+  if (vEl) vEl.style.display = 'none';
 
   const steps = $$('.ap-step', overlay);
   steps.forEach(s => { s.classList.remove('active', 'done'); });

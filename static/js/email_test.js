@@ -116,7 +116,7 @@ function showSkeletonLoading() {
   if (!panel) return;
 
   // Hide real content containers
-  ['#espDiagnostic', '#etPlacementSummary', '#etAssessment', '#etHeaderGrades', '#etTransport', '#etIdentity', '#etScores', '#etReadability', '#etReputation', '#etAudit', '#etRawHeaders'].forEach(s => {
+  ['#etHeroSummary', '#espDiagnostic', '#etPlacementSummary', '#etAssessment', '#etHeaderGrades', '#etTransport', '#etIdentity', '#etScores', '#etReadability', '#etReputation', '#etAudit', '#etRawHeaders'].forEach(s => {
     const el = $(s);
     if (el) el.style.display = 'none';
   });
@@ -190,7 +190,7 @@ function hideSkeletonLoading() {
     setTimeout(() => skeleton.remove(), 300);
   }
   // Restore elements hidden by showSkeletonLoading
-  ['#espDiagnostic', '#etPlacementSummary', '#etAssessment', '#etHeaderGrades', '#etTransport', '#etIdentity', '#etScores', '#etReadability', '#etReputation', '#etAudit', '#etRawHeaders'].forEach(s => {
+  ['#etHeroSummary', '#espDiagnostic', '#etPlacementSummary', '#etAssessment', '#etHeaderGrades', '#etTransport', '#etIdentity', '#etScores', '#etReadability', '#etReputation', '#etAudit', '#etRawHeaders'].forEach(s => {
     const el = $(s);
     if (el) el.style.display = '';
   });
@@ -395,8 +395,123 @@ function renderNotFound() {
 // ══════════════════════════════════════════════════════
 //  RENDER: FULL REPORT
 // ══════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════
+//  HERO SUMMARY CARD — Top-level verdict at a glance
+// ══════════════════════════════════════════════════════
+function renderHeroSummary(data) {
+  const el = $('#etHeroSummary');
+  if (!el) return;
+
+  const p = data.placement;
+  const spam = data.spam;
+  const copy = data.copy;
+  const grades = data.header_grades || [];
+
+  // Determine placement status
+  const inSpam = p && (p.placement === 'spam' || p.placement === 'trash');
+  const inPromo = p && p.placement === 'inbox' && p.tab === 'promotions';
+  const inPrimary = p && p.placement === 'inbox' && (!p.tab || p.tab === 'primary');
+
+  // Count auth issues
+  const authFails = grades.filter(g => g.status === 'fail').length;
+  const authWarns = grades.filter(g => g.status === 'warning').length;
+  const authPasses = grades.filter(g => g.status === 'pass').length;
+
+  // Overall verdict
+  let verdict, verdictColor, verdictIcon, verdictDesc;
+  if (inSpam) {
+    verdict = 'Landed in Spam';
+    verdictColor = 'var(--color-red)';
+    verdictIcon = '\u2717';
+    verdictDesc = 'Your email was filtered to spam. Review the critical issues below to fix delivery.';
+  } else if (inPromo) {
+    verdict = 'Promotions Tab';
+    verdictColor = 'var(--color-yellow)';
+    verdictIcon = '\u26A0';
+    verdictDesc = 'Delivered but sorted into Gmail\'s Promotions tab, which gets 50-70% lower open rates.';
+  } else if (inPrimary && authFails === 0 && (!spam || spam.score <= 20)) {
+    verdict = 'Looking Good';
+    verdictColor = 'var(--color-green)';
+    verdictIcon = '\u2713';
+    verdictDesc = 'Your email passed key checks and landed in the primary inbox.';
+  } else if (inPrimary) {
+    verdict = 'Inbox — With Issues';
+    verdictColor = 'var(--color-blue)';
+    verdictIcon = '\u2139';
+    verdictDesc = 'Delivered to inbox, but some issues were found that could affect future sends.';
+  } else {
+    verdict = 'Results Ready';
+    verdictColor = 'var(--color-blue)';
+    verdictIcon = '\u2139';
+    verdictDesc = 'Your email analysis is complete. Review the findings below.';
+  }
+
+  // Build mini-metric pills
+  const pills = [];
+  if (spam) {
+    const sc = spam.score;
+    const sColor = sc <= 20 ? 'var(--color-green)' : sc <= 40 ? 'var(--color-yellow)' : 'var(--color-red)';
+    pills.push(`<div class="hero-pill"><span class="hero-pill__label">Spam Risk</span><span class="hero-pill__value" style="color:${sColor}">${sc}/100</span></div>`);
+  }
+  if (copy) {
+    const cc = copy.score;
+    const cColor = cc >= 70 ? 'var(--color-green)' : cc >= 50 ? 'var(--color-yellow)' : 'var(--color-red)';
+    pills.push(`<div class="hero-pill"><span class="hero-pill__label">Copy Score</span><span class="hero-pill__value" style="color:${cColor}">${cc}/100</span></div>`);
+  }
+  // Auth summary pill
+  const authTotal = grades.length;
+  if (authTotal > 0) {
+    const aColor = authFails > 0 ? 'var(--color-red)' : authWarns > 0 ? 'var(--color-yellow)' : 'var(--color-green)';
+    pills.push(`<div class="hero-pill"><span class="hero-pill__label">Auth Checks</span><span class="hero-pill__value" style="color:${aColor}">${authPasses}/${authTotal} pass</span></div>`);
+  }
+
+  // Top action item
+  let topAction = '';
+  if (inSpam && authFails > 0) {
+    const failNames = grades.filter(g => g.status === 'fail').map(g => g.label).join(', ');
+    topAction = `<div class="hero-action hero-action--critical"><span class="hero-action__icon">\u2717</span><span>Fix first: <strong>${escHtml(failNames)}</strong> — authentication failures are the #1 cause of spam filtering.</span></div>`;
+  } else if (inSpam && spam && spam.score > 50) {
+    topAction = `<div class="hero-action hero-action--critical"><span class="hero-action__icon">\u26A0</span><span>Fix first: <strong>High spam risk score (${spam.score}/100)</strong> — review flagged content triggers below.</span></div>`;
+  } else if (inPromo) {
+    topAction = `<div class="hero-action hero-action--warning"><span class="hero-action__icon">\u26A0</span><span>To reach Primary: reduce HTML complexity, limit links to 1-2, and write like a person, not a brand.</span></div>`;
+  } else if (authFails > 0) {
+    const failNames = grades.filter(g => g.status === 'fail').map(g => g.label).join(', ');
+    topAction = `<div class="hero-action hero-action--warning"><span class="hero-action__icon">\u26A0</span><span>Fix first: <strong>${escHtml(failNames)}</strong> — failing authentication hurts deliverability over time.</span></div>`;
+  } else if (spam && spam.score > 40) {
+    topAction = `<div class="hero-action hero-action--warning"><span class="hero-action__icon">\u26A0</span><span>Your spam risk score is <strong>${spam.score}/100</strong> — review flagged content triggers to reduce filtering risk.</span></div>`;
+  }
+
+  // Icon bg color (10% opacity version)
+  const iconBgMap = {
+    'var(--color-red)': 'rgba(239,68,68,0.1)',
+    'var(--color-yellow)': 'rgba(245,158,11,0.1)',
+    'var(--color-green)': 'rgba(34,197,94,0.1)',
+    'var(--color-blue)': 'rgba(59,130,246,0.1)',
+  };
+  const iconBg = iconBgMap[verdictColor] || 'rgba(59,130,246,0.1)';
+
+  el.innerHTML = `
+    <div class="hero-summary" style="--hero-color:${verdictColor}">
+      <div class="hero-summary__top">
+        <div class="hero-summary__verdict">
+          <span class="hero-summary__icon" style="background:${iconBg}">${verdictIcon}</span>
+          <div class="hero-summary__text">
+            <span class="hero-summary__title">${escHtml(verdict)}</span>
+            <span class="hero-summary__desc">${escHtml(verdictDesc)}</span>
+          </div>
+        </div>
+        <div class="hero-summary__pills">${pills.join('')}</div>
+      </div>
+      ${topAction}
+    </div>`;
+  el.style.display = '';
+}
+
 function renderFullReport(data) {
   clearAutoRecheck();
+
+  // ── Hero summary card (top-level verdict) ──
+  renderHeroSummary(data);
 
   // ── Placement summary ──
   const p = data.placement;
@@ -465,7 +580,7 @@ function renderFullReport(data) {
   renderEmailPreview(data);
 
   // Show all sections with staggered reveal
-  const revealSections = ['#espDiagnostic', '#etAssessment', '#etHeaderGrades', '#etTransport', '#etIdentity', '#etScores', '#etReadability', '#etReputation', '#etAudit', '#etFullAuditCta', '#etMoveToPrimary', '#etPrimaryOptimizer', '#etSafetyWarning', '#etNextSteps', '#etUpgradeNudge', '#etEmailPreview', '#etRawHeaders'];
+  const revealSections = ['#etHeroSummary', '#espDiagnostic', '#etAssessment', '#etHeaderGrades', '#etTransport', '#etIdentity', '#etScores', '#etReadability', '#etReputation', '#etAudit', '#etFullAuditCta', '#etMoveToPrimary', '#etPrimaryOptimizer', '#etSafetyWarning', '#etNextSteps', '#etUpgradeNudge', '#etEmailPreview', '#etRawHeaders'];
   revealSections.forEach((s, i) => {
     const el = $(s);
     if (el && el.style.display !== 'none') {
