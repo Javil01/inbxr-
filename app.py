@@ -2033,7 +2033,7 @@ def index():
     return render_template("email_test.html",
                            is_admin=_is_admin(),
                            active_page="index",
-                           page_title="INBXR — Land in the Inbox. Land the Sale.",
+                           page_title="INBXR — Build an Inbox That Sells",
                            page_description="The only email tool that diagnoses deliverability AND fixes your copy. Spam risk scoring, 100-point copy analysis, 16 copywriting frameworks, and AI rewrites — free.",
                            canonical_url="https://inbxr.us/")
 
@@ -2087,7 +2087,7 @@ def how_different():
     return render_template("how_different.html",
                            is_admin=_is_admin(),
                            active_page="how_different",
-                           page_title="How INBXR Is Different — Land in the Inbox. Land the Sale.",
+                           page_title="How INBXR Is Different — Build an Inbox That Sells",
                            page_description="The only email platform with deliverability diagnostics AND copy intelligence. 100-point copy scoring, 16 copywriting frameworks, AI rewrites, and framework detection — starting at $0.",
                            canonical_url="https://inbxr.us/how-inbxr-is-different")
 
