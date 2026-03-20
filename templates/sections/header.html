@@ -60,31 +60,32 @@ window.showToast=function(msg,type,duration){
         <a href="/admin/logout" class="nav-link" style="color:var(--red);margin-left:4px">Logout</a>
         {% endif %}
       {% else %}
-        {# Visitors: full tool navigation + sign up CTA #}
+        {# Visitors: clean nav with tools in dropdown #}
         <a href="/" class="nav-link nav-link--featured{% if active_page == 'index' %} nav-link--active{% endif %}">Home</a>
-        <a href="/sender"            class="nav-link{% if active_page == 'sender' %} nav-link--active{% endif %}">Sender Check</a>
-        <a href="/blacklist-monitor" class="nav-link{% if active_page == 'blacklist_monitor' %} nav-link--active{% endif %}">Blacklist Monitor</a>
-        <a href="/placement"         class="nav-link{% if active_page == 'placement' %} nav-link--active{% endif %}">Inbox Placement</a>
         <div class="nav-dropdown">
-          <button class="nav-link nav-link--dropdown{% if active_page in ['analyzer','email_verifier','subject_scorer','warmup','header_analyzer','bimi','bulk_domain_check'] %} nav-link--active{% endif %}">
-            More Tools
+          <button class="nav-link nav-link--dropdown{% if active_page in ['sender','blacklist_monitor','placement','analyzer','email_verifier','subject_scorer','warmup','header_analyzer','bimi','bulk_domain_check','frameworks'] %} nav-link--active{% endif %}">
+            Our Tools
             <svg width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </button>
           <div class="nav-dropdown__menu">
+            <a href="/"                class="nav-dropdown__link{% if active_page == 'email_test' %} nav-dropdown__link--active{% endif %}">Email Checker</a>
+            <a href="/sender"          class="nav-dropdown__link{% if active_page == 'sender' %} nav-dropdown__link--active{% endif %}">Sender Check</a>
+            <a href="/blacklist-monitor" class="nav-dropdown__link{% if active_page == 'blacklist_monitor' %} nav-dropdown__link--active{% endif %}">Blacklist Monitor</a>
+            <a href="/placement"       class="nav-dropdown__link{% if active_page == 'placement' %} nav-dropdown__link--active{% endif %}">Inbox Placement</a>
             <a href="/analyzer"        class="nav-dropdown__link{% if active_page == 'analyzer' %} nav-dropdown__link--active{% endif %}">Email Analyzer</a>
+            <a href="/subject-scorer"  class="nav-dropdown__link{% if active_page == 'subject_scorer' %} nav-dropdown__link--active{% endif %}">Subject Scorer</a>
             <a href="/email-verifier"  class="nav-dropdown__link{% if active_page == 'email_verifier' %} nav-dropdown__link--active{% endif %}">Email Verifier</a>
             <a href="/bulk-domain-check" class="nav-dropdown__link{% if active_page == 'bulk_domain_check' %} nav-dropdown__link--active{% endif %}">Bulk Domain Check</a>
-            <a href="/subject-scorer"  class="nav-dropdown__link{% if active_page == 'subject_scorer' %} nav-dropdown__link--active{% endif %}">Subject Scorer</a>
-            <a href="/warmup"          class="nav-dropdown__link{% if active_page == 'warmup' %} nav-dropdown__link--active{% endif %}">Warm-up Tracker</a>
             <a href="/header-analyzer" class="nav-dropdown__link{% if active_page == 'header_analyzer' %} nav-dropdown__link--active{% endif %}">Header Analyzer</a>
+            <a href="/warmup"          class="nav-dropdown__link{% if active_page == 'warmup' %} nav-dropdown__link--active{% endif %}">Warm-up Tracker</a>
             <a href="/bimi"            class="nav-dropdown__link{% if active_page == 'bimi' %} nav-dropdown__link--active{% endif %}">BIMI Checker</a>
             <a href="/frameworks"      class="nav-dropdown__link{% if active_page == 'frameworks' %} nav-dropdown__link--active{% endif %}">Framework Lab</a>
           </div>
         </div>
         <a href="/how-inbxr-is-different" class="nav-link{% if active_page == 'how_different' %} nav-link--active{% endif %}">Why INBXR</a>
-        <a href="/support" class="nav-link{% if active_page == 'support' %} nav-link--active{% endif %}">Help</a>
-        <a href="/blog" class="nav-link{% if active_page == 'blog' %} nav-link--active{% endif %}">Blog</a>
         <a href="/pricing" class="nav-link{% if active_page == 'pricing' %} nav-link--active{% endif %}">Pricing</a>
+        <a href="/blog" class="nav-link{% if active_page == 'blog' %} nav-link--active{% endif %}">Blog</a>
+        <a href="/support" class="nav-link{% if active_page == 'support' %} nav-link--active{% endif %}">Help</a>
         <span class="nav-spacer"></span>
         <a href="/login" class="nav-link{% if active_page == 'login' %} nav-link--active{% endif %}">Log in</a>
         <a href="/signup" class="nav-link nav-link--cta">Sign Up Free</a>
