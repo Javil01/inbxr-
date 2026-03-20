@@ -1,31 +1,51 @@
 <section class="et-how">
   <div class="et-how__inner">
-    <h2 class="et-how__title">From Send to Fix Plan in Under 2 Minutes</h2>
-    <p class="et-how__sub">No account. No credit card. No sending to your real list.</p>
-    <div class="et-how-steps">
-      <div class="et-how-step">
-        <span class="et-how-step__num">1</span>
-        <div class="et-how-step__body">
-          <h3>Get a Seed Address</h3>
-          <p>Click the button and we generate a unique test address. Takes 3 seconds.</p>
+    <button type="button" class="et-how__toggle" id="etHowToggle" aria-expanded="false">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      How to Use
+      <svg class="et-how__toggle-arrow" viewBox="0 0 10 6" fill="none" width="10" height="6"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+    <div class="et-how__content" id="etHowContent" style="display:none">
+      <h2 class="et-how__title">From Send to Fix Plan in Under 2 Minutes</h2>
+      <p class="et-how__sub">No account. No credit card. No sending to your real list.</p>
+      <div class="et-how-steps">
+        <div class="et-how-step">
+          <span class="et-how-step__num">1</span>
+          <div class="et-how-step__body">
+            <h3>Get a Seed Address</h3>
+            <p>Click the button and we generate a unique test address. Takes 3 seconds.</p>
+          </div>
         </div>
-      </div>
-      <div class="et-how-step__connector"></div>
-      <div class="et-how-step">
-        <span class="et-how-step__num">2</span>
-        <div class="et-how-step__body">
-          <h3>Send Your Real Email</h3>
-          <p>Send from your ESP or mail server &mdash; the same way you&rsquo;d send to your actual list.</p>
+        <div class="et-how-step__connector"></div>
+        <div class="et-how-step">
+          <span class="et-how-step__num">2</span>
+          <div class="et-how-step__body">
+            <h3>Send Your Real Email</h3>
+            <p>Send from your ESP or mail server &mdash; the same way you&rsquo;d send to your actual list.</p>
+          </div>
         </div>
-      </div>
-      <div class="et-how-step__connector"></div>
-      <div class="et-how-step">
-        <span class="et-how-step__num">3</span>
-        <div class="et-how-step__body">
-          <h3>See What&rsquo;s Killing Your Deliverability</h3>
-          <p>Auth verdicts, content grade, blocklist results, and a prioritized fix plan &mdash; all in one report. Pro users get automated alerts when something changes.</p>
+        <div class="et-how-step__connector"></div>
+        <div class="et-how-step">
+          <span class="et-how-step__num">3</span>
+          <div class="et-how-step__body">
+            <h3>See What&rsquo;s Killing Your Deliverability</h3>
+            <p>Auth verdicts, copy score, framework detection, blocklist results, and a prioritized fix plan &mdash; all in one report.</p>
+          </div>
         </div>
       </div>
     </div>
   </div>
 </section>
+<script>
+(function(){
+  var btn = document.getElementById('etHowToggle');
+  var content = document.getElementById('etHowContent');
+  if (!btn || !content) return;
+  btn.addEventListener('click', function() {
+    var open = content.style.display !== 'none';
+    content.style.display = open ? 'none' : '';
+    btn.setAttribute('aria-expanded', !open);
+    btn.classList.toggle('et-how__toggle--open', !open);
+  });
+})();
+</script>

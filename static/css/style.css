@@ -7749,13 +7749,42 @@ a.et-nf-recommend__btn {
 
 /* ── How It Works (3-step) ── */
 .et-how {
-  padding: 80px 24px;
+  padding: 32px 24px;
   background:
     radial-gradient(ellipse 50% 50% at 30% 50%, rgba(37,99,235,0.04) 0%, transparent 60%),
     var(--bg-2);
 }
 .et-how__inner {
   max-width: 800px; margin: 0 auto; text-align: center;
+}
+.et-how__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 24px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 999px;
+  color: rgba(255,255,255,0.7);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s, background 0.2s;
+  font-family: inherit;
+}
+.et-how__toggle:hover {
+  border-color: var(--brand);
+  color: #fff;
+  background: rgba(37,99,235,0.08);
+}
+.et-how__toggle-arrow {
+  transition: transform 0.2s;
+}
+.et-how__toggle--open .et-how__toggle-arrow {
+  transform: rotate(180deg);
+}
+.et-how__content {
+  margin-top: 32px;
 }
 .et-how__title {
   font-family: var(--font-display);
