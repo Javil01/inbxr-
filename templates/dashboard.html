@@ -56,6 +56,11 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
         BIMI Checker
       </a>
+      <span class="dash-nav__heading">Copy &amp; Frameworks</span>
+      <a class="dash-nav__item" href="/frameworks">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
+        Framework Lab
+      </a>
       <span class="dash-nav__heading">AI Assistant</span>
       {% if session.get('tier', 'free') in ('pro', 'agency', 'api') %}
       <a class="dash-nav__item" id="openAssistant" href="#">

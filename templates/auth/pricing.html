@@ -2,7 +2,7 @@
 {% block title %}Pricing{% endblock %}
 {% block content %}
 <h1 class="auth-card__title pricing-title">Simple, Transparent Pricing</h1>
-<p class="auth-card__sub">Every tool is free to start. Upgrade for automated monitoring, AI-powered insights, and proactive alerts that catch deliverability issues before they cost you revenue.</p>
+<p class="auth-card__sub">Every tool is free to start. Upgrade for AI-powered copy rewrites, 16 copywriting frameworks, custom framework builder, automated monitoring, and proactive alerts.</p>
 
 <div class="pricing-grid">
 
@@ -25,6 +25,9 @@
       <li>Full Email Test with auth analysis</li>
       <li>Sender Check (SPF, DKIM, DMARC)</li>
       <li>Header Analyzer &amp; BIMI Checker</li>
+      <li>100-point Copy Effectiveness Scorer</li>
+      <li>Framework Lab (browse 16 frameworks)</li>
+      <li>3 frameworks unlocked (AIDA, PAS, C3PO)</li>
       <li>In-app alerts (manual scans only)</li>
       <li>AI Sales &amp; Technical Support chat</li>
     </ul>
@@ -61,7 +64,10 @@
       <li class="pricing-card__feature--highlight">Automated blocklist &amp; DNS auth monitoring</li>
       <li class="pricing-card__feature--highlight">Instant/daily/weekly email alert digests</li>
       <li class="pricing-card__feature--highlight">AI Email Expert — 10 conversations/mo</li>
-      <li class="pricing-card__feature--highlight">AI Copy Rewriter</li>
+      <li class="pricing-card__feature--highlight">AI Copy Rewriter (tone + framework-aware)</li>
+      <li class="pricing-card__feature--highlight">All 16 frameworks unlocked</li>
+      <li class="pricing-card__feature--highlight">Custom Framework Builder</li>
+      <li class="pricing-card__feature--highlight">Framework detection in analysis</li>
       <li>SPF/DKIM/DMARC change detection</li>
       <li>Cloud test history &amp; PDF reports</li>
       <li>Bulk email verification (CSV)</li>
@@ -94,7 +100,8 @@
       <li><strong>{{ t.limits.warmup_campaigns }}</strong> warmup campaigns</li>
       <li class="pricing-card__feature--highlight">Automated alerts for 50 domains</li>
       <li class="pricing-card__feature--highlight">AI Email Expert — Unlimited</li>
-      <li class="pricing-card__feature--highlight">AI Copy Rewriter</li>
+      <li class="pricing-card__feature--highlight">AI Copy Rewriter (tone + framework-aware)</li>
+      <li class="pricing-card__feature--highlight">All 16 frameworks + Custom Builder</li>
       <li>Everything in Pro, plus:</li>
       <li>Teams &amp; client workspaces</li>
       <li>API access &amp; Webhooks</li>
@@ -135,9 +142,19 @@
         <tr><td>Email Verifier</td><td>25/day</td><td>500/day</td><td>5,000/day</td></tr>
         <tr><td>Warmup Tracker</td><td>1 campaign</td><td>5 campaigns</td><td>25 campaigns</td></tr>
 
+        <tr class="pricing-compare__section"><td colspan="4">Copy Intelligence</td></tr>
+        <tr><td>100-Point Copy Effectiveness Score</td><td>&#10003;</td><td>&#10003;</td><td>&#10003;</td></tr>
+        <tr><td>Framework Detection in Analysis</td><td>&mdash;</td><td>&#10003;</td><td>&#10003;</td></tr>
+        <tr><td>Framework Lab (browse &amp; learn)</td><td>3 frameworks</td><td>All 16</td><td>All 16</td></tr>
+        <tr><td>Custom Framework Builder</td><td>&mdash;</td><td>&#10003;</td><td>&#10003;</td></tr>
+        <tr><td>Apply Frameworks to AI Rewrite</td><td>&mdash;</td><td>&#10003;</td><td>&#10003;</td></tr>
+        <tr><td>"Test This Rewrite" Loop</td><td>&mdash;</td><td>&#10003;</td><td>&#10003;</td></tr>
+
         <tr class="pricing-compare__section"><td colspan="4">AI Features</td></tr>
         <tr><td>AI Email Expert Assistant</td><td>&mdash;</td><td>10/month</td><td>Unlimited</td></tr>
-        <tr><td>AI Copy Rewriter</td><td>&mdash;</td><td>&#10003;</td><td>&#10003;</td></tr>
+        <tr><td>AI Copy Rewriter (tone-aware)</td><td>&mdash;</td><td>&#10003;</td><td>&#10003;</td></tr>
+        <tr><td>AI Framework Rewriter</td><td>&mdash;</td><td>&#10003;</td><td>&#10003;</td></tr>
+        <tr><td>AI Primary Inbox Optimizer</td><td>&mdash;</td><td>&#10003;</td><td>&#10003;</td></tr>
         <tr><td>AI Support Chat (Sales &amp; Tech)</td><td>&#10003;</td><td>&#10003;</td><td>&#10003;</td></tr>
 
         <tr class="pricing-compare__section"><td colspan="4">Monitoring &amp; Alerts</td></tr>
