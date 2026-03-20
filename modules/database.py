@@ -747,6 +747,19 @@ _MIGRATIONS = [
         );
         CREATE INDEX IF NOT EXISTS idx_framework_usage_user ON framework_usage(user_id, created_at DESC);
     """),
+    ("016_fix_c3po_plant_doubt", """
+        UPDATE frameworks
+        SET description = REPLACE(description, 'Plausibility', 'Plant Doubt'),
+            steps_json = REPLACE(REPLACE(steps_json, '"Plausibility"', '"Plant Doubt"'), 'Prove it''s achievable. Use data, social proof, or a quick case study to make the picture believable.', 'Make them question what they think they know. Introduce a gap in their understanding \u2014 the thing they''re missing or getting wrong that''s holding them back.'),
+            example_output = 'Subject: The inbox problem nobody''s talking about
+
+Context: 83% of marketing emails never reach the inbox...
+Picture: Imagine your next campaign hitting 98% inbox placement...
+Plant Doubt: But what if everything you''ve been told about deliverability is wrong? What if the real problem isn''t your content?
+Problem: Most senders are optimizing the wrong things while their authentication silently breaks...
+Opportunity: Start your free INBXR audit today and see where you actually stand.'
+        WHERE slug = 'c3po';
+    """),
 ]
 
 
@@ -764,14 +777,14 @@ def _seed_frameworks(conn):
             "acronym": "C3PO",
             "category": "master",
             "sort_order": 1,
-            "description": "INBXR's proprietary 5-step framework for emails that convert. Context → Picture → Plausibility → Problem → Opportunity.",
+            "description": "INBXR's proprietary 5-step framework for emails that convert. Context → Picture → Plant Doubt → Problem → Opportunity.",
             "when_to_use": "Use for any email where you need to move the reader from awareness to action. Works across industries and audience awareness levels.",
             "deliverability_notes": "Naturally avoids spam triggers because it leads with context and storytelling rather than hype.",
-            "example_output": "Subject: The inbox problem nobody's talking about\n\nContext: 83% of marketing emails never reach the inbox...\nPicture: Imagine your next campaign hitting 98% inbox placement...\nPlausibility: Here's how 200+ senders did exactly that last quarter...\nProblem: But most senders are still guessing at deliverability...\nOpportunity: Start your free INBXR audit today and see where you stand.",
+            "example_output": "Subject: The inbox problem nobody's talking about\n\nContext: 83% of marketing emails never reach the inbox...\nPicture: Imagine your next campaign hitting 98% inbox placement...\nPlant Doubt: But what if everything you've been told about deliverability is wrong? What if the real problem isn't your content?\nProblem: Most senders are optimizing the wrong things while their authentication silently breaks...\nOpportunity: Start your free INBXR audit today and see where you actually stand.",
             "steps_json": _json.dumps([
                 {"key": "C", "label": "Context", "description": "Set the scene. Ground the reader in a relevant situation, stat, or shared experience they instantly recognize."},
                 {"key": "P1", "label": "Picture", "description": "Paint the desired outcome. Help them vividly see what success looks like — make it tangible and emotional."},
-                {"key": "P2", "label": "Plausibility", "description": "Prove it's achievable. Use data, social proof, or a quick case study to make the picture believable."},
+                {"key": "P2", "label": "Plant Doubt", "description": "Make them question what they think they know. Introduce a gap in their understanding — the thing they're missing or getting wrong that's holding them back."},
                 {"key": "P3", "label": "Problem", "description": "Name the obstacle. Identify the specific gap or mistake standing between them and the picture you painted."},
                 {"key": "O", "label": "Opportunity", "description": "Present your solution as the bridge. Clear CTA that connects the problem to the desired outcome."}
             ]),

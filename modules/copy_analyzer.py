@@ -871,7 +871,7 @@ class CopyAnalyzer:
             fab_score += 25
         scores["fab"] = min(100, fab_score)
 
-        # ── C3PO: context, picture, plausibility, problem, opportunity
+        # ── C3PO: context, picture, plant doubt, problem, opportunity
         c3po_score = 0
         # Context: stats or shared experience in opening
         if re.search(r'\d+%|\d+ out of \d+|most |every ', opening):
@@ -879,9 +879,9 @@ class CopyAnalyzer:
         # Picture: visualization language
         if re.search(r'(?i)(imagine|picture|what if|think about)', body_lower):
             c3po_score += 20
-        # Plausibility: proof/data
-        social_proof = sum(1 for p in SOCIAL_PROOF_PATTERNS if re.search(p, body_lower))
-        if social_proof:
+        # Plant Doubt: questioning assumptions, challenging beliefs
+        doubt_words = r'(?i)(but what if|what if .* wrong|are you sure|think you know|the real problem|actually|myth|misconception|missing|overlooking)'
+        if re.search(doubt_words, body_lower):
             c3po_score += 20
         # Problem: naming the obstacle
         if re.search(r'(?i)(but |the problem|the challenge|the gap|what\'s stopping|the obstacle)', middle):
@@ -906,7 +906,7 @@ class CopyAnalyzer:
             "aida": ("AIDA", "Attention → Interest → Desire → Action"),
             "bab": ("BAB", "Before → After → Bridge"),
             "fab": ("FAB", "Feature → Advantage → Benefit"),
-            "c3po": ("C3PO — The INBXR Method", "Context → Picture → Plausibility → Problem → Opportunity"),
+            "c3po": ("C3PO — The INBXR Method", "Context → Picture → Plant Doubt → Problem → Opportunity"),
         }
 
         name, structure = framework_names.get(best_slug, (best_slug.upper(), ""))
