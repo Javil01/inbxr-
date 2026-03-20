@@ -559,23 +559,80 @@ function renderResults(data, payload) {
   updateBadgeCount('copyFlagCount', (copy.all_flags || []).length);
   renderRewrites(copy.rewrites, payload.subject);
 
-  // ── Framework Detection ──
+  // ── Framework Detection (with rewrite bridge) ──
   const fwDetect = copy.framework_detection;
   const fwDetectEl = $('#frameworkDetection');
   if (fwDetect && fwDetectEl) {
+    const fwSlug = fwDetect.detected_slug;
+    const conf = fwDetect.confidence;
+    const rewriteHint = conf < 60
+      ? `<a href="#aiRewriteModule" class="fw-detection__rewrite" data-fw-slug="${escAttr(fwSlug)}">Rewrite with ${escHtml(fwDetect.detected_framework)} &rarr;</a>`
+      : '';
     fwDetectEl.style.display = '';
     fwDetectEl.innerHTML = `
       <div class="fw-detection__card">
         <span class="fw-detection__icon">&#x1F50D;</span>
         <div class="fw-detection__info">
           <strong>Detected: ${escHtml(fwDetect.detected_framework)}</strong>
-          <span class="fw-detection__conf">(${fwDetect.confidence}% match)</span>
+          <span class="fw-detection__conf">(${conf}% match)</span>
           <p>${escHtml(fwDetect.structural_notes)}</p>
         </div>
-        <a href="/frameworks#${encodeURIComponent(fwDetect.detected_slug)}" class="fw-detection__link">View framework &rarr;</a>
+        <div class="fw-detection__actions">
+          <a href="/frameworks#${encodeURIComponent(fwSlug)}" class="fw-detection__link">View framework &rarr;</a>
+          ${rewriteHint}
+        </div>
       </div>`;
+    // Bridge: clicking "Rewrite with [framework]" selects it in the AI rewrite dropdown
+    const rewriteLink = fwDetectEl.querySelector('.fw-detection__rewrite');
+    if (rewriteLink) {
+      rewriteLink.addEventListener('click', function(e) {
+        e.preventDefault();
+        const fwSel = $('#aiFrameworkSelect');
+        if (fwSel) {
+          fwSel.value = 'builtin:' + fwSlug;
+          const aiModule = $('#aiRewriteModule');
+          if (aiModule) aiModule.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      });
+    }
   } else if (fwDetectEl) {
     fwDetectEl.style.display = 'none';
+  }
+
+  // ── Fix Plan ──
+  const fixPlanEl = $('#fixPlanModule');
+  if (copy.fix_plan && copy.fix_plan.length && fixPlanEl) {
+    fixPlanEl.style.display = '';
+    const listEl = $('#fixPlanList');
+    listEl.innerHTML = copy.fix_plan.map(function(step) {
+      const impactCls = step.impact === 'high' ? 'fix-plan__impact--high' : 'fix-plan__impact--med';
+      const toolLink = step.tool_link
+        ? `<a href="${escAttr(step.tool_link)}" class="fix-plan__tool">${escHtml(step.tool_name)} &rarr;</a>`
+        : '';
+      return `<div class="fix-plan__step">
+        <span class="fix-plan__num">${step.priority}</span>
+        <div class="fix-plan__body">
+          <strong class="fix-plan__action">${escHtml(step.action)}</strong>
+          <p class="fix-plan__reason">${escHtml(step.reason)}</p>
+          <div class="fix-plan__meta">
+            <span class="fix-plan__impact ${impactCls}">${escHtml(step.impact)} impact</span>
+            ${toolLink}
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+  } else if (fixPlanEl) {
+    fixPlanEl.style.display = 'none';
+  }
+
+  // ── Subject Line link to Subject Scorer ──
+  const subjectCat = copy.categories ? copy.categories[0] : null;
+  if (subjectCat && subjectCat.score < 15 && payload.subject) {
+    const subLink = document.createElement('div');
+    subLink.className = 'subject-scorer-link';
+    subLink.innerHTML = `<a href="/subject-scorer" target="_blank">Test alternatives in Subject Scorer &rarr;</a>`;
+    const copyCats = $('#copyCategories');
+    if (copyCats && copyCats.firstChild) copyCats.firstChild.appendChild(subLink);
   }
 
   // ── Readability ──
@@ -1890,34 +1947,66 @@ function renderAiRewrite(data) {
       </div>`;
   } else { hookEl.innerHTML = ''; }
 
-  // ── Body rewrite ──
+  // ── Body rewrite (with before/after view) ──
   const bodyEl = $('#aiBodyRewrite');
+  const origBody = _aiPayloadCache ? (_aiPayloadCache.body || '') : '';
+  const origParas = origBody.replace(/<[^>]+>/g, '\n').split(/\n\n+/).filter(Boolean);
+
   if (data.step_mapping && data.step_mapping.length && data.framework_applied) {
-    // Framework-structured output
     bodyEl.innerHTML = `
       <div class="ai-block">
-        <h4 class="ai-block__title">Body Rewrite — ${escHtml(data.framework_applied)} Framework</h4>
-        <div class="ai-text-block ai-text-block--body ai-text-block--framework">
-          ${data.step_mapping.map(s => `
-            <div class="ai-fw-step">
-              <span class="ai-fw-step__key">${escHtml(s.step_key)}</span>
-              <span class="ai-fw-step__label">${escHtml(s.step_label)}</span>
-              <p>${escHtml(s.content || '')}</p>
-            </div>`).join('')}
-          <button type="button" class="dns-copy-btn" data-copy="${escAttr(data.body_rewrite)}">Copy All</button>
+        <div class="ai-block__header">
+          <h4 class="ai-block__title">Body Rewrite — ${escHtml(data.framework_applied)} Framework</h4>
+          <button type="button" class="ai-toggle-original" data-target="aiBodyOriginal">Show Original</button>
+        </div>
+        <div class="ai-before-after">
+          <div class="ai-original" id="aiBodyOriginal" style="display:none">
+            <span class="ai-original__label">Original</span>
+            <div class="ai-original__text">${origParas.map(p => `<p>${escHtml(p)}</p>`).join('')}</div>
+          </div>
+          <div class="ai-text-block ai-text-block--body ai-text-block--framework">
+            ${data.step_mapping.map(s => `
+              <div class="ai-fw-step">
+                <span class="ai-fw-step__key">${escHtml(s.step_key)}</span>
+                <span class="ai-fw-step__label">${escHtml(s.step_label)}</span>
+                <p>${escHtml(s.content || '')}</p>
+              </div>`).join('')}
+            <button type="button" class="dns-copy-btn" data-copy="${escAttr(data.body_rewrite)}">Copy All</button>
+          </div>
         </div>
       </div>`;
   } else if (data.body_rewrite) {
     const paragraphs = data.body_rewrite.split(/\n\n+/).filter(Boolean);
     bodyEl.innerHTML = `
       <div class="ai-block">
-        <h4 class="ai-block__title">Full Body Rewrite</h4>
-        <div class="ai-text-block ai-text-block--body">
-          ${paragraphs.map(p => `<p>${escHtml(p)}</p>`).join('')}
-          <button type="button" class="dns-copy-btn" data-copy="${escAttr(data.body_rewrite)}">Copy All</button>
+        <div class="ai-block__header">
+          <h4 class="ai-block__title">Full Body Rewrite</h4>
+          <button type="button" class="ai-toggle-original" data-target="aiBodyOriginal">Show Original</button>
+        </div>
+        <div class="ai-before-after">
+          <div class="ai-original" id="aiBodyOriginal" style="display:none">
+            <span class="ai-original__label">Original</span>
+            <div class="ai-original__text">${origParas.map(p => `<p>${escHtml(p)}</p>`).join('')}</div>
+          </div>
+          <div class="ai-text-block ai-text-block--body">
+            <span class="ai-original__label ai-original__label--new">Rewritten</span>
+            ${paragraphs.map(p => `<p>${escHtml(p)}</p>`).join('')}
+            <button type="button" class="dns-copy-btn" data-copy="${escAttr(data.body_rewrite)}">Copy All</button>
+          </div>
         </div>
       </div>`;
   } else { bodyEl.innerHTML = ''; }
+
+  // Toggle original handler
+  bodyEl.querySelectorAll('.ai-toggle-original').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var target = document.getElementById(btn.dataset.target);
+      if (!target) return;
+      var showing = target.style.display !== 'none';
+      target.style.display = showing ? 'none' : '';
+      btn.textContent = showing ? 'Show Original' : 'Hide Original';
+    });
+  });
 
   // ── Closing ──
   const closeEl = $('#aiClosingRewrite');

@@ -771,6 +771,9 @@ class CopyAnalyzer:
         # Framework detection
         framework_detection = self._detect_framework()
 
+        # Prioritized fix plan — ranked by impact
+        fix_plan = self._build_fix_plan(cat_a, cat_b, cat_c, cat_d, cat_e, cat_f, framework_detection)
+
         return {
             "score": total,
             "label": label,
@@ -783,6 +786,7 @@ class CopyAnalyzer:
             "all_positives": all_positives[:10],
             "rewrites": rewrites,
             "framework_detection": framework_detection,
+            "fix_plan": fix_plan,
         }
 
     def _detect_framework(self) -> dict:
@@ -918,6 +922,106 @@ class CopyAnalyzer:
             "structural_notes": structure,
             "suggestion": f"This email follows the {name} pattern ({best_score}% match). View this framework to refine your approach.",
         }
+
+    def _build_fix_plan(self, cat_a, cat_b, cat_c, cat_d, cat_e, cat_f, fw_detection) -> list:
+        """Build a prioritized fix plan ranked by impact.
+
+        Returns list of {priority, action, reason, impact, tool_link} dicts.
+        """
+        plan = []
+        priority = 1
+
+        # Worst-scoring categories first (biggest room for improvement)
+        cats_sorted = sorted(
+            [cat_a, cat_b, cat_c, cat_d, cat_e, cat_f],
+            key=lambda c: c["score"] / max(c["max"], 1)
+        )
+
+        for cat in cats_sorted:
+            ratio = cat["score"] / max(cat["max"], 1)
+            if ratio >= 0.75:
+                continue  # already good
+
+            label = cat["label"]
+            flags = cat.get("flags", [])
+            top_flag = flags[0] if flags else None
+
+            if label == "Subject Line Strength" and ratio < 0.6:
+                plan.append({
+                    "priority": priority,
+                    "action": "Rewrite your subject line",
+                    "reason": f"Subject scored {cat['score']}/{cat['max']}. "
+                              + (top_flag["item"] if top_flag else "Lacks clarity or emotional pull."),
+                    "impact": "high" if ratio < 0.4 else "medium",
+                    "tool_link": "/subject-scorer",
+                    "tool_name": "Subject Scorer",
+                })
+                priority += 1
+            elif label == "Opening & Hook" and ratio < 0.6:
+                rec = top_flag.get("recommendation", "Lead with the reader's problem or a bold statement.") if top_flag else "Lead with the reader's problem or a bold statement."
+                plan.append({
+                    "priority": priority,
+                    "action": "Strengthen your opening",
+                    "reason": f"Opening scored {cat['score']}/{cat['max']}. {rec}",
+                    "impact": "high" if ratio < 0.4 else "medium",
+                })
+                priority += 1
+            elif label == "Core Message & Flow" and ratio < 0.6:
+                plan.append({
+                    "priority": priority,
+                    "action": "Tighten your core message",
+                    "reason": f"Message clarity scored {cat['score']}/{cat['max']}. Focus on one clear benefit and remove tangents.",
+                    "impact": "medium",
+                })
+                priority += 1
+            elif label == "CTA Effectiveness" and ratio < 0.6:
+                plan.append({
+                    "priority": priority,
+                    "action": "Fix your call to action",
+                    "reason": f"CTA scored {cat['score']}/{cat['max']}. Use a specific, action-oriented button text.",
+                    "impact": "high",
+                })
+                priority += 1
+            elif label == "Trust & Brand Signals" and ratio < 0.6:
+                plan.append({
+                    "priority": priority,
+                    "action": "Add trust signals",
+                    "reason": f"Trust scored {cat['score']}/{cat['max']}. Include social proof, credentials, or risk reversal.",
+                    "impact": "medium",
+                })
+                priority += 1
+            elif label == "Conversion Psychology" and ratio < 0.6:
+                plan.append({
+                    "priority": priority,
+                    "action": "Apply persuasion techniques",
+                    "reason": f"Psychology scored {cat['score']}/{cat['max']}. Add urgency, scarcity, or emotional triggers.",
+                    "impact": "medium",
+                })
+                priority += 1
+
+        # Framework suggestion
+        if not fw_detection:
+            plan.append({
+                "priority": priority,
+                "action": "Apply a copywriting framework",
+                "reason": "No framework detected. Structure your email with a proven framework like PAS, AIDA, or C3PO for better conversion.",
+                "impact": "high",
+                "tool_link": "/frameworks",
+                "tool_name": "Framework Lab",
+            })
+            priority += 1
+        elif fw_detection.get("confidence", 0) < 60:
+            plan.append({
+                "priority": priority,
+                "action": f"Strengthen your {fw_detection['detected_framework']} structure",
+                "reason": f"Framework detected at {fw_detection['confidence']}% — the structure is there but weak. Review the steps to tighten it.",
+                "impact": "medium",
+                "tool_link": "/frameworks",
+                "tool_name": "Framework Lab",
+            })
+            priority += 1
+
+        return plan[:6]  # max 6 steps
 
     def _generate_rewrites(self, cat_a, cat_b, cat_c, cat_d) -> dict:
         """Generate specific rewrite examples based on the email content."""
