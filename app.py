@@ -768,7 +768,7 @@ def admin_login():
     _admin_pw_ok = False
     if _ADMIN_PASS_HASH and username == ADMIN_USER:
         from modules.auth import _verify_password
-        _admin_pw_ok = _verify_password(password, _ADMIN_PASS_HASH)
+        _admin_pw_ok = _verify_password(_ADMIN_PASS_HASH, password)
     elif _ADMIN_PASS_PLAIN and username == ADMIN_USER:
         import hmac
         _admin_pw_ok = hmac.compare_digest(password, _ADMIN_PASS_PLAIN)
@@ -2118,7 +2118,7 @@ def assistant_chat_api():
     """INBXR Expert Email Assistant — Pro/Agency only."""
     if not session.get("user_id"):
         return jsonify({"error": "Please log in to use the Email Assistant.", "signup_url": "/signup"}), 429
-    tier = session.get("tier", "free")
+    tier = session.get("user_tier", "free")
     if tier not in ("pro", "agency", "api"):
         return jsonify({"error": "The Email Assistant is available on Pro and Agency plans.", "upgrade_url": "/account"}), 403
 
@@ -4058,7 +4058,7 @@ def ai_rewrite():
     """AI-powered email rewrite using Groq API (Pro+ only)."""
     if not session.get("user_id"):
         return jsonify({"error": "Please log in to use AI rewrite.", "signup_url": "/signup"}), 429
-    tier = session.get("tier", "free")
+    tier = session.get("user_tier", "free")
     if tier not in ("pro", "agency", "api"):
         return jsonify({"error": "AI rewrite is available on Pro and Agency plans.", "upgrade_url": "/account"}), 403
 
@@ -4100,7 +4100,7 @@ def ai_rewrite_framework():
     """AI-powered email rewrite structured by a copywriting framework (Pro+ only)."""
     if not session.get("user_id"):
         return jsonify({"error": "Please log in to use AI rewrite.", "signup_url": "/signup"}), 429
-    tier = session.get("tier", "free")
+    tier = session.get("user_tier", "free")
     if tier not in ("pro", "agency", "api"):
         return jsonify({"error": "AI rewrite is available on Pro and Agency plans.", "upgrade_url": "/account"}), 403
 
@@ -4180,7 +4180,7 @@ def ai_optimize_primary():
     """AI-powered email optimization for Gmail Primary tab (Pro+ only)."""
     if not session.get("user_id"):
         return jsonify({"error": "Please log in to use Primary optimizer.", "signup_url": "/signup"}), 429
-    tier = session.get("tier", "free")
+    tier = session.get("user_tier", "free")
     if tier not in ("pro", "agency", "api"):
         return jsonify({"error": "Primary inbox optimizer is available on Pro and Agency plans.", "upgrade_url": "/account"}), 403
 
@@ -4214,7 +4214,7 @@ def ai_optimize_primary():
 def ai_rewrite_status():
     """Check if AI rewrite is available (requires Pro+ tier)."""
     from modules.ai_rewriter import is_available
-    tier = session.get("tier", "free") if session.get("user_id") else "visitor"
+    tier = session.get("user_tier", "free") if session.get("user_id") else "visitor"
     api_available = is_available()
     tier_ok = tier in ("pro", "agency", "api")
     return jsonify({

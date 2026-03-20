@@ -64,8 +64,15 @@ def signup():
         # No email configured — allow login (dev mode / email disabled)
         login_user(user)
         session["is_new_signup"] = True
-        next_url = request.args.get("next", "/dashboard")
+        next_url = _safe_next(request.args.get("next", "/dashboard"))
         return redirect(next_url)
+
+
+def _safe_next(url):
+    """Validate redirect URL to prevent open redirect."""
+    if not url or not url.startswith("/") or url.startswith("//"):
+        return "/dashboard"
+    return url
 
 
 @auth_bp.route("/login", methods=["GET", "POST"])
@@ -84,7 +91,7 @@ def login():
         return render_template("auth/login.html", error="Invalid email or password.", active_page="login")
 
     login_user(user)
-    next_url = request.args.get("next") or request.form.get("next") or "/dashboard"
+    next_url = _safe_next(request.args.get("next") or request.form.get("next") or "/dashboard")
     return redirect(next_url)
 
 

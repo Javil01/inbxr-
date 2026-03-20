@@ -62,7 +62,7 @@
         Framework Lab
       </a>
       <span class="dash-nav__heading">AI Assistant</span>
-      {% if session.get('tier', 'free') in ('pro', 'agency', 'api') %}
+      {% if session.get('user_tier', 'free') in ('pro', 'agency', 'api') %}
       <a class="dash-nav__item" id="openAssistant" href="#">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M12 2a4 4 0 014 4v1a1 1 0 01-1 1H9a1 1 0 01-1-1V6a4 4 0 014-4z"/><path d="M9 8v1a3 3 0 006 0V8"/><path d="M12 14v3"/><path d="M7 17h10a2 2 0 012 2v1H5v-1a2 2 0 012-2z"/></svg>
         Email Expert
@@ -105,7 +105,7 @@
 </button>
 
 <!-- ── Email Expert Assistant Panel ── -->
-{% if session.get('tier', 'free') in ('pro', 'agency', 'api') %}
+{% if session.get('user_tier', 'free') in ('pro', 'agency', 'api') %}
 <div class="ea-panel" id="eaPanel">
   <div class="ea-panel__header">
     <div class="ea-panel__header-info">
@@ -128,7 +128,7 @@
 <script>
   window.__dashStats = {{ stats | tojson }};
   window.__dashCredits = {{ credits | tojson }};
-  window.__userTier = {{ (session.get('tier', 'free') | tojson) }};
+  window.__userTier = {{ (session.get('user_tier', 'free') | tojson) }};
   window.__onboarding = {{ ob_status | tojson }};
 </script>
 <script src="/static/js/dashboard.js"></script>

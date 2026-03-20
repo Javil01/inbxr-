@@ -43,7 +43,7 @@ def frameworks_page():
 def api_frameworks():
     """Return all built-in frameworks. Steps blurred for free users except AIDA, PAS, C3PO."""
     frameworks = get_all_frameworks()
-    tier = session.get("tier", "free") if session.get("user_id") else "free"
+    tier = session.get("user_tier", "free") if session.get("user_id") else "free"
     is_paid = tier in ("pro", "agency", "api")
 
     result = []
@@ -81,7 +81,7 @@ def api_framework_detail(slug):
     if not fw:
         return jsonify({"error": "Framework not found"}), 404
 
-    tier = session.get("tier", "free") if session.get("user_id") else "free"
+    tier = session.get("user_tier", "free") if session.get("user_id") else "free"
     is_paid = tier in ("pro", "agency", "api")
 
     item = {
