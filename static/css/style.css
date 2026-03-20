@@ -852,6 +852,116 @@ img { display: block; max-width: 100%; }
   font-weight: 600;
 }
 
+/* Bad report styles */
+.hero-mock__grade--d { color: #ef4444; }
+.hero-mock__bar--red .hero-mock__bar-fill,
+.hero-mock__bar-fill--red { background: #ef4444; }
+.hero-mock__val--red { color: #ef4444; }
+.hero-mock__badge--none {
+  background: rgba(239,68,68,0.12);
+  color: #ef4444;
+}
+.hero-mock__check--fail {
+  background: rgba(239,68,68,0.12);
+  color: #ef4444;
+}
+.hero-mock__row--issues {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #ef4444;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+/* ── Story animation phases ────────────────────── */
+.hero-story {
+  position: relative;
+  overflow: hidden;
+}
+.hero-story__bad {
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+.hero-story__bad.hero-story--hidden {
+  opacity: 0;
+  transform: scale(0.96);
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+}
+.hero-story__good {
+  display: none;
+  animation: storyGoodIn 0.5s ease both;
+}
+.hero-story__good.hero-story__good--visible {
+  display: flex;
+}
+@keyframes storyGoodIn {
+  from { opacity: 0; transform: scale(1.03); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* Fix button overlay */
+.hero-story__fix {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s ease;
+}
+.hero-story__fix--visible {
+  opacity: 1;
+}
+.hero-story__fix::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(11,19,40,0.7);
+  backdrop-filter: blur(3px);
+}
+.hero-story__fix-btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: var(--cta);
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 700;
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(34,197,94,0.3);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  z-index: 2;
+}
+.hero-story__fix--clicked .hero-story__fix-btn {
+  transform: scale(0.95);
+  box-shadow: 0 2px 10px rgba(34,197,94,0.2);
+}
+.hero-story__fix-cursor {
+  position: absolute;
+  z-index: 3;
+  top: 50%;
+  left: 50%;
+  margin-left: 40px;
+  margin-top: 20px;
+  opacity: 0;
+  transition: opacity 0.3s, transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: translate(30px, 20px);
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+}
+.hero-story__fix--visible .hero-story__fix-cursor {
+  opacity: 1;
+  transform: translate(0, 0);
+}
+.hero-story__fix--clicked .hero-story__fix-cursor {
+  transform: translate(-2px, 2px);
+}
+
 /* ── Hero carousel ────────────────────────────── */
 .hero-carousel {
   position: relative;
