@@ -256,10 +256,36 @@ def send_blocklist_alert(user_id, domain, newly_listed, newly_delisted):
         title = f"{domain} removed from {len(newly_delisted)} blocklist(s)"
         alert_type = "blocklist_delisted"
 
+    # Build enriched blocklist details for in-app display
+    listed_details = []
+    for bl in (newly_listed or []):
+        if isinstance(bl, dict):
+            listed_details.append({
+                "name": bl.get("name", "Unknown"),
+                "weight": bl.get("weight", ""),
+                "delist": bl.get("delist", ""),
+                "info": bl.get("info", ""),
+                "reason": bl.get("reason", ""),
+            })
+        else:
+            listed_details.append({"name": str(bl)})
+
+    delisted_details = []
+    for bl in (newly_delisted or []):
+        if isinstance(bl, dict):
+            delisted_details.append({
+                "name": bl.get("name", "Unknown"),
+                "weight": bl.get("weight", ""),
+            })
+        else:
+            delisted_details.append({"name": str(bl)})
+
     data = {
         "domain": domain,
         "newly_listed": newly_listed,
         "newly_delisted": newly_delisted,
+        "listed_details": listed_details,
+        "delisted_details": delisted_details,
     }
 
     # Check blocklist alert preference

@@ -245,6 +245,53 @@
   };
 
   /* ── Alerts List ── */
+  function renderAlertDetails(a) {
+    let detail = '';
+    let parsed = null;
+    try { parsed = a.data_json ? JSON.parse(a.data_json) : null; } catch(e) {}
+    if (!parsed) return '';
+
+    // Blocklist alerts — show listed/delisted blocklists with delist links
+    if (a.alert_type && a.alert_type.includes('blocklist') && parsed.listed_details) {
+      const items = (parsed.listed_details || []).map(bl => {
+        const weight = bl.weight ? `<span style="color:${bl.weight==='critical'?'#dc2626':bl.weight==='major'?'#f59e0b':'#94a3b8'};font-size:0.7rem;font-weight:600;text-transform:uppercase;margin-left:6px;">${bl.weight}</span>` : '';
+        const delist = bl.delist ? `<a href="${bl.delist}" target="_blank" rel="noopener" style="display:inline-block;margin-left:8px;padding:2px 10px;font-size:0.72rem;background:#dc2626;color:#fff;border-radius:999px;text-decoration:none;font-weight:600;">Delist</a>` : '';
+        const info = bl.info ? `<div style="color:var(--text-3);font-size:0.72rem;margin-top:2px;">${bl.info}</div>` : '';
+        return `<div style="padding:4px 0;"><span style="color:#dc2626;font-weight:600;font-size:0.78rem;">LISTED</span> <span style="font-size:0.82rem;">${bl.name}</span>${weight}${delist}${info}</div>`;
+      });
+      const delisted = (parsed.delisted_details || []).map(bl => {
+        return `<div style="padding:4px 0;"><span style="color:#16a34a;font-weight:600;font-size:0.78rem;">DELISTED</span> <span style="font-size:0.82rem;">${bl.name}</span></div>`;
+      });
+      detail = items.concat(delisted).join('');
+    }
+
+    // DNS auth alerts — show specific record changes
+    if (a.alert_type === 'dns_auth_change' && parsed.dns_changes && parsed.dns_changes.length) {
+      detail = parsed.dns_changes.map(ch => {
+        let desc = `<strong>${ch.record}</strong>: `;
+        if (ch.record === 'DMARC' && ch.old_policy !== undefined) {
+          desc += ch.old_policy && ch.new_policy
+            ? `policy changed from <code style="background:rgba(255,255,255,0.08);padding:1px 5px;border-radius:4px;">p=${ch.old_policy}</code> to <code style="background:rgba(255,255,255,0.08);padding:1px 5px;border-radius:4px;">p=${ch.new_policy}</code>`
+            : ch.new_policy ? `policy set to <code style="background:rgba(255,255,255,0.08);padding:1px 5px;border-radius:4px;">p=${ch.new_policy}</code>` : 'record removed';
+        } else if (ch.old === '(missing)') {
+          desc += `record added`;
+        } else if (ch.new === '(missing)') {
+          desc += `record removed`;
+        } else {
+          desc += `record changed`;
+        }
+        return `<div style="padding:3px 0;font-size:0.8rem;color:var(--text-2);">${desc}</div>`;
+      }).join('');
+
+      // Also show new/resolved issues
+      const newIss = (parsed.new_issues || []).map(i => `<div style="padding:2px 0;font-size:0.78rem;color:#f59e0b;">NEW: ${i.message}</div>`);
+      const resIss = (parsed.resolved_issues || []).map(i => `<div style="padding:2px 0;font-size:0.78rem;color:#16a34a;">RESOLVED: ${i.message}</div>`);
+      detail += newIss.concat(resIss).join('');
+    }
+
+    return detail ? `<div style="margin-top:6px;padding:8px 12px;background:rgba(255,255,255,0.03);border-radius:6px;">${detail}</div>` : '';
+  }
+
   function loadAlerts() {
     fetch('/api/alerts?limit=20').then(r => r.json()).then(data => {
       if (!data.ok) return;
@@ -258,12 +305,14 @@
         const icon = a.alert_type.includes('listed') ? '<span style="color:#dc2626;">&#9679;</span>' :
                      a.alert_type.includes('dns') ? '<span style="color:#f59e0b;">&#9679;</span>' :
                      '<span style="color:#22c55e;">&#9679;</span>';
+        const details = renderAlertDetails(a);
         return `<div style="padding:12px 16px;${unread}background:rgba(255,255,255,0.02);border-radius:8px;margin-bottom:8px;cursor:pointer;" onclick="markAlertRead(${a.id}, this)">
           <div style="display:flex;justify-content:space-between;align-items:center;">
             <span style="font-weight:600;font-size:0.9rem;">${icon} ${a.title}</span>
             <span style="color:var(--text-3);font-size:0.75rem;">${fmt(a.created_at)}</span>
           </div>
           ${a.message ? '<p style="color:var(--text-2);font-size:0.82rem;margin:4px 0 0;">' + a.message + '</p>' : ''}
+          ${details}
         </div>`;
       }).join('');
     });

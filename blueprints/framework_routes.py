@@ -16,6 +16,7 @@ from modules.frameworks import (
     get_user_frameworks, get_user_framework,
     create_user_framework, update_user_framework, delete_user_framework,
     log_framework_usage, get_decision_tree,
+    toggle_favorite, get_user_favorites,
 )
 
 framework_bp = Blueprint("frameworks", __name__)
@@ -112,6 +113,28 @@ def api_framework_detail(slug):
 def api_decision_tree():
     """Return the decision tree data."""
     return jsonify(get_decision_tree())
+
+
+# ── Favorites ─────────────────────────────────────────
+
+@framework_bp.route("/api/frameworks/favorites")
+@login_required
+def api_get_favorites():
+    """Return the current user's favorited framework slugs."""
+    user_id = session["user_id"]
+    return jsonify(get_user_favorites(user_id))
+
+
+@framework_bp.route("/api/frameworks/<slug>/favorite", methods=["POST"])
+@login_required
+def api_toggle_favorite(slug):
+    """Toggle favorite on a framework. Returns {favorited: bool}."""
+    fw = get_framework_by_slug(slug)
+    if not fw:
+        return jsonify({"error": "Framework not found"}), 404
+    user_id = session["user_id"]
+    favorited = toggle_favorite(user_id, fw["id"])
+    return jsonify({"favorited": favorited})
 
 
 # ── User frameworks (Pro/Agency) ──────────────────────

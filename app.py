@@ -2405,6 +2405,53 @@ def email_test_check():
     return jsonify(analysis)
 
 
+# ── Email Report Sending ────────────────────────────
+_email_report_rate = {}  # {ip: [timestamp, ...]}
+
+@app.route("/api/email-report", methods=["POST"])
+def api_email_report():
+    """Send the email test report to a user's email address."""
+    import time as _t
+    from modules.mailer import _send, is_configured
+
+    if not is_configured():
+        return jsonify({"error": "Email sending is not configured."}), 503
+
+    # Rate limit: 3 per hour per IP
+    ip = request.remote_addr or "unknown"
+    now = _t.time()
+    cutoff = now - 3600
+    hits = _email_report_rate.get(ip, [])
+    hits = [t for t in hits if t > cutoff]
+    if len(hits) >= 3:
+        return jsonify({"error": "Too many requests. You can send up to 3 report emails per hour."}), 429
+    hits.append(now)
+    _email_report_rate[ip] = hits
+
+    data = request.get_json(force=True, silent=True)
+    if not data:
+        return jsonify({"error": "Invalid request."}), 400
+
+    email = (data.get("email") or "").strip().lower()
+    report_html = (data.get("report_html") or "").strip()
+
+    # Validate email
+    if not email or not re.match(r'^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$', email):
+        return jsonify({"error": "Please enter a valid email address."}), 400
+
+    if not report_html or len(report_html) > 100000:
+        return jsonify({"error": "Invalid report data."}), 400
+
+    # Send using existing mailer
+    subject = "Your INBXR Email Test Report"
+    ok = _send(email, subject, report_html)
+    if ok:
+        logger.info("Email report sent to %s from IP %s", email, ip)
+        return jsonify({"ok": True})
+    else:
+        return jsonify({"error": "Failed to send email. Please try again."}), 500
+
+
 @app.route("/dns-generator")
 def dns_generator():
     """Redirect to Sender Check which handles DNS generation."""

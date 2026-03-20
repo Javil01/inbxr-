@@ -17,6 +17,15 @@ var TOOL_LABELS = {
   copy_analysis:   'Copy Analysis',
   email_verify:    'Email Verify',
 };
+var TOOL_URLS = {
+  email_test:      '/',
+  domain_check:    '/sender',
+  subject_test:    '/subject-scorer',
+  placement_test:  '/placement',
+  header_analysis: '/header-analyzer',
+  copy_analysis:   '/analyzer',
+  email_verify:    '/email-verifier',
+};
 var TOOL_COLORS = {
   email_test:      '#2563eb',
   domain_check:    '#059669',
@@ -137,6 +146,9 @@ function renderOverview() {
     renderRecentList(data.results || [], 'overviewRecent');
   });
 
+  // Last scan results (all tiers)
+  loadLastScan();
+
   // Domain health
   loadDomainHealth();
 
@@ -230,6 +242,7 @@ function buildOverviewShell(s) {
       statCardHtml('statGrade', s.best_grade || '--', 'Best Grade') +
     '</div>' +
     buildQuickActions() +
+    buildLastScanCard() +
     buildAssistantTeaser() +
     buildDomainHealthCard() +
     '<div class="dash-row">' +
@@ -1023,6 +1036,58 @@ function showWelcomeModal() {
     var match = document.querySelector('.dash-nav__item[data-tool="/"]');
     if (match) { setActiveNav(match); loadToolInDashboard('/'); }
     else { window.location.href = '/'; }
+  });
+}
+
+// ══════════════════════════════════════════════════════
+//  LAST SCAN CARD (all tiers)
+// ══════════════════════════════════════════════════════
+function buildLastScanCard() {
+  return '<div class="dash-card" id="lastScanCard">' +
+    '<div class="dash-card__header">' +
+      '<h3 class="dash-card__title">Last Scan Results</h3>' +
+    '</div>' +
+    '<div id="lastScanContent"><div class="dash-loading-sm"><div class="loading-ring"></div></div></div>' +
+  '</div>';
+}
+
+function loadLastScan() {
+  apiFetch('/api/dashboard/last-scan').then(function(data) {
+    var container = document.getElementById('lastScanContent');
+    if (!container) return;
+
+    if (!data || !data.scan) {
+      container.innerHTML = '<div class="dash-lastscan-empty">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="32" height="32"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>' +
+        '<p>No scans yet. Run your first test to see results here.</p>' +
+        '<a href="/" class="dash-lastscan__cta">Run Your First Test &rarr;</a>' +
+      '</div>';
+      return;
+    }
+
+    var s = data.scan;
+    var toolLabel = TOOL_LABELS[s.tool] || s.tool;
+    var toolUrl = TOOL_URLS[s.tool] || '/';
+    var color = TOOL_COLORS[s.tool] || '#64748b';
+    var gradeCls = gradeClass(s.grade);
+
+    var html = '<div class="dash-lastscan">' +
+      '<div class="dash-lastscan__main">' +
+        '<div class="dash-lastscan__tool" style="color:' + color + '">' +
+          '<span class="dash-lastscan__tool-dot" style="background:' + color + '"></span>' +
+          esc(toolLabel) +
+        '</div>' +
+        '<div class="dash-lastscan__subject">' + esc(s.input_summary || 'Untitled') + '</div>' +
+        '<div class="dash-lastscan__time">' + formatDate(s.created_at) + '</div>' +
+      '</div>' +
+      '<div class="dash-lastscan__scores">' +
+        (s.grade ? '<span class="dash-lastscan__grade dash-grade dash-grade--' + gradeCls + '">' + esc(s.grade) + '</span>' : '') +
+        (s.score != null ? '<span class="dash-lastscan__score">' + s.score + '<small>/100</small></span>' : '') +
+      '</div>' +
+      '<a href="' + toolUrl + '" class="dash-lastscan__cta">Run New Test &rarr;</a>' +
+    '</div>';
+
+    container.innerHTML = html;
   });
 }
 

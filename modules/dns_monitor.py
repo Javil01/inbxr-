@@ -240,7 +240,7 @@ def scan_all_monitored_dns():
 
             changes = detect_dns_changes(prev, scan_result)
             if changes["changed"] and (changes["new_issues"] or changes["resolved_issues"]):
-                # Build alert message
+                # Build alert message with specific record changes
                 parts = []
                 for issue in changes["new_issues"]:
                     parts.append(f"NEW: {issue['message']}")
@@ -249,6 +249,44 @@ def scan_all_monitored_dns():
 
                 title = f"DNS auth change detected for {mon['domain']}"
                 message = " | ".join(parts) if parts else f"DNS records changed for {mon['domain']}"
+
+                # Build enriched details showing old vs new values
+                dns_changes = []
+                prev_spf = prev.get("spf_record") if prev else None
+                new_spf = scan_result["spf"]["record"]
+                if prev_spf != new_spf:
+                    dns_changes.append({
+                        "record": "SPF",
+                        "old": prev_spf or "(missing)",
+                        "new": new_spf or "(missing)",
+                    })
+
+                prev_dmarc = prev.get("dmarc_record") if prev else None
+                new_dmarc = scan_result["dmarc"]["record"]
+                if prev_dmarc != new_dmarc:
+                    prev_policy = None
+                    if prev_dmarc:
+                        for p in prev_dmarc.split(";"):
+                            p = p.strip()
+                            if p.startswith("p="):
+                                prev_policy = p[2:].strip()
+                    new_policy = scan_result["dmarc"].get("policy")
+                    dns_changes.append({
+                        "record": "DMARC",
+                        "old": prev_dmarc or "(missing)",
+                        "new": new_dmarc or "(missing)",
+                        "old_policy": prev_policy,
+                        "new_policy": new_policy,
+                    })
+
+                prev_dkim = bool(prev.get("dkim_valid")) if prev else None
+                new_dkim = scan_result["dkim"]["valid"]
+                if prev_dkim != new_dkim:
+                    dns_changes.append({
+                        "record": "DKIM",
+                        "old": "Valid" if prev_dkim else "Not found",
+                        "new": "Valid" if new_dkim else "Not found",
+                    })
 
                 create_alert(
                     mon["user_id"],
@@ -259,6 +297,7 @@ def scan_all_monitored_dns():
                         "domain": mon["domain"],
                         "new_issues": changes["new_issues"],
                         "resolved_issues": changes["resolved_issues"],
+                        "dns_changes": dns_changes,
                     },
                 )
                 alerted += 1

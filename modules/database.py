@@ -747,6 +747,18 @@ _MIGRATIONS = [
         );
         CREATE INDEX IF NOT EXISTS idx_framework_usage_user ON framework_usage(user_id, created_at DESC);
     """),
+    ("017_framework_favorites", """
+        CREATE TABLE IF NOT EXISTS user_framework_favorites (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            framework_id INTEGER NOT NULL,
+            created_at TEXT DEFAULT (datetime('now')),
+            UNIQUE(user_id, framework_id),
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+            FOREIGN KEY (framework_id) REFERENCES frameworks(id) ON DELETE CASCADE
+        );
+        CREATE INDEX IF NOT EXISTS idx_user_fw_favs_user ON user_framework_favorites(user_id);
+    """),
     ("016_fix_c3po_plant_doubt", """
         UPDATE frameworks
         SET description = REPLACE(description, 'Plausibility', 'Plant Doubt'),

@@ -145,6 +145,24 @@
     <!-- ── HERO SUMMARY CARD (top-level verdict) ── -->
     <div id="etHeroSummary" style="display:none"></div>
 
+    <!-- Email Me This Report -->
+    <div id="etEmailReport" style="display:none">
+      <div class="et-email-report">
+        <button type="button" class="et-email-report__trigger" id="emailReportTrigger">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 4L12 13 2 4"/></svg>
+          <span>Email Me This Report</span>
+        </button>
+        <div class="et-email-report__form" id="emailReportForm" style="display:none">
+          <input type="email" class="et-email-report__input" id="emailReportInput" placeholder="your@email.com" autocomplete="email" />
+          <button type="button" class="et-email-report__send" id="emailReportSend">
+            <span class="btn-text">Send</span>
+            <span class="btn-spinner hidden"></span>
+          </button>
+        </div>
+        <div class="et-email-report__status" id="emailReportStatus"></div>
+      </div>
+    </div>
+
     <!-- ESP vs Domain Diagnostic -->
     <div id="espDiagnostic" style="display:none;"></div>
 

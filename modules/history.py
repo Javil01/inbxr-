@@ -49,6 +49,23 @@ def get_history(user_id, tool=None, limit=50, offset=0, team_id=None):
     return rows
 
 
+def get_last_scan(user_id, team_id=None):
+    """Fetch the most recent check_history entry for a user (or team).
+    Returns a lightweight dict (no result_json) or None.
+    """
+    owner_clause = "team_id = ?" if team_id else "user_id = ?"
+    owner_param = team_id if team_id else user_id
+    row = fetchone(
+        f"""SELECT id, tool, input_summary, grade, score, created_at
+           FROM check_history
+           WHERE {owner_clause}
+           ORDER BY created_at DESC
+           LIMIT 1""",
+        (owner_param,),
+    )
+    return dict(row) if row else None
+
+
 def get_result(history_id, user_id, team_id=None):
     """Fetch a single full result including deserialized result_json.
     Verifies ownership (personal or team). Returns dict or None.

@@ -7,7 +7,7 @@ from flask import Blueprint, render_template, request, jsonify, session
 
 from modules.auth import login_required
 from modules.tiers import has_feature
-from modules.history import (get_history, get_result, delete_result,
+from modules.history import (get_history, get_result, get_last_scan, delete_result,
                              get_history_stats, get_tool_breakdown, get_score_trend)
 
 history_bp = Blueprint("history", __name__)
@@ -25,6 +25,20 @@ def _require_cloud_history():
         from flask import redirect
         return redirect("/pricing?upgrade=1")
     return None
+
+
+@history_bp.route("/api/dashboard/last-scan")
+@login_required
+def api_last_scan():
+    """Return the most recent check_history entry for the logged-in user.
+    Available to ALL tiers (not gated by cloud_history).
+    """
+    user_id = session["user_id"]
+    team_id = session.get("team_id")
+    result = get_last_scan(user_id, team_id=team_id)
+    if not result:
+        return jsonify({"scan": None})
+    return jsonify({"scan": result})
 
 
 @history_bp.route("/history")

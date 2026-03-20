@@ -148,7 +148,7 @@ window.showToast=function(msg,type,duration){
 })();
 </script>
 {% if session.get('user_id') %}
-<script>window.__userTier={{ (current_user_tier or 'free')|tojson }};window.__isNewUser={{ (session.get('is_new_signup', false))|tojson }};</script>
+<script>window.__userTier={{ (current_user_tier or 'free')|tojson }};window.__isNewUser={{ (session.get('is_new_signup', false))|tojson }};window.__userEmail={{ (current_user_email or '')|tojson }};</script>
 <script>
 (function(){
   function pollAlerts(){

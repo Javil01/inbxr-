@@ -12,6 +12,7 @@ let seedAddress = '';
 let autoRecheckTimer = null;
 let autoRecheckSeconds = 0;
 let notFoundCount = 0;
+let lastReportData = null;
 
 const LOADING_MSGS = [
   'Connecting to seed mailbox...',
@@ -116,7 +117,7 @@ function showSkeletonLoading() {
   if (!panel) return;
 
   // Hide real content containers
-  ['#etHeroSummary', '#espDiagnostic', '#etPlacementSummary', '#etAssessment', '#etHeaderGrades', '#etTransport', '#etIdentity', '#etScores', '#etReadability', '#etReputation', '#etAudit', '#etRawHeaders'].forEach(s => {
+  ['#etHeroSummary', '#etEmailReport', '#espDiagnostic', '#etPlacementSummary', '#etAssessment', '#etHeaderGrades', '#etTransport', '#etIdentity', '#etScores', '#etReadability', '#etReputation', '#etAudit', '#etRawHeaders'].forEach(s => {
     const el = $(s);
     if (el) el.style.display = 'none';
   });
@@ -190,7 +191,7 @@ function hideSkeletonLoading() {
     setTimeout(() => skeleton.remove(), 300);
   }
   // Restore elements hidden by showSkeletonLoading
-  ['#etHeroSummary', '#espDiagnostic', '#etPlacementSummary', '#etAssessment', '#etHeaderGrades', '#etTransport', '#etIdentity', '#etScores', '#etReadability', '#etReputation', '#etAudit', '#etRawHeaders'].forEach(s => {
+  ['#etHeroSummary', '#etEmailReport', '#espDiagnostic', '#etPlacementSummary', '#etAssessment', '#etHeaderGrades', '#etTransport', '#etIdentity', '#etScores', '#etReadability', '#etReputation', '#etAudit', '#etRawHeaders'].forEach(s => {
     const el = $(s);
     if (el) el.style.display = '';
   });
@@ -509,6 +510,7 @@ function renderHeroSummary(data) {
 
 function renderFullReport(data) {
   clearAutoRecheck();
+  lastReportData = data;
 
   // ── Hero summary card (top-level verdict) ──
   renderHeroSummary(data);
@@ -578,9 +580,10 @@ function renderFullReport(data) {
   renderNextSteps(data);
   renderUpgradeNudges(data);
   renderEmailPreview(data);
+  setupEmailReport();
 
   // Show all sections with staggered reveal
-  const revealSections = ['#etHeroSummary', '#espDiagnostic', '#etAssessment', '#etHeaderGrades', '#etTransport', '#etIdentity', '#etScores', '#etReadability', '#etReputation', '#etAudit', '#etFullAuditCta', '#etMoveToPrimary', '#etPrimaryOptimizer', '#etSafetyWarning', '#etNextSteps', '#etUpgradeNudge', '#etEmailPreview', '#etRawHeaders'];
+  const revealSections = ['#etHeroSummary', '#etEmailReport', '#espDiagnostic', '#etAssessment', '#etHeaderGrades', '#etTransport', '#etIdentity', '#etScores', '#etReadability', '#etReputation', '#etAudit', '#etFullAuditCta', '#etMoveToPrimary', '#etPrimaryOptimizer', '#etSafetyWarning', '#etNextSteps', '#etUpgradeNudge', '#etEmailPreview', '#etRawHeaders'];
   revealSections.forEach((s, i) => {
     const el = $(s);
     if (el && el.style.display !== 'none') {
@@ -2029,4 +2032,186 @@ function renderEmailPreview(data) {
     tab.classList.add('email-preview-tab--active');
     showProvider(parseInt(tab.dataset.provider));
   });
+}
+
+// ══════════════════════════════════════════════════════
+//  EMAIL ME THIS REPORT
+// ══════════════════════════════════════════════════════
+function setupEmailReport() {
+  const wrap = $('#etEmailReport');
+  if (!wrap) return;
+  wrap.style.display = '';
+
+  const trigger = $('#emailReportTrigger');
+  const form = $('#emailReportForm');
+  const input = $('#emailReportInput');
+  const sendBtn = $('#emailReportSend');
+  const status = $('#emailReportStatus');
+
+  // Pre-fill email for logged-in users
+  if (window.__userEmail) {
+    input.value = window.__userEmail;
+  }
+
+  // Reset state from previous reports
+  form.style.display = 'none';
+  trigger.style.display = '';
+  status.textContent = '';
+  status.className = 'et-email-report__status';
+  sendBtn.disabled = false;
+  $('.btn-text', sendBtn).textContent = 'Send';
+  $('.btn-spinner', sendBtn).classList.add('hidden');
+
+  trigger.onclick = function() {
+    form.style.display = '';
+    trigger.style.display = 'none';
+    input.focus();
+  };
+
+  sendBtn.onclick = function() { sendEmailReport(); };
+  input.onkeydown = function(e) {
+    if (e.key === 'Enter') sendEmailReport();
+  };
+}
+
+function buildReportHtml(data) {
+  // Build a clean HTML summary from the report data
+  const p = data.placement || {};
+  const spam = data.spam || {};
+  const copy = data.copy || {};
+  const grades = data.header_grades || [];
+  const assessment = data.assessment_items || [];
+
+  // Overall verdict
+  const inSpam = p.placement === 'spam' || p.placement === 'trash';
+  const inPromo = p.placement === 'inbox' && p.tab === 'promotions';
+  let verdict = 'Results Ready';
+  let verdictColor = '#3b82f6';
+  if (inSpam) { verdict = 'Landed in Spam'; verdictColor = '#ef4444'; }
+  else if (inPromo) { verdict = 'Promotions Tab'; verdictColor = '#f59e0b'; }
+  else if (p.placement === 'inbox') { verdict = 'Inbox'; verdictColor = '#22c55e'; }
+
+  // Grade pills
+  const gradeColors = { pass: '#22c55e', warning: '#f59e0b', fail: '#ef4444', missing: '#94a3b8' };
+  const gradeLetters = { pass: 'A', warning: 'C', fail: 'F', missing: '?' };
+  let gradeHtml = grades.map(g => {
+    const c = gradeColors[g.status] || '#94a3b8';
+    const l = g.grade || gradeLetters[g.status] || '?';
+    return '<td style="text-align:center;padding:8px 12px;">' +
+      '<span style="display:inline-block;width:32px;height:32px;line-height:32px;border-radius:50%;' +
+      'background:' + c + ';color:#fff;font-weight:700;font-size:14px;">' + l + '</span>' +
+      '<br><span style="font-size:12px;color:#64748b;">' + (g.label || '') + '</span></td>';
+  }).join('');
+
+  // Top 3 issues
+  let issuesHtml = '';
+  const issues = [];
+  grades.filter(g => g.status === 'fail').forEach(g => {
+    issues.push(g.label + ' is failing — ' + (g.detail || 'needs attention'));
+  });
+  grades.filter(g => g.status === 'warning').forEach(g => {
+    issues.push(g.label + ' — ' + (g.detail || 'has warnings'));
+  });
+  if (spam.score > 40) {
+    issues.push('Spam risk score is ' + spam.score + '/100 — review content triggers');
+  }
+  if (copy.score !== undefined && copy.score < 50) {
+    issues.push('Copy score is ' + copy.score + '/100 — improve email content');
+  }
+
+  const topIssues = issues.slice(0, 3);
+  if (topIssues.length > 0) {
+    issuesHtml = '<h3 style="color:#0c1a3a;font-size:15px;margin:20px 0 8px;">Top Issues to Fix</h3><ul style="margin:0;padding-left:20px;">';
+    topIssues.forEach(function(issue) {
+      issuesHtml += '<li style="color:#334155;font-size:14px;line-height:1.7;">' + escHtml(issue) + '</li>';
+    });
+    issuesHtml += '</ul>';
+  } else {
+    issuesHtml = '<p style="color:#22c55e;font-size:14px;margin:16px 0;">No critical issues found — your email looks good.</p>';
+  }
+
+  // Scores
+  let scoresHtml = '';
+  if (spam.score !== undefined) {
+    scoresHtml += '<td style="padding:8px 16px;text-align:center;">' +
+      '<span style="font-size:24px;font-weight:700;color:' + (spam.score <= 20 ? '#22c55e' : spam.score <= 40 ? '#f59e0b' : '#ef4444') + ';">' + spam.score + '</span>' +
+      '<span style="color:#64748b;font-size:13px;">/100</span><br><span style="font-size:12px;color:#64748b;">Spam Risk</span></td>';
+  }
+  if (copy.score !== undefined) {
+    scoresHtml += '<td style="padding:8px 16px;text-align:center;">' +
+      '<span style="font-size:24px;font-weight:700;color:' + (copy.score >= 70 ? '#22c55e' : copy.score >= 50 ? '#f59e0b' : '#ef4444') + ';">' + copy.score + '</span>' +
+      '<span style="color:#64748b;font-size:13px;">/100</span><br><span style="font-size:12px;color:#64748b;">Copy Score</span></td>';
+  }
+
+  return '<div style="font-family:Inter,Arial,sans-serif;max-width:520px;margin:0 auto;padding:32px 24px;">' +
+    '<h2 style="color:#0c1a3a;margin:0 0 4px;font-size:20px;">Your Email Test Report</h2>' +
+    '<p style="color:#64748b;font-size:13px;margin:0 0 20px;">from INBXR &mdash; Email Intelligence Platform</p>' +
+    '<div style="background:' + verdictColor + '10;border-left:4px solid ' + verdictColor + ';padding:12px 16px;border-radius:6px;margin-bottom:20px;">' +
+      '<span style="font-size:16px;font-weight:700;color:' + verdictColor + ';">' + escHtml(verdict) + '</span>' +
+      (p.tab ? '<span style="color:#64748b;font-size:13px;margin-left:8px;">(' + escHtml(p.tab) + ')</span>' : '') +
+    '</div>' +
+    (gradeHtml ? '<table style="width:100%;border-collapse:collapse;margin:16px 0;"><tr>' + gradeHtml + '</tr></table>' : '') +
+    (scoresHtml ? '<table style="width:100%;border-collapse:collapse;margin:12px 0;"><tr>' + scoresHtml + '</tr></table>' : '') +
+    issuesHtml +
+    '<div style="text-align:center;margin:28px 0 16px;">' +
+      '<a href="https://inbxr.us/" style="display:inline-block;background:#16a34a;color:#fff;padding:12px 28px;border-radius:999px;text-decoration:none;font-weight:600;font-size:15px;">View Full Report at INBXR</a>' +
+    '</div>' +
+    '<p style="color:#94a3b8;font-size:12px;margin-top:24px;border-top:1px solid #e2e8f0;padding-top:16px;">INBXR &mdash; Free email deliverability tools. <a href="https://inbxr.us" style="color:#94a3b8;">inbxr.us</a></p>' +
+  '</div>';
+}
+
+async function sendEmailReport() {
+  const input = $('#emailReportInput');
+  const sendBtn = $('#emailReportSend');
+  const status = $('#emailReportStatus');
+  const email = (input.value || '').trim();
+
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    status.textContent = 'Please enter a valid email address.';
+    status.className = 'et-email-report__status et-email-report__status--error';
+    input.focus();
+    return;
+  }
+
+  if (!lastReportData) {
+    status.textContent = 'No report data available. Run a test first.';
+    status.className = 'et-email-report__status et-email-report__status--error';
+    return;
+  }
+
+  sendBtn.disabled = true;
+  $('.btn-text', sendBtn).textContent = 'Sending...';
+  $('.btn-spinner', sendBtn).classList.remove('hidden');
+  status.textContent = '';
+  status.className = 'et-email-report__status';
+
+  try {
+    const reportHtml = buildReportHtml(lastReportData);
+    const res = await fetch('/api/email-report', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: email, report_html: reportHtml }),
+    });
+    const data = await res.json();
+
+    if (res.ok && !data.error) {
+      status.textContent = 'Report sent! Check your inbox.';
+      status.className = 'et-email-report__status et-email-report__status--success';
+      sendBtn.disabled = true;
+      $('.btn-text', sendBtn).textContent = 'Sent';
+      $('.btn-spinner', sendBtn).classList.add('hidden');
+    } else {
+      status.textContent = data.error || 'Failed to send. Try again.';
+      status.className = 'et-email-report__status et-email-report__status--error';
+      sendBtn.disabled = false;
+      $('.btn-text', sendBtn).textContent = 'Send';
+      $('.btn-spinner', sendBtn).classList.add('hidden');
+    }
+  } catch (err) {
+    status.textContent = 'Network error. Please try again.';
+    status.className = 'et-email-report__status et-email-report__status--error';
+    sendBtn.disabled = false;
+    $('.btn-text', sendBtn).textContent = 'Send';
+    $('.btn-spinner', sendBtn).classList.add('hidden');
+  }
 }

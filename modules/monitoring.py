@@ -141,7 +141,8 @@ def scan_user_domain(user_id, monitor_id, team_id=None):
     listed_count = len(listed_entries)
     listed_on = [
         {"name": r["name"], "zone": r["zone"], "weight": r.get("weight", 1),
-         "type": r.get("type", ""), "reason": r.get("reason")}
+         "type": r.get("type", ""), "reason": r.get("reason"),
+         "delist": r.get("delist", ""), "info": r.get("info", "")}
         for r in listed_entries
     ]
     clean = listed_count == 0

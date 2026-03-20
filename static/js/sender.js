@@ -274,7 +274,10 @@ function renderAuthGrid(categories) {
             Show record <span class="accordion-arrow">▼</span>
           </button>
           <div class="auth-detail hidden" id="${detailsId}">
-            <code class="auth-record-code">${escHtml(record)}</code>
+            <div class="auth-record-wrap">
+              <code class="auth-record-code">${escHtml(record)}</code>
+              <button class="fa-copy-btn" data-copy="${escAttr(record)}">Copy</button>
+            </div>
             ${cat.selector ? `<span class="auth-selector-note">Selector: ${escHtml(cat.selector)}</span>` : ''}
             ${cat.policy   ? `<span class="auth-selector-note">Policy: p=${escHtml(cat.policy)}${cat.pct != null ? ` · pct=${cat.pct}%` : ''}</span>` : ''}
           </div>` : ''}
@@ -309,6 +312,28 @@ function renderAuthGrid(categories) {
       const open = detail.classList.toggle('hidden') === false;
       const arrow = $('.accordion-arrow', btn);
       if (arrow) arrow.style.transform = open ? 'rotate(180deg)' : '';
+    });
+  });
+
+  // Copy buttons within auth record details
+  $$('.fa-copy-btn', grid).forEach(btn => {
+    btn.addEventListener('click', () => {
+      const text = btn.dataset.copy;
+      navigator.clipboard.writeText(text).then(() => {
+        btn.textContent = 'Copied!';
+        btn.classList.add('fa-copy-btn--copied');
+        setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('fa-copy-btn--copied'); }, 1500);
+      }).catch(() => {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.cssText = 'position:fixed;opacity:0';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        btn.textContent = 'Copied!';
+        setTimeout(() => { btn.textContent = 'Copy'; }, 1500);
+      });
     });
   });
 }

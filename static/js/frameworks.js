@@ -27,11 +27,14 @@ let _allFrameworks = [];
 let _myFrameworks = [];
 let _activeCategory = 'all';
 let _editingId = null;
+let _favSlugs = new Set();
 
 // ── Init ─────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
+  await loadFavorites();
   await loadFrameworks();
   loadDecisionTree();
+  injectFavoritesTab();
   initTabs();
   initModal();
   initBuilder();
@@ -48,6 +51,78 @@ document.addEventListener('DOMContentLoaded', async () => {
     $('#fwUpsell').style.display = '';
   }
 });
+
+
+// ── Favorites ────────────────────────────────────────
+const _LS_FAV_KEY = 'inbxr_fw_favorites';
+
+function _isLoggedIn() {
+  return !!window.__userId;
+}
+
+async function loadFavorites() {
+  if (_isLoggedIn()) {
+    try {
+      const res = await fetch('/api/frameworks/favorites');
+      if (res.ok) {
+        const slugs = await res.json();
+        _favSlugs = new Set(slugs);
+        return;
+      }
+    } catch (e) { /* fall through to localStorage */ }
+  }
+  // Anonymous / fallback: use localStorage
+  try {
+    const stored = JSON.parse(localStorage.getItem(_LS_FAV_KEY) || '[]');
+    _favSlugs = new Set(stored);
+  } catch (e) {
+    _favSlugs = new Set();
+  }
+}
+
+function _saveFavsLocal() {
+  localStorage.setItem(_LS_FAV_KEY, JSON.stringify([..._favSlugs]));
+}
+
+async function toggleFavorite(slug) {
+  if (_isLoggedIn()) {
+    try {
+      const res = await fetch(`/api/frameworks/${slug}/favorite`, { method: 'POST' });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.favorited) _favSlugs.add(slug);
+        else _favSlugs.delete(slug);
+      }
+    } catch (e) {
+      console.error('Failed to toggle favorite', e);
+    }
+  } else {
+    if (_favSlugs.has(slug)) _favSlugs.delete(slug);
+    else _favSlugs.add(slug);
+    _saveFavsLocal();
+  }
+  // Re-render current view
+  filterGrid();
+  _updateFavTabCount();
+}
+
+function injectFavoritesTab() {
+  const tabs = $('#fwTabs');
+  if (!tabs) return;
+  const favTab = document.createElement('button');
+  favTab.className = 'fw-tab fw-tab--fav';
+  favTab.dataset.category = 'favorites';
+  favTab.innerHTML = '&#9733; Favorites';
+  tabs.appendChild(favTab);
+  _updateFavTabCount();
+}
+
+function _updateFavTabCount() {
+  const tab = $('.fw-tab--fav');
+  if (!tab) return;
+  const count = _favSlugs.size;
+  tab.innerHTML = `&#9733; Favorites${count ? ' (' + count + ')' : ''}`;
+}
 
 
 // ── Load frameworks ──────────────────────────────────
@@ -81,8 +156,13 @@ function renderGrid(frameworks) {
     grid.innerHTML = '<p class="fw-empty">No frameworks found.</p>';
     return;
   }
-  grid.innerHTML = frameworks.map(fw => `
+  grid.innerHTML = frameworks.map(fw => {
+    const isFav = _favSlugs.has(fw.slug);
+    return `
     <div class="fw-card ${fw.locked ? 'fw-card--locked' : ''}" data-slug="${_esc(fw.slug)}" data-category="${_esc(fw.category)}">
+      <button class="fw-card__fav ${isFav ? 'fw-card__fav--active' : ''}" data-slug="${_esc(fw.slug)}" title="${isFav ? 'Remove from favorites' : 'Add to favorites'}" aria-label="Favorite">
+        ${isFav ? '&#9829;' : '&#9825;'}
+      </button>
       <div class="fw-card__top">
         <span class="fw-card__acronym">${_esc(fw.acronym)}</span>
         <span class="fw-card__pill">${_esc(CATEGORY_LABELS[fw.category] || fw.category)}</span>
@@ -90,8 +170,16 @@ function renderGrid(frameworks) {
       <h3 class="fw-card__name">${_esc(fw.name)}</h3>
       <p class="fw-card__desc">${_esc(fw.description)}</p>
       ${fw.locked ? '<span class="fw-card__lock">Pro</span>' : ''}
-    </div>
-  `).join('');
+    </div>`;
+  }).join('');
+
+  // Fav button handlers
+  $$('.fw-card__fav', grid).forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      toggleFavorite(btn.dataset.slug);
+    });
+  });
 
   // Click handlers
   $$('.fw-card', grid).forEach(card => {
@@ -153,9 +241,14 @@ function initTabs() {
 }
 
 function filterGrid() {
-  const filtered = _activeCategory === 'all'
-    ? _allFrameworks
-    : _allFrameworks.filter(fw => fw.category === _activeCategory);
+  let filtered;
+  if (_activeCategory === 'all') {
+    filtered = _allFrameworks;
+  } else if (_activeCategory === 'favorites') {
+    filtered = _allFrameworks.filter(fw => _favSlugs.has(fw.slug));
+  } else {
+    filtered = _allFrameworks.filter(fw => fw.category === _activeCategory);
+  }
   renderGrid(filtered);
 }
 

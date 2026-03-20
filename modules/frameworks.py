@@ -85,6 +85,45 @@ def delete_user_framework(user_id, fw_id):
     return cur.rowcount > 0
 
 
+# ── Favorites ─────────────────────────────────────────
+
+def toggle_favorite(user_id, framework_id):
+    """Toggle a framework favorite. Returns True if now favorited, False if removed."""
+    existing = fetchone(
+        "SELECT id FROM user_framework_favorites WHERE user_id = ? AND framework_id = ?",
+        (user_id, framework_id)
+    )
+    if existing:
+        execute("DELETE FROM user_framework_favorites WHERE id = ?", (existing["id"],))
+        return False
+    execute(
+        "INSERT INTO user_framework_favorites (user_id, framework_id) VALUES (?, ?)",
+        (user_id, framework_id)
+    )
+    return True
+
+
+def get_user_favorites(user_id):
+    """Return list of framework slugs favorited by user."""
+    rows = fetchall(
+        """SELECT f.slug FROM user_framework_favorites uf
+           JOIN frameworks f ON f.id = uf.framework_id
+           WHERE uf.user_id = ?
+           ORDER BY uf.created_at DESC""",
+        (user_id,)
+    )
+    return [r["slug"] for r in rows]
+
+
+def is_favorite(user_id, framework_id):
+    """Check if a framework is favorited by user."""
+    row = fetchone(
+        "SELECT id FROM user_framework_favorites WHERE user_id = ? AND framework_id = ?",
+        (user_id, framework_id)
+    )
+    return row is not None
+
+
 # ── Usage tracking ────────────────────────────────────
 
 def log_framework_usage(user_id, framework_id=None, user_framework_id=None,
