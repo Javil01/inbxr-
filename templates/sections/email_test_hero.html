@@ -16,20 +16,81 @@
       </div>
 
       <div class="hero-split__visual">
-        <div class="hero-carousel" id="heroCarousel">
+        <div class="hero-cinema" id="heroCinema">
 
-          <!-- Slide 1: Bad report → Fix → Good report (animated sequence) -->
-          <div class="hero-slide hero-slide--active" data-slide="0">
-            <div class="hero-mock hero-story" id="heroStory">
+          <!-- ACT 1: Email in Spam -->
+          <div class="hero-act hero-act--active" data-act="0">
+            <div class="hero-mock hero-mock--gmail hero-mock--spam-glow">
+              <div class="hero-mock__header">
+                <span class="hero-mock__dot hero-mock__dot--red"></span>
+                <span class="hero-mock__dot hero-mock__dot--yellow"></span>
+                <span class="hero-mock__dot hero-mock__dot--green"></span>
+                <span class="hero-mock__tab">Gmail</span>
+              </div>
+              <div class="gmail-tabs">
+                <span class="gmail-tab">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 4L12 13 2 4"/></svg>
+                  Primary
+                </span>
+                <span class="gmail-tab">Promotions</span>
+                <span class="gmail-tab gmail-tab--spam gmail-tab--active">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                  Spam
+                </span>
+              </div>
+              <div class="gmail-inbox">
+                <div class="gmail-row gmail-row--spam-landing">
+                  <span class="gmail-avatar gmail-avatar--red">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" width="14" height="14"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                  </span>
+                  <div class="gmail-row__content">
+                    <span class="gmail-row__sender gmail-row__sender--spam">Your Campaign</span>
+                    <span class="gmail-row__subject gmail-row__subject--spam">Exclusive: 3 ways to boost your Q4 pipeline</span>
+                  </div>
+                  <span class="gmail-row__badge-spam">Marked as Spam</span>
+                </div>
+                <div class="gmail-row gmail-row--existing gmail-row--spam-other">
+                  <span class="gmail-avatar gmail-avatar--red-dim">!</span>
+                  <div class="gmail-row__content">
+                    <span class="gmail-row__sender">noreply@deals...</span>
+                    <span class="gmail-row__subject">ACT NOW!! Limited time...</span>
+                  </div>
+                  <span class="gmail-row__time">2d ago</span>
+                </div>
+                <div class="gmail-row gmail-row--existing gmail-row--spam-other">
+                  <span class="gmail-avatar gmail-avatar--red-dim">!</span>
+                  <div class="gmail-row__content">
+                    <span class="gmail-row__sender">winners@prize...</span>
+                    <span class="gmail-row__subject">You've been selected...</span>
+                  </div>
+                  <span class="gmail-row__time">3d ago</span>
+                </div>
+              </div>
+            </div>
+            <p class="hero-act__caption hero-act__caption--red">Where your emails are landing now</p>
+
+            <!-- "Run Report" transition button -->
+            <div class="hero-act__transition" id="act1Transition">
+              <div class="hero-act__trans-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                What's wrong? Run INBXR Report
+              </div>
+              <div class="hero-act__trans-cursor">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="#fff"><path d="M4 0l16 12-7 2 4 8-3 1-4-8-6 5z"/></svg>
+              </div>
+            </div>
+          </div>
+
+          <!-- ACT 2: Bad INBXR Report -->
+          <div class="hero-act" data-act="1">
+            <div class="hero-mock hero-mock--red-glow">
               <div class="hero-mock__header">
                 <span class="hero-mock__dot hero-mock__dot--red"></span>
                 <span class="hero-mock__dot hero-mock__dot--yellow"></span>
                 <span class="hero-mock__dot hero-mock__dot--green"></span>
                 <span class="hero-mock__tab">INBXR Report</span>
               </div>
-
-              <!-- Phase 1: Bad report -->
-              <div class="hero-mock__body hero-story__bad" id="storyBad">
+              <div class="hero-mock__body">
                 <div class="hero-mock__row">
                   <span class="hero-mock__label">Overall Grade</span>
                   <span class="hero-mock__grade hero-mock__grade--d">D</span>
@@ -60,23 +121,34 @@
                 <div class="hero-mock__divider"></div>
                 <div class="hero-mock__row hero-mock__row--issues">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
-                  <span>7 issues found</span>
+                  <span>5 spam triggers &middot; Missing DMARC &middot; No framework</span>
                 </div>
               </div>
+            </div>
+            <p class="hero-act__caption hero-act__caption--red">INBXR found 7 issues in 60 seconds</p>
 
-              <!-- Phase 2: Fix button (overlays bad report) -->
-              <div class="hero-story__fix" id="storyFix">
-                <div class="hero-story__fix-btn" id="storyFixBtn">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
-                  Fix with INBXR AI
-                </div>
-                <div class="hero-story__fix-cursor">
-                  <svg viewBox="0 0 24 24" width="18" height="18" fill="#fff"><path d="M4 0l16 12-7 2 4 8-3 1-4-8-6 5z"/></svg>
-                </div>
+            <!-- "Fix" transition button -->
+            <div class="hero-act__transition" id="act2Transition">
+              <div class="hero-act__trans-btn hero-act__trans-btn--green">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                Fix with INBXR AI
               </div>
+              <div class="hero-act__trans-cursor">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="#fff"><path d="M4 0l16 12-7 2 4 8-3 1-4-8-6 5z"/></svg>
+              </div>
+            </div>
+          </div>
 
-              <!-- Phase 3: Good report -->
-              <div class="hero-mock__body hero-story__good" id="storyGood">
+          <!-- ACT 3: Good INBXR Report -->
+          <div class="hero-act" data-act="2">
+            <div class="hero-mock hero-mock--green-glow">
+              <div class="hero-mock__header">
+                <span class="hero-mock__dot hero-mock__dot--red"></span>
+                <span class="hero-mock__dot hero-mock__dot--yellow"></span>
+                <span class="hero-mock__dot hero-mock__dot--green"></span>
+                <span class="hero-mock__tab">INBXR Report</span>
+              </div>
+              <div class="hero-mock__body">
                 <div class="hero-mock__row">
                   <span class="hero-mock__label">Overall Grade</span>
                   <span class="hero-mock__grade hero-mock__grade--a">A</span>
@@ -94,7 +166,7 @@
                 <div class="hero-mock__divider"></div>
                 <div class="hero-mock__row">
                   <span class="hero-mock__label">Framework</span>
-                  <span class="hero-mock__badge">PAS Detected</span>
+                  <span class="hero-mock__badge">PAS Applied</span>
                 </div>
                 <div class="hero-mock__row">
                   <span class="hero-mock__label">Auth</span>
@@ -107,15 +179,16 @@
                 <div class="hero-mock__divider"></div>
                 <div class="hero-mock__row hero-mock__row--ai">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-                  <span>All issues resolved</span>
+                  <span>Every issue fixed. Copy rewritten.</span>
                 </div>
               </div>
             </div>
+            <p class="hero-act__caption hero-act__caption--green">Every issue fixed. Copy rewritten.</p>
           </div>
 
-          <!-- Slide 2: Gmail Primary inbox animation -->
-          <div class="hero-slide" data-slide="1">
-            <div class="hero-mock hero-mock--gmail">
+          <!-- ACT 4: Email in Primary -->
+          <div class="hero-act" data-act="3">
+            <div class="hero-mock hero-mock--gmail hero-mock--primary-glow">
               <div class="hero-mock__header">
                 <span class="hero-mock__dot hero-mock__dot--red"></span>
                 <span class="hero-mock__dot hero-mock__dot--yellow"></span>
@@ -168,12 +241,15 @@
                 </div>
               </div>
             </div>
+            <p class="hero-act__caption hero-act__caption--green">Where your emails land with INBXR</p>
           </div>
 
-          <!-- Slide indicators -->
-          <div class="hero-carousel__dots">
-            <button class="hero-carousel__dot hero-carousel__dot--active" data-slide="0" aria-label="Report"></button>
-            <button class="hero-carousel__dot" data-slide="1" aria-label="Inbox"></button>
+          <!-- Act indicators -->
+          <div class="hero-cinema__dots">
+            <button class="hero-cinema__dot hero-cinema__dot--active" data-act="0" aria-label="Spam"></button>
+            <button class="hero-cinema__dot" data-act="1" aria-label="Diagnose"></button>
+            <button class="hero-cinema__dot" data-act="2" aria-label="Fix"></button>
+            <button class="hero-cinema__dot" data-act="3" aria-label="Primary"></button>
           </div>
         </div>
       </div>
@@ -183,76 +259,67 @@
 </div>
 <script>
 (function(){
-  /* ── Story animation (slide 1): Bad → Fix → Good ── */
-  var badEl = document.getElementById('storyBad');
-  var fixEl = document.getElementById('storyFix');
-  var goodEl = document.getElementById('storyGood');
-  var storyTimer = null;
+  var acts = document.querySelectorAll('.hero-act');
+  var dots = document.querySelectorAll('.hero-cinema__dot');
+  if (acts.length < 2) return;
 
-  function resetStory() {
-    if (!badEl || !fixEl || !goodEl) return;
-    badEl.classList.remove('hero-story--hidden');
-    fixEl.classList.remove('hero-story__fix--visible', 'hero-story__fix--clicked');
-    goodEl.classList.remove('hero-story__good--visible');
-  }
-
-  function playStory() {
-    resetStory();
-    // 2s: show bad report
-    // 3.5s: show fix button + cursor
-    // 5s: click animation
-    // 5.8s: hide bad, show good
-    storyTimer = setTimeout(function() {
-      fixEl.classList.add('hero-story__fix--visible');
-    }, 2000);
-
-    setTimeout(function() {
-      fixEl.classList.add('hero-story__fix--clicked');
-    }, 3500);
-
-    setTimeout(function() {
-      badEl.classList.add('hero-story--hidden');
-      fixEl.classList.remove('hero-story__fix--visible', 'hero-story__fix--clicked');
-      goodEl.classList.add('hero-story__good--visible');
-    }, 4300);
-  }
-
-  /* ── Carousel ── */
-  var slides = document.querySelectorAll('.hero-slide');
-  var dots = document.querySelectorAll('.hero-carousel__dot');
-  if (slides.length < 2) return;
   var current = 0;
-  var total = slides.length;
-  var carouselTimer;
-
-  // Slide 1 stays for 9s (story plays), slide 2 stays for 6s
-  var durations = [9000, 6000];
+  var total = acts.length;
+  var timer;
+  // Act durations: Spam 3s, Bad Report 3s (+ 1.5s transition), Good Report 3s, Primary 5s
+  var durations = [3000, 4500, 3000, 5000];
+  // Transition button timing (appears after X ms into the act)
+  var transTiming = { 0: 1500, 1: 1500 }; // acts 0 and 1 have transition buttons
 
   function show(i) {
     current = i;
-    slides.forEach(function(s, idx) {
-      s.classList.toggle('hero-slide--active', idx === i);
+    acts.forEach(function(a, idx) {
+      a.classList.toggle('hero-act--active', idx === i);
     });
     dots.forEach(function(d, idx) {
-      d.classList.toggle('hero-carousel__dot--active', idx === i);
+      d.classList.toggle('hero-cinema__dot--active', idx === i);
     });
 
-    // Trigger animations per slide
-    if (i === 0) {
-      playStory();
+    // Reset transitions on all acts
+    document.querySelectorAll('.hero-act__transition').forEach(function(t) {
+      t.classList.remove('hero-act__transition--visible', 'hero-act__transition--clicked');
+    });
+
+    // Schedule transition button if this act has one
+    var transEl = acts[i].querySelector('.hero-act__transition');
+    if (transEl && transTiming[i] !== undefined) {
+      setTimeout(function() {
+        if (current !== i) return; // act changed
+        transEl.classList.add('hero-act__transition--visible');
+      }, transTiming[i]);
+
+      // Click animation before next act
+      setTimeout(function() {
+        if (current !== i) return;
+        transEl.classList.add('hero-act__transition--clicked');
+      }, durations[i] - 800);
     }
-    if (i === 1) {
-      // Re-trigger Gmail landing animation
-      var landing = slides[1].querySelector('.gmail-row--landing');
+
+    // Re-trigger landing animations on act 3 (Primary)
+    if (i === 3) {
+      var landing = acts[3].querySelector('.gmail-row--landing');
       if (landing) { landing.style.animation = 'none'; void landing.offsetWidth; landing.style.animation = ''; }
-      var badge = slides[1].querySelector('.gmail-row__badge-primary');
+      var badge = acts[3].querySelector('.gmail-row__badge-primary');
       if (badge) { badge.style.animation = 'none'; void badge.offsetWidth; badge.style.animation = ''; }
+    }
+
+    // Re-trigger spam landing on act 0
+    if (i === 0) {
+      var spamRow = acts[0].querySelector('.gmail-row--spam-landing');
+      if (spamRow) { spamRow.style.animation = 'none'; void spamRow.offsetWidth; spamRow.style.animation = ''; }
+      var spamBadge = acts[0].querySelector('.gmail-row__badge-spam');
+      if (spamBadge) { spamBadge.style.animation = 'none'; void spamBadge.offsetWidth; spamBadge.style.animation = ''; }
     }
   }
 
   function scheduleNext() {
-    clearTimeout(carouselTimer);
-    carouselTimer = setTimeout(function() {
+    clearTimeout(timer);
+    timer = setTimeout(function() {
       show((current + 1) % total);
       scheduleNext();
     }, durations[current]);
@@ -260,13 +327,12 @@
 
   dots.forEach(function(dot) {
     dot.addEventListener('click', function() {
-      show(parseInt(dot.dataset.slide));
+      show(parseInt(dot.dataset.act));
       scheduleNext();
     });
   });
 
-  // Start
-  playStory();
+  show(0);
   scheduleNext();
 })();
 </script>

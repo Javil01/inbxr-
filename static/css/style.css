@@ -874,37 +874,39 @@ img { display: block; max-width: 100%; }
   font-weight: 600;
 }
 
-/* ── Story animation phases ────────────────────── */
-.hero-story {
+/* ── Hero 4-act cinema ─────────────────────────── */
+.hero-cinema {
   position: relative;
-  overflow: hidden;
 }
-.hero-story__bad {
-  transition: opacity 0.4s ease, transform 0.4s ease;
-}
-.hero-story__bad.hero-story--hidden {
-  opacity: 0;
-  transform: scale(0.96);
-  pointer-events: none;
-  position: absolute;
-  inset: 0;
-}
-.hero-story__good {
+.hero-act {
   display: none;
-  animation: storyGoodIn 0.5s ease both;
+  animation: actIn 0.45s ease;
+  position: relative;
 }
-.hero-story__good.hero-story__good--visible {
-  display: flex;
+.hero-act--active {
+  display: block;
 }
-@keyframes storyGoodIn {
-  from { opacity: 0; transform: scale(1.03); }
-  to { opacity: 1; transform: scale(1); }
+@keyframes actIn {
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-/* Fix button overlay */
-.hero-story__fix {
+/* Act captions */
+.hero-act__caption {
+  text-align: center;
+  font-size: 0.78rem;
+  font-weight: 600;
+  margin: 12px 0 0;
+  letter-spacing: 0.02em;
+}
+.hero-act__caption--red { color: #ef4444; }
+.hero-act__caption--green { color: #22c55e; }
+
+/* Transition buttons (acts 1 & 2) */
+.hero-act__transition {
   position: absolute;
   inset: 0;
+  bottom: 28px; /* leave room for caption */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -912,91 +914,124 @@ img { display: block; max-width: 100%; }
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.4s ease;
+  border-radius: 14px;
 }
-.hero-story__fix--visible {
+.hero-act__transition--visible {
   opacity: 1;
 }
-.hero-story__fix::before {
+.hero-act__transition::before {
   content: '';
   position: absolute;
   inset: 0;
   background: rgba(11,19,40,0.7);
   backdrop-filter: blur(3px);
+  border-radius: 14px;
 }
-.hero-story__fix-btn {
+.hero-act__trans-btn {
   position: relative;
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 12px 24px;
-  background: var(--cta);
+  padding: 11px 22px;
+  background: var(--brand);
   color: #fff;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   font-weight: 700;
   border-radius: 10px;
-  box-shadow: 0 4px 20px rgba(34,197,94,0.3);
+  box-shadow: 0 4px 20px rgba(37,99,235,0.3);
   transition: transform 0.15s ease, box-shadow 0.15s ease;
   z-index: 2;
+  white-space: nowrap;
 }
-.hero-story__fix--clicked .hero-story__fix-btn {
-  transform: scale(0.95);
-  box-shadow: 0 2px 10px rgba(34,197,94,0.2);
+.hero-act__trans-btn--green {
+  background: var(--cta);
+  box-shadow: 0 4px 20px rgba(34,197,94,0.3);
 }
-.hero-story__fix-cursor {
+.hero-act__transition--clicked .hero-act__trans-btn {
+  transform: scale(0.93);
+  box-shadow: 0 2px 8px rgba(37,99,235,0.15);
+}
+.hero-act__trans-cursor {
   position: absolute;
   z-index: 3;
   top: 50%;
   left: 50%;
-  margin-left: 40px;
-  margin-top: 20px;
+  margin-left: 50px;
+  margin-top: 18px;
   opacity: 0;
-  transition: opacity 0.3s, transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-  transform: translate(30px, 20px);
+  transition: opacity 0.3s 0.1s, transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: translate(25px, 15px);
   filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
 }
-.hero-story__fix--visible .hero-story__fix-cursor {
+.hero-act__transition--visible .hero-act__trans-cursor {
   opacity: 1;
   transform: translate(0, 0);
 }
-.hero-story__fix--clicked .hero-story__fix-cursor {
+.hero-act__transition--clicked .hero-act__trans-cursor {
   transform: translate(-2px, 2px);
 }
 
-/* ── Hero carousel ────────────────────────────── */
-.hero-carousel {
-  position: relative;
-}
-.hero-slide {
-  display: none;
-  animation: heroSlideIn 0.5s ease;
-}
-.hero-slide--active {
-  display: block;
-}
-@keyframes heroSlideIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-.hero-carousel__dots {
+/* Act dot indicators */
+.hero-cinema__dots {
   display: flex;
   justify-content: center;
   gap: 8px;
-  margin-top: 16px;
+  margin-top: 14px;
 }
-.hero-carousel__dot {
+.hero-cinema__dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
   border: none;
-  background: rgba(255,255,255,0.2);
+  background: rgba(255,255,255,0.15);
   cursor: pointer;
   padding: 0;
   transition: background 0.2s, transform 0.2s;
 }
-.hero-carousel__dot--active {
+.hero-cinema__dot--active {
   background: var(--brand-light);
   transform: scale(1.3);
 }
+
+/* Glow effects per act */
+.hero-mock--spam-glow {
+  box-shadow: 0 24px 48px rgba(0,0,0,0.4), 0 0 30px rgba(239,68,68,0.08);
+}
+.hero-mock--red-glow {
+  box-shadow: 0 24px 48px rgba(0,0,0,0.4), 0 0 30px rgba(239,68,68,0.1);
+}
+.hero-mock--green-glow {
+  box-shadow: 0 24px 48px rgba(0,0,0,0.4), 0 0 30px rgba(34,197,94,0.1);
+}
+.hero-mock--primary-glow {
+  box-shadow: 0 24px 48px rgba(0,0,0,0.4), 0 0 30px rgba(37,99,235,0.1);
+}
+
+/* Spam-specific styles */
+.gmail-tab--spam { color: #ef4444; }
+.gmail-tab--spam.gmail-tab--active { border-bottom-color: #ef4444; color: #ef4444; }
+.gmail-row--spam-landing {
+  animation: gmailLand 0.7s ease 0.3s both;
+  background: rgba(239,68,68,0.06);
+  border-left: 3px solid #ef4444;
+}
+.gmail-row__sender--spam { color: rgba(255,255,255,0.5); font-weight: 600; }
+.gmail-row__subject--spam { color: rgba(255,255,255,0.35); }
+.gmail-row__badge-spam {
+  font-size: 0.55rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 2px 8px;
+  background: #ef4444;
+  color: #fff;
+  border-radius: 4px;
+  flex-shrink: 0;
+  animation: badgePop 0.3s ease 0.8s both;
+}
+.gmail-avatar--red { background: #ef4444; color: #fff; }
+.gmail-avatar--red-dim { background: rgba(239,68,68,0.15); color: #ef4444; font-size: 0.7rem; font-weight: 800; }
+.gmail-row--spam-other { opacity: 0.4; }
 
 /* ── Gmail mock ───────────────────────────────── */
 .hero-mock--gmail .hero-mock__body { padding: 0; }
