@@ -90,10 +90,6 @@
       &nbsp;&middot;&nbsp; By {{ post.author or 'INBXR Team' }}
     </div>
 
-    {% if post.featured_image %}
-    <img src="{{ post.featured_image }}" alt="{{ post.title }}" class="blog-post__featured" />
-    {% endif %}
-
     <div class="blog-post__content">
       {{ post.content | safe }}
     </div>
