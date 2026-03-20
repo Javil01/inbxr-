@@ -673,17 +673,32 @@ img { display: block; max-width: 100%; }
   max-width: 720px;
 }
 .et-homepage-hero .sender-hero__title {
-  font-size: 2.6rem;
-  margin-bottom: 8px;
+  font-size: 3.8rem;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  margin-bottom: 12px;
+  background: linear-gradient(135deg, #fff 0%, rgba(255,255,255,0.8) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 .et-homepage-hero .sender-hero__eyebrow {
   margin-bottom: 10px;
+}
+.sender-hero__sub-claim {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: rgba(255,255,255,0.85);
+  margin: 0 0 16px;
+  letter-spacing: -0.01em;
+  line-height: 1.5;
 }
 .et-homepage-hero .sender-hero__sub {
   margin-bottom: 12px;
 }
 @media (max-width: 600px) {
-  .et-homepage-hero .sender-hero__title { font-size: 2rem; }
+  .et-homepage-hero .sender-hero__title { font-size: 2.6rem; }
+  .sender-hero__sub-claim { font-size: 1.05rem; }
 }
 
 .sender-hero__inner {
