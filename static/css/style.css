@@ -601,6 +601,233 @@ img { display: block; max-width: 100%; }
   flex-shrink: 0;
 }
 
+/* ── 5a. LANDING PAGE MARKETING SECTIONS ───────────── */
+.lp-section {
+  padding: 80px 24px;
+}
+.lp-section:nth-child(odd) {
+  background: var(--bg-1);
+}
+.lp-section:nth-child(even) {
+  background: var(--bg-2);
+}
+.lp-container {
+  max-width: 960px;
+  margin: 0 auto;
+}
+.lp-eyebrow {
+  display: block;
+  width: fit-content;
+  margin: 0 auto 16px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--brand);
+  background: var(--brand-muted);
+  border: 1px solid var(--brand-border);
+  border-radius: var(--r-full);
+  padding: 5px 14px;
+}
+.lp-heading {
+  font-family: var(--font-display);
+  font-size: 2.2rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+  color: var(--text-1);
+  text-align: center;
+  margin: 0 0 16px;
+}
+.lp-subheading {
+  font-size: 1.05rem;
+  line-height: 1.7;
+  color: var(--text-2);
+  text-align: center;
+  max-width: 680px;
+  margin: 0 auto 40px;
+}
+.lp-closer {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-1);
+  text-align: center;
+  margin-top: 40px;
+}
+
+/* Problem section */
+.lp-problem__body {
+  max-width: 640px;
+  margin: 0 auto;
+  font-size: 0.95rem;
+  line-height: 1.75;
+  color: var(--text-2);
+}
+.lp-problem__body p {
+  margin: 0 0 16px;
+}
+.lp-problem__body ul {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 20px;
+}
+.lp-problem__body ul li {
+  position: relative;
+  padding-left: 20px;
+  margin-bottom: 6px;
+  color: var(--text-2);
+}
+.lp-problem__body ul li::before {
+  content: '\2013';
+  position: absolute;
+  left: 0;
+  color: var(--text-4);
+}
+
+/* Value prop cards */
+.lp-cards {
+  display: grid;
+  gap: 24px;
+  margin-top: 40px;
+}
+.lp-cards--3 { grid-template-columns: repeat(3, 1fr); }
+.lp-cards--2 { grid-template-columns: repeat(2, 1fr); }
+.lp-card {
+  background: var(--bg-1);
+  border: 1px solid var(--border-1);
+  border-radius: var(--r-3);
+  padding: 32px 28px;
+  transition: box-shadow 0.2s var(--ease), transform 0.2s var(--ease);
+}
+.lp-card:hover {
+  box-shadow: var(--shadow-2);
+  transform: translateY(-2px);
+}
+.lp-card__icon {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--r-2);
+  background: var(--brand-muted);
+  color: var(--brand);
+  margin-bottom: 18px;
+}
+.lp-card__title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-1);
+  margin: 0 0 10px;
+}
+.lp-card__body {
+  font-size: 0.9rem;
+  line-height: 1.65;
+  color: var(--text-2);
+  margin: 0;
+}
+
+/* Benefits section */
+.lp-benefits__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 48px;
+  margin-top: 40px;
+}
+.lp-benefits__col {
+  font-size: 0.92rem;
+  line-height: 1.7;
+  color: var(--text-2);
+}
+.lp-benefits__col p {
+  margin: 0 0 14px;
+}
+.lp-benefits__col ul {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 16px;
+}
+.lp-benefits__col ul li {
+  position: relative;
+  padding-left: 22px;
+  margin-bottom: 5px;
+}
+.lp-benefits__col ul li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 9px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--brand);
+  opacity: 0.4;
+}
+.lp-benefits__fragments li::before {
+  background: var(--red) !important;
+  opacity: 0.5 !important;
+}
+.lp-highlight {
+  font-weight: 600;
+  color: var(--text-1);
+}
+
+/* Audience cards */
+.lp-card--audience {
+  border-left: 3px solid var(--brand);
+}
+
+/* Feature grid */
+.lp-feature-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-top: 40px;
+}
+.lp-feature {
+  background: var(--bg-1);
+  border: 1px solid var(--border-1);
+  border-radius: var(--r-3);
+  padding: 24px;
+  transition: box-shadow 0.2s var(--ease);
+}
+.lp-feature:hover {
+  box-shadow: var(--shadow-2);
+}
+.lp-feature__icon {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--r-2);
+  background: var(--brand-muted);
+  color: var(--brand);
+  margin-bottom: 14px;
+}
+.lp-feature__title {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--text-1);
+  margin: 0 0 8px;
+}
+.lp-feature__body {
+  font-size: 0.84rem;
+  line-height: 1.6;
+  color: var(--text-2);
+  margin: 0;
+}
+
+/* Landing page responsive */
+@media (max-width: 768px) {
+  .lp-section { padding: 56px 20px; }
+  .lp-heading { font-size: 1.65rem; }
+  .lp-cards--3,
+  .lp-cards--2,
+  .lp-feature-grid { grid-template-columns: 1fr; }
+  .lp-benefits__grid { grid-template-columns: 1fr; gap: 32px; }
+}
+
 /* ── 5b. GENERIC HERO BAND (Email Verifier etc.) ──── */
 .hero-band {
   background: var(--navy);
