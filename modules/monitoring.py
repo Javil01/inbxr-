@@ -1,5 +1,5 @@
 """
-INBXR — Per-User Domain Monitoring
+InbXr — Per-User Domain Monitoring
 Manages monitored domains per user, runs scans, tracks history.
 Stores everything in the main inbxr.db via modules/database.
 """

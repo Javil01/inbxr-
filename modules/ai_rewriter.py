@@ -1,5 +1,5 @@
 """
-INBXR — AI Full Rewrite Engine
+InbXr — AI Full Rewrite Engine
 Uses Groq API (or compatible OpenAI-format API) to generate complete
 alternative subject lines, body rewrites, and CTAs with tone matching.
 """

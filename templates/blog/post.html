@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>{{ post.meta_title or post.title }} | INBXR Blog</title>
+  <title>{{ post.meta_title or post.title }} | InbXr Blog</title>
   <meta name="description" content="{{ post.meta_description }}" />
   <meta property="og:title" content="{{ post.meta_title or post.title }}" />
   <meta property="og:description" content="{{ post.meta_description }}" />
@@ -27,11 +27,11 @@
     "dateModified": "{{ post.updated_at or post.published_at }}",
     "author": {
       "@type": "Organization",
-      "name": "INBXR"
+      "name": "InbXr"
     },
     "publisher": {
       "@type": "Organization",
-      "name": "INBXR",
+      "name": "InbXr",
       "logo": {
         "@type": "ImageObject",
         "url": "/static/images/logo.png"
@@ -107,7 +107,7 @@
     <div class="blog-post__meta">
       {{ post.published_at[:10] if post.published_at else '' }}
       &nbsp;&middot;&nbsp; {{ post.read_time or '5' }} min read
-      &nbsp;&middot;&nbsp; By {{ post.author or 'INBXR Team' }}
+      &nbsp;&middot;&nbsp; By {{ post.author or 'InbXr Team' }}
     </div>
 
     <div class="blog-post__content">
@@ -162,7 +162,7 @@
 {% endif %}
 
 <footer class="site-footer">
-  <p>&copy; 2026 INBXR &mdash; Free email deliverability tools.</p>
+  <p>&copy; 2026 InbXr &mdash; Free email deliverability tools.</p>
   <p style="margin-top: 10px; font-size: 0.7rem;"><a href="/privacy" style="color: rgba(255,255,255,0.5); text-decoration: underline;">Privacy Policy</a> &nbsp;&middot;&nbsp; <a href="/terms" style="color: rgba(255,255,255,0.5); text-decoration: underline;">Terms of Service</a></p>
 </footer>
 

@@ -1,5 +1,5 @@
 """
-INBXR — Framework Lab CRUD Helpers
+InbXr — Framework Lab CRUD Helpers
 Manage built-in frameworks, user custom frameworks, and usage tracking.
 """
 

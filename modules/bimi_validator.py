@@ -1,5 +1,5 @@
 """
-INBXR — BIMI Validator
+InbXr — BIMI Validator
 Deep validation of Brand Indicators for Message Identification.
 Checks DNS record, SVG logo, VMC certificate, and DMARC prerequisites.
 Zero external dependencies beyond dnspython (already used by reputation_checker).

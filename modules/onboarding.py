@@ -1,5 +1,5 @@
 """
-INBXR — Onboarding progress tracker.
+InbXr — Onboarding progress tracker.
 Derives completion status from existing tables (check_history, user_monitors, users).
 No extra writes needed — progress updates automatically.
 """

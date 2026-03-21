@@ -1,5 +1,5 @@
 """
-INBXR — DNS Record Generators
+InbXr — DNS Record Generators
 Generates copy-paste SPF, DKIM, and DMARC TXT records.
 Uses existing auth check results to suggest fixes, or builds from scratch.
 """

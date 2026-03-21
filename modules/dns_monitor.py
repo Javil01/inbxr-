@@ -1,5 +1,5 @@
 """
-INBXR — DNS Authentication Monitor
+InbXr — DNS Authentication Monitor
 Checks SPF, DKIM, DMARC for monitored domains and alerts on issues/changes.
 """
 
@@ -338,7 +338,7 @@ def _send_dns_alert_email(to_email, domain, changes):
         <tbody>{rows_html}</tbody>
       </table>
       <a href="{BASE_URL}/monitors" style="display:inline-block;background:#16a34a;color:#fff;padding:10px 24px;border-radius:999px;text-decoration:none;font-weight:600;font-size:14px;margin:12px 0;">View Monitors</a>
-      <p style="color:#94a3b8;font-size:12px;margin-top:24px;">INBXR — Email Authentication Monitoring</p>
+      <p style="color:#94a3b8;font-size:12px;margin-top:24px;">InbXr — Email Authentication Monitoring</p>
     </div>
     """
     parts = []

@@ -1,5 +1,5 @@
 /* ══════════════════════════════════════════════════════
-   INBXR — Framework Lab Frontend
+   InbXr — Framework Lab Frontend
    ══════════════════════════════════════════════════════ */
 
 'use strict';
@@ -14,7 +14,7 @@ const _esc = s => {
 };
 
 const CATEGORY_LABELS = {
-  master: 'INBXR Method',
+  master: 'InbXr Method',
   foundational: 'Foundational',
   value_logic: 'Value & Logic',
   story_transformation: 'Story',

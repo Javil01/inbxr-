@@ -1,5 +1,5 @@
 /* ==============================================================
-   INBXR — Email Header Analyzer Page
+   InbXr — Email Header Analyzer Page
    ============================================================== */
 
 'use strict';

@@ -1,5 +1,5 @@
 """
-INBXR — Blog Blueprint
+InbXr — Blog Blueprint
 Public blog pages, sitemap, and admin CRUD / AI writer endpoints.
 """
 
@@ -139,8 +139,8 @@ def blog_index():
         total_pages=total_pages,
         total_posts=total,
         active_page="blog",
-        page_title="Blog — INBXR",
-        page_description="Email deliverability tips, guides, and best practices from the INBXR team.",
+        page_title="Blog — InbXr",
+        page_description="Email deliverability tips, guides, and best practices from the InbXr team.",
         canonical_url="https://inbxr.us/blog",
     )
 
@@ -267,7 +267,7 @@ def admin_create_post():
         import json
         tags = json.dumps(tags)
     status = data.get("status") or "draft"
-    author = (data.get("author") or "INBXR Team").strip()
+    author = (data.get("author") or "InbXr Team").strip()
     keyword_target = (data.get("keyword_target") or "").strip()
 
     # Auto-generate featured image if none provided

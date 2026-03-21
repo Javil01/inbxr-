@@ -1,5 +1,5 @@
 /* ══════════════════════════════════════════════════════
-   INBXR — Dashboard (API-driven, sidebar layout)
+   InbXr — Dashboard (API-driven, sidebar layout)
    ══════════════════════════════════════════════════════ */
 
 'use strict';
@@ -788,7 +788,7 @@ function gradeClass(grade) {
   var messages = [];
   var isLoading = false;
 
-  var GREETING = "Hi! I'm your INBXR Email Expert. I have access to your test results and can help you improve your email deliverability.\n\nAsk me anything — like **\"Why are my emails going to spam?\"** or **\"How do I fix my DMARC?\"** and I'll give you specific advice based on your data.";
+  var GREETING = "Hi! I'm your InbXr Email Expert. I have access to your test results and can help you improve your email deliverability.\n\nAsk me anything — like **\"Why are my emails going to spam?\"** or **\"How do I fix my DMARC?\"** and I'll give you specific advice based on your data.";
 
   function openAssistant() {
     messages = [];
@@ -987,7 +987,7 @@ function showWelcomeModal() {
       '<button class="onboard-close" id="obWelcomeClose">&times;</button>' +
       '<div class="onboard-header">' +
         '<svg viewBox="0 0 24 24" fill="none" stroke="#15c182" stroke-width="2" width="44" height="44"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>' +
-        '<h2>Welcome to INBXR!</h2>' +
+        '<h2>Welcome to InbXr!</h2>' +
         '<p>Your email deliverability command center. Here\'s how to get the most out of it:</p>' +
       '</div>' +
       '<div class="onboard-steps">' +

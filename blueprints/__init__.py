@@ -1,1 +1,1 @@
-# INBXR Blueprints
+# InbXr Blueprints

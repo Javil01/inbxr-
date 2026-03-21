@@ -1,5 +1,5 @@
 /* ══════════════════════════════════════════════════════
-   INBXR — Email Test Analyzer
+   InbXr — Email Test Analyzer
    ══════════════════════════════════════════════════════ */
 
 'use strict';
@@ -1883,7 +1883,7 @@ function renderSafetyWarning(data) {
           <li><strong>The "results" aren't real.</strong> Higher open rates from bot accounts don't translate to revenue. Your actual subscribers are still not seeing your emails.</li>
         </ul>
         <div class="safety-card__cta">
-          <strong>The sustainable approach:</strong> Fix the real issues. INBXR shows you exactly what email providers see — authentication verdicts, spam triggers, content scores, blocklist status — and gives you the specific steps to fix each one. Real diagnostics, real fixes, permanent results.
+          <strong>The sustainable approach:</strong> Fix the real issues. InbXr shows you exactly what email providers see — authentication verdicts, spam triggers, content scores, blocklist status — and gives you the specific steps to fix each one. Real diagnostics, real fixes, permanent results.
         </div>
       </div>
     </div>`;
@@ -2145,7 +2145,7 @@ function buildReportHtml(data) {
 
   return '<div style="font-family:Inter,Arial,sans-serif;max-width:520px;margin:0 auto;padding:32px 24px;">' +
     '<h2 style="color:#0c1a3a;margin:0 0 4px;font-size:20px;">Your Email Test Report</h2>' +
-    '<p style="color:#64748b;font-size:13px;margin:0 0 20px;">from INBXR &mdash; Email Intelligence Platform</p>' +
+    '<p style="color:#64748b;font-size:13px;margin:0 0 20px;">from InbXr &mdash; Email Intelligence Platform</p>' +
     '<div style="background:' + verdictColor + '10;border-left:4px solid ' + verdictColor + ';padding:12px 16px;border-radius:6px;margin-bottom:20px;">' +
       '<span style="font-size:16px;font-weight:700;color:' + verdictColor + ';">' + escHtml(verdict) + '</span>' +
       (p.tab ? '<span style="color:#64748b;font-size:13px;margin-left:8px;">(' + escHtml(p.tab) + ')</span>' : '') +
@@ -2154,9 +2154,9 @@ function buildReportHtml(data) {
     (scoresHtml ? '<table style="width:100%;border-collapse:collapse;margin:12px 0;"><tr>' + scoresHtml + '</tr></table>' : '') +
     issuesHtml +
     '<div style="text-align:center;margin:28px 0 16px;">' +
-      '<a href="https://inbxr.us/" style="display:inline-block;background:#16a34a;color:#fff;padding:12px 28px;border-radius:999px;text-decoration:none;font-weight:600;font-size:15px;">View Full Report at INBXR</a>' +
+      '<a href="https://inbxr.us/" style="display:inline-block;background:#16a34a;color:#fff;padding:12px 28px;border-radius:999px;text-decoration:none;font-weight:600;font-size:15px;">View Full Report at InbXr</a>' +
     '</div>' +
-    '<p style="color:#94a3b8;font-size:12px;margin-top:24px;border-top:1px solid #e2e8f0;padding-top:16px;">INBXR &mdash; Free email deliverability tools. <a href="https://inbxr.us" style="color:#94a3b8;">inbxr.us</a></p>' +
+    '<p style="color:#94a3b8;font-size:12px;margin-top:24px;border-top:1px solid #e2e8f0;padding-top:16px;">InbXr &mdash; Free email deliverability tools. <a href="https://inbxr.us" style="color:#94a3b8;">inbxr.us</a></p>' +
   '</div>';
 }
 

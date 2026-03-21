@@ -1,5 +1,5 @@
 """
-INBXR — Blog Featured Image Generator
+InbXr — Blog Featured Image Generator
 Generates branded 1200x630 OG images for blog posts using Pillow.
 """
 
@@ -269,7 +269,7 @@ def generate_blog_image(title, slug, category=None, keyword=None):
     except Exception:
         # Fallback: just write text
         logo_font = _get_font(28, bold=True)
-        draw.text((80, HEIGHT - 70), "INBXR", fill=TEXT_WHITE + (255,), font=logo_font)
+        draw.text((80, HEIGHT - 70), "InbXr", fill=TEXT_WHITE + (255,), font=logo_font)
 
     # ── URL in bottom-right ──
     url_font = _get_font(16)

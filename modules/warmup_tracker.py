@@ -1,5 +1,5 @@
 """
-INBXR — Warm-up Tracker
+InbXr — Warm-up Tracker
 Tracks IP/domain warm-up campaigns with daily volume logging and health assessment.
 """
 

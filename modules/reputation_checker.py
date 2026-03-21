@@ -1,5 +1,5 @@
 """
-INBXR — Sender Reputation & Authentication Checker
+InbXr — Sender Reputation & Authentication Checker
 Performs live DNS lookups for SPF, DKIM, DMARC, BIMI,
 PTR / FCrDNS, parallel DNSBL checks, and SMTP diagnostics.
 """
@@ -726,7 +726,7 @@ class ReputationChecker:
             conn = HTTPSConnection(f"mta-sts.{self.domain}", 443, timeout=8, context=ctx)
             conn.request("GET", "/.well-known/mta-sts.txt", headers={
                 "Host": f"mta-sts.{self.domain}",
-                "User-Agent": "INBXR-MTA-STS-Checker/1.0",
+                "User-Agent": "InbXr-MTA-STS-Checker/1.0",
             })
             resp = conn.getresponse()
             if resp.status != 200:

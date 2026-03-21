@@ -1,5 +1,5 @@
 """
-INBXR — SQLite Backup Module
+InbXr — SQLite Backup Module
 Safe hot backups using SQLite's .backup() API with automatic retention.
 """
 

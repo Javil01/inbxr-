@@ -1,5 +1,5 @@
 """
-INBXR — User Authentication
+InbXr — User Authentication
 Registration, login, password hashing, session management, decorators.
 """
 

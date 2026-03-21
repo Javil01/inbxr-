@@ -1,5 +1,5 @@
 """
-INBXR — Email Readability Analyzer
+InbXr — Email Readability Analyzer
 Flesch-Kincaid scoring, sentence analysis, passive voice detection.
 Zero external dependencies — pure Python.
 """

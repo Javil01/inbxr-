@@ -1,5 +1,5 @@
 """
-INBXR Tier Configuration
+InbXr Tier Configuration
 Defines Free / Pro / Agency / API tier limits and features.
 """
 

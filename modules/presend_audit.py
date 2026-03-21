@@ -1,5 +1,5 @@
 """
-INBXR — Pre-Send Audit Checklist
+InbXr — Pre-Send Audit Checklist
 Aggregates results from all analysis modules into a unified pass/fail
 checklist with an overall send readiness score.
 """

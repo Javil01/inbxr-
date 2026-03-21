@@ -1,5 +1,5 @@
 /* ══════════════════════════════════════════════════════
-   INBXR — Admin Blog Manager + Editor JS
+   InbXr — Admin Blog Manager + Editor JS
    ══════════════════════════════════════════════════════ */
 
 (function() {

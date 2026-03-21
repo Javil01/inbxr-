@@ -1,5 +1,5 @@
 /* ══════════════════════════════════════════════════════
-   INBXR — Inbox Placement Tester
+   InbXr — Inbox Placement Tester
    ══════════════════════════════════════════════════════ */
 
 'use strict';

@@ -1,5 +1,5 @@
 """
-INBXR — Link & Image Validator
+InbXr — Link & Image Validator
 Validates all links and images in an email body:
 - Broken links (HTTP status)
 - Redirect chains
@@ -405,7 +405,7 @@ def _head_request(url: str, get_body_size: bool = False):
         method = "GET" if get_body_size else "HEAD"
         conn.request(method, path, headers={
             "Host": host,
-            "User-Agent": "INBXR-LinkChecker/1.0",
+            "User-Agent": "InbXr-LinkChecker/1.0",
             "Accept": "*/*",
         })
         resp = conn.getresponse()

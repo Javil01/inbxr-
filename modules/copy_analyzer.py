@@ -910,7 +910,7 @@ class CopyAnalyzer:
             "aida": ("AIDA", "Attention → Interest → Desire → Action"),
             "bab": ("BAB", "Before → After → Bridge"),
             "fab": ("FAB", "Feature → Advantage → Benefit"),
-            "c3po": ("C3PO — The INBXR Method", "Context → Picture → Plant Doubt → Problem → Opportunity"),
+            "c3po": ("C3PO — The InbXr Method", "Context → Picture → Plant Doubt → Problem → Opportunity"),
         }
 
         name, structure = framework_names.get(best_slug, (best_slug.upper(), ""))

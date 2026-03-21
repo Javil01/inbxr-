@@ -1,5 +1,5 @@
 """
-INBXR — Team Routes
+InbXr — Team Routes
 Create, manage, and invite members to team workspaces.
 """
 

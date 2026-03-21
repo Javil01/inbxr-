@@ -1,5 +1,5 @@
 """
-INBXR — Per-User + Per-IP Rate Limiting
+InbXr — Per-User + Per-IP Rate Limiting
 Uses the usage_log table for persistent, tier-aware rate limiting.
 Anonymous users: 3 checks/day across all tools.
 """

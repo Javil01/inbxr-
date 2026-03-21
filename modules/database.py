@@ -1,5 +1,5 @@
 """
-INBXR — Centralized Database Manager
+InbXr — Centralized Database Manager
 SQLite with WAL mode. Handles schema creation and migrations.
 """
 
@@ -148,7 +148,7 @@ def _seed_blog_posts(conn):
                         p.get("excerpt", ""), p.get("meta_title", p["title"]),
                         p.get("meta_description", ""), featured, og_img,
                         p.get("tags", "[]"),
-                        p.get("status", "published"), p.get("author", "INBXR Team"),
+                        p.get("status", "published"), p.get("author", "InbXr Team"),
                         p.get("read_time", 5), p.get("keyword_target", ""),
                         p.get("published_at"),
                     )
@@ -570,7 +570,7 @@ _MIGRATIONS = [
          'Learn the three pillars of email deliverability — authentication, reputation, and content quality — plus a step-by-step testing workflow to ensure your emails reach the inbox.',
          '["email deliverability","SPF","DKIM","DMARC","inbox placement","sender reputation","spam filters"]',
          'published',
-         'INBXR Team',
+         'InbXr Team',
          8,
          'email deliverability',
          datetime('now'),
@@ -615,7 +615,7 @@ _MIGRATIONS = [
 [CTA:/sender]
 
 <h2>Conclusion</h2>
-<p>Avoiding Gmail''s Promotions Tab requires a combination of personalized content, clear subject lines, and optimized email deliverability. By following these tips and using INBXR''s tools, you can improve your email deliverability and ensure your emails reach your customers'' primary inbox.</p>
+<p>Avoiding Gmail''s Promotions Tab requires a combination of personalized content, clear subject lines, and optimized email deliverability. By following these tips and using InbXr''s tools, you can improve your email deliverability and ensure your emails reach your customers'' primary inbox.</p>
 
 <h2>FAQ</h2>
 <h3>How do I know if my emails are going to the Promotions Tab?</h3>
@@ -631,7 +631,7 @@ _MIGRATIONS = [
          'Learn why emails land in Gmail''s Promotions Tab and actionable tips to improve email deliverability and reach your subscribers'' primary inbox.',
          '["email deliverability","Gmail","Promotions Tab","inbox placement","subject lines"]',
          'published',
-         'INBXR Team',
+         'InbXr Team',
          5,
          'email deliverability',
          datetime('now'),
@@ -678,7 +678,7 @@ _MIGRATIONS = [
             category_id INTEGER REFERENCES blog_categories(id) ON DELETE SET NULL,
             tags TEXT DEFAULT '[]',
             status TEXT DEFAULT 'draft' CHECK(status IN ('draft', 'published')),
-            author TEXT DEFAULT 'INBXR Team',
+            author TEXT DEFAULT 'InbXr Team',
             read_time INTEGER DEFAULT 5,
             keyword_target TEXT DEFAULT '',
             created_at TEXT DEFAULT (datetime('now')),
@@ -769,7 +769,7 @@ Context: 83% of marketing emails never reach the inbox...
 Picture: Imagine your next campaign hitting 98% inbox placement...
 Plant Doubt: But what if everything you''ve been told about deliverability is wrong? What if the real problem isn''t your content?
 Problem: Most senders are optimizing the wrong things while their authentication silently breaks...
-Opportunity: Start your free INBXR audit today and see where you actually stand.'
+Opportunity: Start your free InbXr audit today and see where you actually stand.'
         WHERE slug = 'c3po';
     """),
 ]
@@ -784,15 +784,15 @@ def _seed_frameworks(conn):
 
     _frameworks = [
         {
-            "name": "C3PO — The INBXR Method",
+            "name": "C3PO — The InbXr Method",
             "slug": "c3po",
             "acronym": "C3PO",
             "category": "master",
             "sort_order": 1,
-            "description": "INBXR's proprietary 5-step framework for emails that convert. Context → Picture → Plant Doubt → Problem → Opportunity.",
+            "description": "InbXr's proprietary 5-step framework for emails that convert. Context → Picture → Plant Doubt → Problem → Opportunity.",
             "when_to_use": "Use for any email where you need to move the reader from awareness to action. Works across industries and audience awareness levels.",
             "deliverability_notes": "Naturally avoids spam triggers because it leads with context and storytelling rather than hype.",
-            "example_output": "Subject: The inbox problem nobody's talking about\n\nContext: 83% of marketing emails never reach the inbox...\nPicture: Imagine your next campaign hitting 98% inbox placement...\nPlant Doubt: But what if everything you've been told about deliverability is wrong? What if the real problem isn't your content?\nProblem: Most senders are optimizing the wrong things while their authentication silently breaks...\nOpportunity: Start your free INBXR audit today and see where you actually stand.",
+            "example_output": "Subject: The inbox problem nobody's talking about\n\nContext: 83% of marketing emails never reach the inbox...\nPicture: Imagine your next campaign hitting 98% inbox placement...\nPlant Doubt: But what if everything you've been told about deliverability is wrong? What if the real problem isn't your content?\nProblem: Most senders are optimizing the wrong things while their authentication silently breaks...\nOpportunity: Start your free InbXr audit today and see where you actually stand.",
             "steps_json": _json.dumps([
                 {"key": "C", "label": "Context", "description": "Set the scene. Ground the reader in a relevant situation, stat, or shared experience they instantly recognize."},
                 {"key": "P1", "label": "Picture", "description": "Paint the desired outcome. Help them vividly see what success looks like — make it tangible and emotional."},
@@ -810,7 +810,7 @@ def _seed_frameworks(conn):
             "description": "The classic marketing framework: grab Attention, build Interest, create Desire, drive Action.",
             "when_to_use": "Best for audiences with low awareness. Use when you need to introduce a concept from scratch and guide the reader step by step.",
             "deliverability_notes": "Watch the Attention step — avoid ALL CAPS or clickbait subject lines that trigger spam filters.",
-            "example_output": "Attention: Your emails are landing in spam — and you don't even know it.\nInterest: 1 in 5 marketing emails never reaches the inbox.\nDesire: Imagine knowing exactly where every email lands before you hit send.\nAction: Try INBXR free — your first inbox placement test is on us.",
+            "example_output": "Attention: Your emails are landing in spam — and you don't even know it.\nInterest: 1 in 5 marketing emails never reaches the inbox.\nDesire: Imagine knowing exactly where every email lands before you hit send.\nAction: Try InbXr free — your first inbox placement test is on us.",
             "steps_json": _json.dumps([
                 {"key": "A", "label": "Attention", "description": "Open with a bold hook — a surprising stat, provocative question, or pattern interrupt that stops the scroll."},
                 {"key": "I", "label": "Interest", "description": "Build on the hook with relevant details. Show you understand their world and the stakes involved."},
@@ -827,7 +827,7 @@ def _seed_frameworks(conn):
             "description": "Problem → Agitate → Solve. Identify a pain point, twist the knife, then present the relief.",
             "when_to_use": "Ideal for problem-aware audiences. Use when readers already feel the pain but haven't found a solution.",
             "deliverability_notes": "The Agitate step can tip into fear-mongering. Keep it empathetic, not alarmist, to avoid spam complaints.",
-            "example_output": "Problem: Your bounce rate is climbing and you don't know why.\nAgitate: Every bounced email damages your sender reputation — and once ISPs flag you, recovery takes months.\nSolve: INBXR monitors your reputation 24/7 and alerts you before damage is done.",
+            "example_output": "Problem: Your bounce rate is climbing and you don't know why.\nAgitate: Every bounced email damages your sender reputation — and once ISPs flag you, recovery takes months.\nSolve: InbXr monitors your reputation 24/7 and alerts you before damage is done.",
             "steps_json": _json.dumps([
                 {"key": "P", "label": "Problem", "description": "Identify the reader's pain point clearly. Be specific — vague problems don't resonate."},
                 {"key": "A", "label": "Agitate", "description": "Amplify the pain. Show the consequences of inaction. Make them feel the urgency."},
@@ -876,7 +876,7 @@ def _seed_frameworks(conn):
             "description": "Before → After → Bridge. Show the current state, the desired state, then bridge the gap with your solution.",
             "when_to_use": "Perfect for transformation narratives. Use when the gap between current and desired state is clear and emotional.",
             "deliverability_notes": "Transformation language is natural and conversational — low spam risk.",
-            "example_output": "Before: You're sending 50K emails a month but only 60% reach the inbox.\nAfter: Every email lands where it belongs. Open rates double. Revenue follows.\nBridge: INBXR's deliverability suite finds and fixes the gaps. Start free.",
+            "example_output": "Before: You're sending 50K emails a month but only 60% reach the inbox.\nAfter: Every email lands where it belongs. Open rates double. Revenue follows.\nBridge: InbXr's deliverability suite finds and fixes the gaps. Start free.",
             "steps_json": _json.dumps([
                 {"key": "B1", "label": "Before", "description": "Describe the reader's current painful reality. Be specific and empathetic."},
                 {"key": "A", "label": "After", "description": "Paint the transformed state. Make it vivid and desirable."},
@@ -892,7 +892,7 @@ def _seed_frameworks(conn):
             "description": "Introduce a Star (character), tell their Story (struggle), reveal the Solution. Narrative-driven persuasion.",
             "when_to_use": "Use when you have a compelling case study or customer story. Great for building emotional connection.",
             "deliverability_notes": "Story-driven emails read like personal messages — excellent for inbox placement.",
-            "example_output": "Star: Meet Sarah, an email marketer at a 50-person SaaS company.\nStory: Her campaigns were getting 12% open rates. She spent weeks tweaking subject lines, but the real problem was 40% of her emails were going to spam.\nSolution: After running INBXR's audit, she fixed 3 DNS issues in 10 minutes. Open rates jumped to 28% within two weeks.",
+            "example_output": "Star: Meet Sarah, an email marketer at a 50-person SaaS company.\nStory: Her campaigns were getting 12% open rates. She spent weeks tweaking subject lines, but the real problem was 40% of her emails were going to spam.\nSolution: After running InbXr's audit, she fixed 3 DNS issues in 10 minutes. Open rates jumped to 28% within two weeks.",
             "steps_json": _json.dumps([
                 {"key": "S1", "label": "Star", "description": "Introduce a relatable character — could be a customer, the reader themselves, or even you."},
                 {"key": "S2", "label": "Story", "description": "Tell their struggle. Make it specific and relatable. Show the obstacles they faced."},
@@ -908,7 +908,7 @@ def _seed_frameworks(conn):
             "description": "Problem → Advantage → Proof → Action. Similar to PAS but replaces agitation with proof-based advantage.",
             "when_to_use": "Use when your audience is skeptical and needs evidence more than emotional agitation.",
             "deliverability_notes": "Proof-heavy emails feel credible. Include specific numbers rather than vague claims.",
-            "example_output": "Problem: Email authentication is confusing and easy to get wrong.\nAdvantage: INBXR checks SPF, DKIM, DMARC, MTA-STS, BIMI, and DANE in one scan — and generates fix records.\nProof: 15,000+ domains audited. Average setup time: 8 minutes.\nAction: Run your free sender check now.",
+            "example_output": "Problem: Email authentication is confusing and easy to get wrong.\nAdvantage: InbXr checks SPF, DKIM, DMARC, MTA-STS, BIMI, and DANE in one scan — and generates fix records.\nProof: 15,000+ domains audited. Average setup time: 8 minutes.\nAction: Run your free sender check now.",
             "steps_json": _json.dumps([
                 {"key": "P1", "label": "Problem", "description": "State the problem clearly and specifically."},
                 {"key": "A", "label": "Advantage", "description": "Present your unique advantage — what makes your approach different."},
@@ -1045,7 +1045,7 @@ def _seed_frameworks(conn):
             "description": "Answer three questions: Why this? Why you? Why now? Simple framework for overcoming objections.",
             "when_to_use": "Use when the reader is considering but hasn't committed. Great for mid-funnel emails.",
             "deliverability_notes": "Objection-handling emails feel helpful, not salesy — good for engagement.",
-            "example_output": "Why this: Your email deliverability directly controls your revenue.\nWhy us: INBXR is the only tool that checks all 6 auth protocols in one scan.\nWhy now: Gmail's February 2024 sender requirements mean non-compliant domains get throttled.",
+            "example_output": "Why this: Your email deliverability directly controls your revenue.\nWhy us: InbXr is the only tool that checks all 6 auth protocols in one scan.\nWhy now: Gmail's February 2024 sender requirements mean non-compliant domains get throttled.",
             "steps_json": _json.dumps([
                 {"key": "W1", "label": "Why This", "description": "Why does this problem/solution matter? Establish relevance."},
                 {"key": "W2", "label": "Why You", "description": "Why is your solution the right one? Differentiate from alternatives."},

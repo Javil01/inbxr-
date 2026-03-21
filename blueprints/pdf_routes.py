@@ -1,5 +1,5 @@
 """
-INBXR — PDF Report Routes
+InbXr — PDF Report Routes
 Generate and serve PDF/HTML reports for saved check results.
 """
 

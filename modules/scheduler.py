@@ -1,5 +1,5 @@
 """
-INBXR — Background Scheduler
+InbXr — Background Scheduler
 Uses APScheduler to run periodic tasks: blocklist scans, log cleanup.
 """
 
@@ -167,7 +167,7 @@ def _scheduled_daily_blog_post():
                (title, slug, content, excerpt, meta_title, meta_description,
                 featured_image, og_image, tags, status, author, read_time,
                 keyword_target, published_at)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'published', 'INBXR Team', ?, ?,
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'published', 'InbXr Team', ?, ?,
                        datetime('now'))""",
             (
                 data["title"], data["slug"], content,

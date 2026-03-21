@@ -1,5 +1,5 @@
 /* ================================================================
-   INBXR — Email Verifier  (email_verifier.js)
+   InbXr — Email Verifier  (email_verifier.js)
    ================================================================ */
 (function () {
   "use strict";

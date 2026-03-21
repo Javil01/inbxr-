@@ -1,5 +1,5 @@
 """
-INBXR — Teams & Workspaces
+InbXr — Teams & Workspaces
 Create teams, invite members, manage roles, share resources.
 """
 

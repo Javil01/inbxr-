@@ -1,5 +1,5 @@
 """
-INBXR — Critical Path Test Suite
+InbXr — Critical Path Test Suite
 Covers auth, admin, database, mailer, and admin API endpoints.
 Run with: pytest tests/test_critical.py -v
 """

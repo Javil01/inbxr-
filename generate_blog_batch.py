@@ -1,5 +1,5 @@
 """
-INBXR — Batch SEO Blog Post Generator
+InbXr — Batch SEO Blog Post Generator
 Generates 10 high-intent blog posts using the AI blog writer and saves them to the database.
 
 Usage:
@@ -29,7 +29,7 @@ from modules.blog_ai import generate_blog_post_long, BlogAIError
 from modules.blog_image import generate_blog_image
 
 # ── SEO Topic Batch ──
-# High-intent keywords that drive organic traffic to INBXR tools.
+# High-intent keywords that drive organic traffic to InbXr tools.
 # Ordered by search volume potential and conversion intent.
 
 TOPICS = [
@@ -140,7 +140,7 @@ def save_post(data, category_id, category_name=""):
            (title, slug, content, excerpt, meta_title, meta_description,
             featured_image, og_image, category_id, tags, status, author,
             read_time, keyword_target, published_at)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'published', 'INBXR Team', ?, ?,
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'published', 'InbXr Team', ?, ?,
                    datetime('now'))""",
         (
             data["title"],
@@ -189,7 +189,7 @@ def main():
     failed = 0
 
     print(f"\n{'='*60}")
-    print(f"  INBXR — Batch Blog Generator")
+    print(f"  InbXr — Batch Blog Generator")
     print(f"  Generating {len(TOPICS) - start_idx} SEO blog posts")
     print(f"{'='*60}\n")
 

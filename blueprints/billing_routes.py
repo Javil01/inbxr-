@@ -1,5 +1,5 @@
 """
-INBXR — Stripe Billing Routes
+InbXr — Stripe Billing Routes
 Checkout sessions, customer portal, and webhook handling.
 """
 
@@ -272,8 +272,8 @@ def _handle_checkout_completed(session_obj):
                 base_url = os.environ.get("BASE_URL", "https://inbxr.us")
                 send_email(
                     to_email=customer_email,
-                    subject="Welcome to INBXR — Set Your Password",
-                    html=f"""<h2>Welcome to INBXR!</h2>
+                    subject="Welcome to InbXr — Set Your Password",
+                    html=f"""<h2>Welcome to InbXr!</h2>
                     <p>Your <strong>{tier.title()}</strong> subscription is now active.</p>
                     <p>We created your account automatically. Click below to set your password:</p>
                     <p><a href="{base_url}/reset-password?token={token}" style="display:inline-block;padding:12px 24px;background:#22c55e;color:#fff;text-decoration:none;border-radius:8px;font-weight:700;">Set My Password</a></p>

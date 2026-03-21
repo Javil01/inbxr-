@@ -1,5 +1,5 @@
 """
-INBXR — Email Test Analyzer
+InbXr — Email Test Analyzer
 Fetches a real received email via IMAP, parses headers comprehensively,
 and runs all analysis modules against the actual content.
 """
@@ -597,7 +597,7 @@ def run_full_analysis(raw_bytes: bytes, placement: str, folder: str,
     sender_email = content["sender_email"]
 
     # Remove test token from subject for cleaner analysis
-    clean_subject = re.sub(r'\s*INBXR-[A-F0-9]{8}\s*', '', subject).strip()
+    clean_subject = re.sub(r'\s*InbXr-[A-F0-9]{8}\s*', '', subject).strip()
 
     # 3. Extract domain for reputation checks
     domain = _extract_domain(sender_email)

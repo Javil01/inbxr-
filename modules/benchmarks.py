@@ -1,5 +1,5 @@
 """
-INBXR — Industry Benchmarks
+InbXr — Industry Benchmarks
 Hardcoded benchmark ranges based on email marketing performance data.
 Returns percentile rankings and comparisons for analysis results.
 """

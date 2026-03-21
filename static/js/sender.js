@@ -1,5 +1,5 @@
 /* ══════════════════════════════════════════════════════
-   INBXR — Sender Reputation Page
+   InbXr — Sender Reputation Page
    ══════════════════════════════════════════════════════ */
 
 'use strict';
@@ -929,7 +929,7 @@ function renderSenderSafetyWarning() {
           <li><strong>The "results" aren't real.</strong> Higher open rates from bot accounts don't translate to revenue. Your actual subscribers are still not seeing your emails.</li>
         </ul>
         <div class="safety-card__cta">
-          <strong>The sustainable approach:</strong> Fix the real issues. INBXR shows you exactly what email providers see — authentication verdicts, spam triggers, content scores, blocklist status — and gives you the specific steps to fix each one. Real diagnostics, real fixes, permanent results.
+          <strong>The sustainable approach:</strong> Fix the real issues. InbXr shows you exactly what email providers see — authentication verdicts, spam triggers, content scores, blocklist status — and gives you the specific steps to fix each one. Real diagnostics, real fixes, permanent results.
         </div>
       </div>
     </div>`;

@@ -1,5 +1,5 @@
 """
-INBXR — Cloud History
+InbXr — Cloud History
 Save, retrieve, and manage check results for logged-in users.
 """
 

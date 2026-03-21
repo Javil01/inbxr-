@@ -1,5 +1,5 @@
 """
-INBXR — Monitor Blueprint
+InbXr — Monitor Blueprint
 Routes for per-user domain monitoring, scan triggers, and alerts.
 """
 

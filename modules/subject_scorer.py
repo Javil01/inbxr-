@@ -1,5 +1,5 @@
 """
-INBXR — Subject Line A/B Scorer
+InbXr — Subject Line A/B Scorer
 Scores multiple subject lines on deliverability + effectiveness dimensions.
 Returns ranked results with per-subject breakdowns.
 """

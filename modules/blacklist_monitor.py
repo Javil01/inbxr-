@@ -1,5 +1,5 @@
 """
-INBXR — Blacklist Monitor
+InbXr — Blacklist Monitor
 Tracks domains against DNSBL blocklists over time using SQLite storage.
 """
 

@@ -1,5 +1,5 @@
 """
-INBXR — AI Blog Writer
+InbXr — AI Blog Writer
 Uses Groq API to generate SEO-optimized blog posts about email deliverability.
 """
 
@@ -61,11 +61,11 @@ VOICE & STYLE (match this exactly):
 - Bold claims backed by specifics. Use real numbers, percentages, and examples. ("Emails with a single CTA increase clicks by over 300%.")
 - No corporate speak. No filler. No "In today's digital landscape" garbage. Every sentence must pull the reader forward.
 - Use <strong> tags for emphasis on key phrases — like highlighting with a marker.
-- Formula: Hook (pain point) → Why it matters → The fix (actionable steps) → Wrap-up with INBXR tool CTA
+- Formula: Hook (pain point) → Why it matters → The fix (actionable steps) → Wrap-up with InbXr tool CTA
 - Section headers should be bold and punchy, not generic. ("The 4 Key Factors That Determine If You Get Opened" not "Factors Affecting Open Rates")
 - End with a confident wrap-up and sign off: "Cheers,<br/>The InBoXer Team"
 
-INBXR tools (link using standard <a href="/path"> tags):
+InbXr tools (link using standard <a href="/path"> tags):
 - Email Test (/) — send a real email, get a full deliverability checkup
 - Sender Check (/sender) — verify SPF/DKIM/DMARC, generate DNS records, audit domain health
 - Inbox Placement (/placement) — test where emails actually land (inbox vs spam)
@@ -80,7 +80,7 @@ STRUCTURE:
 - CRITICAL: The post MUST be 1500-2000 words. Each H2 section 200-300 words minimum.
 - Start with a hook/intro (no heading) — 100+ words, drop reader into the problem
 - 5-7 H2 sections with punchy headers, detailed actionable content
-- Link to 3+ relevant INBXR tools using standard HTML anchor tags. Do NOT use [CTA:] markers.
+- Link to 3+ relevant InbXr tools using standard HTML anchor tags. Do NOT use [CTA:] markers.
 - Target keyword in title, first paragraph, one H2, and naturally throughout
 - FAQ section at the end with 3-5 Q&A pairs (each answer 50+ words)
 - HTML output only (h2, h3, p, ul, ol, li, strong, em, a tags — no h1)
@@ -232,7 +232,7 @@ def generate_blog_post_long(topic: str, target_keyword: str,
         internal_links_context = f"\n\nExisting blog posts you can link to internally:\n{links}"
 
     # ── Pass 1: Metadata ──
-    meta_system = f"""You are an SEO content strategist for INBXR, an email deliverability platform.
+    meta_system = f"""You are an SEO content strategist for InbXr, an email deliverability platform.
 Generate metadata for a blog post. Return ONLY valid JSON.
 
 Return a JSON object with exactly these keys:
@@ -278,7 +278,7 @@ VOICE & STYLE (match this exactly):
 - End sections with a forward-looking hook that pulls into the next section.
 - Wrap up with a confident conclusion and "Cheers,<br/>The InBoXer Team"
 
-INBXR tools (link using standard <a href="/path"> tags):
+InbXr tools (link using standard <a href="/path"> tags):
 - Email Test (/) — send a real email, get a full deliverability checkup
 - Sender Check (/sender) — verify SPF/DKIM/DMARC, generate DNS records, audit domain
 - Inbox Placement (/placement) — test inbox vs spam landing
@@ -295,7 +295,7 @@ REQUIREMENTS:
 - Write 1500-2000 words MINIMUM. Each H2 section must be 200+ words.
 - Start with a hook/intro (no heading) — drop the reader into the problem immediately. 100+ words.
 - Include 6+ H2 sections with detailed, actionable content.
-- Link to 3-4 relevant INBXR tools using standard HTML anchor tags. Do NOT use [CTA:] markers.
+- Link to 3-4 relevant InbXr tools using standard HTML anchor tags. Do NOT use [CTA:] markers.
 - End with a wrap-up H2 section.
 - Target keyword "{target_keyword}" in the intro and at least 2 H2 headings.
 - Do NOT wrap in markdown code fences. Output raw HTML only."""
@@ -386,7 +386,7 @@ Style rules:
 - Aim for 500-800 words. Shorter than the blog post but meatier than a quick tip.
 - No corporate speak. No filler. Every sentence pulls the reader forward.
 
-INBXR tool links (pick the most relevant 1-2):
+InbXr tool links (pick the most relevant 1-2):
 - https://www.inbxr.us/ — Email Test
 - https://www.inbxr.us/sender — Sender Check (auth, DNS, audit)
 - https://www.inbxr.us/placement — Inbox Placement
@@ -441,7 +441,7 @@ def generate_topic(existing_titles: list = None) -> dict:
         titles = "\n".join(f"- {t}" for t in existing_titles[:30])
         existing_context = f"\n\nExisting blog posts (DO NOT repeat these topics):\n{titles}"
 
-    system_msg = f"""You are an SEO strategist for INBXR, an email deliverability platform.
+    system_msg = f"""You are an SEO strategist for InbXr, an email deliverability platform.
 
 Generate ONE new blog topic targeting a high-search-volume keyword in the email marketing/deliverability space.
 

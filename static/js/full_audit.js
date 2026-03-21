@@ -1,5 +1,5 @@
 /* ==============================================================
-   INBXR — Full Domain Audit Page
+   InbXr — Full Domain Audit Page
    One domain → every check → prioritized fixes with copy-paste DNS records
    ============================================================== */
 

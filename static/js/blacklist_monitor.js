@@ -1,5 +1,5 @@
 /* ══════════════════════════════════════════════════════
-   INBXR — Blacklist Monitor Page
+   InbXr — Blacklist Monitor Page
    ══════════════════════════════════════════════════════ */
 
 'use strict';

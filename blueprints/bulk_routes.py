@@ -1,5 +1,5 @@
 """
-INBXR — Bulk Email Verification Routes
+InbXr — Bulk Email Verification Routes
 Upload CSV / paste emails, run bulk verification, download results.
 """
 

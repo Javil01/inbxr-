@@ -1,5 +1,5 @@
 """
-INBXR — History Blueprint
+InbXr — History Blueprint
 Routes for viewing and managing saved check results.
 """
 

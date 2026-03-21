@@ -1,5 +1,5 @@
 /* ══════════════════════════════════════════════════════
-   INBXR — Support Chat Panel
+   InbXr — Support Chat Panel
    ══════════════════════════════════════════════════════ */
 
 'use strict';
@@ -18,8 +18,8 @@ var messages = []; // conversation history
 var isLoading = false;
 
 var GREETINGS = {
-  support: "Hi! I'm the INBXR Technical Support assistant. How can I help you today?",
-  sales: "Hi! I'm the INBXR Sales assistant. I can help with questions about plans, pricing, and features. What would you like to know?"
+  support: "Hi! I'm the InbXr Technical Support assistant. How can I help you today?",
+  sales: "Hi! I'm the InbXr Sales assistant. I can help with questions about plans, pricing, and features. What would you like to know?"
 };
 
 var AGENT_LABELS = {

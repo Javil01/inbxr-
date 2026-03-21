@@ -1,5 +1,5 @@
 """
-INBXR — Bulk Email Verification
+InbXr — Bulk Email Verification
 Create, process, and manage bulk verification jobs.
 """
 

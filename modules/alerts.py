@@ -1,5 +1,5 @@
 """
-INBXR — Alert System
+InbXr — Alert System
 Creates, stores, and sends notifications for blocklist changes and other events.
 """
 
@@ -208,14 +208,14 @@ def send_digest_emails(frequency):
           {extra}
           <a href="{BASE_URL}/monitors" style="display:inline-block;background:#16a34a;color:#fff;padding:10px 24px;border-radius:999px;text-decoration:none;font-weight:600;font-size:14px;margin:12px 0;">View All Alerts</a>
           <p style="color:#94a3b8;font-size:12px;margin-top:24px;">
-            INBXR — Email Intelligence Platform<br>
+            InbXr — Email Intelligence Platform<br>
             <a href="{BASE_URL}/monitors" style="color:#94a3b8;">Manage alert preferences</a>
           </p>
         </div>
         """
         text = f"Your {frequency} alert digest — {len(alerts)} new alerts. View at {BASE_URL}/monitors"
 
-        if _send(user["email"], f"INBXR {frequency.title()} Digest — {len(alerts)} Alert(s)", html, text):
+        if _send(user["email"], f"InbXr {frequency.title()} Digest — {len(alerts)} Alert(s)", html, text):
             execute(
                 "UPDATE alert_preferences SET last_digest_at = datetime('now') WHERE user_id = ?",
                 (user["user_id"],),
@@ -327,7 +327,7 @@ def send_blocklist_alert(user_id, domain, newly_listed, newly_delisted):
         <tbody>{rows_html}</tbody>
       </table>
       <a href="/monitors" style="display:inline-block;background:#16a34a;color:#fff;padding:10px 24px;border-radius:999px;text-decoration:none;font-weight:600;font-size:14px;margin:12px 0;">View Monitors</a>
-      <p style="color:#94a3b8;font-size:12px;margin-top:24px;">INBXR — Blocklist Monitoring</p>
+      <p style="color:#94a3b8;font-size:12px;margin-top:24px;">InbXr — Blocklist Monitoring</p>
     </div>
     """
     text = f"Blocklist Alert: {domain}\n\n{message}\n\nView your monitors at /monitors"

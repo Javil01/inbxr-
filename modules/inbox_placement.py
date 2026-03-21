@@ -1,5 +1,5 @@
 """
-INBXR — Inbox Placement Tester
+InbXr — Inbox Placement Tester
 Checks seed mailboxes via IMAP to determine inbox vs spam vs promotions placement.
 Uses Python stdlib imaplib — zero external dependencies.
 """
@@ -149,7 +149,7 @@ def get_seed_info():
 
 def generate_token():
     """Generate a unique test token for subject-line matching."""
-    return f"INBXR-{uuid.uuid4().hex[:8].upper()}"
+    return f"InbXr-{uuid.uuid4().hex[:8].upper()}"
 
 
 # ══════════════════════════════════════════════════════
@@ -211,7 +211,7 @@ def check_seed_health() -> list:
 # ══════════════════════════════════════════════════════
 
 def cleanup_seeds(keep_token: str = None) -> dict:
-    """Delete old INBXR test emails from all seed inboxes.
+    """Delete old InbXr test emails from all seed inboxes.
     Optionally keep emails matching keep_token."""
     accounts = load_seed_accounts()
     summary = {"accounts": 0, "deleted": 0, "errors": []}
@@ -231,7 +231,7 @@ def cleanup_seeds(keep_token: str = None) -> dict:
             imap.login(acc["username"], acc["password"])
             summary["accounts"] += 1
 
-            # Search all standard folders for INBXR test emails
+            # Search all standard folders for InbXr test emails
             folders_to_clean = ["INBOX"] + \
                 _SPAM_FOLDERS.get(provider, []) + \
                 _TRASH_FOLDERS.get(provider, [])
@@ -242,7 +242,7 @@ def cleanup_seeds(keep_token: str = None) -> dict:
                     if status != "OK":
                         continue
 
-                    status, msg_ids = imap.search(None, '(SUBJECT "INBXR-")')
+                    status, msg_ids = imap.search(None, '(SUBJECT "InbXr-")')
                     if status != "OK" or not msg_ids[0]:
                         continue
 
@@ -579,9 +579,9 @@ def generate_recommendations(results: list, summary: dict) -> list:
                 "title": f"All Emails Landed in Spam ({spam}/{total})",
                 "text": "Every seed mailbox filtered your email to spam. This indicates a serious deliverability problem that needs immediate attention.",
                 "actions": [
-                    "Run INBXR's Sender Check to verify SPF, DKIM, and DMARC are configured correctly",
+                    "Run InbXr's Sender Check to verify SPF, DKIM, and DMARC are configured correctly",
                     "Check if your sending IP or domain is on any blocklists (use Sender Check)",
-                    "Run your email through INBXR's Email Analyzer to identify spam trigger words",
+                    "Run your email through InbXr's Email Analyzer to identify spam trigger words",
                     "Review your email for excessive links, images, or ALL CAPS text",
                     "If using a shared IP (common with ESPs), contact your provider about IP reputation",
                     "If your domain is new (< 30 days), start a warmup campaign with small, engaged segments",
@@ -596,7 +596,7 @@ def generate_recommendations(results: list, summary: dict) -> list:
                 "title": f"Mixed Results — {spam} of {total} Landed in Spam",
                 "text": f"Inbox: {', '.join(inbox_providers)}. Spam: {', '.join(spam_providers)}. Different providers filter differently, which suggests borderline reputation or content issues.",
                 "actions": [
-                    "Run INBXR's Sender Check to verify authentication records are correct",
+                    "Run InbXr's Sender Check to verify authentication records are correct",
                     "Run your email through the Email Analyzer to identify content-based spam triggers",
                     "Check blocklists — you may be listed on a provider-specific list",
                     "Reduce the number of links and images in your email",
@@ -656,8 +656,8 @@ def generate_recommendations(results: list, summary: dict) -> list:
             "title": "General Deliverability Tips",
             "text": f"Your inbox placement rate is {inbox_pct:.0f}%. Here are steps to improve it across all providers.",
             "actions": [
-                "Use INBXR's Email Analyzer to check your content for spam triggers before sending",
-                "Use INBXR's Sender Check to verify your full authentication setup",
+                "Use InbXr's Email Analyzer to check your content for spam triggers before sending",
+                "Use InbXr's Sender Check to verify your full authentication setup",
                 "Warm up new sending domains gradually — start with small, engaged segments",
                 "Maintain a consistent sending schedule and volume (avoid big spikes)",
                 "Remove hard bounces and unengaged recipients from your list",
