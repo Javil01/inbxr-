@@ -2628,115 +2628,308 @@ def api_check_lead_status():
 
 
 def _build_report_email_html(analysis):
-    """Build a comprehensive HTML email report from analysis data."""
+    """Build a polished HTML email report from analysis data."""
+    import html as _html
+    e = _html.escape
+
     p = analysis.get("placement", {})
     spam = analysis.get("spam", {})
-    copy = analysis.get("copy", {})
+    copy_data = analysis.get("copy", {})
     grades = analysis.get("header_grades", [])
     esp = analysis.get("esp_diagnostic", {})
+    readability = analysis.get("readability", {})
+    reputation = analysis.get("reputation", {})
+    audit = analysis.get("audit", {})
+    content = analysis.get("content", {})
+    transport = analysis.get("headers", {}).get("transport", {})
 
-    # Verdict
+    # ── Verdict ──
     in_spam = p.get("placement") in ("spam", "trash")
     in_promo = p.get("placement") == "inbox" and p.get("tab") == "promotions"
-    verdict = "Results Ready"
-    verdict_color = "#3b82f6"
     if in_spam:
-        verdict = "Landed in Spam"
-        verdict_color = "#ef4444"
+        verdict, verdict_color, verdict_bg = "Landed in Spam", "#ef4444", "#fef2f2"
     elif in_promo:
-        verdict = "Promotions Tab"
-        verdict_color = "#f59e0b"
+        verdict, verdict_color, verdict_bg = "Promotions Tab", "#f59e0b", "#fffbeb"
     elif p.get("placement") == "inbox":
-        verdict = "Inbox"
-        verdict_color = "#22c55e"
+        verdict, verdict_color, verdict_bg = "Primary Inbox", "#22c55e", "#f0fdf4"
+    else:
+        verdict, verdict_color, verdict_bg = "Results Ready", "#3b82f6", "#eff6ff"
 
-    # Grade pills
-    grade_colors = {"pass": "#22c55e", "warning": "#f59e0b", "fail": "#ef4444", "missing": "#94a3b8"}
-    grade_letters = {"pass": "A", "warning": "C", "fail": "F", "missing": "?"}
-    grade_html = ""
-    for g in grades:
-        c = grade_colors.get(g.get("status"), "#94a3b8")
-        l = g.get("grade") or grade_letters.get(g.get("status"), "?")
-        label = g.get("label", "")
-        detail = g.get("detail", "")
-        grade_html += (
-            f'<td style="text-align:center;padding:8px 10px;vertical-align:top;">'
-            f'<span style="display:inline-block;width:32px;height:32px;line-height:32px;border-radius:50%;'
-            f'background:{c};color:#fff;font-weight:700;font-size:14px;">{l}</span>'
-            f'<br><span style="font-size:12px;color:#64748b;">{label}</span>'
+    # ── Helper: score card ──
+    def score_card(label, score, invert=False):
+        if score is None:
+            return ""
+        if invert:  # lower is better (spam risk)
+            c = "#22c55e" if score <= 20 else "#f59e0b" if score <= 40 else "#ef4444"
+        else:  # higher is better
+            c = "#22c55e" if score >= 70 else "#f59e0b" if score >= 50 else "#ef4444"
+        return (
+            f'<td style="width:50%;padding:16px;text-align:center;background:#f8fafc;border-radius:8px;">'
+            f'<div style="font-size:32px;font-weight:800;color:{c};line-height:1;">{score}</div>'
+            f'<div style="font-size:11px;color:#94a3b8;margin-top:2px;">/100</div>'
+            f'<div style="font-size:12px;color:#64748b;font-weight:600;margin-top:6px;">{label}</div>'
             f'</td>'
         )
 
-    # Issues
-    issues = []
-    for g in grades:
-        if g.get("status") == "fail":
-            issues.append(f'<strong>{g["label"]}</strong> is failing — {g.get("detail", "needs attention")}')
-        elif g.get("status") == "warning":
-            issues.append(f'<strong>{g["label"]}</strong> — {g.get("detail", "has warnings")}')
-    if spam.get("score", 0) > 40:
-        issues.append(f'Spam risk score is <strong>{spam["score"]}/100</strong> — review content triggers')
-    if copy.get("score") is not None and copy["score"] < 50:
-        issues.append(f'Copy score is <strong>{copy["score"]}/100</strong> — improve email content')
+    # ── Helper: auth grade row ──
+    def grade_row(g):
+        status = g.get("status", "missing")
+        colors = {"pass": "#22c55e", "warning": "#f59e0b", "fail": "#ef4444", "missing": "#94a3b8"}
+        icons = {"pass": "&#10003;", "warning": "&#9888;", "fail": "&#10007;", "missing": "?"}
+        labels = {"pass": "Pass", "warning": "Warning", "fail": "Fail", "missing": "N/A"}
+        c = colors.get(status, "#94a3b8")
+        detail = g.get("detail", "")
+        # Truncate long details for email
+        if len(detail) > 200:
+            detail = detail[:200] + "..."
+        return (
+            f'<tr>'
+            f'<td style="padding:10px 12px;border-bottom:1px solid #f1f5f9;vertical-align:top;">'
+            f'<span style="display:inline-block;width:24px;height:24px;line-height:24px;border-radius:50%;'
+            f'background:{c};color:#fff;font-size:12px;font-weight:700;text-align:center;">{icons.get(status, "?")}</span>'
+            f'</td>'
+            f'<td style="padding:10px 0;border-bottom:1px solid #f1f5f9;vertical-align:top;">'
+            f'<div style="font-size:13px;font-weight:600;color:#0c1a3a;">{e(g.get("label", ""))}'
+            f'<span style="color:{c};font-size:11px;font-weight:500;margin-left:6px;">{labels.get(status, "")}</span></div>'
+            + (f'<div style="font-size:12px;color:#64748b;margin-top:3px;line-height:1.4;">{e(detail)}</div>' if detail else "")
+            + f'</td></tr>'
+        )
 
-    issues_html = ""
-    if issues:
-        issues_html = '<h3 style="color:#0c1a3a;font-size:15px;margin:24px 0 8px;">Issues Found</h3><ul style="margin:0;padding-left:20px;">'
-        for issue in issues:
-            issues_html += f'<li style="color:#334155;font-size:14px;line-height:1.8;">{issue}</li>'
-        issues_html += "</ul>"
-    else:
-        issues_html = '<p style="color:#22c55e;font-size:14px;margin:16px 0;">No critical issues found — your email looks good.</p>'
+    # ── Subject line ──
+    subject_line = content.get("clean_subject") or content.get("subject", "")
+    from_header = content.get("from_header") or content.get("sender_email", "")
 
-    # ESP diagnostic
-    esp_html = ""
-    if esp.get("verdict") and esp["verdict"] != "unknown":
-        esp_labels = {"clean": "All Clear", "domain": "Domain Issue", "content": "Content Issue", "esp": "ESP Issue", "both": "Multiple Issues"}
-        esp_html = (
-            f'<div style="background:{verdict_color}10;border-left:4px solid {verdict_color};padding:12px 16px;border-radius:6px;margin:16px 0;">'
-            f'<strong style="font-size:13px;">Diagnosis: {esp_labels.get(esp["verdict"], esp["verdict"])}</strong>'
-            f'<p style="font-size:13px;color:#334155;margin:6px 0 0;">{esp.get("message", "")}</p>'
+    # ── Build sections ──
+    sections = []
+
+    # 1. Header
+    sections.append(
+        f'<div style="background:#0c1a3a;padding:28px 32px;border-radius:12px 12px 0 0;">'
+        f'<table style="width:100%"><tr>'
+        f'<td><span style="color:#15c182;font-size:20px;font-weight:800;letter-spacing:-0.5px;">InbXr</span></td>'
+        f'<td style="text-align:right;"><span style="color:rgba(255,255,255,0.5);font-size:12px;">Email Test Report</span></td>'
+        f'</tr></table>'
+        f'</div>'
+    )
+
+    # 2. Verdict banner
+    sections.append(
+        f'<div style="background:{verdict_bg};padding:24px 32px;border-left:4px solid {verdict_color};">'
+        f'<div style="font-size:22px;font-weight:800;color:{verdict_color};margin:0 0 4px;">{verdict}</div>'
+        + (f'<div style="font-size:13px;color:#64748b;">Tab: {e(p.get("tab", "primary").title())}</div>' if p.get("tab") else "")
+        + (f'<div style="font-size:13px;color:#64748b;margin-top:8px;">Subject: <strong>{e(subject_line)}</strong></div>' if subject_line else "")
+        + (f'<div style="font-size:12px;color:#94a3b8;">From: {e(from_header)}</div>' if from_header else "")
+        + f'</div>'
+    )
+
+    # 3. Score cards
+    spam_card = score_card("Spam Risk", spam.get("score"), invert=True)
+    copy_card = score_card("Copy Score", copy_data.get("score"), invert=False)
+    if spam_card or copy_card:
+        sections.append(
+            f'<div style="padding:24px 32px 0;">'
+            f'<table style="width:100%;border-collapse:separate;border-spacing:12px 0;"><tr>'
+            f'{spam_card}{copy_card}'
+            f'</tr></table>'
             f'</div>'
         )
 
-    # Scores
-    scores_html = ""
-    if spam.get("score") is not None:
-        sc = spam["score"]
-        sc_color = "#22c55e" if sc <= 20 else "#f59e0b" if sc <= 40 else "#ef4444"
-        scores_html += (
-            f'<td style="padding:8px 16px;text-align:center;">'
-            f'<span style="font-size:24px;font-weight:700;color:{sc_color};">{sc}</span>'
-            f'<span style="color:#64748b;font-size:13px;">/100</span><br>'
-            f'<span style="font-size:12px;color:#64748b;">Spam Risk</span></td>'
-        )
-    if copy.get("score") is not None:
-        cc = copy["score"]
-        cc_color = "#22c55e" if cc >= 70 else "#f59e0b" if cc >= 50 else "#ef4444"
-        scores_html += (
-            f'<td style="padding:8px 16px;text-align:center;">'
-            f'<span style="font-size:24px;font-weight:700;color:{cc_color};">{cc}</span>'
-            f'<span style="color:#64748b;font-size:13px;">/100</span><br>'
-            f'<span style="font-size:12px;color:#64748b;">Copy Score</span></td>'
+    # Readability + reputation row
+    read_card = score_card("Readability", readability.get("score"), invert=False)
+    rep_score = None
+    if isinstance(reputation, dict):
+        combined = reputation.get("combined", reputation)
+        if isinstance(combined, dict):
+            rep_score = combined.get("score")
+    rep_card = score_card("DNS Reputation", rep_score, invert=False)
+    if read_card or rep_card:
+        sections.append(
+            f'<div style="padding:12px 32px 0;">'
+            f'<table style="width:100%;border-collapse:separate;border-spacing:12px 0;"><tr>'
+            f'{read_card}{rep_card}'
+            f'</tr></table>'
+            f'</div>'
         )
 
+    # 4. ESP Diagnostic
+    if esp.get("verdict") and esp["verdict"] != "unknown":
+        esp_labels = {"clean": "All Clear", "domain": "Domain Issue", "content": "Content Issue", "esp": "ESP Issue", "both": "Multiple Issues"}
+        esp_colors = {"clean": "#22c55e", "domain": "#ef4444", "content": "#f59e0b", "esp": "#ef4444", "both": "#ef4444"}
+        ec = esp_colors.get(esp["verdict"], "#64748b")
+        details_html = ""
+        for d in (esp.get("details") or []):
+            details_html += f'<li style="font-size:12px;color:#475569;line-height:1.6;">{e(d)}</li>'
+        sections.append(
+            f'<div style="padding:20px 32px 0;">'
+            f'<div style="background:{ec}08;border:1px solid {ec}30;border-radius:8px;padding:16px;">'
+            f'<div style="font-size:13px;font-weight:700;color:{ec};margin-bottom:4px;">Diagnosis: {esp_labels.get(esp["verdict"], "")}</div>'
+            f'<div style="font-size:13px;color:#334155;line-height:1.5;">{e(esp.get("message", ""))}</div>'
+            + (f'<ul style="margin:8px 0 0;padding-left:16px;">{details_html}</ul>' if details_html else "")
+            + f'</div></div>'
+        )
+
+    # 5. Authentication grades
+    if grades:
+        rows_html = ""
+        for g in grades:
+            rows_html += grade_row(g)
+        sections.append(
+            f'<div style="padding:24px 32px 0;">'
+            f'<div style="font-size:15px;font-weight:700;color:#0c1a3a;margin-bottom:12px;">Authentication &amp; Headers</div>'
+            f'<table style="width:100%;border-collapse:collapse;">{rows_html}</table>'
+            f'</div>'
+        )
+
+    # 6. Issues & fixes
+    issues = []
+    for g in grades:
+        if g.get("status") == "fail":
+            issues.append(("critical", g.get("label", ""), g.get("detail", "needs attention")))
+        elif g.get("status") == "warning":
+            issues.append(("warning", g.get("label", ""), g.get("detail", "has warnings")))
+    if spam.get("score", 0) > 40:
+        issues.append(("warning", "Spam Risk", f'Score is {spam["score"]}/100 — review content triggers'))
+    if copy_data.get("score") is not None and copy_data["score"] < 50:
+        issues.append(("warning", "Copy Score", f'Score is {copy_data["score"]}/100 — improve email content'))
+
+    # Placement issues
+    if in_spam:
+        issues.insert(0, ("critical", "Inbox Placement", "Your email landed in the spam folder. Fix authentication and content issues first."))
+    elif in_promo:
+        issues.insert(0, ("warning", "Promotions Tab", "Reduce HTML complexity, limit links, and write like a person to reach Primary."))
+
+    if issues:
+        items_html = ""
+        for severity, label, detail in issues:
+            dot_color = "#ef4444" if severity == "critical" else "#f59e0b"
+            items_html += (
+                f'<tr><td style="padding:8px 12px 8px 0;vertical-align:top;width:8px;">'
+                f'<div style="width:8px;height:8px;border-radius:50%;background:{dot_color};margin-top:5px;"></div></td>'
+                f'<td style="padding:8px 0;border-bottom:1px solid #f8fafc;">'
+                f'<div style="font-size:13px;font-weight:600;color:#0c1a3a;">{e(label)}</div>'
+                f'<div style="font-size:12px;color:#64748b;line-height:1.5;margin-top:2px;">{e(detail[:300])}</div>'
+                f'</td></tr>'
+            )
+        sections.append(
+            f'<div style="padding:24px 32px 0;">'
+            f'<div style="font-size:15px;font-weight:700;color:#0c1a3a;margin-bottom:12px;">What to Fix</div>'
+            f'<table style="width:100%;border-collapse:collapse;">{items_html}</table>'
+            f'</div>'
+        )
+    else:
+        sections.append(
+            f'<div style="padding:24px 32px 0;">'
+            f'<div style="background:#f0fdf4;border-radius:8px;padding:16px;text-align:center;">'
+            f'<div style="font-size:14px;font-weight:600;color:#22c55e;">No critical issues found — your email looks good.</div>'
+            f'</div></div>'
+        )
+
+    # 7. Audit checklist (if available)
+    audit_checks = audit.get("checks", []) if isinstance(audit, dict) else []
+    if audit_checks:
+        checks_html = ""
+        for chk in audit_checks[:10]:
+            passed = chk.get("pass", False)
+            icon = "&#10003;" if passed else "&#10007;"
+            ic = "#22c55e" if passed else "#ef4444"
+            checks_html += (
+                f'<div style="display:inline-block;padding:4px 10px;margin:3px;border-radius:6px;'
+                f'background:{ic}08;font-size:11px;color:{ic};font-weight:600;">'
+                f'{icon} {e(chk.get("label", ""))}</div>'
+            )
+        sections.append(
+            f'<div style="padding:20px 32px 0;">'
+            f'<div style="font-size:15px;font-weight:700;color:#0c1a3a;margin-bottom:10px;">Pre-Send Checklist</div>'
+            f'<div>{checks_html}</div>'
+            f'</div>'
+        )
+
+    # 8. Transport info
+    if transport:
+        tls_status = "Encrypted (TLS)" if transport.get("tls_used") else "Not encrypted"
+        tls_color = "#22c55e" if transport.get("tls_used") else "#ef4444"
+        sections.append(
+            f'<div style="padding:20px 32px 0;">'
+            f'<div style="font-size:15px;font-weight:700;color:#0c1a3a;margin-bottom:10px;">Transport</div>'
+            f'<table style="width:100%;font-size:12px;color:#64748b;">'
+            f'<tr><td style="padding:4px 0;">Encryption</td><td style="text-align:right;font-weight:600;color:{tls_color};">{tls_status}</td></tr>'
+            + (f'<tr><td style="padding:4px 0;">TLS Version</td><td style="text-align:right;">{e(str(transport.get("tls_version", "")))}</td></tr>' if transport.get("tls_version") else "")
+            + (f'<tr><td style="padding:4px 0;">Sender IP</td><td style="text-align:right;font-family:monospace;">{e(str(transport.get("sender_ip", "")))}</td></tr>' if transport.get("sender_ip") else "")
+            + f'<tr><td style="padding:4px 0;">Routing Hops</td><td style="text-align:right;">{transport.get("hop_count", "?")}</td></tr>'
+            f'</table>'
+            f'</div>'
+        )
+
+    # 9. Readability detail
+    if readability.get("grade_level"):
+        sections.append(
+            f'<div style="padding:20px 32px 0;">'
+            f'<div style="font-size:15px;font-weight:700;color:#0c1a3a;margin-bottom:8px;">Readability</div>'
+            f'<div style="font-size:13px;color:#334155;">Grade Level: <strong>{e(str(readability["grade_level"]))}</strong></div>'
+            + (f'<div style="font-size:12px;color:#64748b;margin-top:4px;line-height:1.5;">{e(readability.get("summary", "")[:300])}</div>' if readability.get("summary") else "")
+            + f'</div>'
+        )
+
+    # 10. Blocklist status
+    rep_section = reputation.get("reputation", reputation) if isinstance(reputation, dict) else {}
+    if isinstance(rep_section, dict):
+        listed = rep_section.get("listed_count", 0)
+        if listed > 0:
+            listings = rep_section.get("listed_on", [])
+            list_items = ""
+            for bl in listings[:5]:
+                name = bl.get("name", bl.get("zone", ""))
+                list_items += f'<div style="font-size:12px;color:#ef4444;padding:2px 0;">&#8226; {e(name)}</div>'
+            sections.append(
+                f'<div style="padding:20px 32px 0;">'
+                f'<div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:14px;">'
+                f'<div style="font-size:13px;font-weight:700;color:#ef4444;">Listed on {listed} blocklist(s)</div>'
+                f'{list_items}'
+                f'</div></div>'
+            )
+        else:
+            sections.append(
+                f'<div style="padding:20px 32px 0;">'
+                f'<div style="background:#f0fdf4;border-radius:8px;padding:12px;font-size:13px;color:#22c55e;font-weight:600;text-align:center;">'
+                f'&#10003; Clean across all blocklists</div></div>'
+            )
+
+    # 11. CTA + Footer
+    sections.append(
+        f'<div style="padding:32px;text-align:center;">'
+        f'<div style="margin-bottom:24px;">'
+        f'<a href="https://inbxr.us/signup" style="display:inline-block;background:#15c182;color:#fff;'
+        f'padding:14px 32px;border-radius:8px;text-decoration:none;font-weight:700;font-size:15px;">'
+        f'Create Free Account &rarr;</a>'
+        f'</div>'
+        f'<div style="margin-bottom:16px;">'
+        f'<a href="https://inbxr.us/" style="color:#64748b;font-size:13px;text-decoration:underline;">Run another test</a>'
+        f'</div>'
+        f'</div>'
+    )
+
+    # Footer
+    sections.append(
+        f'<div style="background:#f8fafc;padding:20px 32px;border-radius:0 0 12px 12px;border-top:1px solid #e2e8f0;">'
+        f'<table style="width:100%"><tr>'
+        f'<td><span style="color:#15c182;font-size:14px;font-weight:800;">InbXr</span>'
+        f'<span style="color:#94a3b8;font-size:11px;margin-left:6px;">Email Intelligence</span></td>'
+        f'<td style="text-align:right;"><a href="https://inbxr.us" style="color:#94a3b8;font-size:11px;text-decoration:none;">inbxr.us</a></td>'
+        f'</tr></table>'
+        f'</div>'
+    )
+
+    # Assemble
+    body = "\n".join(sections)
     return (
-        '<div style="font-family:Inter,Arial,sans-serif;max-width:520px;margin:0 auto;padding:32px 24px;">'
-        '<h2 style="color:#0c1a3a;margin:0 0 4px;font-size:20px;">Your Full Email Test Report</h2>'
-        '<p style="color:#64748b;font-size:13px;margin:0 0 20px;">from InbXr &mdash; Email Intelligence Platform</p>'
-        f'<div style="background:{verdict_color}10;border-left:4px solid {verdict_color};padding:12px 16px;border-radius:6px;margin-bottom:20px;">'
-        f'<span style="font-size:16px;font-weight:700;color:{verdict_color};">{verdict}</span>'
-        + (f'<span style="color:#64748b;font-size:13px;margin-left:8px;">({p.get("tab", "")})</span>' if p.get("tab") else "")
-        + '</div>'
-        + (f'<table style="width:100%;border-collapse:collapse;margin:16px 0;"><tr>{grade_html}</tr></table>' if grade_html else "")
-        + esp_html
-        + (f'<table style="width:100%;border-collapse:collapse;margin:12px 0;"><tr>{scores_html}</tr></table>' if scores_html else "")
-        + issues_html
-        + '<div style="text-align:center;margin:28px 0 16px;">'
-        '<a href="https://inbxr.us/" style="display:inline-block;background:#16a34a;color:#fff;padding:12px 28px;border-radius:999px;text-decoration:none;font-weight:600;font-size:15px;">Run Another Test</a>'
-        '</div>'
-        '<p style="color:#94a3b8;font-size:12px;margin-top:24px;border-top:1px solid #e2e8f0;padding-top:16px;">InbXr &mdash; Free email deliverability tools. <a href="https://inbxr.us" style="color:#94a3b8;">inbxr.us</a></p>'
-        '</div>'
+        f'<!DOCTYPE html><html><head><meta charset="utf-8">'
+        f'<meta name="viewport" content="width=device-width,initial-scale=1.0"></head>'
+        f'<body style="margin:0;padding:0;background:#f1f5f9;font-family:Inter,Arial,Helvetica,sans-serif;">'
+        f'<div style="max-width:560px;margin:24px auto;background:#fff;border-radius:12px;'
+        f'box-shadow:0 1px 3px rgba(0,0,0,0.08);overflow:hidden;">'
+        f'{body}'
+        f'</div>'
+        f'</body></html>'
     )
 
 
