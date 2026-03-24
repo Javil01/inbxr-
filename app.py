@@ -2480,8 +2480,7 @@ def api_email_report():
 
 @app.route("/api/unlock-report", methods=["POST"])
 def api_unlock_report():
-    """Capture lead email and send verification email."""
-    import secrets
+    """Validate email (syntax + MX + disposable check), capture lead, unlock report."""
     from modules.mailer import _send, is_configured
     from modules import database as db
 
@@ -2492,138 +2491,62 @@ def api_unlock_report():
     email = (data.get("email") or "").strip().lower()
     token = (data.get("token") or "").strip()
 
-    # Validate email
+    # Basic syntax validation
     if not email or not re.match(r'^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$', email):
         return jsonify({"error": "Please enter a valid email address."}), 400
 
     if not token:
         return jsonify({"error": "Missing test token."}), 400
 
-    # Check if this email is already verified (returning lead)
-    existing = db.fetchone("SELECT id, verified FROM lead_emails WHERE email = ?", (email,))
-    if existing and existing["verified"]:
-        # Already verified — skip verification, return full data + set cookie
-        cached = _analysis_cache.get(token)
-        full_data = cached["data"] if cached else None
-        resp_data = {"ok": True, "verified": True}
-        if full_data:
-            full_data["gated"] = False
-            resp_data["analysis"] = full_data
-        resp = make_response(jsonify(resp_data))
-        resp.set_cookie("inbxr_lead", email, max_age=60*60*24*365, httponly=True, samesite="Lax")
-        return resp
+    domain = email.rsplit("@", 1)[1]
 
-    # Generate verification token
-    v_token = secrets.token_urlsafe(32)
+    # Reject disposable/temp email domains
+    from modules.email_verifier import DISPOSABLE_DOMAINS
+    if domain in DISPOSABLE_DOMAINS:
+        return jsonify({"error": "Please use a real email address, not a disposable one."}), 400
 
-    # Store or update lead
-    if existing:
+    # MX record check — verify domain can receive email
+    try:
+        import dns.resolver
+        answers = dns.resolver.resolve(domain, "MX", lifetime=5)
+        if not answers:
+            return jsonify({"error": "That email domain doesn't appear to exist. Please check and try again."}), 400
+    except Exception:
+        # Try A record fallback
+        try:
+            import dns.resolver
+            dns.resolver.resolve(domain, "A", lifetime=5)
+        except Exception:
+            return jsonify({"error": "That email domain doesn't appear to exist. Please check and try again."}), 400
+
+    # Store lead email
+    existing = db.fetchone("SELECT id FROM lead_emails WHERE email = ?", (email,))
+    if not existing:
         db.execute(
-            "UPDATE lead_emails SET verification_token = ?, test_token = ? WHERE id = ?",
-            (v_token, token, existing["id"]),
+            "INSERT INTO lead_emails (email, ip_address, source, verified, test_token) VALUES (?, ?, ?, 1, ?)",
+            (email, request.remote_addr or "unknown", "email_test_gate", token),
         )
     else:
-        db.execute(
-            "INSERT INTO lead_emails (email, ip_address, source, verification_token, test_token) VALUES (?, ?, ?, ?, ?)",
-            (email, request.remote_addr or "unknown", "email_test_gate", v_token, token),
-        )
-    logger.info("Lead captured: %s from IP %s (verification pending)", email, request.remote_addr)
+        db.execute("UPDATE lead_emails SET verified = 1, test_token = ? WHERE id = ?", (token, existing["id"]))
+    logger.info("Lead captured: %s from IP %s", email, request.remote_addr)
 
-    # Send verification email
-    if is_configured():
-        base_url = os.environ.get("BASE_URL", "https://inbxr.us")
-        verify_url = f"{base_url}/verify-lead/{v_token}"
-        subject = "Verify your email to unlock your InbXr report"
-        html = f"""
-        <div style="font-family:Inter,Arial,sans-serif;max-width:480px;margin:0 auto;padding:32px 24px;">
-          <h2 style="color:#0c1a3a;margin:0 0 8px;font-size:20px;">Your report is ready</h2>
-          <p style="color:#334155;font-size:15px;line-height:1.6;">
-            Click the button below to verify your email and unlock your full InbXr email test report.
-          </p>
-          <a href="{verify_url}"
-             style="display:inline-block;background:#16a34a;color:#fff;padding:12px 28px;
-                    border-radius:999px;text-decoration:none;font-weight:600;font-size:15px;
-                    margin:20px 0;">
-            Verify &amp; Unlock Report
-          </a>
-          <p style="color:#64748b;font-size:13px;line-height:1.5;margin-top:24px;">
-            Or copy this link:<br>
-            <a href="{verify_url}" style="color:#16a34a;word-break:break-all;">{verify_url}</a>
-          </p>
-          <p style="color:#94a3b8;font-size:12px;margin-top:32px;">
-            InbXr &mdash; Free email deliverability tools. <a href="https://inbxr.us" style="color:#94a3b8;">inbxr.us</a>
-          </p>
-        </div>
-        """
-        text = f"Verify your email to unlock your InbXr report: {verify_url}"
-        _send(email, subject, html, text)
+    # Get cached analysis
+    cached = _analysis_cache.get(token)
+    full_data = cached["data"] if cached else None
 
-    return jsonify({"ok": True, "verified": False, "lead_token": v_token})
+    # Send full report email in background
+    if is_configured() and full_data:
+        report_html = _build_report_email_html(full_data)
+        _send(email, "Your InbXr Email Test Report", report_html)
 
-
-@app.route("/verify-lead/<v_token>")
-def verify_lead(v_token):
-    """Verify a lead email and unlock the report."""
-    from modules.mailer import _send, is_configured
-    from modules import database as db
-
-    lead = db.fetchone("SELECT * FROM lead_emails WHERE verification_token = ?", (v_token,))
-    if not lead:
-        return redirect("/", code=302)
-
-    # Mark as verified
-    db.execute("UPDATE lead_emails SET verified = 1 WHERE id = ?", (lead["id"],))
-    logger.info("Lead verified: %s", lead["email"])
-
-    # Send the full report email if we have cached analysis
-    cached = _analysis_cache.get(lead.get("test_token", ""))
-    if cached and is_configured():
-        from modules.mailer import _send
-        analysis = cached["data"]
-        # Build a server-side report email
-        report_html = _build_report_email_html(analysis)
-        _send(lead["email"], "Your InbXr Email Test Report", report_html)
-
-    # Render verification success page with signup CTA
-    resp = make_response(render_template(
-        "auth/lead_verified.html",
-        email=lead["email"],
-        active_page="",
-        allow_index=False,
-    ))
-    resp.set_cookie("inbxr_lead", lead["email"], max_age=60*60*24*365, httponly=True, samesite="Lax")
-    return resp
-
-
-@app.route("/api/check-lead-status", methods=["POST"])
-def api_check_lead_status():
-    """Poll endpoint to check if a lead email has been verified."""
-    from modules import database as db
-
-    data = request.get_json(force=True, silent=True)
-    if not data:
-        return jsonify({"verified": False})
-
-    lead_token = (data.get("lead_token") or "").strip()
-    if not lead_token:
-        return jsonify({"verified": False})
-
-    lead = db.fetchone(
-        "SELECT verified, test_token FROM lead_emails WHERE verification_token = ?",
-        (lead_token,),
-    )
-    if not lead or not lead["verified"]:
-        return jsonify({"verified": False})
-
-    # Return full analysis if available
-    cached = _analysis_cache.get(lead.get("test_token", ""))
-    resp_data = {"verified": True}
-    if cached:
-        cached["data"]["gated"] = False
-        resp_data["analysis"] = cached["data"]
+    # Return full data + set cookie
+    resp_data = {"ok": True}
+    if full_data:
+        full_data["gated"] = False
+        resp_data["analysis"] = full_data
 
     resp = make_response(jsonify(resp_data))
-    resp.set_cookie("inbxr_lead", "verified", max_age=60*60*24*365, httponly=True, samesite="Lax")
+    resp.set_cookie("inbxr_lead", email, max_age=60*60*24*365, httponly=True, samesite="Lax")
     return resp
 
 

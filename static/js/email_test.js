@@ -717,8 +717,6 @@ function renderGatedView(data) {
   gateInput.onkeydown = (e) => { if (e.key === 'Enter') submitGateEmail(); };
 }
 
-let leadPollTimer = null;
-
 async function submitGateEmail() {
   const input = $('#gateEmailInput');
   const btn = $('#gateEmailBtn');
@@ -733,7 +731,7 @@ async function submitGateEmail() {
   }
 
   btn.disabled = true;
-  $('.btn-text', btn).textContent = 'Sending...';
+  $('.btn-text', btn).textContent = 'Verifying...';
   $('.btn-spinner', btn).classList.remove('hidden');
   status.textContent = '';
 
@@ -747,30 +745,19 @@ async function submitGateEmail() {
     const result = await res.json();
 
     if (res.ok && result.ok) {
-      if (result.verified) {
-        // Already verified — unlock immediately
-        status.textContent = "Email verified! Unlocking your report...";
-        status.className = 'et-gate-card__status et-gate-card__status--success';
-        $('.btn-spinner', btn).classList.add('hidden');
-        if (result.analysis) lastReportData = result.analysis;
-        setTimeout(() => {
-          const gate = $('#etEmailGate');
-          if (gate) gate.style.display = 'none';
-          if (lastReportData) {
-            lastReportData.gated = false;
-            renderFullReport(lastReportData);
-          }
-        }, 1500);
-      } else {
-        // Verification email sent — show waiting state + start polling
-        $('.btn-spinner', btn).classList.add('hidden');
-        $('.btn-text', btn).textContent = 'Sent!';
-        status.innerHTML = '<strong>Check your inbox!</strong> Click the verification link to unlock your full report.';
-        status.className = 'et-gate-card__status et-gate-card__status--success';
-        input.disabled = true;
-        // Start polling for verification
-        startLeadPoll(result.lead_token);
-      }
+      status.innerHTML = 'Unlocking your report... We also sent a copy to <strong>' + escHtml(email) + '</strong>';
+      status.className = 'et-gate-card__status et-gate-card__status--success';
+      $('.btn-spinner', btn).classList.add('hidden');
+      $('.btn-text', btn).textContent = 'Unlocked!';
+      if (result.analysis) lastReportData = result.analysis;
+      setTimeout(() => {
+        const gate = $('#etEmailGate');
+        if (gate) gate.style.display = 'none';
+        if (lastReportData) {
+          lastReportData.gated = false;
+          renderFullReport(lastReportData);
+        }
+      }, 1500);
     } else {
       status.textContent = result.error || 'Something went wrong. Try again.';
       status.className = 'et-gate-card__status et-gate-card__status--error';
@@ -785,45 +772,6 @@ async function submitGateEmail() {
     $('.btn-text', btn).textContent = 'Send My Report';
     $('.btn-spinner', btn).classList.add('hidden');
   }
-}
-
-function startLeadPoll(leadToken) {
-  if (leadPollTimer) clearInterval(leadPollTimer);
-  let attempts = 0;
-  const maxAttempts = 120; // 6 minutes at 3s intervals
-
-  leadPollTimer = setInterval(async () => {
-    attempts++;
-    if (attempts > maxAttempts) {
-      clearInterval(leadPollTimer);
-      return;
-    }
-    try {
-      const res = await fetch('/api/check-lead-status', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ lead_token: leadToken }),
-      });
-      const data = await res.json();
-      if (data.verified) {
-        clearInterval(leadPollTimer);
-        const status = $('#gateEmailStatus');
-        if (status) {
-          status.textContent = 'Email verified! Unlocking your report...';
-          status.className = 'et-gate-card__status et-gate-card__status--success';
-        }
-        if (data.analysis) lastReportData = data.analysis;
-        setTimeout(() => {
-          const gate = $('#etEmailGate');
-          if (gate) gate.style.display = 'none';
-          if (lastReportData) {
-            lastReportData.gated = false;
-            renderFullReport(lastReportData);
-          }
-        }, 1500);
-      }
-    } catch (e) { /* ignore poll errors */ }
-  }, 3000);
 }
 
 // ── ESP vs Domain Diagnostic ────────────────────────

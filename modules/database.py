@@ -72,9 +72,12 @@ def _run_migrations(conn):
 
     applied = {r["name"] for r in fetchall("SELECT name FROM _migrations")}
 
-    for name, sql in _MIGRATIONS:
+    for name, migration in _MIGRATIONS:
         if name not in applied:
-            conn.executescript(sql)
+            if callable(migration):
+                migration(conn)
+            else:
+                conn.executescript(migration)
             conn.execute("INSERT INTO _migrations (name) VALUES (?)", (name,))
             conn.commit()
 
@@ -307,6 +310,19 @@ CREATE TABLE IF NOT EXISTS alerts (
 
 CREATE INDEX IF NOT EXISTS idx_alerts_user ON alerts(user_id, is_read, created_at DESC);
 """
+
+def _add_lead_verification_columns(conn):
+    """Safely add verification columns to lead_emails (idempotent)."""
+    existing = {r[1] for r in conn.execute("PRAGMA table_info(lead_emails)").fetchall()}
+    if "verification_token" not in existing:
+        conn.execute("ALTER TABLE lead_emails ADD COLUMN verification_token TEXT")
+    if "verified" not in existing:
+        conn.execute("ALTER TABLE lead_emails ADD COLUMN verified INTEGER DEFAULT 0")
+    if "test_token" not in existing:
+        conn.execute("ALTER TABLE lead_emails ADD COLUMN test_token TEXT")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_lead_emails_vtoken ON lead_emails(verification_token)")
+    conn.commit()
+
 
 # ── Migrations (append-only list) ───────────────────────
 
@@ -778,20 +794,11 @@ Opportunity: Start your free InbXr audit today and see where you actually stand.
             email TEXT NOT NULL COLLATE NOCASE,
             ip_address TEXT,
             source TEXT DEFAULT 'email_test_gate',
-            verification_token TEXT UNIQUE,
-            verified INTEGER DEFAULT 0,
-            test_token TEXT,
             created_at TEXT DEFAULT (datetime('now'))
         );
         CREATE INDEX IF NOT EXISTS idx_lead_emails_email ON lead_emails(email);
-        CREATE INDEX IF NOT EXISTS idx_lead_emails_vtoken ON lead_emails(verification_token);
     """),
-    ("019_lead_emails_verification", """
-        ALTER TABLE lead_emails ADD COLUMN verification_token TEXT;
-        ALTER TABLE lead_emails ADD COLUMN verified INTEGER DEFAULT 0;
-        ALTER TABLE lead_emails ADD COLUMN test_token TEXT;
-        CREATE INDEX IF NOT EXISTS idx_lead_emails_vtoken ON lead_emails(verification_token);
-    """),
+    ("019_lead_emails_verification", _add_lead_verification_columns),
 ]
 
 
