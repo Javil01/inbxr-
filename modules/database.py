@@ -778,9 +778,19 @@ Opportunity: Start your free InbXr audit today and see where you actually stand.
             email TEXT NOT NULL COLLATE NOCASE,
             ip_address TEXT,
             source TEXT DEFAULT 'email_test_gate',
+            verification_token TEXT UNIQUE,
+            verified INTEGER DEFAULT 0,
+            test_token TEXT,
             created_at TEXT DEFAULT (datetime('now'))
         );
         CREATE INDEX IF NOT EXISTS idx_lead_emails_email ON lead_emails(email);
+        CREATE INDEX IF NOT EXISTS idx_lead_emails_vtoken ON lead_emails(verification_token);
+    """),
+    ("019_lead_emails_verification", """
+        ALTER TABLE lead_emails ADD COLUMN verification_token TEXT;
+        ALTER TABLE lead_emails ADD COLUMN verified INTEGER DEFAULT 0;
+        ALTER TABLE lead_emails ADD COLUMN test_token TEXT;
+        CREATE INDEX IF NOT EXISTS idx_lead_emails_vtoken ON lead_emails(verification_token);
     """),
 ]
 

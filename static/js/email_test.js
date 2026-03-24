@@ -717,6 +717,8 @@ function renderGatedView(data) {
   gateInput.onkeydown = (e) => { if (e.key === 'Enter') submitGateEmail(); };
 }
 
+let leadPollTimer = null;
+
 async function submitGateEmail() {
   const input = $('#gateEmailInput');
   const btn = $('#gateEmailBtn');
@@ -736,36 +738,39 @@ async function submitGateEmail() {
   status.textContent = '';
 
   try {
-    const reportHtml = lastReportData ? buildReportHtml(lastReportData) : '';
     const token = lastReportData?._token || currentToken;
     const res = await fetch('/api/unlock-report', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, token, report_html: reportHtml }),
+      body: JSON.stringify({ email, token }),
     });
     const result = await res.json();
 
     if (res.ok && result.ok) {
-      // Show success state
-      status.textContent = "Check your inbox! Your full report is on the way.";
-      status.className = 'et-gate-card__status et-gate-card__status--success';
-      btn.disabled = true;
-      $('.btn-text', btn).textContent = 'Sent!';
-      $('.btn-spinner', btn).classList.add('hidden');
-
-      // If server returned full analysis, render it after a brief pause
-      if (result.analysis) {
-        lastReportData = result.analysis;
+      if (result.verified) {
+        // Already verified — unlock immediately
+        status.textContent = "Email verified! Unlocking your report...";
+        status.className = 'et-gate-card__status et-gate-card__status--success';
+        $('.btn-spinner', btn).classList.add('hidden');
+        if (result.analysis) lastReportData = result.analysis;
+        setTimeout(() => {
+          const gate = $('#etEmailGate');
+          if (gate) gate.style.display = 'none';
+          if (lastReportData) {
+            lastReportData.gated = false;
+            renderFullReport(lastReportData);
+          }
+        }, 1500);
+      } else {
+        // Verification email sent — show waiting state + start polling
+        $('.btn-spinner', btn).classList.add('hidden');
+        $('.btn-text', btn).textContent = 'Sent!';
+        status.innerHTML = '<strong>Check your inbox!</strong> Click the verification link to unlock your full report.';
+        status.className = 'et-gate-card__status et-gate-card__status--success';
+        input.disabled = true;
+        // Start polling for verification
+        startLeadPoll(result.lead_token);
       }
-      // Unlock and show full report after a moment
-      setTimeout(() => {
-        const gate = $('#etEmailGate');
-        if (gate) gate.style.display = 'none';
-        if (lastReportData) {
-          lastReportData.gated = false;
-          renderFullReport(lastReportData);
-        }
-      }, 2000);
     } else {
       status.textContent = result.error || 'Something went wrong. Try again.';
       status.className = 'et-gate-card__status et-gate-card__status--error';
@@ -780,6 +785,45 @@ async function submitGateEmail() {
     $('.btn-text', btn).textContent = 'Send My Report';
     $('.btn-spinner', btn).classList.add('hidden');
   }
+}
+
+function startLeadPoll(leadToken) {
+  if (leadPollTimer) clearInterval(leadPollTimer);
+  let attempts = 0;
+  const maxAttempts = 120; // 6 minutes at 3s intervals
+
+  leadPollTimer = setInterval(async () => {
+    attempts++;
+    if (attempts > maxAttempts) {
+      clearInterval(leadPollTimer);
+      return;
+    }
+    try {
+      const res = await fetch('/api/check-lead-status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lead_token: leadToken }),
+      });
+      const data = await res.json();
+      if (data.verified) {
+        clearInterval(leadPollTimer);
+        const status = $('#gateEmailStatus');
+        if (status) {
+          status.textContent = 'Email verified! Unlocking your report...';
+          status.className = 'et-gate-card__status et-gate-card__status--success';
+        }
+        if (data.analysis) lastReportData = data.analysis;
+        setTimeout(() => {
+          const gate = $('#etEmailGate');
+          if (gate) gate.style.display = 'none';
+          if (lastReportData) {
+            lastReportData.gated = false;
+            renderFullReport(lastReportData);
+          }
+        }, 1500);
+      }
+    } catch (e) { /* ignore poll errors */ }
+  }, 3000);
 }
 
 // ── ESP vs Domain Diagnostic ────────────────────────
@@ -2338,7 +2382,7 @@ function buildReportHtml(data) {
     (scoresHtml ? '<table style="width:100%;border-collapse:collapse;margin:12px 0;"><tr>' + scoresHtml + '</tr></table>' : '') +
     issuesHtml +
     '<div style="text-align:center;margin:28px 0 16px;">' +
-      '<a href="https://inbxr.us/" style="display:inline-block;background:#16a34a;color:#fff;padding:12px 28px;border-radius:999px;text-decoration:none;font-weight:600;font-size:15px;">View Full Report at InbXr</a>' +
+      '<a href="https://inbxr.us/" style="display:inline-block;background:#16a34a;color:#fff;padding:12px 28px;border-radius:999px;text-decoration:none;font-weight:600;font-size:15px;">Run Another Test at InbXr</a>' +
     '</div>' +
     '<p style="color:#94a3b8;font-size:12px;margin-top:24px;border-top:1px solid #e2e8f0;padding-top:16px;">InbXr &mdash; Free email deliverability tools. <a href="https://inbxr.us" style="color:#94a3b8;">inbxr.us</a></p>' +
   '</div>';

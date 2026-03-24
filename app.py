@@ -2480,8 +2480,8 @@ def api_email_report():
 
 @app.route("/api/unlock-report", methods=["POST"])
 def api_unlock_report():
-    """Capture lead email, send full report, return full data."""
-    import time as _t
+    """Capture lead email and send verification email."""
+    import secrets
     from modules.mailer import _send, is_configured
     from modules import database as db
 
@@ -2491,7 +2491,6 @@ def api_unlock_report():
 
     email = (data.get("email") or "").strip().lower()
     token = (data.get("token") or "").strip()
-    report_html = (data.get("report_html") or "").strip()
 
     # Validate email
     if not email or not re.match(r'^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$', email):
@@ -2500,39 +2499,240 @@ def api_unlock_report():
     if not token:
         return jsonify({"error": "Missing test token."}), 400
 
-    # Store lead email
-    existing = db.fetchone("SELECT id FROM lead_emails WHERE email = ?", (email,))
-    if not existing:
+    # Check if this email is already verified (returning lead)
+    existing = db.fetchone("SELECT id, verified FROM lead_emails WHERE email = ?", (email,))
+    if existing and existing["verified"]:
+        # Already verified — skip verification, return full data + set cookie
+        cached = _analysis_cache.get(token)
+        full_data = cached["data"] if cached else None
+        resp_data = {"ok": True, "verified": True}
+        if full_data:
+            full_data["gated"] = False
+            resp_data["analysis"] = full_data
+        resp = make_response(jsonify(resp_data))
+        resp.set_cookie("inbxr_lead", email, max_age=60*60*24*365, httponly=True, samesite="Lax")
+        return resp
+
+    # Generate verification token
+    v_token = secrets.token_urlsafe(32)
+
+    # Store or update lead
+    if existing:
         db.execute(
-            "INSERT INTO lead_emails (email, ip_address, source) VALUES (?, ?, ?)",
-            (email, request.remote_addr or "unknown", "email_test_gate"),
+            "UPDATE lead_emails SET verification_token = ?, test_token = ? WHERE id = ?",
+            (v_token, token, existing["id"]),
         )
-    logger.info("Lead captured: %s from IP %s", email, request.remote_addr)
+    else:
+        db.execute(
+            "INSERT INTO lead_emails (email, ip_address, source, verification_token, test_token) VALUES (?, ?, ?, ?, ?)",
+            (email, request.remote_addr or "unknown", "email_test_gate", v_token, token),
+        )
+    logger.info("Lead captured: %s from IP %s (verification pending)", email, request.remote_addr)
 
-    # Get cached analysis
-    cached = _analysis_cache.get(token)
-    full_data = cached["data"] if cached else None
+    # Send verification email
+    if is_configured():
+        base_url = os.environ.get("BASE_URL", "https://inbxr.us")
+        verify_url = f"{base_url}/verify-lead/{v_token}"
+        subject = "Verify your email to unlock your InbXr report"
+        html = f"""
+        <div style="font-family:Inter,Arial,sans-serif;max-width:480px;margin:0 auto;padding:32px 24px;">
+          <h2 style="color:#0c1a3a;margin:0 0 8px;font-size:20px;">Your report is ready</h2>
+          <p style="color:#334155;font-size:15px;line-height:1.6;">
+            Click the button below to verify your email and unlock your full InbXr email test report.
+          </p>
+          <a href="{verify_url}"
+             style="display:inline-block;background:#16a34a;color:#fff;padding:12px 28px;
+                    border-radius:999px;text-decoration:none;font-weight:600;font-size:15px;
+                    margin:20px 0;">
+            Verify &amp; Unlock Report
+          </a>
+          <p style="color:#64748b;font-size:13px;line-height:1.5;margin-top:24px;">
+            Or copy this link:<br>
+            <a href="{verify_url}" style="color:#16a34a;word-break:break-all;">{verify_url}</a>
+          </p>
+          <p style="color:#94a3b8;font-size:12px;margin-top:32px;">
+            InbXr &mdash; Free email deliverability tools. <a href="https://inbxr.us" style="color:#94a3b8;">inbxr.us</a>
+          </p>
+        </div>
+        """
+        text = f"Verify your email to unlock your InbXr report: {verify_url}"
+        _send(email, subject, html, text)
 
-    # Send email report if mailer is configured and we have report HTML
-    if is_configured() and report_html and len(report_html) <= 100000:
-        subject = "Your InbXr Email Test Report"
-        _send(email, subject, report_html)
+    return jsonify({"ok": True, "verified": False, "lead_token": v_token})
 
-    # Build response with full data + set cookie
-    resp_data = {"ok": True}
-    if full_data:
-        full_data["gated"] = False
-        resp_data["analysis"] = full_data
+
+@app.route("/verify-lead/<v_token>")
+def verify_lead(v_token):
+    """Verify a lead email and unlock the report."""
+    from modules.mailer import _send, is_configured
+    from modules import database as db
+
+    lead = db.fetchone("SELECT * FROM lead_emails WHERE verification_token = ?", (v_token,))
+    if not lead:
+        return redirect("/", code=302)
+
+    # Mark as verified
+    db.execute("UPDATE lead_emails SET verified = 1 WHERE id = ?", (lead["id"],))
+    logger.info("Lead verified: %s", lead["email"])
+
+    # Send the full report email if we have cached analysis
+    cached = _analysis_cache.get(lead.get("test_token", ""))
+    if cached and is_configured():
+        from modules.mailer import _send
+        analysis = cached["data"]
+        # Build a server-side report email
+        report_html = _build_report_email_html(analysis)
+        _send(lead["email"], "Your InbXr Email Test Report", report_html)
+
+    # Set cookie and redirect to homepage
+    resp = make_response(redirect("/?verified=1", code=302))
+    resp.set_cookie("inbxr_lead", lead["email"], max_age=60*60*24*365, httponly=True, samesite="Lax")
+    return resp
+
+
+@app.route("/api/check-lead-status", methods=["POST"])
+def api_check_lead_status():
+    """Poll endpoint to check if a lead email has been verified."""
+    from modules import database as db
+
+    data = request.get_json(force=True, silent=True)
+    if not data:
+        return jsonify({"verified": False})
+
+    lead_token = (data.get("lead_token") or "").strip()
+    if not lead_token:
+        return jsonify({"verified": False})
+
+    lead = db.fetchone(
+        "SELECT verified, test_token FROM lead_emails WHERE verification_token = ?",
+        (lead_token,),
+    )
+    if not lead or not lead["verified"]:
+        return jsonify({"verified": False})
+
+    # Return full analysis if available
+    cached = _analysis_cache.get(lead.get("test_token", ""))
+    resp_data = {"verified": True}
+    if cached:
+        cached["data"]["gated"] = False
+        resp_data["analysis"] = cached["data"]
 
     resp = make_response(jsonify(resp_data))
-    resp.set_cookie(
-        "inbxr_lead",
-        email,
-        max_age=60 * 60 * 24 * 365,  # 1 year
-        httponly=True,
-        samesite="Lax",
-    )
+    resp.set_cookie("inbxr_lead", "verified", max_age=60*60*24*365, httponly=True, samesite="Lax")
     return resp
+
+
+def _build_report_email_html(analysis):
+    """Build a comprehensive HTML email report from analysis data."""
+    p = analysis.get("placement", {})
+    spam = analysis.get("spam", {})
+    copy = analysis.get("copy", {})
+    grades = analysis.get("header_grades", [])
+    esp = analysis.get("esp_diagnostic", {})
+
+    # Verdict
+    in_spam = p.get("placement") in ("spam", "trash")
+    in_promo = p.get("placement") == "inbox" and p.get("tab") == "promotions"
+    verdict = "Results Ready"
+    verdict_color = "#3b82f6"
+    if in_spam:
+        verdict = "Landed in Spam"
+        verdict_color = "#ef4444"
+    elif in_promo:
+        verdict = "Promotions Tab"
+        verdict_color = "#f59e0b"
+    elif p.get("placement") == "inbox":
+        verdict = "Inbox"
+        verdict_color = "#22c55e"
+
+    # Grade pills
+    grade_colors = {"pass": "#22c55e", "warning": "#f59e0b", "fail": "#ef4444", "missing": "#94a3b8"}
+    grade_letters = {"pass": "A", "warning": "C", "fail": "F", "missing": "?"}
+    grade_html = ""
+    for g in grades:
+        c = grade_colors.get(g.get("status"), "#94a3b8")
+        l = g.get("grade") or grade_letters.get(g.get("status"), "?")
+        label = g.get("label", "")
+        detail = g.get("detail", "")
+        grade_html += (
+            f'<td style="text-align:center;padding:8px 10px;vertical-align:top;">'
+            f'<span style="display:inline-block;width:32px;height:32px;line-height:32px;border-radius:50%;'
+            f'background:{c};color:#fff;font-weight:700;font-size:14px;">{l}</span>'
+            f'<br><span style="font-size:12px;color:#64748b;">{label}</span>'
+            f'</td>'
+        )
+
+    # Issues
+    issues = []
+    for g in grades:
+        if g.get("status") == "fail":
+            issues.append(f'<strong>{g["label"]}</strong> is failing — {g.get("detail", "needs attention")}')
+        elif g.get("status") == "warning":
+            issues.append(f'<strong>{g["label"]}</strong> — {g.get("detail", "has warnings")}')
+    if spam.get("score", 0) > 40:
+        issues.append(f'Spam risk score is <strong>{spam["score"]}/100</strong> — review content triggers')
+    if copy.get("score") is not None and copy["score"] < 50:
+        issues.append(f'Copy score is <strong>{copy["score"]}/100</strong> — improve email content')
+
+    issues_html = ""
+    if issues:
+        issues_html = '<h3 style="color:#0c1a3a;font-size:15px;margin:24px 0 8px;">Issues Found</h3><ul style="margin:0;padding-left:20px;">'
+        for issue in issues:
+            issues_html += f'<li style="color:#334155;font-size:14px;line-height:1.8;">{issue}</li>'
+        issues_html += "</ul>"
+    else:
+        issues_html = '<p style="color:#22c55e;font-size:14px;margin:16px 0;">No critical issues found — your email looks good.</p>'
+
+    # ESP diagnostic
+    esp_html = ""
+    if esp.get("verdict") and esp["verdict"] != "unknown":
+        esp_labels = {"clean": "All Clear", "domain": "Domain Issue", "content": "Content Issue", "esp": "ESP Issue", "both": "Multiple Issues"}
+        esp_html = (
+            f'<div style="background:{verdict_color}10;border-left:4px solid {verdict_color};padding:12px 16px;border-radius:6px;margin:16px 0;">'
+            f'<strong style="font-size:13px;">Diagnosis: {esp_labels.get(esp["verdict"], esp["verdict"])}</strong>'
+            f'<p style="font-size:13px;color:#334155;margin:6px 0 0;">{esp.get("message", "")}</p>'
+            f'</div>'
+        )
+
+    # Scores
+    scores_html = ""
+    if spam.get("score") is not None:
+        sc = spam["score"]
+        sc_color = "#22c55e" if sc <= 20 else "#f59e0b" if sc <= 40 else "#ef4444"
+        scores_html += (
+            f'<td style="padding:8px 16px;text-align:center;">'
+            f'<span style="font-size:24px;font-weight:700;color:{sc_color};">{sc}</span>'
+            f'<span style="color:#64748b;font-size:13px;">/100</span><br>'
+            f'<span style="font-size:12px;color:#64748b;">Spam Risk</span></td>'
+        )
+    if copy.get("score") is not None:
+        cc = copy["score"]
+        cc_color = "#22c55e" if cc >= 70 else "#f59e0b" if cc >= 50 else "#ef4444"
+        scores_html += (
+            f'<td style="padding:8px 16px;text-align:center;">'
+            f'<span style="font-size:24px;font-weight:700;color:{cc_color};">{cc}</span>'
+            f'<span style="color:#64748b;font-size:13px;">/100</span><br>'
+            f'<span style="font-size:12px;color:#64748b;">Copy Score</span></td>'
+        )
+
+    return (
+        '<div style="font-family:Inter,Arial,sans-serif;max-width:520px;margin:0 auto;padding:32px 24px;">'
+        '<h2 style="color:#0c1a3a;margin:0 0 4px;font-size:20px;">Your Full Email Test Report</h2>'
+        '<p style="color:#64748b;font-size:13px;margin:0 0 20px;">from InbXr &mdash; Email Intelligence Platform</p>'
+        f'<div style="background:{verdict_color}10;border-left:4px solid {verdict_color};padding:12px 16px;border-radius:6px;margin-bottom:20px;">'
+        f'<span style="font-size:16px;font-weight:700;color:{verdict_color};">{verdict}</span>'
+        + (f'<span style="color:#64748b;font-size:13px;margin-left:8px;">({p.get("tab", "")})</span>' if p.get("tab") else "")
+        + '</div>'
+        + (f'<table style="width:100%;border-collapse:collapse;margin:16px 0;"><tr>{grade_html}</tr></table>' if grade_html else "")
+        + esp_html
+        + (f'<table style="width:100%;border-collapse:collapse;margin:12px 0;"><tr>{scores_html}</tr></table>' if scores_html else "")
+        + issues_html
+        + '<div style="text-align:center;margin:28px 0 16px;">'
+        '<a href="https://inbxr.us/" style="display:inline-block;background:#16a34a;color:#fff;padding:12px 28px;border-radius:999px;text-decoration:none;font-weight:600;font-size:15px;">Run Another Test</a>'
+        '</div>'
+        '<p style="color:#94a3b8;font-size:12px;margin-top:24px;border-top:1px solid #e2e8f0;padding-top:16px;">InbXr &mdash; Free email deliverability tools. <a href="https://inbxr.us" style="color:#94a3b8;">inbxr.us</a></p>'
+        '</div>'
+    )
 
 
 @app.route("/dns-generator")
