@@ -13228,3 +13228,188 @@ a.et-next-step:hover {
 .pricing-toggle__switch--on::after {
   transform: translateX(20px);
 }
+
+/* ══════════════════════════════════════════════════════
+   EMAIL GATE — Report gating for lead capture
+   ══════════════════════════════════════════════════════ */
+.et-gated-preview {
+  position: relative;
+  margin-top: 20px;
+}
+.et-gated-preview__blur {
+  filter: blur(6px);
+  -webkit-filter: blur(6px);
+  pointer-events: none;
+  user-select: none;
+  opacity: 0.5;
+}
+.et-gated-preview__overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 40px;
+  z-index: 10;
+}
+.et-gate-card {
+  background: #fff;
+  border: 1px solid var(--border-1);
+  border-radius: 16px;
+  padding: 36px 32px;
+  max-width: 480px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.08);
+}
+.et-gate-card__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--cta-light, rgba(21,193,130,0.1));
+  color: var(--cta);
+  margin-bottom: 16px;
+}
+.et-gate-card__title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-1);
+  margin: 0 0 8px;
+}
+.et-gate-card__sub {
+  font-size: 0.88rem;
+  color: var(--text-2);
+  line-height: 1.5;
+  margin: 0 0 20px;
+}
+.et-gate-card__form {
+  display: flex;
+  gap: 8px;
+  max-width: 380px;
+  margin: 0 auto;
+}
+.et-gate-card__input {
+  flex: 1;
+  padding: 12px 16px;
+  border: 1px solid var(--border-1);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.et-gate-card__input:focus {
+  border-color: var(--cta);
+}
+.et-gate-card__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 20px;
+  background: var(--cta);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: transform 0.15s, opacity 0.15s;
+}
+.et-gate-card__btn:hover {
+  transform: scale(1.03);
+}
+.et-gate-card__btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+.et-gate-card__status {
+  margin-top: 12px;
+  font-size: 0.82rem;
+  min-height: 1.2em;
+}
+.et-gate-card__status--error {
+  color: var(--color-red);
+}
+.et-gate-card__status--success {
+  color: var(--color-green);
+  font-weight: 600;
+}
+
+/* Issue summary above the gate */
+.gate-summary {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 20px 24px;
+  background: #fff;
+  border: 1px solid var(--border-1);
+  border-radius: 12px;
+  margin-top: 16px;
+}
+.gate-summary__score {
+  display: flex;
+  align-items: baseline;
+  gap: 2px;
+}
+.gate-summary__number {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: var(--score-color);
+  line-height: 1;
+}
+.gate-summary__label {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-3);
+}
+.gate-summary__title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-1);
+  margin: 0 0 8px;
+}
+.gate-summary__pills {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.gate-pill {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+.gate-pill--critical {
+  background: rgba(239,68,68,0.1);
+  color: #ef4444;
+}
+.gate-pill--warning {
+  background: rgba(245,158,11,0.1);
+  color: #f59e0b;
+}
+.gate-pill--good {
+  background: rgba(34,197,94,0.1);
+  color: #22c55e;
+}
+
+@media (max-width: 600px) {
+  .et-gate-card {
+    padding: 24px 16px;
+    margin: 0 8px;
+  }
+  .et-gate-card__form {
+    flex-direction: column;
+  }
+  .gate-summary {
+    flex-direction: column;
+    text-align: center;
+  }
+}

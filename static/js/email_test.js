@@ -117,7 +117,7 @@ function showSkeletonLoading() {
   if (!panel) return;
 
   // Hide real content containers
-  ['#etHeroSummary', '#etEmailReport', '#espDiagnostic', '#etPlacementSummary', '#etAssessment', '#etHeaderGrades', '#etTransport', '#etIdentity', '#etScores', '#etReadability', '#etReputation', '#etAudit', '#etRawHeaders'].forEach(s => {
+  ['#etHeroSummary', '#etEmailGate', '#etEmailReport', '#espDiagnostic', '#etPlacementSummary', '#etAssessment', '#etHeaderGrades', '#etTransport', '#etIdentity', '#etScores', '#etReadability', '#etReputation', '#etAudit', '#etRawHeaders'].forEach(s => {
     const el = $(s);
     if (el) el.style.display = 'none';
   });
@@ -515,6 +515,16 @@ function renderFullReport(data) {
   // ── Hero summary card (top-level verdict) ──
   renderHeroSummary(data);
 
+  // ── Email gate for anonymous users ──
+  if (data.gated) {
+    renderGatedView(data);
+    return;
+  }
+
+  // Hide gate if returning user
+  const gate = $('#etEmailGate');
+  if (gate) gate.style.display = 'none';
+
   // ── Placement summary ──
   const p = data.placement;
   const placementColors = {
@@ -596,6 +606,180 @@ function renderFullReport(data) {
     const el = $(s);
     if (el) el.style.display = '';
   });
+}
+
+// ══════════════════════════════════════════════════════
+//  GATED VIEW — Summary + Blurred Preview + Email Gate
+// ══════════════════════════════════════════════════════
+function renderGatedView(data) {
+  const gateEl = $('#etEmailGate');
+  if (!gateEl) return;
+
+  // Hide all full report sections
+  ['#etEmailReport', '#espDiagnostic', '#etPlacementSummary', '#etAssessment',
+   '#etHeaderGrades', '#etTransport', '#etIdentity', '#etScores', '#etReadability',
+   '#etReputation', '#etAudit', '#etRawHeaders', '#etFullAuditCta', '#etMoveToPrimary',
+   '#etPrimaryOptimizer', '#etSafetyWarning', '#etNextSteps', '#etUpgradeNudge',
+   '#etEmailPreview'].forEach(s => {
+    const el = $(s);
+    if (el) el.style.display = 'none';
+  });
+  $('.placement-actions').style.display = 'none';
+
+  // Build issue summary
+  const grades = data.header_grades || [];
+  const spam = data.spam || {};
+  const copy = data.copy || {};
+  const placement = data.placement || {};
+
+  let criticalCount = 0;
+  let warningCount = 0;
+
+  grades.forEach(g => {
+    if (g.status === 'fail') criticalCount++;
+    else if (g.status === 'warning') warningCount++;
+  });
+  if (placement.placement === 'spam' || placement.placement === 'trash') criticalCount++;
+  if (spam.score > 60) criticalCount++;
+  else if (spam.score > 40) warningCount++;
+  if (placement.tab === 'promotions') warningCount++;
+
+  const summaryEl = $('#etIssueSummary');
+  if (summaryEl) {
+    const overallScore = Math.round(
+      ((100 - (spam.score || 0)) + (copy.score || 50)) / 2
+    );
+    const scoreColor = overallScore >= 70 ? 'var(--color-green)' : overallScore >= 50 ? 'var(--color-yellow)' : 'var(--color-red)';
+
+    let issuesPills = '';
+    if (criticalCount > 0) {
+      issuesPills += `<span class="gate-pill gate-pill--critical">${criticalCount} critical</span>`;
+    }
+    if (warningCount > 0) {
+      issuesPills += `<span class="gate-pill gate-pill--warning">${warningCount} warning${warningCount > 1 ? 's' : ''}</span>`;
+    }
+    if (criticalCount === 0 && warningCount === 0) {
+      issuesPills = '<span class="gate-pill gate-pill--good">No issues found</span>';
+    }
+
+    summaryEl.innerHTML = `
+      <div class="gate-summary">
+        <div class="gate-summary__score" style="--score-color:${scoreColor}">
+          <span class="gate-summary__number">${overallScore}</span>
+          <span class="gate-summary__label">/100</span>
+        </div>
+        <div class="gate-summary__details">
+          <h3 class="gate-summary__title">Your email scores ${overallScore}/100</h3>
+          <div class="gate-summary__pills">${issuesPills}</div>
+        </div>
+      </div>`;
+  }
+
+  // Build blurred preview (fake report sections)
+  const blurEl = $('#etGatedBlur');
+  if (blurEl) {
+    blurEl.innerHTML = `
+      <div class="et-section" style="opacity:0.6">
+        <h3 class="et-section__title">Assessment Summary</h3>
+        <div style="display:grid;gap:12px">
+          <div style="height:60px;background:var(--bg-2);border-radius:8px;border:1px solid var(--border-1)"></div>
+          <div style="height:80px;background:var(--bg-2);border-radius:8px;border:1px solid var(--border-1)"></div>
+          <div style="height:45px;background:var(--bg-2);border-radius:8px;border:1px solid var(--border-1)"></div>
+        </div>
+      </div>
+      <div class="et-section" style="opacity:0.5">
+        <h3 class="et-section__title">Authentication &amp; Header Analysis</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px">
+          <div style="height:90px;background:var(--bg-2);border-radius:8px;border:1px solid var(--border-1)"></div>
+          <div style="height:90px;background:var(--bg-2);border-radius:8px;border:1px solid var(--border-1)"></div>
+          <div style="height:90px;background:var(--bg-2);border-radius:8px;border:1px solid var(--border-1)"></div>
+          <div style="height:90px;background:var(--bg-2);border-radius:8px;border:1px solid var(--border-1)"></div>
+        </div>
+      </div>
+      <div class="et-section" style="opacity:0.4">
+        <h3 class="et-section__title">Content Analysis</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+          <div style="height:100px;background:var(--bg-2);border-radius:8px;border:1px solid var(--border-1)"></div>
+          <div style="height:100px;background:var(--bg-2);border-radius:8px;border:1px solid var(--border-1)"></div>
+        </div>
+      </div>`;
+  }
+
+  gateEl.style.display = '';
+  gateEl.classList.add('et-section-reveal');
+
+  // Wire up gate form
+  const gateInput = $('#gateEmailInput');
+  const gateBtn = $('#gateEmailBtn');
+  const gateStatus = $('#gateEmailStatus');
+
+  gateBtn.onclick = () => submitGateEmail();
+  gateInput.onkeydown = (e) => { if (e.key === 'Enter') submitGateEmail(); };
+}
+
+async function submitGateEmail() {
+  const input = $('#gateEmailInput');
+  const btn = $('#gateEmailBtn');
+  const status = $('#gateEmailStatus');
+  const email = (input.value || '').trim();
+
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    status.textContent = 'Please enter a valid email address.';
+    status.className = 'et-gate-card__status et-gate-card__status--error';
+    input.focus();
+    return;
+  }
+
+  btn.disabled = true;
+  $('.btn-text', btn).textContent = 'Sending...';
+  $('.btn-spinner', btn).classList.remove('hidden');
+  status.textContent = '';
+
+  try {
+    const reportHtml = lastReportData ? buildReportHtml(lastReportData) : '';
+    const token = lastReportData?._token || currentToken;
+    const res = await fetch('/api/unlock-report', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, token, report_html: reportHtml }),
+    });
+    const result = await res.json();
+
+    if (res.ok && result.ok) {
+      // Show success state
+      status.textContent = "Check your inbox! Your full report is on the way.";
+      status.className = 'et-gate-card__status et-gate-card__status--success';
+      btn.disabled = true;
+      $('.btn-text', btn).textContent = 'Sent!';
+      $('.btn-spinner', btn).classList.add('hidden');
+
+      // If server returned full analysis, render it after a brief pause
+      if (result.analysis) {
+        lastReportData = result.analysis;
+      }
+      // Unlock and show full report after a moment
+      setTimeout(() => {
+        const gate = $('#etEmailGate');
+        if (gate) gate.style.display = 'none';
+        if (lastReportData) {
+          lastReportData.gated = false;
+          renderFullReport(lastReportData);
+        }
+      }, 2000);
+    } else {
+      status.textContent = result.error || 'Something went wrong. Try again.';
+      status.className = 'et-gate-card__status et-gate-card__status--error';
+      btn.disabled = false;
+      $('.btn-text', btn).textContent = 'Send My Report';
+      $('.btn-spinner', btn).classList.add('hidden');
+    }
+  } catch (err) {
+    status.textContent = 'Network error. Please try again.';
+    status.className = 'et-gate-card__status et-gate-card__status--error';
+    btn.disabled = false;
+    $('.btn-text', btn).textContent = 'Send My Report';
+    $('.btn-spinner', btn).classList.add('hidden');
+  }
 }
 
 // ── ESP vs Domain Diagnostic ────────────────────────

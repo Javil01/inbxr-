@@ -32,7 +32,7 @@ import email as email_lib
 from email import policy as email_policy
 import ipaddress
 from datetime import timedelta
-from flask import Flask, render_template, request, jsonify, session, redirect, url_for
+from flask import Flask, render_template, request, jsonify, session, redirect, url_for, make_response
 
 app = Flask(__name__)
 
@@ -2404,7 +2404,31 @@ def email_test_check():
             save_result(session["user_id"], "email_test", summary, analysis,
                         grade=grade_map.get(p, "C"), score=score_map.get(p, 50))
 
-    return jsonify(analysis)
+    # ── Gate logic: anonymous users see summary only ──
+    is_logged_in = bool(session.get("user_id"))
+    lead_cookie = request.cookies.get("inbxr_lead")
+    gated = not is_logged_in and not lead_cookie
+
+    if gated:
+        # Cache full analysis so we can send it when they provide email
+        import time as _cache_t
+        _analysis_cache[token] = {"data": analysis, "timestamp": _cache_t.time()}
+        # Clean old cache entries
+        now = _cache_t.time()
+        stale = [k for k, v in _analysis_cache.items() if now - v["timestamp"] > _CACHE_TTL]
+        for k in stale:
+            del _analysis_cache[k]
+
+    analysis["gated"] = gated
+    analysis["_token"] = token
+
+    resp = jsonify(analysis)
+    return resp
+
+
+# ── Email Gate: cached analysis by token ────────────
+_analysis_cache = {}  # {token: {data, timestamp}}
+_CACHE_TTL = 3600  # 1 hour
 
 
 # ── Email Report Sending ────────────────────────────
@@ -2452,6 +2476,63 @@ def api_email_report():
         return jsonify({"ok": True})
     else:
         return jsonify({"error": "Failed to send email. Please try again."}), 500
+
+
+@app.route("/api/unlock-report", methods=["POST"])
+def api_unlock_report():
+    """Capture lead email, send full report, return full data."""
+    import time as _t
+    from modules.mailer import _send, is_configured
+    from modules import database as db
+
+    data = request.get_json(force=True, silent=True)
+    if not data:
+        return jsonify({"error": "Invalid request."}), 400
+
+    email = (data.get("email") or "").strip().lower()
+    token = (data.get("token") or "").strip()
+    report_html = (data.get("report_html") or "").strip()
+
+    # Validate email
+    if not email or not re.match(r'^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$', email):
+        return jsonify({"error": "Please enter a valid email address."}), 400
+
+    if not token:
+        return jsonify({"error": "Missing test token."}), 400
+
+    # Store lead email
+    existing = db.fetchone("SELECT id FROM lead_emails WHERE email = ?", (email,))
+    if not existing:
+        db.execute(
+            "INSERT INTO lead_emails (email, ip_address, source) VALUES (?, ?, ?)",
+            (email, request.remote_addr or "unknown", "email_test_gate"),
+        )
+    logger.info("Lead captured: %s from IP %s", email, request.remote_addr)
+
+    # Get cached analysis
+    cached = _analysis_cache.get(token)
+    full_data = cached["data"] if cached else None
+
+    # Send email report if mailer is configured and we have report HTML
+    if is_configured() and report_html and len(report_html) <= 100000:
+        subject = "Your InbXr Email Test Report"
+        _send(email, subject, report_html)
+
+    # Build response with full data + set cookie
+    resp_data = {"ok": True}
+    if full_data:
+        full_data["gated"] = False
+        resp_data["analysis"] = full_data
+
+    resp = make_response(jsonify(resp_data))
+    resp.set_cookie(
+        "inbxr_lead",
+        email,
+        max_age=60 * 60 * 24 * 365,  # 1 year
+        httponly=True,
+        samesite="Lax",
+    )
+    return resp
 
 
 @app.route("/dns-generator")

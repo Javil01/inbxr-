@@ -772,6 +772,16 @@ Problem: Most senders are optimizing the wrong things while their authentication
 Opportunity: Start your free InbXr audit today and see where you actually stand.'
         WHERE slug = 'c3po';
     """),
+    ("018_lead_emails", """
+        CREATE TABLE IF NOT EXISTS lead_emails (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            email TEXT NOT NULL COLLATE NOCASE,
+            ip_address TEXT,
+            source TEXT DEFAULT 'email_test_gate',
+            created_at TEXT DEFAULT (datetime('now'))
+        );
+        CREATE INDEX IF NOT EXISTS idx_lead_emails_email ON lead_emails(email);
+    """),
 ]
 
 
