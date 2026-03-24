@@ -2584,8 +2584,13 @@ def verify_lead(v_token):
         report_html = _build_report_email_html(analysis)
         _send(lead["email"], "Your InbXr Email Test Report", report_html)
 
-    # Set cookie and redirect to homepage
-    resp = make_response(redirect("/?verified=1", code=302))
+    # Render verification success page with signup CTA
+    resp = make_response(render_template(
+        "auth/lead_verified.html",
+        email=lead["email"],
+        active_page="",
+        allow_index=False,
+    ))
     resp.set_cookie("inbxr_lead", lead["email"], max_age=60*60*24*365, httponly=True, samesite="Lax")
     return resp
 

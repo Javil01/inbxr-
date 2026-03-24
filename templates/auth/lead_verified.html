@@ -1,0 +1,38 @@
+{% extends "auth/base_auth.html" %}
+{% block title %}Email Verified{% endblock %}
+
+{% block content %}
+<div style="text-align:center;padding:16px 0;">
+  <div style="display:inline-flex;align-items:center;justify-content:center;width:64px;height:64px;border-radius:50%;background:rgba(21,193,130,0.1);margin-bottom:20px;">
+    <svg viewBox="0 0 24 24" fill="none" stroke="#15c182" stroke-width="2" width="32" height="32">
+      <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+    </svg>
+  </div>
+
+  <h2 style="margin:0 0 8px;font-size:1.5rem;">Email Verified!</h2>
+  <p style="color:var(--text-2);font-size:0.95rem;margin:0 0 24px;line-height:1.6;">
+    Your full report is on its way to <strong>{{ email }}</strong>.<br>
+    Check your inbox in the next minute or two.
+  </p>
+
+  <div style="background:var(--bg-2);border:1px solid var(--border-1);border-radius:12px;padding:24px;margin:0 0 24px;text-align:left;">
+    <h3 style="margin:0 0 8px;font-size:1rem;">Want to unlock more?</h3>
+    <p style="color:var(--text-2);font-size:0.88rem;margin:0 0 16px;line-height:1.5;">
+      Create a free InbXr account to save your results, track your deliverability over time, and get access to all our tools.
+    </p>
+    <ul style="color:var(--text-2);font-size:0.85rem;margin:0 0 20px;padding-left:18px;line-height:1.8;">
+      <li>Save and compare test results</li>
+      <li>Monitor your domains for blocklist changes</li>
+      <li>Get deliverability alerts</li>
+      <li>Access all 10+ email tools</li>
+    </ul>
+    <a href="/signup" class="btn-analyze" style="display:block;text-align:center;text-decoration:none;padding:12px 24px;border-radius:8px;font-weight:600;">
+      Create Free Account
+    </a>
+  </div>
+
+  <a href="/" style="color:var(--text-3);font-size:0.82rem;text-decoration:underline;">
+    Run another test
+  </a>
+</div>
+{% endblock %}
