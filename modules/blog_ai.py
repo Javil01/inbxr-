@@ -11,6 +11,8 @@ import ssl
 import time
 from http.client import HTTPSConnection
 
+from config.blog_knowledge_base import KNOWLEDGE_BASE
+
 logger = logging.getLogger('inbxr.blog_ai')
 
 # ── Config (read at call time to allow .env loading) ──
@@ -51,40 +53,42 @@ def generate_blog_post(topic: str, target_keyword: str,
                           for p in existing_posts[:10])
         internal_links_context = f"\n\nExisting blog posts you can link to internally:\n{links}"
 
-    system_msg = f"""You are the writer behind InBoXr — an email deliverability platform and newsletter read by email marketers.
+    system_msg = f"""You are the writer behind InBoXr — an email deliverability platform.
+Your writing voice is modeled after Ian Stanley's style in "Just Fucking Send It" —
+direct, story-driven, opinionated, and entertaining.
 
-VOICE & STYLE (match this exactly):
-- Open with a gut-punch hook. Drop the reader into a pain point or story immediately. No "Welcome" or "In this post." Start with tension.
-- Ultra-short paragraphs. 1-3 sentences max. Tons of whitespace. Every paragraph earns its place.
-- Use "you" constantly. Make it personal and conversational — like talking to a smart friend over coffee.
-- Confident, slightly edgy, helpful. You tell hard truths. ("Here's the hard truth most marketers don't want to admit:")
-- Bold claims backed by specifics. Use real numbers, percentages, and examples. ("Emails with a single CTA increase clicks by over 300%.")
-- No corporate speak. No filler. No "In today's digital landscape" garbage. Every sentence must pull the reader forward.
-- Use <strong> tags for emphasis on key phrases — like highlighting with a marker.
-- Formula: Hook (pain point) → Why it matters → The fix (actionable steps) → Wrap-up with InbXr tool CTA
-- Section headers should be bold and punchy, not generic. ("The 4 Key Factors That Determine If You Get Opened" not "Factors Affecting Open Rates")
-- End with a confident wrap-up and sign off: "Cheers,<br/>The InBoXer Team"
+{KNOWLEDGE_BASE}
 
-InbXr tools (link using standard <a href="/path"> tags):
-- Email Test (/) — send a real email, get a full deliverability checkup
-- Sender Check (/sender) — verify SPF/DKIM/DMARC, generate DNS records, audit domain health
-- Inbox Placement (/placement) — test where emails actually land (inbox vs spam)
-- Subject Line Scorer (/subject-scorer) — AI subject line analysis across 7 dimensions
-- BIMI Checker (/bimi) — validate BIMI record, SVG logo, and VMC certificate
-- Blacklist Monitor (/blacklist-monitor) — check 100+ blocklists for your domain/IP
-- Header Analyzer (/header-analyzer) — parse raw email headers for auth verdicts and routing
-- Email Verifier (/email-verifier) — verify email addresses before sending
-- Warm-up Tracker (/warmup) — track IP/domain warm-up campaigns
+CRITICAL VOICE RULES — violating these makes the post unusable:
+1. OPEN WITH A SPECIFIC STORY. Not "Picture this" or "Imagine" — drop us into a real
+   scene with details. A sender, a number, a moment. Make the reader feel the gut-punch
+   before you teach anything.
+2. SHORT PARAGRAPHS ONLY. 1-3 sentences max. Single-sentence paragraphs for emphasis.
+3. NO GENERIC ADVICE. Every claim needs a specific number, example, or before/after.
+4. SECTION HEADERS ARE PUNCHY, NOT ACADEMIC. "Why Nobody Reads Past Your First Email"
+   not "The Importance of Welcome Email Optimization."
+5. BE OPINIONATED. Take a stance. Challenge something the reader believes.
+6. Credit Ian Stanley by name when referencing his named frameworks.
+7. End with: "Cheers,<br/>The InBoXer Team" then a PS that callbacks to the opening story.
+
+InbXr tools (link naturally using <a href="/path"> tags, 3-4 per post):
+- Email Test (/) — full deliverability checkup
+- Sender Check (/sender) — SPF/DKIM/DMARC verification
+- Inbox Placement (/placement) — inbox vs spam testing
+- Subject Line Scorer (/subject-scorer) — AI subject line analysis
+- BIMI Checker (/bimi) — BIMI record validation
+- Blacklist Monitor (/blacklist-monitor) — 100+ blocklist check
+- Header Analyzer (/header-analyzer) — email header parsing
+- Email Verifier (/email-verifier) — address verification
+- Warm-up Tracker (/warmup) — warm-up campaign tracking
 
 STRUCTURE:
-- CRITICAL: The post MUST be 1500-2000 words. Each H2 section 200-300 words minimum.
-- Start with a hook/intro (no heading) — 100+ words, drop reader into the problem
-- 5-7 H2 sections with punchy headers, detailed actionable content
-- Link to 3+ relevant InbXr tools using standard HTML anchor tags. Do NOT use [CTA:] markers.
-- Target keyword in title, first paragraph, one H2, and naturally throughout
-- FAQ section at the end with 3-5 Q&A pairs (each answer 50+ words)
-- HTML output only (h2, h3, p, ul, ol, li, strong, em, a tags — no h1)
-- Include real examples, specific stats, and step-by-step instructions
+- 1500-2000 words. Each H2 section 200-300 words minimum.
+- 5-7 H2 sections with punchy headers.
+- Use the target keyword in the title and first paragraph. After that, use natural
+  variations — never repeat the exact keyword more than 3-4 times total.
+- FAQ section at the end with 3-5 Q&A pairs (each answer 50+ words).
+- HTML only: h2, h3, p, ul, ol, li, strong, em, a tags. No h1, divs, or classes.
 {internal_links_context}
 
 IMPORTANT: Return ONLY valid JSON. No markdown, no code fences, no explanation outside the JSON.
@@ -117,7 +121,8 @@ Return a JSON object with exactly these keys:
 
 
 def _call_api(system_msg: str, user_msg: str, cfg: dict,
-              max_tokens: int = 8192, json_mode: bool = True) -> str:
+              max_tokens: int = 8192, json_mode: bool = True,
+              temperature: float = 0.7) -> str:
     """Call the Groq/OpenAI-compatible API."""
     body_dict = {
         "model": cfg["model"],
@@ -125,7 +130,7 @@ def _call_api(system_msg: str, user_msg: str, cfg: dict,
             {"role": "system", "content": system_msg},
             {"role": "user", "content": user_msg},
         ],
-        "temperature": 0.7,
+        "temperature": temperature,
         "max_tokens": max_tokens,
     }
     if json_mode:
@@ -237,9 +242,9 @@ Generate metadata for a blog post. Return ONLY valid JSON.
 
 Return a JSON object with exactly these keys:
 {{
-  "title": "SEO-optimized blog post title with target keyword",
-  "slug": "url-friendly-slug-with-keyword",
-  "meta_description": "150-160 character meta description with target keyword",
+  "title": "Compelling blog post title (include target keyword naturally — don't force it)",
+  "slug": "url-friendly-slug",
+  "meta_description": "150-160 character meta description that reads naturally and includes the topic",
   "excerpt": "200 character excerpt for listing pages",
   "tags": ["tag1", "tag2", "tag3", "tag4", "tag5"],
   "faq": [
@@ -263,42 +268,52 @@ Return a JSON object with exactly these keys:
     outline = meta.get("outline", [])
     outline_text = "\n".join(f"- {s}" for s in outline) if outline else "Use 6 logical H2 sections"
 
+    # Respect Groq TPM limits between passes
+    time.sleep(15)
+
     # ── Pass 2: Full HTML content ──
-    content_system = f"""You are the writer behind InBoXr — an email deliverability platform and newsletter.
-Write a COMPLETE, LONG blog post in HTML. This is the FULL article — write every section in detail.
+    content_system = f"""You are the writer behind InBoXr — an email deliverability platform.
+Write a COMPLETE blog post in HTML. Your writing voice is modeled after Ian Stanley's
+style in "Just Fucking Send It" — direct, story-driven, opinionated, and entertaining.
 
-VOICE & STYLE (match this exactly):
-- Open with a gut-punch hook. Drop the reader right into the pain point. No preamble, no "In this article."
-- Ultra-short paragraphs. 1-3 sentences max. Tons of whitespace between ideas.
-- Use "you" constantly. Conversational, like talking to a smart friend.
-- Confident, slightly edgy, helpful. Tell hard truths. Use phrases like "Here's the hard truth:", "Let's break it down.", "And that's the most common blind spot."
-- Bold key phrases with <strong> tags for emphasis.
-- Include real numbers, stats, and specific examples — not generic advice.
-- Section headers should be punchy and specific, not academic. Good: "Why No One's Opening Your Emails". Bad: "Understanding Email Open Rates".
-- End sections with a forward-looking hook that pulls into the next section.
-- Wrap up with a confident conclusion and "Cheers,<br/>The InBoXer Team"
+{KNOWLEDGE_BASE}
 
-InbXr tools (link using standard <a href="/path"> tags):
-- Email Test (/) — send a real email, get a full deliverability checkup
-- Sender Check (/sender) — verify SPF/DKIM/DMARC, generate DNS records, audit domain
-- Inbox Placement (/placement) — test inbox vs spam landing
+CRITICAL VOICE RULES — violating these makes the post unusable:
+1. OPEN WITH A SPECIFIC STORY. Not "Picture this" or "Imagine" — drop us into a real
+   scene with details. A sender, a number, a moment. "A SaaS founder emailed us last
+   Tuesday after watching 6,000 subscribers go silent over a single weekend." Make the
+   reader feel the gut-punch before you teach anything.
+2. SHORT PARAGRAPHS ONLY. 1-3 sentences max. Single-sentence paragraphs for emphasis.
+   If a paragraph has more than 3 sentences, split it.
+3. NO GENERIC ADVICE. Every claim needs a specific number, example, or before/after.
+   Bad: "Personalization improves engagement." Good: "Emails with the recipient's first
+   name in the subject line see 26% higher open rates — but that's table stakes."
+4. SECTION HEADERS ARE PUNCHY, NOT ACADEMIC. "Why Nobody Reads Past Your First Email"
+   not "The Importance of Welcome Email Optimization."
+5. BE OPINIONATED. Take a stance. Challenge something the reader believes. "Most welcome
+   sequences are 5 emails of pure filler. You'd be better off sending one great email
+   than five forgettable ones."
+6. End with: "Cheers,<br/>The InBoXer Team" then a PS that callbacks to the opening story
+   or delivers one final sharp insight.
+
+InbXr tools (link naturally using <a href="/path"> tags, 3-4 per post):
+- Email Test (/) — full deliverability checkup
+- Sender Check (/sender) — SPF/DKIM/DMARC verification
+- Inbox Placement (/placement) — inbox vs spam testing
 - Subject Line Scorer (/subject-scorer) — AI subject line analysis
-- BIMI Checker (/bimi) — validate BIMI record and VMC
-- Blacklist Monitor (/blacklist-monitor) — check 100+ blocklists
-- Header Analyzer (/header-analyzer) — parse raw email headers
-- Email Verifier (/email-verifier) — verify email addresses
-- Warm-up Tracker (/warmup) — track warm-up campaigns
+- BIMI Checker (/bimi) — BIMI record validation
+- Blacklist Monitor (/blacklist-monitor) — 100+ blocklist check
+- Header Analyzer (/header-analyzer) — email header parsing
+- Email Verifier (/email-verifier) — address verification
+- Warm-up Tracker (/warmup) — warm-up campaign tracking
 {internal_links_context}
 
-REQUIREMENTS:
-- Output ONLY HTML tags: h2, h3, p, ul, ol, li, strong, em, a. No h1, no divs, no classes.
-- Write 1500-2000 words MINIMUM. Each H2 section must be 200+ words.
-- Start with a hook/intro (no heading) — drop the reader into the problem immediately. 100+ words.
-- Include 6+ H2 sections with detailed, actionable content.
-- Link to 3-4 relevant InbXr tools using standard HTML anchor tags. Do NOT use [CTA:] markers.
-- End with a wrap-up H2 section.
-- Target keyword "{target_keyword}" in the intro and at least 2 H2 headings.
-- Do NOT wrap in markdown code fences. Output raw HTML only."""
+FORMAT REQUIREMENTS:
+- HTML only: h2, h3, p, ul, ol, li, strong, em, a tags. No h1, divs, or classes.
+- 1500-2000 words. 6+ H2 sections, each 200+ words.
+- Use the target keyword "{target_keyword}" in the intro paragraph. After that, use
+  natural variations — never repeat the exact keyword phrase more than 3-4 times total.
+- Do NOT wrap in markdown code fences. Raw HTML only."""
 
     content_user = f"""Write the full blog post for: "{meta.get('title', topic)}"
 Target keyword: {target_keyword}
@@ -306,11 +321,18 @@ Target keyword: {target_keyword}
 Follow this outline:
 {outline_text}
 
-IMPORTANT: 1500-2000 words minimum. Write in the InBoXr voice — punchy, direct, conversational. Short paragraphs. Bold key phrases. Real examples and stats. Drop the reader into the problem from line one."""
+REMINDERS:
+- 1500-2000 words. Open with a REAL story — not "Picture this" or "Imagine."
+- Short paragraphs (1-3 sentences). Bold key phrases with <strong>.
+- Be opinionated. Use specific numbers and examples. No generic filler.
+- Credit Ian Stanley by name when referencing his frameworks.
+- Use the target keyword naturally 3-4 times max — vary your language.
+- End with sign-off + PS that ties back to the opening story."""
 
     try:
         raw_content = _call_api(content_system, content_user, cfg,
-                                max_tokens=8192, json_mode=False)
+                                max_tokens=8192, json_mode=False,
+                                temperature=0.85)
         # Extract content from non-JSON response
         data = json.loads(raw_content)
         choices = data.get("choices", [])
@@ -448,7 +470,14 @@ Generate ONE new blog topic targeting a high-search-volume keyword in the email 
 The topic should be:
 - Actionable and specific (not generic)
 - Targeting a keyword people actually search for
-- Relevant to email deliverability, authentication, inbox placement, sender reputation, or email marketing
+- Relevant to email deliverability, authentication, inbox placement, sender reputation, list hygiene, engagement optimization, or email marketing
+- Use one of these proven headline formulas:
+  * Story hook: "I Watched a [Person] [Dramatic Consequence] Because [Root Cause]"
+  * Contrarian: Challenge conventional wisdom ("Stop Doing X!", "Why X Is Actually Hurting You")
+  * Urgent warning: "[Platform] Just Changed [Thing] — Here's What to Do"
+  * Specific results: "How to [Achieve Result] in [Timeframe]"
+  * Curiosity gap: Question that the reader MUST answer
+  * Named framework: "The [Name] Method to [Achieve Result]"
 - Different from any existing posts listed below
 {existing_context}
 
@@ -478,43 +507,43 @@ def suggest_topics() -> list:
     """Return a list of 10 high-potential blog topics for email deliverability."""
     return [
         {
-            "topic": "Why Are My Emails Going to Spam? (Complete Fix Guide)",
+            "topic": "Your Emails Are Going to Spam — Here's Exactly Why (And How to Fix It Today)",
             "keyword": "emails going to spam",
         },
         {
-            "topic": "How to Set Up DMARC in 5 Minutes",
+            "topic": "How to Set Up DMARC in 5 Minutes (Before Gmail Blocks You)",
             "keyword": "how to set up dmarc",
         },
         {
-            "topic": "Email Deliverability Checklist for 2026",
+            "topic": "The Email Deliverability Checklist That Saved a 200K-Subscriber Newsletter",
             "keyword": "email deliverability checklist",
         },
         {
-            "topic": "SPF Record: What It Is and How to Create One",
+            "topic": "Stop Guessing: SPF Records Explained So You Actually Get It Right",
             "keyword": "spf record",
         },
         {
-            "topic": "DKIM Explained: How to Authenticate Your Emails",
+            "topic": "DKIM Authentication: The One Setup Mistake That Tanks Your Inbox Rate",
             "keyword": "dkim email authentication",
         },
         {
-            "topic": "How to Check If Your Email Is Blacklisted",
+            "topic": "You Might Be Blacklisted Right Now — Here's How to Find Out",
             "keyword": "email blacklist check",
         },
         {
-            "topic": "Email Warm-Up Guide: How to Build Sender Reputation",
+            "topic": "The Warm-Up Method: How to Build Sender Reputation Without Getting Burned",
             "keyword": "email warm up",
         },
         {
-            "topic": "Subject Lines That Trigger Spam Filters (And What to Use Instead)",
+            "topic": "These Subject Line Words Are Sending You Straight to Spam (The Full List)",
             "keyword": "spam trigger words",
         },
         {
-            "topic": "BIMI Setup Guide: Get Your Logo in Gmail",
+            "topic": "BIMI Setup: How to Get Your Logo in Gmail (And Why It Matters More Than You Think)",
             "keyword": "bimi setup",
         },
         {
-            "topic": "Cold Email Deliverability: How to Stay Out of Spam",
+            "topic": "Cold Email Deliverability Is Broken — Here's What Actually Works in 2026",
             "keyword": "cold email deliverability",
         },
     ]

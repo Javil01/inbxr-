@@ -3,6 +3,7 @@ InbXr — Blog Blueprint
 Public blog pages, sitemap, and admin CRUD / AI writer endpoints.
 """
 
+import os
 import re
 import time
 from datetime import datetime
@@ -69,6 +70,12 @@ def _fix_legacy_links(content):
 # ── Admin auth helper ────────────────────────────────────
 
 def _is_admin():
+    # Allow API key auth for automated scripts (e.g. daily blog generator)
+    api_key = request.headers.get("X-Blog-Api-Key") or request.args.get("api_key")
+    expected = os.environ.get("BLOG_API_KEY")
+    if api_key and expected and api_key == expected:
+        return True
+
     if not session.get("is_admin", False):
         return False
     admin_login_time = session.get("admin_login_at")
