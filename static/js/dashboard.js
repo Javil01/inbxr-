@@ -152,6 +152,9 @@ function renderOverview() {
   // Domain health
   loadDomainHealth();
 
+  // ESP deliverability health
+  loadEspHealth();
+
   // Trend filter buttons
   setTimeout(function() {
     var filters = document.getElementById('trendFilters');
@@ -245,6 +248,7 @@ function buildOverviewShell(s) {
     buildLastScanCard() +
     buildAssistantTeaser() +
     buildDomainHealthCard() +
+    buildEspHealthCard() +
     '<div class="dash-row">' +
       '<div class="dash-card dash-card--wide">' +
         '<div class="dash-card__header dash-card__header--row">' +
@@ -1101,6 +1105,79 @@ function buildDomainHealthCard() {
     '</div>' +
     '<div id="domainHealthOverview"><div class="dash-loading-sm"><div class="loading-ring"></div></div></div>' +
   '</div>';
+}
+
+function buildEspHealthCard() {
+  var tier = window.__userTier || 'free';
+  if (tier === 'free') {
+    return '<div class="dash-card">' +
+      '<div class="dash-card__header"><h3 class="dash-card__title">Deliverability Dashboard</h3></div>' +
+      '<div style="padding:16px 0;text-align:center;">' +
+        '<p style="font-size:0.85rem;color:var(--text-3);margin:0 0 12px;">Connect your email platform for always-on health monitoring.</p>' +
+        '<a href="/pricing" class="dash-tool-link" style="color:var(--brand);">Upgrade to Pro &rarr;</a>' +
+      '</div>' +
+    '</div>';
+  }
+  return '<div class="dash-card">' +
+    '<div class="dash-card__header">' +
+      '<h3 class="dash-card__title">Deliverability Health</h3>' +
+      '<a href="/deliverability" class="dash-tool-link" style="font-size:0.78rem;">View Dashboard &rarr;</a>' +
+    '</div>' +
+    '<div id="espHealthOverview"><div class="dash-loading-sm"><div class="loading-ring"></div></div></div>' +
+  '</div>';
+}
+
+function loadEspHealth() {
+  var tier = window.__userTier || 'free';
+  if (tier === 'free') return;
+  var container = document.getElementById('espHealthOverview');
+  if (!container) return;
+
+  apiFetch('/api/integrations/health').then(function(data) {
+    if (!data || !data.has_data) {
+      container.innerHTML = '<div style="padding:12px 0;text-align:center;">' +
+        '<p style="font-size:0.85rem;color:var(--text-3);margin:0 0 10px;">No platforms connected yet.</p>' +
+        '<a href="/account/integrations" class="dash-tool-link" style="color:var(--brand);">Connect a Platform &rarr;</a>' +
+      '</div>';
+      return;
+    }
+
+    var sc = data.overall_score;
+    var gr = data.overall_grade;
+    var color = sc >= 75 ? '#16a34a' : sc >= 50 ? '#ca8a04' : '#ef4444';
+    var intgCount = data.integrations ? data.integrations.length : 0;
+
+    var html = '<div style="display:flex;align-items:center;gap:16px;padding:8px 0;">' +
+      '<div style="text-align:center;min-width:60px;">' +
+        '<div style="font-size:1.8rem;font-weight:800;color:' + color + ';line-height:1;">' + sc + '</div>' +
+        '<div style="font-size:0.75rem;font-weight:700;color:' + color + ';">' + esc(gr) + '</div>' +
+      '</div>' +
+      '<div style="flex:1;font-size:0.82rem;">' +
+        '<div style="color:var(--text-2);margin-bottom:4px;">' + intgCount + ' platform' + (intgCount !== 1 ? 's' : '') + ' connected</div>' +
+        '<div style="display:flex;gap:14px;flex-wrap:wrap;">' +
+          '<span style="color:' + (data.avg_bounce_rate > 2 ? '#ef4444' : '#16a34a') + ';">Bounce: ' + data.avg_bounce_rate + '%</span>' +
+          '<span style="color:' + (data.avg_complaint_rate > 0.1 ? '#ef4444' : '#16a34a') + ';">Complaints: ' + data.avg_complaint_rate + '%</span>' +
+          '<span style="color:' + (data.avg_open_rate > 20 ? '#16a34a' : '#ca8a04') + ';">Opens: ' + data.avg_open_rate + '%</span>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+
+    if (data.warmup_accounts && data.warmup_accounts.length > 0) {
+      html += '<div style="border-top:1px solid var(--border,#e5e7eb);padding-top:8px;margin-top:8px;font-size:0.78rem;color:var(--text-3);">';
+      data.warmup_accounts.forEach(function(w) {
+        var wc = w.score >= 70 ? '#16a34a' : w.score >= 40 ? '#ca8a04' : '#ef4444';
+        html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:3px 0;">' +
+          '<span>' + esc(w.provider) + ' warmup</span>' +
+          '<span style="font-weight:700;color:' + wc + ';">' + w.score + '/100</span>' +
+        '</div>';
+      });
+      html += '</div>';
+    }
+
+    container.innerHTML = html;
+  }).catch(function() {
+    container.innerHTML = '<p style="font-size:0.82rem;color:var(--text-4);padding:8px 0;">Unable to load health data.</p>';
+  });
 }
 
 function loadDomainHealth() {
