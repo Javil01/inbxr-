@@ -149,7 +149,17 @@ img { display: block; max-width: 100%; }
 .embedded .sender-hero,
 .embedded .tool-hero,
 .embedded .et-homepage-hero,
-.embedded .et-final-cta { display: none !important; }
+.embedded .et-final-cta,
+.embedded .lp-section,
+.embedded .et-comparison,
+.embedded .et-value-strip,
+.embedded .et-how,
+.embedded .et-safe-approach,
+.embedded .et-tools-strip,
+.embedded .back-link,
+.embedded .fw-hero { display: none !important; }
+.embedded .auth-page { padding: 0; }
+.embedded .auth-card { max-width: none; box-shadow: none; border: none; }
 
 .site-header {
   position: sticky;

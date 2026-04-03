@@ -57,7 +57,7 @@
         BIMI Checker
       </a>
       <span class="dash-nav__heading">Copy &amp; Frameworks</span>
-      <a class="dash-nav__item" href="/frameworks">
+      <a class="dash-nav__item" data-tool="/frameworks" href="#">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
         Framework Lab
       </a>
@@ -89,11 +89,11 @@
       </a>
       {% if session.get('user_tier', 'free') in ('pro', 'agency', 'api') %}
       <span class="dash-nav__heading">Integrations</span>
-      <a class="dash-nav__item" href="/account/integrations">
+      <a class="dash-nav__item" data-tool="/account/integrations" href="#">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
         Connected Accounts
       </a>
-      <a class="dash-nav__item" href="/deliverability">
+      <a class="dash-nav__item" data-tool="/deliverability" href="#">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
         Deliverability
       </a>
