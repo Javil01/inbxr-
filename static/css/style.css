@@ -16,9 +16,9 @@
   --navy-light:   #152244;
   --navy-text:    rgba(255,255,255,0.85);
 
-  /* Card / surface backgrounds (dark panels) */
+  /* Card / surface backgrounds */
   --card-bg:      #0f172a;
-  --surface-1:    #1e293b;
+  --surface-1:    #ffffff;
 
   /* Accent — used in gradients alongside brand */
   --accent:       #1d4ed8;
@@ -158,8 +158,8 @@ img { display: block; max-width: 100%; }
 .embedded .et-tools-strip,
 .embedded .back-link,
 .embedded .fw-hero { display: none !important; }
-.embedded .auth-page { padding: 0; }
-.embedded .auth-card { max-width: none; box-shadow: none; border: none; }
+.embedded .auth-page { padding: 20px; background: #fff; }
+.embedded .auth-card { max-width: none; box-shadow: none; border: none; background: #fff; }
 
 .site-header {
   position: sticky;
