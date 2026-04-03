@@ -39,9 +39,6 @@ window.showToast=function(msg,type,duration){
       {% elif session.get('user_id') %}
         {# Logged-in: Dashboard + user controls only (tools are in the sidebar) #}
         <a href="/dashboard" class="nav-link nav-link--featured{% if active_page == 'dashboard' %} nav-link--active{% endif %}">Dashboard</a>
-        {% if current_user_tier in ('pro', 'agency', 'api') %}
-        <a href="/deliverability" class="nav-link{% if active_page == 'deliverability' %} nav-link--active{% endif %}">Deliverability</a>
-        {% endif %}
         {% if current_team_id or current_user_tier == 'agency' %}
         <a href="/team" class="nav-link{% if active_page == 'team' %} nav-link--active{% endif %}">Team{% if current_team_name %}: {{ current_team_name }}{% endif %}</a>
         {% endif %}
