@@ -16,6 +16,7 @@ TIERS = {
             "warmup_campaigns": 1,
             "subject_tests_per_day": 10,
             "placement_tests_per_day": 3,
+            "esp_integrations": 0,
         },
         "features": {
             "cloud_history": False,
@@ -31,6 +32,7 @@ TIERS = {
             "ai_support_chat": True,
             "priority_support": False,
             "framework_builder": False,
+            "esp_integrations": False,
         },
     },
     "pro": {
@@ -46,6 +48,7 @@ TIERS = {
             "subject_tests_per_day": 50,
             "placement_tests_per_day": 20,
             "assistant_chats_per_month": 10,
+            "esp_integrations": 1,
         },
         "features": {
             "cloud_history": True,
@@ -61,6 +64,7 @@ TIERS = {
             "webhooks": False,
             "priority_support": True,
             "framework_builder": True,
+            "esp_integrations": True,
         },
     },
     "agency": {
@@ -75,6 +79,7 @@ TIERS = {
             "warmup_campaigns": 25,
             "subject_tests_per_day": 200,
             "placement_tests_per_day": 100,
+            "esp_integrations": 10,
         },
         "features": {
             "cloud_history": True,
@@ -90,6 +95,7 @@ TIERS = {
             "webhooks": True,
             "priority_support": True,
             "framework_builder": True,
+            "esp_integrations": True,
         },
     },
     "api": {
@@ -104,6 +110,7 @@ TIERS = {
             "warmup_campaigns": 0,
             "subject_tests_per_day": 1000,
             "placement_tests_per_day": 500,
+            "esp_integrations": 10,
         },
         "features": {
             "cloud_history": True,
@@ -119,6 +126,7 @@ TIERS = {
             "webhooks": True,
             "priority_support": True,
             "framework_builder": True,
+            "esp_integrations": True,
         },
         "api_pricing": {
             "domain_check": 0.02,

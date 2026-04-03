@@ -136,6 +136,9 @@ app.register_blueprint(blog_bp)
 from blueprints.framework_routes import framework_bp
 app.register_blueprint(framework_bp)
 
+from blueprints.integration_routes import integration_bp
+app.register_blueprint(integration_bp)
+
 from modules.scheduler import init_scheduler
 init_scheduler(app)
 

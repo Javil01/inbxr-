@@ -1,0 +1,386 @@
+{% extends "auth/base_auth.html" %}
+{% block title %}Deliverability Dashboard{% endblock %}
+{% block content %}
+<style>
+.dlv-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; }
+.dlv-header h1 { margin: 0; }
+.dlv-actions { display: flex; gap: 8px; }
+
+/* Overall health hero */
+.dlv-hero { display: flex; align-items: center; gap: 24px; padding: 24px; background: var(--bg-1, #fff); border: 1px solid var(--border); border-radius: var(--r-lg, 12px); margin-bottom: 20px; }
+.dlv-score-ring { position: relative; width: 110px; height: 110px; flex-shrink: 0; }
+.dlv-score-ring svg { width: 110px; height: 110px; transform: rotate(-90deg); }
+.dlv-score-ring circle { fill: none; stroke-width: 8; }
+.dlv-score-ring .ring-bg { stroke: var(--border, #e5e7eb); }
+.dlv-score-ring .ring-fg { stroke-linecap: round; transition: stroke-dashoffset 1s ease, stroke 0.3s; }
+.dlv-score-val { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.dlv-score-num { font-size: 1.6rem; font-weight: 800; color: var(--text-1); line-height: 1; }
+.dlv-score-grade { font-size: 0.75rem; font-weight: 700; margin-top: 2px; }
+.dlv-hero-stats { flex: 1; display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 14px; }
+.dlv-stat { text-align: center; }
+.dlv-stat__val { font-size: 1.3rem; font-weight: 800; color: var(--text-1); }
+.dlv-stat__label { font-size: 0.72rem; color: var(--text-3); margin-top: 2px; }
+
+/* Cards grid */
+.dlv-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; margin-bottom: 20px; }
+.dlv-card { background: var(--bg-1, #fff); border: 1px solid var(--border); border-radius: var(--r-lg, 12px); padding: 20px; }
+.dlv-card__title { font-size: 0.9rem; font-weight: 700; color: var(--text-1); margin: 0 0 14px; display: flex; align-items: center; gap: 8px; }
+.dlv-card__title .badge { font-size: 0.7rem; padding: 2px 8px; border-radius: var(--r-full, 99px); font-weight: 600; }
+
+/* Integration cards */
+.dlv-intg { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+.dlv-intg:last-child { border-bottom: none; }
+.dlv-intg__icon { width: 38px; height: 38px; border-radius: var(--r-md, 8px); background: var(--bg-2); display: flex; align-items: center; justify-content: center; font-weight: 700; color: var(--brand); font-size: 1rem; flex-shrink: 0; }
+.dlv-intg__info { flex: 1; min-width: 0; }
+.dlv-intg__name { font-size: 0.85rem; font-weight: 600; color: var(--text-1); }
+.dlv-intg__meta { font-size: 0.72rem; color: var(--text-3); }
+.dlv-intg__score { text-align: right; }
+.dlv-intg__score-num { font-size: 1.1rem; font-weight: 800; }
+.dlv-intg__score-grade { font-size: 0.7rem; font-weight: 700; }
+
+/* Warmup card */
+.dlv-warmup { display: flex; align-items: center; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+.dlv-warmup:last-child { border-bottom: none; }
+.dlv-warmup__bar { width: 60px; height: 8px; background: var(--bg-2); border-radius: 4px; overflow: hidden; }
+.dlv-warmup__fill { height: 100%; border-radius: 4px; transition: width 0.6s ease; }
+.dlv-warmup__info { flex: 1; }
+.dlv-warmup__provider { font-size: 0.82rem; font-weight: 600; color: var(--text-1); }
+.dlv-warmup__detail { font-size: 0.72rem; color: var(--text-3); }
+.dlv-warmup__score { font-size: 1rem; font-weight: 800; }
+
+/* Metric bars */
+.dlv-metric { margin-bottom: 14px; }
+.dlv-metric:last-child { margin-bottom: 0; }
+.dlv-metric__head { display: flex; justify-content: space-between; margin-bottom: 5px; }
+.dlv-metric__label { font-size: 0.78rem; color: var(--text-2); }
+.dlv-metric__val { font-size: 0.78rem; font-weight: 700; }
+.dlv-metric__bar { height: 8px; background: var(--bg-2); border-radius: 4px; overflow: hidden; }
+.dlv-metric__fill { height: 100%; border-radius: 4px; transition: width 0.6s ease; }
+
+/* Campaign table */
+.dlv-campaigns { width: 100%; font-size: 0.78rem; border-collapse: collapse; }
+.dlv-campaigns th { text-align: left; color: var(--text-3); font-weight: 600; padding: 6px 8px; border-bottom: 1px solid var(--border); }
+.dlv-campaigns td { padding: 8px; border-bottom: 1px solid var(--bg-2); color: var(--text-2); }
+.dlv-campaigns tr:last-child td { border-bottom: none; }
+
+/* ISP breakdown */
+.dlv-isp { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--bg-2); }
+.dlv-isp:last-child { border-bottom: none; }
+.dlv-isp__name { font-size: 0.8rem; font-weight: 600; color: var(--text-1); width: 100px; flex-shrink: 0; }
+.dlv-isp__bar { flex: 1; height: 6px; background: var(--bg-2); border-radius: 3px; overflow: hidden; }
+.dlv-isp__fill { height: 100%; border-radius: 3px; }
+.dlv-isp__pct { font-size: 0.75rem; font-weight: 600; width: 45px; text-align: right; }
+
+/* Empty state */
+.dlv-empty { text-align: center; padding: 48px 20px; }
+.dlv-empty__icon { font-size: 2.5rem; margin-bottom: 12px; opacity: 0.3; }
+.dlv-empty__title { font-size: 1.1rem; font-weight: 700; color: var(--text-1); margin-bottom: 6px; }
+.dlv-empty__desc { font-size: 0.88rem; color: var(--text-3); margin-bottom: 20px; }
+
+/* Color helpers */
+.c-green { color: #16a34a; }
+.c-yellow { color: #ca8a04; }
+.c-red { color: #ef4444; }
+.c-gray { color: var(--text-3); }
+.bg-green { background: #16a34a; }
+.bg-yellow { background: #ca8a04; }
+.bg-red { background: #ef4444; }
+.bg-brand { background: var(--brand); }
+
+/* Loading skeleton */
+.dlv-loading { text-align: center; padding: 60px 20px; color: var(--text-3); font-size: 0.9rem; }
+
+@media (max-width: 600px) {
+  .dlv-hero { flex-direction: column; text-align: center; }
+  .dlv-hero-stats { grid-template-columns: repeat(2, 1fr); }
+  .dlv-grid { grid-template-columns: 1fr; }
+}
+</style>
+
+<div class="dlv-header">
+  <h1 class="auth-card__title">Deliverability Dashboard</h1>
+  <div class="dlv-actions">
+    <button class="auth-btn auth-btn--sm" onclick="syncAll()" id="syncAllBtn">Sync All</button>
+    <a href="{{ url_for('integrations.integrations_page') }}" class="auth-btn auth-btn--sm auth-btn--outline" style="text-decoration:none;">Manage Integrations</a>
+  </div>
+</div>
+
+<div id="dashContent">
+  <div class="dlv-loading">Loading deliverability data...</div>
+</div>
+
+<script>
+const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
+
+function headers(json) {
+  const h = { 'X-Requested-With': 'XMLHttpRequest' };
+  if (json) h['Content-Type'] = 'application/json';
+  return h;
+}
+
+function scoreColor(score) {
+  if (score >= 75) return '#16a34a';
+  if (score >= 50) return '#ca8a04';
+  return '#ef4444';
+}
+
+function gradeClass(grade) {
+  if (grade === 'A' || grade === 'B') return 'c-green';
+  if (grade === 'C') return 'c-yellow';
+  return 'c-red';
+}
+
+function metricColor(val, thresholds) {
+  // thresholds = { good: X, warn: Y } — lower is better for bounce/complaint
+  if (val <= thresholds.good) return 'bg-green';
+  if (val <= thresholds.warn) return 'bg-yellow';
+  return 'bg-red';
+}
+
+function pct(n, d) { return d ? ((n / d) * 100).toFixed(1) : '0.0'; }
+function fmt(n) { return n != null ? n.toLocaleString() : '—'; }
+
+function renderDashboard(d) {
+  const el = document.getElementById('dashContent');
+
+  if (!d.has_data) {
+    el.innerHTML = `
+      <div class="dlv-empty">
+        <div class="dlv-empty__icon">&#9993;</div>
+        <div class="dlv-empty__title">No deliverability data yet</div>
+        <div class="dlv-empty__desc">Connect an email platform and sync to see your deliverability health score, bounce rates, warmup progress, and more.</div>
+        <a href="/account/integrations" class="auth-btn" style="text-decoration:none;">Connect a Platform</a>
+      </div>`;
+    return;
+  }
+
+  const circ = 2 * Math.PI * 45;
+  const offset = circ - (circ * d.overall_score / 100);
+  const sColor = scoreColor(d.overall_score);
+
+  let html = `
+    <!-- Overall Health -->
+    <div class="dlv-hero">
+      <div class="dlv-score-ring">
+        <svg viewBox="0 0 110 110">
+          <circle class="ring-bg" cx="55" cy="55" r="45"/>
+          <circle class="ring-fg" cx="55" cy="55" r="45"
+                  stroke="${sColor}"
+                  stroke-dasharray="${circ}"
+                  stroke-dashoffset="${offset}"/>
+        </svg>
+        <div class="dlv-score-val">
+          <span class="dlv-score-num">${d.overall_score}</span>
+          <span class="dlv-score-grade ${gradeClass(d.overall_grade)}">${d.overall_grade}</span>
+        </div>
+      </div>
+      <div class="dlv-hero-stats">
+        <div class="dlv-stat">
+          <div class="dlv-stat__val">${fmt(d.total_sent)}</div>
+          <div class="dlv-stat__label">Emails Sent</div>
+        </div>
+        <div class="dlv-stat">
+          <div class="dlv-stat__val" style="color:${d.avg_bounce_rate > 2 ? '#ef4444' : d.avg_bounce_rate > 1 ? '#ca8a04' : '#16a34a'}">${d.avg_bounce_rate}%</div>
+          <div class="dlv-stat__label">Bounce Rate</div>
+        </div>
+        <div class="dlv-stat">
+          <div class="dlv-stat__val" style="color:${d.avg_complaint_rate > 0.1 ? '#ef4444' : '#16a34a'}">${d.avg_complaint_rate}%</div>
+          <div class="dlv-stat__label">Complaint Rate</div>
+        </div>
+        <div class="dlv-stat">
+          <div class="dlv-stat__val" style="color:${d.avg_open_rate > 20 ? '#16a34a' : d.avg_open_rate > 10 ? '#ca8a04' : '#ef4444'}">${d.avg_open_rate}%</div>
+          <div class="dlv-stat__label">Open Rate</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="dlv-grid">`;
+
+  // Integration health cards
+  html += `<div class="dlv-card">
+    <h3 class="dlv-card__title">Platform Health</h3>`;
+  for (const intg of d.integrations) {
+    const ic = scoreColor(intg.health_score);
+    html += `
+      <div class="dlv-intg">
+        <div class="dlv-intg__icon">${(intg.account_name || intg.provider).charAt(0).toUpperCase()}</div>
+        <div class="dlv-intg__info">
+          <div class="dlv-intg__name">${intg.account_name || intg.provider}</div>
+          <div class="dlv-intg__meta">${fmt(intg.totals.sent)} sent &middot; ${intg.totals.bounce_rate}% bounced</div>
+        </div>
+        <div class="dlv-intg__score">
+          <div class="dlv-intg__score-num" style="color:${ic}">${intg.health_score}</div>
+          <div class="dlv-intg__score-grade ${gradeClass(intg.health_grade)}">${intg.health_grade}</div>
+        </div>
+      </div>`;
+  }
+  html += '</div>';
+
+  // Bounce/Complaint/Open rate metrics
+  html += `<div class="dlv-card">
+    <h3 class="dlv-card__title">Key Metrics</h3>
+    <div class="dlv-metric">
+      <div class="dlv-metric__head">
+        <span class="dlv-metric__label">Bounce Rate</span>
+        <span class="dlv-metric__val" style="color:${d.avg_bounce_rate > 2 ? '#ef4444' : '#16a34a'}">${d.avg_bounce_rate}%</span>
+      </div>
+      <div class="dlv-metric__bar"><div class="dlv-metric__fill ${metricColor(d.avg_bounce_rate, {good:1, warn:3})}" style="width:${Math.min(d.avg_bounce_rate * 10, 100)}%"></div></div>
+    </div>
+    <div class="dlv-metric">
+      <div class="dlv-metric__head">
+        <span class="dlv-metric__label">Complaint Rate</span>
+        <span class="dlv-metric__val" style="color:${d.avg_complaint_rate > 0.1 ? '#ef4444' : '#16a34a'}">${d.avg_complaint_rate}%</span>
+      </div>
+      <div class="dlv-metric__bar"><div class="dlv-metric__fill ${metricColor(d.avg_complaint_rate, {good:0.05, warn:0.15})}" style="width:${Math.min(d.avg_complaint_rate * 100, 100)}%"></div></div>
+    </div>
+    <div class="dlv-metric">
+      <div class="dlv-metric__head">
+        <span class="dlv-metric__label">Open Rate</span>
+        <span class="dlv-metric__val" style="color:${d.avg_open_rate > 20 ? '#16a34a' : '#ca8a04'}">${d.avg_open_rate}%</span>
+      </div>
+      <div class="dlv-metric__bar"><div class="dlv-metric__fill ${d.avg_open_rate > 20 ? 'bg-green' : d.avg_open_rate > 10 ? 'bg-yellow' : 'bg-red'}" style="width:${Math.min(d.avg_open_rate, 100)}%"></div></div>
+    </div>
+    <div class="dlv-metric" style="margin-top:18px;">
+      <div class="dlv-metric__head">
+        <span class="dlv-metric__label">Total Delivered</span>
+        <span class="dlv-metric__val">${fmt(d.total_sent - d.total_bounces)}</span>
+      </div>
+    </div>
+  </div>`;
+
+  // Warmup card (if any)
+  if (d.warmup_accounts && d.warmup_accounts.length > 0) {
+    html += `<div class="dlv-card">
+      <h3 class="dlv-card__title">Warmup Status
+        <span class="badge" style="background:rgba(21,193,130,0.1);color:var(--brand);">${d.warmup_accounts.length} account${d.warmup_accounts.length > 1 ? 's' : ''}</span>
+      </h3>`;
+    for (const w of d.warmup_accounts) {
+      const wc = scoreColor(w.score);
+      const statusLabel = w.status === 'healthy' ? 'Healthy' : w.status === 'warming' ? 'Warming Up' : 'Cold';
+      html += `
+        <div class="dlv-warmup">
+          <div>
+            <div class="dlv-warmup__bar"><div class="dlv-warmup__fill" style="width:${w.score}%;background:${wc}"></div></div>
+          </div>
+          <div class="dlv-warmup__info">
+            <div class="dlv-warmup__provider">${w.provider}${w.label ? ' (' + w.label + ')' : ''}</div>
+            <div class="dlv-warmup__detail">${statusLabel} &middot; ${w.accounts_count || 0} accounts &middot; ${w.accounts_with_warmup || 0} warming</div>
+          </div>
+          <div class="dlv-warmup__score" style="color:${wc}">${w.score}</div>
+        </div>`;
+    }
+    html += '</div>';
+  }
+
+  // ISP breakdown (from Mailchimp)
+  const ispData = d.integrations.find(i => i.isp_breakdown && i.isp_breakdown.length > 0);
+  if (ispData) {
+    html += `<div class="dlv-card">
+      <h3 class="dlv-card__title">ISP Delivery Breakdown</h3>`;
+    const maxSent = Math.max(...ispData.isp_breakdown.map(i => i.sent || 0), 1);
+    for (const isp of ispData.isp_breakdown.slice(0, 8)) {
+      const delivRate = isp.sent ? ((isp.delivered / isp.sent) * 100).toFixed(1) : '0.0';
+      const barPct = (isp.sent / maxSent) * 100;
+      html += `
+        <div class="dlv-isp">
+          <div class="dlv-isp__name">${isp.isp}</div>
+          <div class="dlv-isp__bar"><div class="dlv-isp__fill bg-brand" style="width:${barPct}%"></div></div>
+          <div class="dlv-isp__pct">${delivRate}%</div>
+        </div>`;
+    }
+    html += '</div>';
+  }
+
+  // Recent campaigns table
+  const allCampaigns = d.integrations.flatMap(i =>
+    (i.campaigns || []).map(c => ({ ...c, provider: i.provider }))
+  ).slice(0, 10);
+
+  if (allCampaigns.length > 0) {
+    html += `<div class="dlv-card" style="grid-column: 1 / -1;">
+      <h3 class="dlv-card__title">Recent Campaigns</h3>
+      <div style="overflow-x:auto;">
+      <table class="dlv-campaigns">
+        <thead>
+          <tr><th>Campaign</th><th>Platform</th><th>Sent</th><th>Opens</th><th>Bounces</th><th>Bounce %</th><th>Open %</th></tr>
+        </thead>
+        <tbody>`;
+    for (const c of allCampaigns) {
+      const bc = c.bounce_rate > 3 ? 'c-red' : c.bounce_rate > 1 ? 'c-yellow' : 'c-green';
+      const oc = c.open_rate > 20 ? 'c-green' : c.open_rate > 10 ? 'c-yellow' : 'c-red';
+      html += `<tr>
+        <td style="font-weight:600;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${c.name}</td>
+        <td>${c.provider}</td>
+        <td>${fmt(c.sent)}</td>
+        <td>${fmt(c.opens)}</td>
+        <td>${fmt(c.bounces)}</td>
+        <td class="${bc}">${c.bounce_rate}%</td>
+        <td class="${oc}">${c.open_rate}%</td>
+      </tr>`;
+    }
+    html += '</tbody></table></div></div>';
+  }
+
+  // Domain auth status
+  const domainData = d.integrations.filter(i => i.domains && i.domains.length > 0);
+  if (domainData.length > 0) {
+    html += `<div class="dlv-card">
+      <h3 class="dlv-card__title">Domain Authentication</h3>`;
+    for (const intg of domainData) {
+      for (const dom of intg.domains) {
+        html += `
+          <div style="padding:8px 0;border-bottom:1px solid var(--bg-2);font-size:0.82rem;">
+            <div style="font-weight:600;color:var(--text-1);">${dom.domain}</div>
+            <div style="margin-top:4px;display:flex;gap:10px;">
+              <span style="color:${dom.spf ? '#16a34a' : '#ef4444'}">SPF ${dom.spf ? 'Pass' : 'Fail'}</span>
+              <span style="color:${dom.dkim ? '#16a34a' : '#ef4444'}">DKIM ${dom.dkim ? 'Pass' : 'Fail'}</span>
+              ${dom.dmarc !== null ? `<span style="color:${dom.dmarc ? '#16a34a' : '#ef4444'}">DMARC ${dom.dmarc ? 'Pass' : 'Fail'}</span>` : ''}
+              <span class="c-gray">${dom.state}</span>
+            </div>
+          </div>`;
+      }
+    }
+    html += '</div>';
+  }
+
+  html += '</div>'; // close dlv-grid
+  el.innerHTML = html;
+}
+
+async function loadDashboard() {
+  try {
+    const r = await fetch('/api/integrations/health', { headers: headers() });
+    const d = await r.json();
+    if (d.ok) renderDashboard(d);
+    else document.getElementById('dashContent').innerHTML = '<p style="color:var(--red);padding:20px;">Failed to load dashboard data.</p>';
+  } catch(e) {
+    console.error(e);
+    document.getElementById('dashContent').innerHTML = '<p style="color:var(--red);padding:20px;">Network error loading dashboard.</p>';
+  }
+}
+
+async function syncAll() {
+  const btn = document.getElementById('syncAllBtn');
+  btn.disabled = true;
+  btn.textContent = 'Syncing...';
+  try {
+    const r = await fetch('/api/integrations/sync-all', {
+      method: 'POST',
+      headers: headers(),
+    });
+    const d = await r.json();
+    if (d.ok) {
+      btn.textContent = `Synced ${d.synced}/${d.total}`;
+      setTimeout(() => { btn.textContent = 'Sync All'; btn.disabled = false; }, 2000);
+      loadDashboard();
+    }
+  } catch(e) {
+    console.error(e);
+    btn.textContent = 'Sync Failed';
+    setTimeout(() => { btn.textContent = 'Sync All'; btn.disabled = false; }, 2000);
+  }
+}
+
+loadDashboard();
+</script>
+{% endblock %}

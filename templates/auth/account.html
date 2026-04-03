@@ -63,6 +63,17 @@
 </div>
 {% endif %}
 
+{% if user.tier in ('pro', 'agency', 'api') %}
+<div class="account-section">
+  <h2 class="account-section__title">ESP Integrations</h2>
+  <p style="font-size:0.85rem;color:var(--text-3);margin:0 0 12px;">Connect your email platform for always-on deliverability monitoring.</p>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;">
+    <a href="{{ url_for('integrations.deliverability_dashboard') }}" class="auth-btn auth-btn--sm" style="text-decoration:none;">Deliverability Dashboard</a>
+    <a href="{{ url_for('integrations.integrations_page') }}" class="auth-btn auth-btn--sm auth-btn--outline" style="text-decoration:none;">Manage Integrations</a>
+  </div>
+</div>
+{% endif %}
+
 {% if user.tier != 'agency' %}
 <div class="account-upgrade">
   {% if user.tier == 'free' %}

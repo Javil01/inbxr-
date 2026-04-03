@@ -171,6 +171,7 @@ function renderResults(data) {
   renderRecommendations(recommendations);
   renderNextSteps(data);
   renderSenderUpgradeNudge(data);
+  renderSenderIntegrationNudge(data);
   renderSenderSafetyWarning();
 
   // Re-check button
@@ -903,6 +904,43 @@ function renderSenderUpgradeNudge(data) {
         <p class="upgrade-nudge__text">${escHtml(contextText)}</p>
         <p class="upgrade-nudge__text"><strong>&#128196; PDF Reports</strong> — Download and share this sender check with your team.</p>
         <a href="/pricing" class="upgrade-nudge__cta">Upgrade to Pro &rarr;</a>
+      </div>
+    </div>`;
+}
+
+// ══════════════════════════════════════════════════════
+//  INTEGRATION NUDGE — Connect Your ESP
+// ══════════════════════════════════════════════════════
+function renderSenderIntegrationNudge(data) {
+  const el = $('#senderIntegrationNudge');
+  if (!el) return;
+  const tier = window.__userTier || 'free';
+
+  let title, text, ctaText, ctaUrl;
+
+  if (tier === 'free') {
+    title = 'Monitor This Automatically';
+    text = 'Upgrade to Pro and connect your email platform — Mailchimp, Instantly, ActiveCampaign, Smartlead, or Mailgun — to get a live health score, bounce tracking, and warmup monitoring in one dashboard. No more manual checks.';
+    ctaText = 'See Plans';
+    ctaUrl = '/pricing';
+  } else {
+    title = 'Connect Your Sending Platform';
+    text = 'Link your ESP to get continuous deliverability monitoring — bounce rates, complaint tracking, warmup scores, and a health grade updated every 6 hours. Stop checking manually.';
+    ctaText = 'Connect Now';
+    ctaUrl = '/account/integrations';
+  }
+
+  el.classList.remove('hidden');
+  el.innerHTML = `
+    <div class="upgrade-nudge" style="border-left:3px solid var(--brand);">
+      <div class="upgrade-nudge__icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+      </div>
+      <div class="upgrade-nudge__body">
+        <h3 class="upgrade-nudge__title">${title}</h3>
+        <p class="upgrade-nudge__text">${text}</p>
+        <p class="upgrade-nudge__text" style="font-size:0.78rem;color:var(--text-4);">Supports: Mailchimp &middot; ActiveCampaign &middot; Instantly &middot; Smartlead &middot; Mailgun &middot; GoHighLevel &middot; AWeber</p>
+        <a href="${ctaUrl}" class="upgrade-nudge__cta">${ctaText} &rarr;</a>
       </div>
     </div>`;
 }

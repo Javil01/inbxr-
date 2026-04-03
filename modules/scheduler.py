@@ -186,6 +186,18 @@ def _scheduled_daily_blog_post():
         logger.exception("[SCHEDULER] Blog post job failed: %s", e)
 
 
+def _scheduled_esp_sync():
+    """Sync all active ESP integrations."""
+    from modules.esp_sync import sync_all_active
+
+    try:
+        result = sync_all_active()
+        logger.info("[SCHEDULER] ESP sync: %d synced, %d errors",
+                     result["synced"], result["errors"])
+    except Exception as e:
+        logger.error("[SCHEDULER] ESP sync failed: %s", e)
+
+
 def _scheduled_alert_cleanup():
     """Clean up old read alerts."""
     from modules.alerts import cleanup_old_alerts
@@ -275,6 +287,16 @@ def init_scheduler(app):
         IntervalTrigger(hours=24),
         id="alert_cleanup",
         name="Old Alert Cleanup",
+        replace_existing=True,
+        next_run_time=None,
+    )
+
+    # Job 9: Sync ESP integrations every 6 hours
+    _scheduler.add_job(
+        _scheduled_esp_sync,
+        IntervalTrigger(hours=6),
+        id="esp_integration_sync",
+        name="ESP Integration Sync",
         replace_existing=True,
         next_run_time=None,
     )

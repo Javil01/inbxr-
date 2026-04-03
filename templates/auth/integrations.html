@@ -1,0 +1,297 @@
+{% extends "auth/base_auth.html" %}
+{% block title %}Integrations{% endblock %}
+{% block content %}
+<style>
+.integrations-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 8px; }
+.integrations-header h1 { margin: 0; }
+.integrations-count { font-size: 0.82rem; color: var(--text-3); }
+.integrations-grid { display: grid; grid-template-columns: 1fr; gap: 16px; margin-top: 20px; }
+.esp-card { background: var(--bg-1, #fff); border: 1px solid var(--border, #e5e7eb); border-radius: var(--r-lg, 12px); padding: 20px; transition: box-shadow 0.2s; }
+.esp-card:hover { box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+.esp-card__head { display: flex; align-items: center; gap: 14px; margin-bottom: 12px; }
+.esp-card__icon { width: 44px; height: 44px; border-radius: var(--r-md, 8px); background: var(--bg-2, #f5f7fa); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: 700; color: var(--brand); flex-shrink: 0; }
+.esp-card__info { flex: 1; min-width: 0; }
+.esp-card__name { font-size: 1rem; font-weight: 700; color: var(--text-1); margin: 0; }
+.esp-card__desc { font-size: 0.8rem; color: var(--text-3); margin: 4px 0 0; }
+.esp-card__status { display: inline-flex; align-items: center; gap: 5px; font-size: 0.75rem; font-weight: 600; padding: 3px 10px; border-radius: var(--r-full, 99px); }
+.esp-card__status--active { background: rgba(34,197,94,0.1); color: #16a34a; }
+.esp-card__status--pending { background: rgba(234,179,8,0.1); color: #ca8a04; }
+.esp-card__status--error { background: rgba(239,68,68,0.1); color: #ef4444; }
+.esp-card__status--disconnected { background: rgba(100,116,139,0.1); color: var(--text-3); }
+.esp-card__status-dot { width: 7px; height: 7px; border-radius: 50%; }
+.esp-card__status--active .esp-card__status-dot { background: #16a34a; }
+.esp-card__status--pending .esp-card__status-dot { background: #ca8a04; }
+.esp-card__status--error .esp-card__status-dot { background: #ef4444; }
+.esp-card__status--disconnected .esp-card__status-dot { background: var(--text-4); }
+.esp-card__tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0; }
+.esp-card__tag { font-size: 0.7rem; padding: 2px 8px; border-radius: var(--r-full, 99px); background: rgba(21,193,130,0.08); color: var(--brand); }
+.esp-card__actions { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+.esp-card__msg { font-size: 0.78rem; color: var(--text-3); margin-top: 8px; }
+.esp-card__synced { font-size: 0.72rem; color: var(--text-4); margin-top: 6px; }
+
+/* Connect modal */
+.esp-modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
+.esp-modal-overlay.active { display: flex; }
+.esp-modal { background: #fff; border-radius: var(--r-lg, 12px); padding: 28px; max-width: 480px; width: 100%; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.15); }
+.esp-modal__title { font-size: 1.1rem; font-weight: 700; margin: 0 0 4px; color: var(--text-1); }
+.esp-modal__sub { font-size: 0.82rem; color: var(--text-3); margin: 0 0 20px; }
+.esp-modal__field { margin-bottom: 16px; }
+.esp-modal__field label { display: block; font-size: 0.82rem; font-weight: 600; color: var(--text-2); margin-bottom: 5px; }
+.esp-modal__field input { width: 100%; padding: 10px 12px; border: 1px solid var(--border, #e5e7eb); border-radius: var(--r-md, 8px); font-size: 0.88rem; font-family: inherit; background: var(--bg-1, #fff); color: var(--text-1); box-sizing: border-box; }
+.esp-modal__field input:focus { outline: none; border-color: var(--brand); box-shadow: 0 0 0 3px rgba(21,193,130,0.12); }
+.esp-modal__field .field-help { font-size: 0.72rem; color: var(--text-4); margin-top: 4px; }
+.esp-modal__actions { display: flex; gap: 10px; margin-top: 20px; }
+.esp-modal__error { font-size: 0.82rem; color: var(--red, #ef4444); margin-top: 10px; display: none; }
+.back-link { display: inline-flex; align-items: center; gap: 6px; font-size: 0.85rem; color: var(--text-3); text-decoration: none; margin-bottom: 16px; }
+.back-link:hover { color: var(--brand); }
+</style>
+
+<a href="{{ url_for('auth.account') }}" class="back-link">&larr; Back to Account</a>
+
+<div class="integrations-header">
+  <h1 class="auth-card__title">Connected Accounts</h1>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <span class="integrations-count" id="intCount"></span>
+    <a href="{{ url_for('integrations.deliverability_dashboard') }}" class="auth-btn auth-btn--sm" style="text-decoration:none;">View Dashboard</a>
+  </div>
+</div>
+<p style="font-size:0.85rem;color:var(--text-3);margin:0 0 6px;">Connect your email platform for always-on deliverability monitoring.</p>
+
+<!-- Connected integrations -->
+<div class="integrations-grid" id="connectedGrid"></div>
+
+<!-- Available providers -->
+<h2 style="font-size:0.95rem;font-weight:700;margin:28px 0 4px;color:var(--text-1);">Available Platforms</h2>
+<p style="font-size:0.82rem;color:var(--text-3);margin:0 0 12px;">Click connect to link your account.</p>
+<div class="integrations-grid" id="availableGrid"></div>
+
+<!-- Connect modal -->
+<div class="esp-modal-overlay" id="connectModal">
+  <div class="esp-modal">
+    <h2 class="esp-modal__title" id="modalTitle">Connect</h2>
+    <p class="esp-modal__sub" id="modalSub"></p>
+    <form id="connectForm" onsubmit="return false;">
+      <input type="hidden" id="modalProvider" />
+      <div id="modalFields"></div>
+      <div class="esp-modal__error" id="modalError"></div>
+      <div class="esp-modal__actions">
+        <button type="submit" class="auth-btn" id="modalSubmit" onclick="submitConnect()">Connect</button>
+        <button type="button" class="auth-btn auth-btn--outline" onclick="closeModal()">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+const PROVIDERS = {{ providers | tojson }};
+const TIER_LIMIT = {{ tier_limit }};
+const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
+let integrations = [];
+
+function headers(json) {
+  const h = { 'X-Requested-With': 'XMLHttpRequest' };
+  if (json) h['Content-Type'] = 'application/json';
+  return h;
+}
+
+async function loadIntegrations() {
+  try {
+    const r = await fetch('/api/integrations', { headers: headers() });
+    const d = await r.json();
+    if (d.ok) {
+      integrations = d.integrations;
+      render();
+    }
+  } catch(e) { console.error(e); }
+}
+
+function render() {
+  const connected = document.getElementById('connectedGrid');
+  const available = document.getElementById('availableGrid');
+  const count = document.getElementById('intCount');
+  count.textContent = `${integrations.length} / ${TIER_LIMIT} connected`;
+
+  const connectedProviders = new Set(integrations.map(i => i.provider));
+
+  // Render connected
+  if (integrations.length === 0) {
+    connected.innerHTML = '<p style="font-size:0.85rem;color:var(--text-4);padding:16px 0;">No integrations connected yet.</p>';
+  } else {
+    connected.innerHTML = integrations.map(i => {
+      const p = PROVIDERS[i.provider] || {};
+      const tags = (p.data_points || []).map(t => `<span class="esp-card__tag">${t}</span>`).join('');
+      const synced = i.last_synced_at ? `Last synced: ${new Date(i.last_synced_at + 'Z').toLocaleDateString()}` : 'Never synced';
+      return `
+        <div class="esp-card">
+          <div class="esp-card__head">
+            <div class="esp-card__icon">${(p.name || i.provider).charAt(0)}</div>
+            <div class="esp-card__info">
+              <h3 class="esp-card__name">${p.name || i.provider}${i.label ? ' <span style="font-weight:400;color:var(--text-3);">(' + i.label + ')</span>' : ''}</h3>
+              <p class="esp-card__desc">${p.description || ''}</p>
+            </div>
+            <span class="esp-card__status esp-card__status--${i.status}">
+              <span class="esp-card__status-dot"></span>
+              ${i.status.charAt(0).toUpperCase() + i.status.slice(1)}
+            </span>
+          </div>
+          <div class="esp-card__tags">${tags}</div>
+          ${i.status_message ? `<div class="esp-card__msg">${i.status_message}</div>` : ''}
+          <div class="esp-card__synced">${synced}</div>
+          <div class="esp-card__actions">
+            <button class="auth-btn auth-btn--sm" onclick="syncIntegration(${i.id})" id="syncBtn${i.id}">Sync Now</button>
+            <button class="auth-btn auth-btn--sm auth-btn--outline" onclick="testIntegration(${i.id})" id="testBtn${i.id}">Test</button>
+            <button class="auth-btn auth-btn--sm auth-btn--danger" onclick="deleteIntegration(${i.id}, '${p.name || i.provider}')">Disconnect</button>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  // Render available (not yet connected)
+  const availableProviders = Object.entries(PROVIDERS).filter(([key]) => !connectedProviders.has(key));
+  if (availableProviders.length === 0) {
+    available.innerHTML = '<p style="font-size:0.85rem;color:var(--text-4);padding:16px 0;">All platforms connected.</p>';
+  } else {
+    available.innerHTML = availableProviders.map(([key, p]) => {
+      const tags = (p.data_points || []).map(t => `<span class="esp-card__tag">${t}</span>`).join('');
+      const disabled = integrations.length >= TIER_LIMIT;
+      return `
+        <div class="esp-card" style="opacity:${disabled ? '0.6' : '1'}">
+          <div class="esp-card__head">
+            <div class="esp-card__icon">${p.name.charAt(0)}</div>
+            <div class="esp-card__info">
+              <h3 class="esp-card__name">${p.name}</h3>
+              <p class="esp-card__desc">${p.description}</p>
+            </div>
+          </div>
+          <div class="esp-card__tags">${tags}</div>
+          <div class="esp-card__actions">
+            <button class="auth-btn auth-btn--sm" onclick="openConnect('${key}')" ${disabled ? 'disabled title="Upgrade for more integrations"' : ''}>
+              Connect
+            </button>
+            ${p.docs_url ? `<a href="${p.docs_url}" target="_blank" class="auth-btn auth-btn--sm auth-btn--outline" style="text-decoration:none;">Docs</a>` : ''}
+          </div>
+        </div>`;
+    }).join('');
+  }
+}
+
+function openConnect(provider) {
+  const p = PROVIDERS[provider];
+  if (!p) return;
+  document.getElementById('modalProvider').value = provider;
+  document.getElementById('modalTitle').textContent = `Connect ${p.name}`;
+  document.getElementById('modalSub').textContent = p.description;
+  document.getElementById('modalError').style.display = 'none';
+
+  const fieldsDiv = document.getElementById('modalFields');
+  fieldsDiv.innerHTML = p.fields.map(f => `
+    <div class="esp-modal__field">
+      <label for="field_${f.key}">${f.label}</label>
+      <input type="${f.key.includes('key') || f.key.includes('token') ? 'password' : 'text'}"
+             id="field_${f.key}" name="${f.key}"
+             placeholder="${f.placeholder || ''}" required />
+      ${f.help ? `<div class="field-help">${f.help}</div>` : ''}
+    </div>
+  `).join('');
+
+  document.getElementById('connectModal').classList.add('active');
+  const firstInput = fieldsDiv.querySelector('input');
+  if (firstInput) setTimeout(() => firstInput.focus(), 100);
+}
+
+function closeModal() {
+  document.getElementById('connectModal').classList.remove('active');
+}
+
+async function submitConnect() {
+  const provider = document.getElementById('modalProvider').value;
+  const p = PROVIDERS[provider];
+  if (!p) return;
+
+  const btn = document.getElementById('modalSubmit');
+  const errEl = document.getElementById('modalError');
+  errEl.style.display = 'none';
+  btn.disabled = true;
+  btn.textContent = 'Connecting...';
+
+  const body = { provider };
+  p.fields.forEach(f => {
+    body[f.key] = document.getElementById('field_' + f.key)?.value?.trim() || '';
+  });
+
+  try {
+    const r = await fetch('/api/integrations', {
+      method: 'POST',
+      headers: headers(true),
+      body: JSON.stringify(body),
+    });
+    const d = await r.json();
+    if (d.ok) {
+      closeModal();
+      await loadIntegrations();
+      // Auto-test after connecting
+      if (d.integration?.id) testIntegration(d.integration.id);
+    } else {
+      errEl.textContent = d.error || 'Failed to connect.';
+      errEl.style.display = 'block';
+    }
+  } catch(e) {
+    errEl.textContent = 'Network error. Try again.';
+    errEl.style.display = 'block';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Connect';
+  }
+}
+
+async function testIntegration(id) {
+  const btn = document.getElementById('testBtn' + id);
+  if (btn) { btn.disabled = true; btn.textContent = 'Testing...'; }
+  try {
+    const r = await fetch(`/api/integrations/${id}/test`, {
+      method: 'POST',
+      headers: headers(),
+    });
+    const d = await r.json();
+    await loadIntegrations();
+  } catch(e) { console.error(e); }
+  if (btn) { btn.disabled = false; btn.textContent = 'Test Connection'; }
+}
+
+async function syncIntegration(id) {
+  const btn = document.getElementById('syncBtn' + id);
+  if (btn) { btn.disabled = true; btn.textContent = 'Syncing...'; }
+  try {
+    const r = await fetch(`/api/integrations/${id}/sync`, {
+      method: 'POST',
+      headers: headers(),
+    });
+    const d = await r.json();
+    await loadIntegrations();
+  } catch(e) { console.error(e); }
+  if (btn) { btn.disabled = false; btn.textContent = 'Sync Now'; }
+}
+
+async function deleteIntegration(id, name) {
+  if (!confirm(`Disconnect ${name}? This removes the saved credentials.`)) return;
+  try {
+    const r = await fetch(`/api/integrations/${id}`, {
+      method: 'DELETE',
+      headers: headers(),
+    });
+    const d = await r.json();
+    if (d.ok) loadIntegrations();
+  } catch(e) { console.error(e); }
+}
+
+// Close modal on overlay click or Escape
+document.getElementById('connectModal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeModal();
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeModal();
+});
+
+loadIntegrations();
+</script>
+{% endblock %}

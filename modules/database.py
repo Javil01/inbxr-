@@ -799,6 +799,42 @@ Opportunity: Start your free InbXr audit today and see where you actually stand.
         CREATE INDEX IF NOT EXISTS idx_lead_emails_email ON lead_emails(email);
     """),
     ("019_lead_emails_verification", _add_lead_verification_columns),
+    ("020_esp_integrations_and_snapshots", """
+        CREATE TABLE IF NOT EXISTS esp_integrations (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            provider TEXT NOT NULL CHECK(provider IN (
+                'mailchimp', 'activecampaign', 'mailgun', 'gohighlevel',
+                'instantly', 'smartlead', 'aweber'
+            )),
+            label TEXT DEFAULT '',
+            api_key_encrypted TEXT NOT NULL,
+            server_prefix TEXT DEFAULT '',
+            status TEXT DEFAULT 'pending' CHECK(status IN ('pending', 'active', 'error', 'disconnected')),
+            status_message TEXT DEFAULT '',
+            last_synced_at TEXT,
+            sync_data_json TEXT,
+            created_at TEXT DEFAULT (datetime('now')),
+            updated_at TEXT DEFAULT (datetime('now')),
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+            UNIQUE(user_id, provider, label)
+        );
+        CREATE INDEX IF NOT EXISTS idx_esp_integrations_user ON esp_integrations(user_id);
+        CREATE INDEX IF NOT EXISTS idx_esp_integrations_status ON esp_integrations(status);
+
+        CREATE TABLE IF NOT EXISTS esp_sync_snapshots (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            integration_id INTEGER NOT NULL,
+            health_score INTEGER DEFAULT 0,
+            health_grade TEXT DEFAULT '—',
+            totals_json TEXT,
+            warmup_json TEXT,
+            data_json TEXT,
+            synced_at TEXT DEFAULT (datetime('now')),
+            FOREIGN KEY (integration_id) REFERENCES esp_integrations(id) ON DELETE CASCADE
+        );
+        CREATE INDEX IF NOT EXISTS idx_esp_snapshots_integration ON esp_sync_snapshots(integration_id, synced_at DESC);
+    """),
 ]
 
 
