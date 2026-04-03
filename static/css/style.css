@@ -698,6 +698,40 @@ img { display: block; max-width: 100%; }
   color: var(--text-4);
 }
 
+/* Problem cards (agency vs marketer) */
+.lp-problem-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  max-width: 680px;
+  margin: 0 auto;
+}
+.lp-problem-card {
+  background: var(--bg-2);
+  border: 1px solid var(--border-1);
+  border-radius: var(--r-3);
+  padding: 24px;
+  text-align: left;
+}
+.lp-problem-card__label {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--brand);
+  margin-bottom: 8px;
+}
+.lp-problem-card__text {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: var(--text-2);
+  margin: 0;
+}
+@media (max-width: 600px) {
+  .lp-problem-cards { grid-template-columns: 1fr; }
+}
+
 /* Value prop cards */
 .lp-cards {
   display: grid;
