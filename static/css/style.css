@@ -160,6 +160,29 @@ img { display: block; max-width: 100%; }
 .embedded .fw-hero { display: none !important; }
 .embedded .auth-page { padding: 20px; background: #fff; }
 .embedded .auth-card { max-width: none; box-shadow: none; border: none; background: #fff; }
+.embedded body,
+.embedded .fw-lab,
+.embedded .fw-decision,
+.embedded .fw-card,
+.embedded .fw-modal,
+.embedded .fw-detail,
+.embedded .fw-builder { background: #fff; color: var(--text-1); }
+.embedded .fw-decision { border-color: var(--border-1); }
+.embedded .fw-decision__opt { background: var(--bg-2); border-color: var(--border-1); color: var(--text-1); }
+.embedded .fw-decision__opt:hover { background: rgba(37,99,235,0.06); border-color: var(--brand); }
+.embedded .fw-decision__opt strong { color: var(--text-1); }
+.embedded .fw-decision__opt span { color: var(--text-2); }
+.embedded .fw-decision__rec { background: var(--bg-2); border-color: var(--border-1); color: var(--text-1); }
+.embedded .fw-section-title { color: var(--text-1); }
+.embedded .fw-section-subtitle { color: var(--text-2); }
+.embedded .fw-card { border-color: var(--border-1); }
+.embedded .fw-card__name { color: var(--text-1); }
+.embedded .fw-card__desc { color: var(--text-2); }
+.embedded .fw-card__badge { background: var(--bg-2); color: var(--text-2); }
+.embedded .fw-tab { color: var(--text-3); }
+.embedded .fw-tab--active { color: var(--brand); border-color: var(--brand); }
+.embedded .fw-modal { border-color: var(--border-1); }
+.embedded .fw-detail { border-color: var(--border-1); }
 
 .site-header {
   position: sticky;
@@ -6564,7 +6587,40 @@ select {
    DASHBOARD — Sidebar Layout
    ══════════════════════════════════════════════════════ */
 
-.dashboard-page { min-height: 100vh; display: flex; flex-direction: column; }
+.dashboard-page { min-height: 100vh; display: flex; flex-direction: column; background: #fff; }
+
+/* ── Dashboard light theme overrides ── */
+.dashboard-page .ob-card { background: #fff; border-color: var(--border-1); }
+.dashboard-page .ob-card__title { color: var(--text-1); }
+.dashboard-page .ob-card__dismiss { color: var(--text-4); }
+.dashboard-page .ob-card__dismiss:hover { color: var(--text-2); }
+.dashboard-page .ob-card__bar { background: var(--bg-4); }
+.dashboard-page .ob-step { background: var(--bg-2); border-color: var(--border-1); }
+.dashboard-page .ob-step--pending { border-color: var(--border-1); }
+.dashboard-page .ob-step--pending:hover { background: rgba(37,99,235,0.04); border-color: var(--brand); }
+.dashboard-page .ob-step__icon { background: var(--bg-4); color: var(--text-3); }
+.dashboard-page .ob-step--done .ob-step__icon { background: rgba(21,193,130,0.1); color: #059669; }
+.dashboard-page .ob-step--pending .ob-step__icon { color: var(--text-3); }
+.dashboard-page .ob-step__body strong { color: var(--text-1); }
+.dashboard-page .ob-step--done .ob-step__body strong { color: var(--text-4); }
+.dashboard-page .ob-step__body p { color: var(--text-3); }
+.dashboard-page .fu-hint { background: #fff; border-color: var(--border-1); box-shadow: var(--shadow-2); }
+.dashboard-page .fu-hint p { color: var(--text-2); }
+.dashboard-page .fu-hint__close { color: var(--text-3); border-color: var(--border-1); }
+.dashboard-page .db-trend-summary { color: var(--text-3); }
+.dashboard-page .db-trend-summary strong { color: var(--text-1); }
+.dashboard-page .dash-trend-btn { background: var(--bg-2); border-color: var(--border-1); color: var(--text-3); }
+.dashboard-page .dash-trend-btn:hover { background: var(--bg-4); color: var(--text-1); }
+.dashboard-page .dash-trend-btn--active { background: rgba(34,197,94,0.08); border-color: rgba(34,197,94,0.3); color: #059669; }
+.dashboard-page .db-chart__tooltip { background: #fff; border-color: var(--border-1); color: var(--text-1); box-shadow: var(--shadow-2); }
+.dashboard-page .dash-domain-health-empty { color: var(--text-3); }
+.dashboard-page .dash-domain-health-empty a { color: var(--brand); }
+.dashboard-page .onboard-step__body h3 { color: var(--text-1); }
+.dashboard-page .onboard-step__body p { color: var(--text-3); }
+.dashboard-page .onboard-step { background: var(--bg-2); border-color: var(--border-1); }
+.dashboard-page .onboard-step--active { background: rgba(37,99,235,0.04); border-color: var(--brand); }
+.dashboard-page .onboard-step__num { background: var(--bg-4); color: var(--text-3); }
+.dashboard-page .onboard-step--active .onboard-step__num { background: var(--brand); color: #fff; }
 
 .dash {
   display: flex;
