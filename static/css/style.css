@@ -160,29 +160,85 @@ img { display: block; max-width: 100%; }
 .embedded .fw-hero { display: none !important; }
 .embedded .auth-page { padding: 20px; background: #fff; }
 .embedded .auth-card { max-width: none; box-shadow: none; border: none; background: #fff; }
+/* ── Framework Lab — embedded light theme ─────────── */
 .embedded body,
-.embedded .fw-lab,
-.embedded .fw-decision,
-.embedded .fw-card,
-.embedded .fw-modal,
-.embedded .fw-detail,
-.embedded .fw-builder { background: #fff; color: var(--text-1); }
-.embedded .fw-decision { border-color: var(--border-1); }
-.embedded .fw-decision__opt { background: var(--bg-2); border-color: var(--border-1); color: var(--text-1); }
-.embedded .fw-decision__opt:hover { background: rgba(37,99,235,0.06); border-color: var(--brand); }
-.embedded .fw-decision__opt strong { color: var(--text-1); }
-.embedded .fw-decision__opt span { color: var(--text-2); }
-.embedded .fw-decision__rec { background: var(--bg-2); border-color: var(--border-1); color: var(--text-1); }
+.embedded .fw-lab { background: #fff; color: var(--text-1); }
+
+/* Decision tree */
+.embedded .fw-decision {
+  background: #fff; border: 1px solid var(--border-1); border-radius: 16px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+}
 .embedded .fw-section-title { color: var(--text-1); }
-.embedded .fw-section-subtitle { color: var(--text-2); }
-.embedded .fw-card { border-color: var(--border-1); }
-.embedded .fw-card__name { color: var(--text-1); }
-.embedded .fw-card__desc { color: var(--text-2); }
-.embedded .fw-card__badge { background: var(--bg-2); color: var(--text-2); }
+.embedded .fw-section-subtitle { color: var(--text-3); }
+.embedded .fw-decision__question { color: var(--text-1); }
+.embedded .fw-decision__opt {
+  background: #fff; border: 1px solid var(--border-1); color: var(--text-1);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+.embedded .fw-decision__opt:hover {
+  border-color: var(--brand); background: rgba(37,99,235,0.03);
+  box-shadow: 0 2px 8px rgba(37,99,235,0.08);
+  transform: translateY(-1px);
+}
+.embedded .fw-decision__opt strong { color: var(--text-1); }
+.embedded .fw-decision__opt span { color: var(--text-3); }
+.embedded .fw-decision__result h3 { color: var(--text-1); }
+.embedded .fw-decision__rec {
+  background: #fff; border: 1px solid var(--border-1); color: var(--text-1);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+.embedded .fw-decision__rec:hover { border-color: var(--brand); box-shadow: 0 2px 8px rgba(37,99,235,0.08); }
+.embedded .fw-decision__rec p { color: var(--text-3); }
+
+/* Tabs */
+.embedded .fw-tabs { border-color: var(--border-1); }
 .embedded .fw-tab { color: var(--text-3); }
-.embedded .fw-tab--active { color: var(--brand); border-color: var(--brand); }
-.embedded .fw-modal { border-color: var(--border-1); }
-.embedded .fw-detail { border-color: var(--border-1); }
+.embedded .fw-tab:hover { color: var(--text-1); background: var(--bg-2); }
+.embedded .fw-tab--active { color: var(--brand); background: rgba(37,99,235,0.06); border-bottom-color: var(--brand); }
+
+/* Framework cards */
+.embedded .fw-card {
+  background: #fff; border: 1px solid var(--border-1); color: var(--text-1);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+.embedded .fw-card:hover {
+  border-color: var(--brand); transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(37,99,235,0.10);
+}
+.embedded .fw-card__name { color: var(--text-1); }
+.embedded .fw-card__desc { color: var(--text-3); }
+.embedded .fw-card__pill { background: var(--bg-2); color: var(--text-2); }
+
+/* Favorites link */
+.embedded .fw-fav-toggle { color: var(--text-3); }
+.embedded .fw-fav-toggle:hover { color: var(--brand); }
+
+/* Modal */
+.embedded .fw-modal-overlay { background: rgba(0,0,0,0.3); }
+.embedded .fw-modal {
+  background: #fff; border: 1px solid var(--border-1); color: var(--text-1);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.12);
+}
+.embedded .fw-modal__desc { color: var(--text-2); }
+.embedded .fw-modal__section h3 { color: var(--text-1); }
+.embedded .fw-modal__section p { color: var(--text-2); }
+.embedded .fw-modal__example { background: var(--bg-2); color: var(--text-2); border: 1px solid var(--border-1); }
+.embedded .fw-modal__close { color: var(--text-3); }
+.embedded .fw-modal__close:hover { color: var(--text-1); }
+.embedded .fw-modal__step { background: var(--bg-2); border-color: var(--border-1); }
+.embedded .fw-modal__step-key { background: var(--brand); color: #fff; }
+.embedded .fw-modal__step-label { color: var(--text-1); }
+.embedded .fw-modal__step-desc { color: var(--text-2); }
+
+/* Builder */
+.embedded .fw-builder { background: #fff; border: 1px solid var(--border-1); color: var(--text-1); }
+.embedded .fw-builder input,
+.embedded .fw-builder textarea { background: #fff; border-color: var(--border-1); color: var(--text-1); }
+
+/* Upsell */
+.embedded .fw-upsell { background: var(--bg-2); border-color: var(--border-1); color: var(--text-1); }
+.embedded .fw-upsell p { color: var(--text-2); }
 
 .site-header {
   position: sticky;
