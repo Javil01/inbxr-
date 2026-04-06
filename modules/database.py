@@ -324,6 +324,24 @@ def _add_lead_verification_columns(conn):
     conn.commit()
 
 
+def _add_alerts_signal_columns(conn):
+    """Safely add signal-related columns to existing alerts table (idempotent)."""
+    existing = {r[1] for r in conn.execute("PRAGMA table_info(alerts)").fetchall()}
+    if "signal_dimension" not in existing:
+        conn.execute("ALTER TABLE alerts ADD COLUMN signal_dimension TEXT")
+    if "recommended_action" not in existing:
+        conn.execute("ALTER TABLE alerts ADD COLUMN recommended_action TEXT")
+    if "action_url" not in existing:
+        conn.execute("ALTER TABLE alerts ADD COLUMN action_url TEXT")
+    if "severity" not in existing:
+        conn.execute("ALTER TABLE alerts ADD COLUMN severity TEXT DEFAULT 'info'")
+    if "is_dismissed" not in existing:
+        conn.execute("ALTER TABLE alerts ADD COLUMN is_dismissed INTEGER DEFAULT 0")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_alerts_signal_dim ON alerts(signal_dimension)")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_alerts_dismissed ON alerts(is_dismissed)")
+    conn.commit()
+
+
 # ── Migrations (append-only list) ───────────────────────
 
 _MIGRATIONS = [
@@ -835,6 +853,229 @@ Opportunity: Start your free InbXr audit today and see where you actually stand.
         );
         CREATE INDEX IF NOT EXISTS idx_esp_snapshots_integration ON esp_sync_snapshots(integration_id, synced_at DESC);
     """),
+    ("021_signal_intelligence_system", """
+        -- Signal Scores (current reading per user per ESP integration)
+        CREATE TABLE IF NOT EXISTS signal_scores (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            esp_integration_id INTEGER,
+            data_source TEXT DEFAULT 'esp_sync' CHECK(data_source IN ('esp_sync', 'csv_upload', 'manual', 'aggregate')),
+
+            -- The 7 signal dimension scores (Pro weights: 25/25/15/15/10/5/5)
+            bounce_exposure_score REAL DEFAULT 0,
+            engagement_trajectory_score REAL DEFAULT 0,
+            acquisition_quality_score REAL DEFAULT 0,
+            domain_reputation_score REAL DEFAULT 0,
+            dormancy_risk_score REAL DEFAULT 0,
+            authentication_standing_score REAL DEFAULT 0,
+            decay_velocity_score REAL DEFAULT 0,
+
+            -- Composite
+            total_signal_score REAL DEFAULT 0,
+            signal_grade TEXT DEFAULT 'F' CHECK(signal_grade IN ('A', 'B', 'C', 'D', 'F')),
+
+            -- Tier context (affects weights/display)
+            tier_at_calculation TEXT DEFAULT 'pro' CHECK(tier_at_calculation IN ('free', 'pro', 'agency', 'api')),
+
+            -- MPP metadata
+            mpp_adjusted INTEGER DEFAULT 0,
+            mpp_accuracy TEXT DEFAULT 'medium' CHECK(mpp_accuracy IN ('high', 'medium', 'low', 'none')),
+            mpp_discount_rate REAL DEFAULT 0,
+
+            -- Trend tracking (replaces predictive claim — direction only, no days)
+            trajectory_direction TEXT DEFAULT 'stable' CHECK(trajectory_direction IN ('improving', 'stable', 'declining', 'unknown')),
+            velocity_rate REAL DEFAULT 0,
+
+            -- Segment counts (Active ≤30d, Warm 31-90d, At-Risk 91-180d, Dormant 180+d)
+            active_contacts INTEGER DEFAULT 0,
+            warm_contacts INTEGER DEFAULT 0,
+            at_risk_contacts INTEGER DEFAULT 0,
+            dormant_contacts INTEGER DEFAULT 0,
+            total_contacts INTEGER DEFAULT 0,
+
+            -- Per-dimension metadata (JSON strings)
+            bounce_exposure_meta TEXT,
+            engagement_trajectory_meta TEXT,
+            acquisition_quality_meta TEXT,
+            domain_reputation_meta TEXT,
+            dormancy_risk_meta TEXT,
+            authentication_standing_meta TEXT,
+            decay_velocity_meta TEXT,
+
+            calculated_at TEXT DEFAULT (datetime('now')),
+            created_at TEXT DEFAULT (datetime('now')),
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+            FOREIGN KEY (esp_integration_id) REFERENCES esp_integrations(id) ON DELETE SET NULL
+        );
+        CREATE INDEX IF NOT EXISTS idx_signal_scores_user ON signal_scores(user_id);
+        CREATE INDEX IF NOT EXISTS idx_signal_scores_integration ON signal_scores(esp_integration_id);
+        CREATE INDEX IF NOT EXISTS idx_signal_scores_calculated ON signal_scores(calculated_at DESC);
+
+        -- Signal Score History (time-series snapshots for trend charts)
+        CREATE TABLE IF NOT EXISTS signal_score_history (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            esp_integration_id INTEGER,
+            total_signal_score REAL,
+            signal_grade TEXT,
+            bounce_exposure_score REAL,
+            engagement_trajectory_score REAL,
+            acquisition_quality_score REAL,
+            domain_reputation_score REAL,
+            dormancy_risk_score REAL,
+            authentication_standing_score REAL,
+            decay_velocity_score REAL,
+            active_contacts INTEGER,
+            warm_contacts INTEGER,
+            at_risk_contacts INTEGER,
+            dormant_contacts INTEGER,
+            total_contacts INTEGER,
+            -- Event annotations for timeline chart
+            event_type TEXT,
+            event_label TEXT,
+            recorded_at TEXT DEFAULT (datetime('now')),
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        );
+        CREATE INDEX IF NOT EXISTS idx_signal_history_user ON signal_score_history(user_id);
+        CREATE INDEX IF NOT EXISTS idx_signal_history_recorded ON signal_score_history(recorded_at DESC);
+
+        -- Signal Rules (automation with dry-run default)
+        CREATE TABLE IF NOT EXISTS signal_rules (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            esp_integration_id INTEGER,
+            rule_name TEXT NOT NULL,
+            is_active INTEGER DEFAULT 1,
+            is_template INTEGER DEFAULT 0,
+            template_id TEXT,
+
+            -- Condition
+            condition_signal TEXT NOT NULL,
+            condition_operator TEXT DEFAULT 'greater_than' CHECK(condition_operator IN (
+                'greater_than', 'less_than', 'equals', 'greater_than_or_equal', 'less_than_or_equal'
+            )),
+            condition_value REAL NOT NULL,
+            condition_duration_days INTEGER,
+
+            -- Action
+            action_type TEXT NOT NULL CHECK(action_type IN ('suppress', 'move_segment', 'notify', 'tag')),
+            action_target TEXT,
+            action_esp_sync INTEGER DEFAULT 0,
+            action_dry_run INTEGER DEFAULT 1,
+
+            -- Stats
+            times_fired INTEGER DEFAULT 0,
+            last_fired_at TEXT,
+            last_preview_count INTEGER,
+
+            created_at TEXT DEFAULT (datetime('now')),
+            updated_at TEXT DEFAULT (datetime('now')),
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+            FOREIGN KEY (esp_integration_id) REFERENCES esp_integrations(id) ON DELETE SET NULL
+        );
+        CREATE INDEX IF NOT EXISTS idx_signal_rules_user ON signal_rules(user_id);
+        CREATE INDEX IF NOT EXISTS idx_signal_rules_active ON signal_rules(is_active);
+
+        -- Signal Rule Log
+        CREATE TABLE IF NOT EXISTS signal_rule_log (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            rule_id INTEGER NOT NULL,
+            user_id INTEGER NOT NULL,
+            was_dry_run INTEGER DEFAULT 0,
+            contacts_affected INTEGER DEFAULT 0,
+            action_taken TEXT,
+            esp_sync_status TEXT CHECK(esp_sync_status IN ('success', 'failed', 'pending', 'skipped', 'dry_run')),
+            esp_sync_error TEXT,
+            fired_at TEXT DEFAULT (datetime('now')),
+            FOREIGN KEY (rule_id) REFERENCES signal_rules(id) ON DELETE CASCADE
+        );
+        CREATE INDEX IF NOT EXISTS idx_rule_log_rule ON signal_rule_log(rule_id);
+        CREATE INDEX IF NOT EXISTS idx_rule_log_user ON signal_rule_log(user_id, fired_at DESC);
+
+        -- Contact Segments (per-contact tracking)
+        CREATE TABLE IF NOT EXISTS contact_segments (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            esp_integration_id INTEGER,
+            email TEXT NOT NULL,
+            segment TEXT DEFAULT 'unknown' CHECK(segment IN ('active', 'warm', 'at_risk', 'dormant', 'unknown')),
+
+            -- Engagement timeline
+            last_open_date TEXT,
+            last_click_date TEXT,
+            last_reply_date TEXT,
+
+            -- MPP flag (per-open, but we store aggregate for the contact)
+            likely_mpp_opener INTEGER DEFAULT 0,
+            mpp_detection_method TEXT,
+
+            -- Acquisition
+            acquisition_date TEXT,
+            acquisition_quality_flag TEXT CHECK(acquisition_quality_flag IN ('organic', 'cold', 'unknown')),
+
+            -- Verification flags
+            is_hard_bounce INTEGER DEFAULT 0,
+            is_catch_all INTEGER DEFAULT 0,
+            is_role_address INTEGER DEFAULT 0,
+            is_disposable INTEGER DEFAULT 0,
+            verified_at TEXT,
+
+            -- Suppression tracking
+            is_suppressed INTEGER DEFAULT 0,
+            suppressed_at TEXT,
+            suppression_reason TEXT,
+            suppression_rule_id INTEGER,
+
+            days_since_engagement INTEGER,
+            created_at TEXT DEFAULT (datetime('now')),
+            updated_at TEXT DEFAULT (datetime('now')),
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+            FOREIGN KEY (esp_integration_id) REFERENCES esp_integrations(id) ON DELETE CASCADE,
+            FOREIGN KEY (suppression_rule_id) REFERENCES signal_rules(id) ON DELETE SET NULL,
+            UNIQUE(user_id, esp_integration_id, email)
+        );
+        CREATE INDEX IF NOT EXISTS idx_contact_seg_user ON contact_segments(user_id);
+        CREATE INDEX IF NOT EXISTS idx_contact_seg_integration ON contact_segments(esp_integration_id);
+        CREATE INDEX IF NOT EXISTS idx_contact_seg_email ON contact_segments(email);
+        CREATE INDEX IF NOT EXISTS idx_contact_seg_segment ON contact_segments(segment);
+        CREATE INDEX IF NOT EXISTS idx_contact_seg_suppressed ON contact_segments(is_suppressed);
+
+        -- ISP Compliance Requirements (static reference table)
+        CREATE TABLE IF NOT EXISTS isp_compliance_requirements (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            isp_name TEXT NOT NULL,
+            requirement_type TEXT NOT NULL CHECK(requirement_type IN (
+                'dmarc', 'spf', 'dkim', 'list_unsubscribe', 'volume_threshold', 'tls', 'bimi'
+            )),
+            requirement_detail TEXT,
+            enforcement_date TEXT,
+            volume_threshold INTEGER,
+            severity TEXT DEFAULT 'required' CHECK(severity IN ('required', 'recommended', 'optional')),
+            reference_url TEXT,
+            created_at TEXT DEFAULT (datetime('now'))
+        );
+        CREATE INDEX IF NOT EXISTS idx_isp_compliance_isp ON isp_compliance_requirements(isp_name);
+
+        -- Seed ISP compliance data
+        INSERT OR IGNORE INTO isp_compliance_requirements (isp_name, requirement_type, requirement_detail, enforcement_date, volume_threshold, severity, reference_url) VALUES
+        ('Gmail', 'dmarc', 'p=none minimum required for bulk senders', '2024-02-01', 5000, 'required', 'https://support.google.com/mail/answer/81126'),
+        ('Gmail', 'spf', 'Valid SPF record required', '2024-02-01', 5000, 'required', 'https://support.google.com/mail/answer/81126'),
+        ('Gmail', 'dkim', 'DKIM signing required with 1024-bit key minimum', '2024-02-01', 5000, 'required', 'https://support.google.com/mail/answer/81126'),
+        ('Gmail', 'list_unsubscribe', 'One-click List-Unsubscribe header required', '2024-06-01', 5000, 'required', 'https://support.google.com/mail/answer/81126'),
+        ('Yahoo', 'dmarc', 'p=none minimum required for bulk senders', '2024-02-01', 5000, 'required', 'https://senders.yahooinc.com/best-practices/'),
+        ('Yahoo', 'spf', 'Valid SPF record required', '2024-02-01', 5000, 'required', 'https://senders.yahooinc.com/best-practices/'),
+        ('Yahoo', 'dkim', 'DKIM signing required', '2024-02-01', 5000, 'required', 'https://senders.yahooinc.com/best-practices/'),
+        ('Yahoo', 'list_unsubscribe', 'One-click List-Unsubscribe header required', '2024-06-01', 5000, 'required', 'https://senders.yahooinc.com/best-practices/'),
+        ('Microsoft', 'dmarc', 'p=quarantine or p=reject required — p=none fails Microsoft 2025 bulk sender rules', '2025-05-01', 5000, 'required', 'https://learn.microsoft.com/en-us/defender-office-365/email-authentication-dmarc-configure'),
+        ('Microsoft', 'spf', 'Valid SPF record required', '2025-05-01', 5000, 'required', 'https://learn.microsoft.com/en-us/defender-office-365/'),
+        ('Microsoft', 'dkim', 'DKIM signing required', '2025-05-01', 5000, 'required', 'https://learn.microsoft.com/en-us/defender-office-365/'),
+        ('Microsoft', 'list_unsubscribe', 'One-click List-Unsubscribe header required', '2025-05-01', 5000, 'required', 'https://learn.microsoft.com/en-us/defender-office-365/');
+
+        -- Extend alerts table with signal context columns
+        -- Note: SQLite ALTER TABLE ADD COLUMN is safe and idempotent via IF NOT EXISTS pattern on column check
+        -- We add these without CHECK constraints to avoid breaking existing rows
+    """),
+    ("022_alerts_signal_columns", _add_alerts_signal_columns),
 ]
 
 

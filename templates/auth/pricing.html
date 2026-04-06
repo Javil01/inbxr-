@@ -3,7 +3,7 @@
 {% block title %}Pricing{% endblock %}
 {% block content %}
 <h1 class="auth-card__title pricing-title">Sales Delivered</h1>
-<p class="auth-card__sub">Deliverability diagnostics + copy intelligence + always-on ESP monitoring in one platform. Every tool is free to start. Upgrade for AI framework rewrites, ESP integrations, deliverability dashboard, and proactive alerts.</p>
+<p class="auth-card__sub">The 7 Inbox Signals + copy intelligence + always-on ESP monitoring in one platform. Every tool is free to start. Upgrade for Signal Watch, Signal Rules, Recovery Sequences, Framework Rewriter, and Early Warning alerts.</p>
 
 <div class="pricing-grid">
 
@@ -23,14 +23,14 @@
       <li>{{ t.limits.subject_tests_per_day }} subject line tests/day</li>
       <li>{{ t.limits.blocklist_domains }} monitored domains</li>
       <li>{{ t.limits.warmup_campaigns }} warmup campaign</li>
-      <li>Full Email Test with auth analysis</li>
-      <li>Sender Check (SPF, DKIM, DMARC)</li>
+      <li>Full Inboxer Send Test with auth analysis</li>
+      <li>Inboxer Sender Check (SPF, DKIM, DMARC)</li>
       <li>Header Analyzer &amp; BIMI Checker</li>
       <li>100-point Copy Effectiveness Scorer</li>
       <li>Framework Lab (browse 16 frameworks)</li>
       <li>3 frameworks unlocked (AIDA, PAS, C3PO)</li>
       <li>In-app alerts (manual scans only)</li>
-      <li>AI Sales &amp; Technical Support chat</li>
+      <li>Sales &amp; Technical Support chat</li>
       <li>&mdash; No ESP integrations</li>
       <li>&mdash; No deliverability dashboard</li>
     </ul>
@@ -66,8 +66,8 @@
       <li><strong>{{ t.limits.warmup_campaigns }}</strong> warmup campaigns</li>
       <li class="pricing-card__feature--highlight">Automated blocklist &amp; DNS auth monitoring</li>
       <li class="pricing-card__feature--highlight">Instant/daily/weekly email alert digests</li>
-      <li class="pricing-card__feature--highlight">AI Email Expert — 10 conversations/mo</li>
-      <li class="pricing-card__feature--highlight">AI Copy Rewriter (tone + framework-aware)</li>
+      <li class="pricing-card__feature--highlight">Signal Advisor — 20 conversations/mo</li>
+      <li class="pricing-card__feature--highlight">Copy Rewriter (tone + framework-aware)</li>
       <li class="pricing-card__feature--highlight">All 16 frameworks unlocked</li>
       <li class="pricing-card__feature--highlight">Custom Framework Builder</li>
       <li class="pricing-card__feature--highlight">Framework detection in analysis</li>
@@ -104,8 +104,8 @@
       <li><strong>{{ t.limits.blocklist_domains }}</strong> monitored domains</li>
       <li><strong>{{ t.limits.warmup_campaigns }}</strong> warmup campaigns</li>
       <li class="pricing-card__feature--highlight">Automated alerts for 50 domains</li>
-      <li class="pricing-card__feature--highlight">AI Email Expert — Unlimited</li>
-      <li class="pricing-card__feature--highlight">AI Copy Rewriter (tone + framework-aware)</li>
+      <li class="pricing-card__feature--highlight">Signal Advisor — Unlimited</li>
+      <li class="pricing-card__feature--highlight">Copy Rewriter (tone + framework-aware)</li>
       <li class="pricing-card__feature--highlight">All 16 frameworks + Custom Builder</li>
       <li>Everything in Pro, plus:</li>
       <li class="pricing-card__feature--highlight">10 ESP integrations</li>
@@ -141,15 +141,15 @@
       </thead>
       <tbody>
         <tr class="pricing-compare__section"><td colspan="4">Deliverability Tools</td></tr>
-        <tr><td>Email Test (send &amp; analyze)</td><td>&#10003;</td><td>&#10003;</td><td>&#10003;</td></tr>
-        <tr><td>Sender Check (SPF/DKIM/DMARC)</td><td>&#10003;</td><td>&#10003;</td><td>&#10003;</td></tr>
-        <tr><td>Inbox Placement Test</td><td>3/day</td><td>20/day</td><td>100/day</td></tr>
+        <tr><td>Inboxer Send Test (send &amp; analyze)</td><td>&#10003;</td><td>&#10003;</td><td>&#10003;</td></tr>
+        <tr><td>Inboxer Sender Check (SPF/DKIM/DMARC)</td><td>&#10003;</td><td>&#10003;</td><td>&#10003;</td></tr>
+        <tr><td>Inboxer Placement Test</td><td>3/day</td><td>20/day</td><td>100/day</td></tr>
         <tr><td>Subject Line Scorer</td><td>10/day</td><td>50/day</td><td>200/day</td></tr>
         <tr><td>Header Analyzer</td><td>&#10003;</td><td>&#10003;</td><td>&#10003;</td></tr>
         <tr><td>BIMI Checker</td><td>&#10003;</td><td>&#10003;</td><td>&#10003;</td></tr>
-        <tr><td>Blacklist Monitor</td><td>2 domains</td><td>10 domains</td><td>50 domains</td></tr>
-        <tr><td>Email Verifier</td><td>25/day</td><td>500/day</td><td>5,000/day</td></tr>
-        <tr><td>Warmup Tracker</td><td>1 campaign</td><td>5 campaigns</td><td>25 campaigns</td></tr>
+        <tr><td>Reputation Watch (blocklists)</td><td>2 domains</td><td>10 domains</td><td>50 domains</td></tr>
+        <tr><td>Signal Verifier</td><td>25/day</td><td>500/day</td><td>5,000/day</td></tr>
+        <tr><td>Inboxer Warmup</td><td>1 campaign</td><td>5 campaigns</td><td>25 campaigns</td></tr>
 
         <tr class="pricing-compare__section"><td colspan="4">Copy Intelligence</td></tr>
         <tr><td>100-Point Copy Effectiveness Score</td><td>&#10003;</td><td>&#10003;</td><td>&#10003;</td></tr>
@@ -160,11 +160,11 @@
         <tr><td>"Test This Rewrite" Loop</td><td>&mdash;</td><td>&#10003;</td><td>&#10003;</td></tr>
 
         <tr class="pricing-compare__section"><td colspan="4">AI Features</td></tr>
-        <tr><td>AI Email Expert Assistant</td><td>&mdash;</td><td>10/month</td><td>Unlimited</td></tr>
-        <tr><td>AI Copy Rewriter (tone-aware)</td><td>&mdash;</td><td>&#10003;</td><td>&#10003;</td></tr>
-        <tr><td>AI Framework Rewriter</td><td>&mdash;</td><td>&#10003;</td><td>&#10003;</td></tr>
-        <tr><td>AI Primary Inbox Optimizer</td><td>&mdash;</td><td>&#10003;</td><td>&#10003;</td></tr>
-        <tr><td>AI Support Chat (Sales &amp; Tech)</td><td>&#10003;</td><td>&#10003;</td><td>&#10003;</td></tr>
+        <tr><td>Signal Advisor (context-aware AI)</td><td>&mdash;</td><td>20/month</td><td>Unlimited</td></tr>
+        <tr><td>Copy Rewriter (tone-aware)</td><td>&mdash;</td><td>&#10003;</td><td>&#10003;</td></tr>
+        <tr><td>Framework Rewriter</td><td>&mdash;</td><td>&#10003;</td><td>&#10003;</td></tr>
+        <tr><td>Primary Intelligence (inbox optimizer)</td><td>&mdash;</td><td>&#10003;</td><td>&#10003;</td></tr>
+        <tr><td>Support Chat (Sales &amp; Tech)</td><td>&#10003;</td><td>&#10003;</td><td>&#10003;</td></tr>
 
         <tr class="pricing-compare__section"><td colspan="4">ESP Integrations &amp; Monitoring</td></tr>
         <tr><td>ESP Integrations (Mailchimp, Instantly, etc.)</td><td>&mdash;</td><td>1 account</td><td>10 accounts</td></tr>
@@ -179,9 +179,9 @@
         <tr><td>Alert Preferences &amp; Digest Emails</td><td>&mdash;</td><td>&#10003;</td><td>&#10003;</td></tr>
 
         <tr class="pricing-compare__section"><td colspan="4">Productivity</td></tr>
-        <tr><td>Cloud Test History</td><td>&mdash;</td><td>&#10003;</td><td>&#10003;</td></tr>
-        <tr><td>PDF Reports</td><td>&mdash;</td><td>&#10003;</td><td>&#10003;</td></tr>
-        <tr><td>Bulk Email Verification (CSV)</td><td>&mdash;</td><td>&#10003;</td><td>&#10003;</td></tr>
+        <tr><td>Signal History (cloud)</td><td>&mdash;</td><td>&#10003;</td><td>&#10003;</td></tr>
+        <tr><td>Signal Reports (PDF)</td><td>&mdash;</td><td>&#10003;</td><td>&#10003;</td></tr>
+        <tr><td>List Verification (CSV)</td><td>&mdash;</td><td>&#10003;</td><td>&#10003;</td></tr>
 
         <tr class="pricing-compare__section"><td colspan="4">Collaboration &amp; Scale</td></tr>
         <tr><td>Teams &amp; Client Workspaces</td><td>&mdash;</td><td>&mdash;</td><td>&#10003;</td></tr>

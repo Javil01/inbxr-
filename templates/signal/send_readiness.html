@@ -1,0 +1,76 @@
+{% extends "auth/base_auth.html" %}
+{% block title %}Send Readiness{% endblock %}
+{% block content %}
+<style>
+.sr-header h1 { margin: 0; font-size: 1.6rem; }
+.sr-header__sub { font-size: 0.85rem; color: var(--text-3); margin: 4px 0 20px; }
+
+.sr-gate { padding: 28px; border-radius: var(--r-lg, 12px); margin-bottom: 20px; text-align: center; }
+.sr-gate--green { background: rgba(5,150,105,0.08); border: 2px solid #059669; }
+.sr-gate--amber { background: rgba(217,119,6,0.08); border: 2px solid #d97706; }
+.sr-gate--red { background: rgba(220,38,38,0.08); border: 2px solid #dc2626; }
+
+.sr-gate__icon { font-size: 3rem; line-height: 1; margin-bottom: 12px; }
+.sr-gate--green .sr-gate__icon { color: #059669; }
+.sr-gate--amber .sr-gate__icon { color: #d97706; }
+.sr-gate--red .sr-gate__icon { color: #dc2626; }
+
+.sr-gate__status { font-size: 1.6rem; font-weight: 800; margin: 0 0 6px; }
+.sr-gate__message { font-size: 1rem; color: var(--text-2); margin: 0 0 14px; }
+.sr-gate__score { font-size: 0.85rem; color: var(--text-3); }
+
+.sr-issues { background: var(--bg-1, #fff); border: 1px solid var(--border); border-radius: var(--r-lg, 12px); padding: 20px; margin-bottom: 20px; }
+.sr-issues__title { font-size: 0.95rem; font-weight: 700; margin: 0 0 12px; }
+.sr-issues__list { list-style: none; padding: 0; margin: 0; }
+.sr-issues__item { padding: 8px 0; border-bottom: 1px solid var(--bg-2); font-size: 0.88rem; color: var(--text-2); }
+.sr-issues__item:last-child { border-bottom: none; }
+.sr-issues__item::before { content: "! "; color: #d97706; font-weight: 700; }
+
+.sr-actions { background: var(--bg-1, #fff); border: 1px solid var(--border); border-radius: var(--r-lg, 12px); padding: 20px; }
+.sr-actions__title { font-size: 0.95rem; font-weight: 700; margin: 0 0 12px; }
+.sr-actions__list { list-style: none; padding: 0; margin: 0; }
+.sr-actions__item { padding: 10px 0; border-bottom: 1px solid var(--bg-2); font-size: 0.88rem; color: var(--text-2); }
+.sr-actions__item:last-child { border-bottom: none; }
+.sr-actions__item::before { content: "→ "; color: var(--brand); font-weight: 700; }
+</style>
+
+<div class="sr-header">
+  <h1>Send Readiness</h1>
+  <p class="sr-header__sub">Pre-campaign gate — green/amber/red based on your 7 Inbox Signals</p>
+</div>
+
+<div class="sr-gate sr-gate--{{ readiness.status }}">
+  <div class="sr-gate__icon">
+    {% if readiness.status == 'green' %}✓{% elif readiness.status == 'amber' %}⚠{% else %}✕{% endif %}
+  </div>
+  <h2 class="sr-gate__status">{{ readiness.status_label }}</h2>
+  <p class="sr-gate__message">{{ readiness.message }}</p>
+  {% if readiness.score is defined %}
+    <div class="sr-gate__score">Signal Score: <strong>{{ readiness.score|round|int }}/100</strong> ({{ readiness.grade }})</div>
+  {% endif %}
+</div>
+
+{% if readiness.issues %}
+<div class="sr-issues">
+  <h3 class="sr-issues__title">Issues to resolve before sending</h3>
+  <ul class="sr-issues__list">
+    {% for issue in readiness.issues %}
+      <li class="sr-issues__item">{{ issue }}</li>
+    {% endfor %}
+  </ul>
+</div>
+{% endif %}
+
+{% if readiness.actions %}
+<div class="sr-actions">
+  <h3 class="sr-actions__title">Recommended actions</h3>
+  <ul class="sr-actions__list">
+    {% for action in readiness.actions %}
+      <li class="sr-actions__item">{{ action }}</li>
+    {% endfor %}
+  </ul>
+</div>
+{% endif %}
+
+<p style="text-align:center;margin-top:20px;"><a href="/signal-score">&larr; Back to Signal Score</a></p>
+{% endblock %}

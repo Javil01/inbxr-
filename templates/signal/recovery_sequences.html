@@ -1,0 +1,137 @@
+{% extends "auth/base_auth.html" %}
+{% block title %}Recovery Sequences{% endblock %}
+{% block content %}
+<style>
+.rs-header h1 { margin: 0; font-size: 1.6rem; }
+.rs-header__sub { font-size: 0.85rem; color: var(--text-3); margin: 4px 0 20px; }
+.rs-form { background: var(--bg-1, #fff); border: 1px solid var(--border); border-radius: var(--r-lg, 12px); padding: 24px; margin-bottom: 20px; }
+.rs-field { margin-bottom: 14px; }
+.rs-field label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-1); margin-bottom: 4px; }
+.rs-field select, .rs-field input { width: 100%; padding: 9px 12px; border: 1px solid var(--border); border-radius: var(--r-md, 8px); font-size: 0.9rem; background: #fff; }
+.rs-btn { padding: 10px 20px; background: var(--brand); color: #fff; border: none; border-radius: var(--r-md, 8px); font-size: 0.9rem; font-weight: 600; cursor: pointer; }
+.rs-btn:hover { background: var(--brand-dark, #1d4ed8); }
+.rs-btn[disabled] { opacity: 0.6; cursor: not-allowed; }
+
+.rs-email { background: var(--bg-1, #fff); border: 1px solid var(--border); border-radius: var(--r-lg, 12px); padding: 20px; margin-bottom: 12px; }
+.rs-email__num { font-size: 0.7rem; font-weight: 700; color: var(--brand); text-transform: uppercase; letter-spacing: 0.08em; }
+.rs-email__subjects { margin: 10px 0 14px; }
+.rs-email__subject { background: var(--bg-2); padding: 8px 12px; border-radius: var(--r-md, 8px); margin-bottom: 6px; font-size: 0.85rem; font-weight: 600; }
+.rs-email__preview { font-size: 0.78rem; color: var(--text-3); font-style: italic; margin: 4px 0 12px; }
+.rs-email__body { font-size: 0.88rem; line-height: 1.6; color: var(--text-2); white-space: pre-wrap; padding: 12px; background: var(--bg-2); border-radius: var(--r-md, 8px); margin-bottom: 10px; }
+.rs-email__cta { font-size: 0.82rem; font-weight: 700; color: var(--brand); }
+
+.rs-loading { text-align: center; padding: 20px; color: var(--text-3); }
+.rs-empty { text-align: center; padding: 32px; color: var(--text-3); border: 1px dashed var(--border); border-radius: var(--r-lg, 12px); }
+</style>
+
+<div class="rs-header">
+  <h1>Recovery Sequences</h1>
+  <p class="rs-header__sub">Groq-generated 2-3 email re-engagement sequence for your at-risk segment</p>
+</div>
+
+<div class="rs-form">
+  <div class="rs-field">
+    <label for="segment">Segment</label>
+    <select id="segment">
+      <option value="at_risk">At-Risk (91-180 days inactive)</option>
+      <option value="dormant">Dormant (180+ days inactive)</option>
+      <option value="warm">Warm (31-90 days, prevent decay)</option>
+      <option value="cold_acquisition">Cold acquisition (never engaged)</option>
+    </select>
+  </div>
+  <div class="rs-field">
+    <label for="brand">Brand / product name</label>
+    <input type="text" id="brand" placeholder="Your brand name" />
+  </div>
+  <div class="rs-field">
+    <label for="tone">Tone</label>
+    <select id="tone">
+      <option value="conversational">Conversational</option>
+      <option value="professional">Professional</option>
+      <option value="urgent">Urgent</option>
+      <option value="warm">Warm</option>
+    </select>
+  </div>
+  <div class="rs-field">
+    <label for="num_emails">Number of emails in sequence</label>
+    <select id="num_emails">
+      <option value="2">2 emails</option>
+      <option value="3" selected>3 emails</option>
+    </select>
+  </div>
+  <button type="button" class="rs-btn" id="genBtn" onclick="generateSequence()">Generate Sequence</button>
+</div>
+
+<div id="results"></div>
+
+<p style="text-align:center;margin-top:20px;"><a href="/signal-score">&larr; Back to Signal Score</a></p>
+
+<script>
+function generateSequence() {
+  const btn = document.getElementById('genBtn');
+  const results = document.getElementById('results');
+  btn.disabled = true;
+  btn.textContent = 'Generating…';
+  results.innerHTML = '<div class="rs-loading">AI is writing your sequence — this takes 15-30 seconds…</div>';
+
+  const body = {
+    segment: document.getElementById('segment').value,
+    brand_name: document.getElementById('brand').value || 'our brand',
+    tone: document.getElementById('tone').value,
+    num_emails: parseInt(document.getElementById('num_emails').value),
+  };
+
+  fetch('/recovery-sequences/generate', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.content || '',
+    },
+    body: JSON.stringify(body),
+  })
+  .then(r => r.json())
+  .then(d => {
+    btn.disabled = false;
+    btn.textContent = 'Generate Sequence';
+    if (d.ok && d.sequence) {
+      renderSequence(d.sequence);
+    } else {
+      results.innerHTML = '<div class="rs-empty">Generation failed: ' + (d.error || 'unknown error') + '</div>';
+    }
+  })
+  .catch(e => {
+    btn.disabled = false;
+    btn.textContent = 'Generate Sequence';
+    results.innerHTML = '<div class="rs-empty">Network error: ' + e + '</div>';
+  });
+}
+
+function renderSequence(sequence) {
+  const results = document.getElementById('results');
+  results.innerHTML = '';
+  sequence.forEach((email, i) => {
+    const div = document.createElement('div');
+    div.className = 'rs-email';
+    div.innerHTML = `
+      <div class="rs-email__num">Email ${i + 1}</div>
+      <div class="rs-email__subjects">
+        <strong style="font-size:0.78rem;color:var(--text-3);">Subject variants:</strong>
+        <div class="rs-email__subject">${escapeHtml(email.subject_1 || '')}</div>
+        <div class="rs-email__subject">${escapeHtml(email.subject_2 || '')}</div>
+        <div class="rs-email__subject">${escapeHtml(email.subject_3 || '')}</div>
+      </div>
+      ${email.preview_text ? `<div class="rs-email__preview">Preview: ${escapeHtml(email.preview_text)}</div>` : ''}
+      <div class="rs-email__body">${escapeHtml(email.body || '')}</div>
+      ${email.cta_text ? `<div class="rs-email__cta">CTA: ${escapeHtml(email.cta_text)}</div>` : ''}
+    `;
+    results.appendChild(div);
+  });
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+</script>
+{% endblock %}

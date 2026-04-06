@@ -10,42 +10,42 @@ STEPS = [
     {
         "key": "email_verified",
         "title": "Verify Your Email",
-        "desc": "Confirm your email address to unlock all features.",
+        "desc": "Confirm your email address to unlock the full 7 Inbox Signals system.",
         "href": "/account",
         "cta": "Verify Email",
         "icon": "mail",
     },
     {
         "key": "first_email_test",
-        "title": "Run Your First Email Test",
+        "title": "Run Your First Inboxer Send Test",
         "desc": "Send a test email and get instant SPF, DKIM, DMARC, spam risk, and content analysis.",
         "href": "/",
-        "cta": "Run Email Test",
+        "cta": "Run Inboxer Send Test",
         "icon": "zap",
     },
     {
         "key": "first_domain_check",
-        "title": "Check Sender Authentication",
-        "desc": "Enter your sending domain to verify auth records and get an A-F sender health grade.",
+        "title": "Run Inboxer Sender Check",
+        "desc": "Enter your sending domain to verify SPF/DKIM/DMARC and get your Authentication Standing signal score.",
         "href": "/sender",
         "cta": "Check Domain",
         "icon": "shield",
     },
     {
+        "key": "first_signal_score",
+        "title": "Get Your First Signal Score",
+        "desc": "Connect an ESP or upload a CSV to get a reading on all 7 Inbox Signals — your full deliverability picture in 60 seconds.",
+        "href": "/signal-score",
+        "cta": "Get Signal Score",
+        "icon": "activity",
+    },
+    {
         "key": "first_monitor",
-        "title": "Set Up Blocklist Monitoring",
-        "desc": "Add your domain for automated scanning across 110+ blocklists every 6 hours.",
+        "title": "Set Up Reputation Watch",
+        "desc": "Add your domain for automated blocklist scanning across 110+ DNSBLs every 6 hours.",
         "href": "/blacklist-monitor",
         "cta": "Add Monitor",
         "icon": "eye",
-    },
-    {
-        "key": "first_subject_test",
-        "title": "Score a Subject Line",
-        "desc": "A/B test 2-10 subject lines across 7 scoring dimensions before you send.",
-        "href": "/subject-scorer",
-        "cta": "Score Subjects",
-        "icon": "type",
     },
 ]
 
@@ -78,8 +78,9 @@ def get_onboarding_status(user_id):
         (user_id,),
     ))
 
-    completed["first_subject_test"] = bool(fetchone(
-        "SELECT 1 FROM check_history WHERE user_id = ? AND tool = 'subject_test' LIMIT 1",
+    # New: completed if user has any signal_scores row (CSV upload OR ESP-driven calculation)
+    completed["first_signal_score"] = bool(fetchone(
+        "SELECT 1 FROM signal_scores WHERE user_id = ? LIMIT 1",
         (user_id,),
     ))
 

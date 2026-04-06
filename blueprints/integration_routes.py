@@ -338,12 +338,15 @@ def get_health_summary():
 @login_required
 @tier_required("pro", "agency", "api")
 def deliverability_dashboard():
-    """Deliverability dashboard page."""
-    user = get_current_user()
-    return render_template(
-        "auth/deliverability.html",
-        active_page="deliverability",
-    )
+    """
+    Legacy /deliverability URL — permanently redirects to /signal-score.
+    The Signal Score Dashboard is now the single consolidated home for
+    deliverability intelligence (primary) + aggregate ESP health (supporting).
+
+    Preserves bookmarks, sidebar links, and SEO authority via 301.
+    """
+    from flask import redirect, url_for
+    return redirect(url_for("signal.signal_score_dashboard"), code=301)
 
 
 @integration_bp.route("/api/integrations/providers", methods=["GET"])

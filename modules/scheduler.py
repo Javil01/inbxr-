@@ -187,15 +187,191 @@ def _scheduled_daily_blog_post():
 
 
 def _scheduled_esp_sync():
-    """Sync all active ESP integrations."""
-    from modules.esp_sync import sync_all_active
+    """
+    Sync all active ESP integrations AND run Signal Watch.
 
+    This single job handles:
+    1. Aggregate ESP sync (existing modules/esp_sync.py) — updates esp_sync_snapshots
+    2. Per-contact sync for Phase 2 supported ESPs (Mailchimp, ActiveCampaign, Mailgun, AWeber)
+    3. Signal Score recalculation for all Pro+ users
+    4. Early Warning alert evaluation
+    5. Signal Rules execution (alert-only, dry-run default)
+
+    Reference: SIGNAL_SPEC.md Phase 3 — extends this job rather than adding a parallel one.
+    """
+    from modules.esp_sync import sync_all_active
+    from modules.database import fetchall
+
+    # Step 1: existing aggregate sync
     try:
         result = sync_all_active()
-        logger.info("[SCHEDULER] ESP sync: %d synced, %d errors",
+        logger.info("[SCHEDULER] ESP aggregate sync: %d synced, %d errors",
                      result["synced"], result["errors"])
     except Exception as e:
-        logger.error("[SCHEDULER] ESP sync failed: %s", e)
+        logger.error("[SCHEDULER] ESP aggregate sync failed: %s", e)
+
+    # Step 2 + 3: Signal Watch — per-contact sync and signal calculation
+    try:
+        _signal_watch_for_all_users()
+    except Exception as e:
+        logger.error("[SCHEDULER] Signal Watch failed: %s", e)
+
+
+def _signal_watch_for_all_users():
+    """
+    For each Pro+ user with active integrations, pull per-contact data
+    (for ESPs that support it), calculate Signal Score, fire Early Warning
+    alerts, and execute live Signal Rules.
+
+    Non-supported ESPs (Instantly, Smartlead, GHL) fall back to aggregate-only
+    signal calculation using data already in esp_sync_snapshots.
+    """
+    from modules.database import fetchall
+
+    # Get Pro+ users with active integrations
+    users = fetchall(
+        """SELECT DISTINCT u.id, u.tier, u.email
+           FROM users u
+           JOIN esp_integrations i ON i.user_id = u.id
+           WHERE u.tier IN ('pro', 'agency', 'api')
+           AND u.status = 'active'
+           AND i.status = 'active'"""
+    )
+
+    logger.info("[SIGNAL_WATCH] Starting for %d Pro+ users", len(users))
+    synced = 0
+    errors = 0
+
+    for u in users:
+        try:
+            _signal_watch_for_user(u['id'], u['tier'])
+            synced += 1
+        except Exception as e:
+            logger.exception("[SIGNAL_WATCH] User %s failed", u['id'])
+            errors += 1
+
+    logger.info("[SIGNAL_WATCH] Done: %d synced, %d errors", synced, errors)
+
+
+def _signal_watch_for_user(user_id, tier):
+    """Run Signal Watch for a single user."""
+    from modules.database import fetchall, fetchone
+    from modules.signal_score import calculate_signal_score, save_signal_score
+    from modules.esp_contact_sync import (
+        sync_contacts_for_integration, get_contacts_for_signal_score,
+    )
+    from modules.signal_alerts import check_early_warning_conditions
+    from modules.signal_rules import execute_signal_rules
+
+    # Get user's active integrations
+    integrations = fetchall(
+        """SELECT id, provider FROM esp_integrations
+           WHERE user_id = ? AND status = 'active'""",
+        (user_id,),
+    )
+
+    for integration in integrations:
+        integration_id = integration['id']
+        provider = integration['provider']
+
+        # Step 1: pull per-contact data (only for supported ESPs)
+        if provider in ('mailchimp', 'activecampaign', 'mailgun', 'aweber'):
+            try:
+                sync_result = sync_contacts_for_integration(integration_id)
+                if sync_result.get('error'):
+                    logger.warning(
+                        "[SIGNAL_WATCH] sync error for integration %s (%s): %s",
+                        integration_id, provider, sync_result['error']
+                    )
+            except Exception as e:
+                logger.exception(
+                    "[SIGNAL_WATCH] sync exception for integration %s (%s)",
+                    integration_id, provider
+                )
+
+        # Step 2: fetch contacts from contact_segments (if any)
+        contacts = get_contacts_for_signal_score(user_id, integration_id, limit=50000)
+
+        # Step 3: fetch auth data
+        auth_data = _get_auth_data_for_user(user_id)
+
+        # Step 4: calculate Signal Score
+        try:
+            result = calculate_signal_score(
+                user_id=user_id,
+                esp_integration_id=integration_id,
+                contact_data=contacts,
+                auth_data=auth_data,
+                esp_type=provider,
+                tier=tier,
+            )
+            save_signal_score(user_id, integration_id, result)
+        except Exception as e:
+            logger.exception(
+                "[SIGNAL_WATCH] score calculation failed for user %s integration %s",
+                user_id, integration_id
+            )
+            continue
+
+        # Step 5: Early Warning
+        try:
+            ew_result = check_early_warning_conditions(user_id, result)
+            if ew_result.get('alerts_created', 0) > 0:
+                logger.info(
+                    "[SIGNAL_WATCH] Fired %d Early Warning alerts for user %s",
+                    ew_result['alerts_created'], user_id
+                )
+        except Exception as e:
+            logger.exception("[SIGNAL_WATCH] Early Warning failed for user %s", user_id)
+
+        # Step 6: Signal Rules (live rules only — dry-run ignored)
+        try:
+            rules_result = execute_signal_rules(user_id, integration_id, result, contacts)
+            if rules_result.get('rules_fired', 0) > 0:
+                logger.info(
+                    "[SIGNAL_WATCH] Fired %d rules for user %s",
+                    rules_result['rules_fired'], user_id
+                )
+        except Exception as e:
+            logger.exception("[SIGNAL_WATCH] Signal Rules failed for user %s", user_id)
+
+
+def _get_auth_data_for_user(user_id):
+    """
+    Fetch authentication data for Signal Score calculation.
+    Reads from existing dns_monitor_snapshots + monitor_scans tables.
+    """
+    from modules.database import fetchone
+
+    # Get latest DNS monitor snapshot across user's monitors
+    dns = fetchone(
+        """SELECT ds.spf_record, ds.dkim_valid, ds.dmarc_record, ds.dmarc_policy, ds.issues
+           FROM dns_monitor_snapshots ds
+           JOIN user_monitors um ON um.id = ds.monitor_id
+           WHERE um.user_id = ?
+           ORDER BY ds.scanned_at DESC LIMIT 1""",
+        (user_id,),
+    )
+
+    # Get latest blocklist scan
+    bl = fetchone(
+        """SELECT ms.listed_count, ms.clean
+           FROM monitor_scans ms
+           JOIN user_monitors um ON um.id = ms.monitor_id
+           WHERE um.user_id = ?
+           ORDER BY ms.scanned_at DESC LIMIT 1""",
+        (user_id,),
+    )
+
+    auth_data = {
+        'spf_valid': bool(dns and dns.get('spf_record')),
+        'dkim_valid': bool(dns and dns.get('dkim_valid')),
+        'dmarc_policy': (dns.get('dmarc_policy') if dns else None) or 'none',
+        'list_unsubscribe': False,  # Not tracked yet — List-Unsubscribe check is Phase 5 polish
+        'blacklisted': bool(bl and bl.get('listed_count', 0) > 0),
+        'blacklists_count': (bl.get('listed_count') if bl else 0) or 0,
+    }
+    return auth_data
 
 
 def _scheduled_alert_cleanup():

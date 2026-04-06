@@ -1,0 +1,693 @@
+"""
+InbXr — Signal Intelligence Blueprint
+
+All routes for the 7 Inbox Signals system:
+- /signal-score            Signal Score Dashboard (primary)
+- /signal-score/calculate  Trigger a manual calculation
+- /signal-score/from-csv   Upload CSV for free-tier reading
+- /signal-score/history    Historical trend data
+- /signal-map              Contact segment visualization
+- /signal-alerts           Early Warning + Signal Rule alerts
+- /signal-alerts/<id>/dismiss
+- /signal-rules            Rule CRUD + preview + toggle
+- /signal-rules/<id>/preview  Dry-run
+- /signal-rules/<id>/toggle   Enable/disable
+- /signal-rules/<id>/flip-dry-run
+- /signal-rules/<id>/delete
+- /send-readiness          Pre-campaign gate
+- /recovery-sequences      AI re-engagement sequence generator (stub for now)
+
+Reference: SIGNAL_SPEC.md Phase 3 + Phase 4.
+
+All routes use raw SQLite + session auth (not SQLAlchemy + Flask-Login).
+"""
+
+import json
+import logging
+
+from flask import Blueprint, render_template, request, jsonify
+
+from modules.auth import login_required, tier_required, get_current_user
+from modules.database import execute, fetchone, fetchall
+from modules.tiers import has_feature, get_tier_limit
+from modules.signal_copy import (
+    SIGNAL_DIMENSION_COPY,
+    SIGNAL_GRADE_COPY,
+    ACTION_RECOMMENDATIONS,
+    PRE_BUILT_RULE_TEMPLATES,
+    SEGMENT_LABELS,
+    TRAJECTORY_DIRECTION_LABELS,
+    TRAJECTORY_DIRECTION_MESSAGES,
+    MPP_ACCURACY_LABELS,
+    FREE_TIER_LOCKED_SIGNALS,
+    get_homepage_signal_pills,
+)
+from modules.signal_score import (
+    calculate_signal_score,
+    calculate_signal_score_from_csv,
+    save_signal_score,
+    get_latest_signal_score,
+    get_signal_history,
+)
+from modules.signal_rules import (
+    preview_signal_rule,
+    create_rule_from_template,
+    create_custom_rule,
+    toggle_rule,
+    flip_dry_run,
+    delete_rule,
+    get_user_rules,
+    get_rule_log,
+)
+from modules.signal_alerts import (
+    get_signal_alerts,
+    dismiss_alert,
+    get_unread_signal_alert_count,
+)
+
+logger = logging.getLogger("inbxr.signal_routes")
+
+signal_bp = Blueprint("signal", __name__)
+
+
+# ── Helper: weakest signal identification ─────────────
+
+def _weakest_signal(latest_score):
+    """Return the tuple (dimension_key, score_value, weight) of the weakest signal."""
+    if not latest_score:
+        return None
+
+    signals = {
+        'bounce_exposure': (latest_score.get('bounce_exposure_score', 0), 25),
+        'engagement_trajectory': (latest_score.get('engagement_trajectory_score', 0), 25),
+        'acquisition_quality': (latest_score.get('acquisition_quality_score', 0), 15),
+        'domain_reputation': (latest_score.get('domain_reputation_score', 0), 15),
+        'dormancy_risk': (latest_score.get('dormancy_risk_score', 0), 10),
+        'authentication_standing': (latest_score.get('authentication_standing_score', 0), 5),
+        'decay_velocity': (latest_score.get('decay_velocity_score', 0), 5),
+    }
+
+    # Filter out locked signals for free tier
+    tier = latest_score.get('tier_at_calculation', 'pro')
+    if tier == 'free':
+        for s in FREE_TIER_LOCKED_SIGNALS:
+            signals.pop(s, None)
+
+    weakest_key = min(signals.keys(), key=lambda k: (signals[k][0] / signals[k][1]) if signals[k][1] else 1)
+    return (weakest_key, signals[weakest_key][0], signals[weakest_key][1])
+
+
+# ── Dashboard ──────────────────────────────────────────
+
+@signal_bp.route("/signal-score")
+@login_required
+def signal_score_dashboard():
+    """Signal Score Dashboard — main 7-signal visualization page."""
+    user = get_current_user()
+    user_id = user["id"]
+    tier = user.get("tier", "free")
+
+    latest = get_latest_signal_score(user_id, esp_integration_id=None)
+    # Also try per-integration (for users with connected ESP)
+    if not latest:
+        integration_latest = fetchone(
+            """SELECT * FROM signal_scores
+               WHERE user_id = ? AND esp_integration_id IS NOT NULL
+               ORDER BY calculated_at DESC LIMIT 1""",
+            (user_id,),
+        )
+        if integration_latest:
+            latest = integration_latest
+
+    history = []
+    weakest = None
+    weakest_action = None
+    weakest_name = None
+
+    if latest:
+        history = get_signal_history(user_id, latest.get("esp_integration_id"), limit=30)
+        weakest = _weakest_signal(latest)
+        if weakest:
+            weakest_name = SIGNAL_DIMENSION_COPY.get(weakest[0], {}).get("name", weakest[0])
+            weakest_action = ACTION_RECOMMENDATIONS.get(weakest[0])
+
+    alerts = get_signal_alerts(user_id, limit=10)
+    unread_alert_count = get_unread_signal_alert_count(user_id)
+
+    return render_template(
+        "signal/dashboard.html",
+        active_page="signal_score",
+        latest=latest,
+        history=history,
+        weakest=weakest,
+        weakest_name=weakest_name,
+        weakest_action=weakest_action,
+        alerts=alerts,
+        unread_alert_count=unread_alert_count,
+        signal_dimensions=SIGNAL_DIMENSION_COPY,
+        grade_copy=SIGNAL_GRADE_COPY,
+        segment_labels=SEGMENT_LABELS,
+        mpp_labels=MPP_ACCURACY_LABELS,
+        trajectory_labels=TRAJECTORY_DIRECTION_LABELS,
+        trajectory_messages=TRAJECTORY_DIRECTION_MESSAGES,
+        free_tier_locked=list(FREE_TIER_LOCKED_SIGNALS),
+        tier=tier,
+        title="Signal Score",
+    )
+
+
+@signal_bp.route("/signal-score/calculate", methods=["POST"])
+@login_required
+@tier_required("pro", "agency", "api")
+def calculate_signal_score_now():
+    """
+    Manually trigger a Signal Score recalculation.
+    Requires a connected ESP — users without one should use the CSV upload path.
+    """
+    from modules.esp_contact_sync import get_contacts_for_signal_score
+    from modules.scheduler import _get_auth_data_for_user
+
+    user = get_current_user()
+    user_id = user["id"]
+    tier = user.get("tier", "pro")
+
+    # Find first active integration
+    integration = fetchone(
+        """SELECT id, provider FROM esp_integrations
+           WHERE user_id = ? AND status = 'active'
+           ORDER BY created_at LIMIT 1""",
+        (user_id,),
+    )
+
+    if not integration:
+        return jsonify({
+            "ok": False,
+            "error": "No active ESP connected. Connect an ESP or upload a CSV.",
+        }), 400
+
+    integration_id = integration["id"]
+    provider = integration["provider"]
+
+    # Fetch existing contact data (assumes periodic sync has run at least once)
+    contacts = get_contacts_for_signal_score(user_id, integration_id, limit=50000)
+    auth_data = _get_auth_data_for_user(user_id)
+
+    result = calculate_signal_score(
+        user_id=user_id,
+        esp_integration_id=integration_id,
+        contact_data=contacts,
+        auth_data=auth_data,
+        esp_type=provider,
+        tier=tier,
+    )
+    save_signal_score(user_id, integration_id, result)
+
+    # Run Early Warning + Signal Rules
+    from modules.signal_alerts import check_early_warning_conditions
+    from modules.signal_rules import execute_signal_rules
+    check_early_warning_conditions(user_id, result)
+    execute_signal_rules(user_id, integration_id, result, contacts)
+
+    return jsonify({
+        "ok": True,
+        "score": result["total_signal_score"],
+        "grade": result["signal_grade"],
+        "trajectory": result["trajectory_direction"],
+        "total_contacts": result["segments"]["total"],
+    })
+
+
+@signal_bp.route("/signal-score/from-csv", methods=["POST"])
+@login_required
+def calculate_signal_score_csv():
+    """
+    Calculate a Signal Score from an uploaded CSV file.
+    Free tier entry point — no ESP connection required.
+    """
+    user = get_current_user()
+    user_id = user["id"]
+    tier = user.get("tier", "free")
+
+    if not has_feature(tier, "signal_csv_upload"):
+        return jsonify({"ok": False, "error": "CSV upload not available on your tier"}), 403
+
+    if "csv_file" not in request.files:
+        return jsonify({"ok": False, "error": "No file uploaded"}), 400
+
+    f = request.files["csv_file"]
+    try:
+        csv_content = f.read().decode("utf-8")
+    except UnicodeDecodeError:
+        try:
+            f.seek(0)
+            csv_content = f.read().decode("latin-1")
+        except Exception:
+            return jsonify({"ok": False, "error": "Could not decode CSV file. Use UTF-8."}), 400
+
+    from modules.scheduler import _get_auth_data_for_user
+    auth_data = _get_auth_data_for_user(user_id)
+
+    result = calculate_signal_score_from_csv(
+        user_id=user_id,
+        csv_content=csv_content,
+        auth_data=auth_data,
+        tier=tier,
+    )
+
+    if result.get("error"):
+        return jsonify({"ok": False, "error": result.get("message", "CSV parse error")}), 400
+
+    save_signal_score(user_id, None, result)
+
+    return jsonify({
+        "ok": True,
+        "score": result["total_signal_score"],
+        "grade": result["signal_grade"],
+        "rows_parsed": result["rows_parsed"],
+        "rows_skipped": result["rows_skipped"],
+        "total_contacts": result["segments"]["total"],
+    })
+
+
+@signal_bp.route("/signal-score/history")
+@login_required
+def signal_score_history():
+    """Signal Score history as JSON for chart rendering."""
+    user = get_current_user()
+    history = get_signal_history(user["id"], esp_integration_id=None, limit=90)
+
+    chart_data = [{
+        "date": h.get("recorded_at"),
+        "score": h.get("total_signal_score"),
+        "grade": h.get("signal_grade"),
+        "event_type": h.get("event_type"),
+        "event_label": h.get("event_label"),
+        "total_contacts": h.get("total_contacts"),
+    } for h in history]
+
+    return jsonify({"ok": True, "history": chart_data})
+
+
+# ── Signal Map ─────────────────────────────────────────
+
+@signal_bp.route("/signal-map")
+@login_required
+def signal_map():
+    """Signal Map — visual breakdown of Active / Warm / At-Risk / Dormant segments."""
+    user = get_current_user()
+    latest = get_latest_signal_score(user["id"], esp_integration_id=None)
+
+    # Count suppressed contacts
+    suppressed_count = 0
+    if latest:
+        result = fetchone(
+            """SELECT COUNT(*) as cnt FROM contact_segments
+               WHERE user_id = ? AND is_suppressed = 1""",
+            (user["id"],),
+        )
+        suppressed_count = result["cnt"] if result else 0
+
+    return render_template(
+        "signal/map.html",
+        active_page="signal_map",
+        latest=latest,
+        suppressed_count=suppressed_count,
+        segment_labels=SEGMENT_LABELS,
+        title="Signal Map",
+    )
+
+
+# ── Signal Alerts ──────────────────────────────────────
+
+@signal_bp.route("/signal-alerts")
+@login_required
+@tier_required("pro", "agency", "api")
+def signal_alerts_page():
+    """Signal Alerts list — Early Warning + Signal Rule firings."""
+    user = get_current_user()
+    alerts = get_signal_alerts(user["id"], limit=50)
+    return render_template(
+        "signal/alerts.html",
+        active_page="signal_alerts",
+        alerts=alerts,
+        title="Signal Alerts",
+    )
+
+
+@signal_bp.route("/signal-alerts/<int:alert_id>/dismiss", methods=["POST"])
+@login_required
+def dismiss_signal_alert(alert_id):
+    """Dismiss a signal alert."""
+    user = get_current_user()
+    dismiss_alert(user["id"], alert_id)
+    return jsonify({"ok": True})
+
+
+# ── Signal Rules ───────────────────────────────────────
+
+@signal_bp.route("/signal-rules")
+@login_required
+@tier_required("pro", "agency", "api")
+def signal_rules_page():
+    """Signal Rules management page."""
+    user = get_current_user()
+    rules = get_user_rules(user["id"])
+    rule_log = get_rule_log(user["id"], limit=20)
+
+    return render_template(
+        "signal/rules.html",
+        active_page="signal_rules",
+        rules=rules,
+        rule_log=rule_log,
+        templates=PRE_BUILT_RULE_TEMPLATES,
+        signal_dimensions=SIGNAL_DIMENSION_COPY,
+        rules_max=get_tier_limit(user.get("tier", "pro"), "signal_rules_max"),
+        title="Signal Rules",
+    )
+
+
+@signal_bp.route("/signal-rules/create-from-template", methods=["POST"])
+@login_required
+@tier_required("pro", "agency", "api")
+def create_rule_from_template_route():
+    user = get_current_user()
+    data = request.get_json(force=True) if request.is_json else request.form.to_dict()
+
+    template_id = data.get("template_id")
+    if not template_id:
+        return jsonify({"ok": False, "error": "template_id required"}), 400
+
+    # Check rule count limit
+    existing_count = len(get_user_rules(user["id"]))
+    max_rules = get_tier_limit(user.get("tier", "pro"), "signal_rules_max")
+    if existing_count >= max_rules:
+        return jsonify({
+            "ok": False,
+            "error": f"Rule limit reached ({max_rules}). Upgrade for more."
+        }), 403
+
+    result = create_rule_from_template(user["id"], template_id)
+    if result.get("error"):
+        return jsonify({"ok": False, "error": result["error"]}), 400
+    return jsonify({"ok": True, "rule": result.get("rule")})
+
+
+@signal_bp.route("/signal-rules/<int:rule_id>/preview", methods=["POST"])
+@login_required
+@tier_required("pro", "agency", "api")
+def preview_rule(rule_id):
+    """Dry-run preview: show what a rule WOULD do."""
+    from modules.esp_contact_sync import get_contacts_for_signal_score
+
+    user = get_current_user()
+
+    latest = get_latest_signal_score(user["id"])
+    if not latest:
+        return jsonify({
+            "ok": False,
+            "error": "No Signal Score calculated yet. Run a calculation first."
+        }), 400
+
+    integration_id = latest.get("esp_integration_id")
+    contacts = get_contacts_for_signal_score(user["id"], integration_id, limit=50000)
+
+    # Build minimal signal_result dict from the latest row
+    signal_result = {
+        "scores": {
+            "bounce_exposure": latest.get("bounce_exposure_score", 0),
+            "engagement_trajectory": latest.get("engagement_trajectory_score", 0),
+            "acquisition_quality": latest.get("acquisition_quality_score", 0),
+            "domain_reputation": latest.get("domain_reputation_score", 0),
+            "dormancy_risk": latest.get("dormancy_risk_score", 0),
+            "authentication_standing": latest.get("authentication_standing_score", 0),
+            "decay_velocity": latest.get("decay_velocity_score", 0),
+        },
+        "total_signal_score": latest.get("total_signal_score", 0),
+    }
+
+    preview = preview_signal_rule(user["id"], rule_id, contacts, signal_result)
+    if preview.get("error"):
+        return jsonify({"ok": False, "error": preview["error"]}), 404
+    return jsonify({"ok": True, **preview})
+
+
+@signal_bp.route("/signal-rules/<int:rule_id>/toggle", methods=["POST"])
+@login_required
+@tier_required("pro", "agency", "api")
+def toggle_rule_route(rule_id):
+    user = get_current_user()
+    result = toggle_rule(user["id"], rule_id)
+    if result.get("error"):
+        return jsonify({"ok": False, "error": result["error"]}), 404
+    return jsonify({"ok": True, **result})
+
+
+@signal_bp.route("/signal-rules/<int:rule_id>/flip-dry-run", methods=["POST"])
+@login_required
+@tier_required("pro", "agency", "api")
+def flip_rule_dry_run(rule_id):
+    """
+    Explicitly flip a rule from dry-run to live (or back).
+    This is the ONLY way to activate a rule for real ESP/data changes.
+    """
+    user = get_current_user()
+    result = flip_dry_run(user["id"], rule_id)
+    if result.get("error"):
+        return jsonify({"ok": False, "error": result["error"]}), 404
+    return jsonify({"ok": True, **result})
+
+
+@signal_bp.route("/signal-rules/<int:rule_id>", methods=["DELETE"])
+@login_required
+@tier_required("pro", "agency", "api")
+def delete_rule_route(rule_id):
+    user = get_current_user()
+    result = delete_rule(user["id"], rule_id)
+    return jsonify({"ok": True, **result})
+
+
+# ── Send Readiness ─────────────────────────────────────
+
+@signal_bp.route("/send-readiness")
+@login_required
+@tier_required("pro", "agency", "api")
+def send_readiness_page():
+    """Pre-campaign Signal readiness gate."""
+    user = get_current_user()
+    latest = get_latest_signal_score(user["id"])
+    readiness = _calculate_send_readiness(latest)
+    return render_template(
+        "signal/send_readiness.html",
+        active_page="send_readiness",
+        latest=latest,
+        readiness=readiness,
+        title="Send Readiness",
+    )
+
+
+@signal_bp.route("/send-readiness/check", methods=["POST"])
+@login_required
+@tier_required("pro", "agency", "api")
+def send_readiness_check():
+    """Check send readiness for a specific campaign/segment."""
+    user = get_current_user()
+    latest = get_latest_signal_score(user["id"])
+    readiness = _calculate_send_readiness(latest)
+
+    # Log the check event in history
+    if latest:
+        execute(
+            """INSERT INTO signal_score_history (
+                user_id, esp_integration_id, total_signal_score, signal_grade,
+                event_type, event_label
+            ) VALUES (?, ?, ?, ?, 'send_readiness_check', ?)""",
+            (
+                user["id"],
+                latest.get("esp_integration_id"),
+                latest["total_signal_score"],
+                latest["signal_grade"],
+                f"Send check: {readiness['status_label']}",
+            ),
+        )
+
+    return jsonify({"ok": True, **readiness})
+
+
+def _calculate_send_readiness(latest):
+    """
+    Compose green/amber/red send readiness gate from latest signal data.
+    Green: score >= 70, no critical signals failing
+    Amber: score 45-69, or one signal warning
+    Red: score < 45, or authentication failing, or blacklisted
+    """
+    if not latest:
+        return {
+            "status": "amber",
+            "status_label": "No signal data",
+            "message": "Calculate your Signal Score first.",
+            "issues": [],
+            "actions": ["Connect your ESP or upload a CSV"],
+        }
+
+    issues = []
+    actions = []
+    score = latest.get("total_signal_score", 0)
+
+    # Authentication check
+    auth_score = latest.get("authentication_standing_score", 0)
+    if auth_score < 3:
+        issues.append("Authentication Standing is below threshold — emails may be rejected")
+        actions.append("Fix authentication in Inboxer Sender Check")
+
+    # Bounce exposure
+    bounce_score = latest.get("bounce_exposure_score", 0)
+    if bounce_score < 10:
+        issues.append("Bounce Exposure is elevated — risk of reputation damage")
+        actions.append("Run List Verification before sending")
+
+    # Dormancy Risk
+    dormancy = latest.get("dormancy_risk_score", 0)
+    if dormancy < 5:
+        issues.append("Dormancy Risk is high — suppress dormant contacts first")
+        actions.append("Apply Signal Rules to suppress 180+ day dormant contacts")
+
+    # Segment composition
+    at_risk = latest.get("at_risk_contacts", 0)
+    total = latest.get("total_contacts", 0) or 1
+    at_risk_pct = (at_risk / total) * 100
+
+    if at_risk_pct > 20:
+        issues.append(f"{at_risk_pct:.0f}% of your list is At-Risk — sending to full list not recommended")
+        actions.append("Run Recovery Sequences on At-Risk segment first")
+
+    if score >= 70 and not issues:
+        status = "green"
+        label = "Clear"
+        message = "Clear to send. All 7 Inbox Signals are in good condition."
+    elif score >= 45 and len(issues) <= 1:
+        status = "amber"
+        label = "Caution"
+        message = f'{len(issues)} signal{"s" if len(issues) != 1 else ""} need attention before sending.'
+    else:
+        status = "red"
+        label = "Hold"
+        message = "Do not send to your full list. Resolve signal issues first."
+
+    return {
+        "status": status,
+        "status_label": label,
+        "score": score,
+        "grade": latest.get("signal_grade"),
+        "message": message,
+        "issues": issues,
+        "actions": actions,
+    }
+
+
+# ── Recovery Sequences (stub — depends on Groq integration) ──
+
+@signal_bp.route("/recovery-sequences")
+@login_required
+@tier_required("pro", "agency", "api")
+def recovery_sequences_page():
+    """Recovery Sequences page — AI-generated re-engagement email flow."""
+    user = get_current_user()
+    latest = get_latest_signal_score(user["id"])
+    return render_template(
+        "signal/recovery_sequences.html",
+        active_page="recovery_sequences",
+        latest=latest,
+        title="Recovery Sequences",
+    )
+
+
+@signal_bp.route("/recovery-sequences/generate", methods=["POST"])
+@login_required
+@tier_required("pro", "agency", "api")
+def generate_recovery_sequence():
+    """
+    Generate a 2-3 email re-engagement sequence via Groq.
+    Stubs the Groq call for now — full integration in next session.
+    """
+    data = request.get_json(force=True) if request.is_json else request.form.to_dict()
+    segment = data.get("segment", "at_risk")
+    brand_name = data.get("brand_name", "our brand")
+    tone = data.get("tone", "conversational")
+    num_emails = int(data.get("num_emails", 3))
+
+    # Build prompt and call Groq — uses existing ai_rewriter pattern
+    try:
+        sequence = _generate_sequence_via_groq(segment, brand_name, tone, num_emails)
+        return jsonify({"ok": True, "sequence": sequence})
+    except Exception as e:
+        logger.exception("Recovery Sequences generation failed")
+        return jsonify({"ok": False, "error": "Generation failed. Try again."}), 500
+
+
+def _generate_sequence_via_groq(segment, brand_name, tone, num_emails):
+    """
+    Call Groq with a recovery sequence prompt. Reuses the existing
+    modules/ai_rewriter.py Groq client pattern.
+
+    Returns a list of email dicts: [{subject_variants, preview_text, body, cta_text}, ...]
+    """
+    import os
+    import urllib.request
+    import urllib.error
+
+    api_key = os.environ.get("GROQ_API_KEY")
+    if not api_key:
+        raise RuntimeError("GROQ_API_KEY not configured")
+
+    days_map = {"at_risk": "91-180", "dormant": "180+", "warm": "31-90", "cold_acquisition": "never engaged"}
+    days_inactive = days_map.get(segment, "90+")
+
+    prompt = f"""You are an expert email re-engagement copywriter. Generate a {num_emails}-email re-engagement sequence as JSON.
+
+Context from InbXr's 7 Inbox Signals:
+- Segment: {segment} ({days_inactive} days since last engagement)
+- Brand: {brand_name}
+- Tone: {tone}
+
+Structure:
+- Email 1 (Day 1): Gentle re-connection — did we lose you?
+- Email 2 (Day 4): Value reminder — what they're missing
+{f"- Email 3 (Day 8): Stay or go? Binary final ask" if num_emails >= 3 else ""}
+
+Return ONLY valid JSON array. Each email object has:
+- subject_1, subject_2, subject_3 (3 subject line variants)
+- preview_text (preheader, ~50 chars)
+- body (150-200 words)
+- cta_text
+
+Rules:
+- Focus: re-engagement signal (click or reply), not selling
+- Avoid: ALL CAPS, excessive punctuation, "Act Now" urgency, spam triggers
+- Match tone: {tone}"""
+
+    payload = json.dumps({
+        "model": "llama-3.3-70b-versatile",
+        "messages": [{"role": "user", "content": prompt}],
+        "temperature": 0.7,
+        "max_tokens": 2500,
+    }).encode("utf-8")
+
+    req = urllib.request.Request(
+        "https://api.groq.com/openai/v1/chat/completions",
+        data=payload,
+        headers={
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+        },
+    )
+
+    with urllib.request.urlopen(req, timeout=60) as resp:
+        response = json.loads(resp.read().decode())
+
+    content = response["choices"][0]["message"]["content"]
+
+    # Strip markdown fences if present
+    import re
+    cleaned = re.sub(r"^```(?:json)?\s*|\s*```$", "", content.strip(), flags=re.MULTILINE)
+
+    return json.loads(cleaned)

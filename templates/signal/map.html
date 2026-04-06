@@ -1,0 +1,71 @@
+{% extends "auth/base_auth.html" %}
+{% block title %}Signal Map — Contact Segments{% endblock %}
+{% block content %}
+<style>
+.sm-header { margin-bottom: 20px; }
+.sm-header h1 { margin: 0; font-size: 1.6rem; }
+.sm-header__sub { font-size: 0.85rem; color: var(--text-3); margin: 4px 0 0; }
+
+.sm-card { background: var(--bg-1, #fff); border: 1px solid var(--border); border-radius: var(--r-lg, 12px); padding: 24px; margin-bottom: 20px; }
+.sm-seg { display: flex; align-items: center; gap: 16px; padding: 16px 0; border-bottom: 1px solid var(--bg-2); }
+.sm-seg:last-child { border-bottom: none; }
+.sm-seg__name { width: 120px; font-weight: 700; color: var(--text-1); }
+.sm-seg__bar { flex: 1; height: 32px; background: var(--bg-2); border-radius: 6px; overflow: hidden; }
+.sm-seg__fill { height: 100%; border-radius: 6px; transition: width 0.8s ease; display: flex; align-items: center; justify-content: flex-end; padding-right: 10px; color: #fff; font-weight: 700; font-size: 0.85rem; }
+.sm-seg__fill--active { background: #059669; }
+.sm-seg__fill--warm { background: #3b82f6; }
+.sm-seg__fill--at_risk { background: #d97706; }
+.sm-seg__fill--dormant { background: #dc2626; }
+.sm-seg__count { width: 100px; text-align: right; font-size: 0.95rem; font-weight: 700; color: var(--text-1); }
+.sm-seg__desc { font-size: 0.8rem; color: var(--text-3); max-width: 260px; }
+
+.sm-empty { text-align: center; padding: 40px 20px; color: var(--text-3); }
+.sm-suppressed { background: rgba(100,116,139,0.08); padding: 12px 16px; border-radius: var(--r-md, 8px); font-size: 0.85rem; color: var(--text-2); margin-top: 16px; }
+</style>
+
+<div class="sm-header">
+  <h1>Signal Map</h1>
+  <p class="sm-header__sub">Contact segment breakdown from your current Signal Score reading</p>
+</div>
+
+{% if not latest or not latest.total_contacts %}
+  <div class="sm-card">
+    <div class="sm-empty">
+      <p>No contact data yet.</p>
+      <p><a href="/signal-score">Run your first Signal Score reading &rarr;</a></p>
+    </div>
+  </div>
+{% else %}
+  {% set total = latest.total_contacts %}
+  <div class="sm-card">
+    {% for seg_key in ['active', 'warm', 'at_risk', 'dormant'] %}
+      {% set count = latest[seg_key ~ '_contacts']|default(0) %}
+      {% set pct = (count / total * 100)|round|int if total else 0 %}
+      {% set seg_info = segment_labels[seg_key] %}
+      <div class="sm-seg">
+        <div class="sm-seg__name">
+          {{ seg_info.label }}
+          <div style="font-size:0.7rem;font-weight:400;color:var(--text-4);">{{ seg_info.days_range }}</div>
+        </div>
+        <div class="sm-seg__bar">
+          <div class="sm-seg__fill sm-seg__fill--{{ seg_key }}" style="width: {{ pct }}%;">
+            {% if pct >= 10 %}{{ pct }}%{% endif %}
+          </div>
+        </div>
+        <div class="sm-seg__count">{{ count }}</div>
+        <div class="sm-seg__desc">{{ seg_info.description }}</div>
+      </div>
+    {% endfor %}
+
+    {% if suppressed_count %}
+    <div class="sm-suppressed">
+      <strong>{{ suppressed_count }}</strong> contact{{ 's' if suppressed_count != 1 else '' }} suppressed by Signal Rules (not shown above)
+    </div>
+    {% endif %}
+  </div>
+{% endif %}
+
+<p style="text-align:center;font-size:0.85rem;color:var(--text-3);">
+  <a href="/signal-score">&larr; Back to Signal Score</a>
+</p>
+{% endblock %}

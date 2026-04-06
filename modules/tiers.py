@@ -33,6 +33,17 @@ TIERS = {
             "priority_support": False,
             "framework_builder": False,
             "esp_integrations": False,
+            # Signal Intelligence (Phase 4)
+            "signal_score": True,             # Free gets 5 of 7 (normalized to 100)
+            "signal_csv_upload": True,        # Free can upload CSV for signal reading
+            "signal_watch": False,            # No background monitoring
+            "early_warning": False,           # No alerts from signal rules
+            "signal_rules": False,            # No automation rules
+            "signal_advisor": False,          # AI advisor is Pro+
+            "recovery_sequences": False,      # Groq-generated sequences are Pro+
+            "send_readiness": False,          # Pre-campaign gate is Pro+
+            "engagement_trajectory_signal": False,  # Market-first locked for free
+            "acquisition_quality_signal": False,    # Market-first locked for free
         },
     },
     "pro": {
@@ -49,6 +60,8 @@ TIERS = {
             "placement_tests_per_day": 20,
             "assistant_chats_per_month": 10,
             "esp_integrations": 1,
+            "signal_rules_max": 10,
+            "signal_advisor_chats_per_month": 20,
         },
         "features": {
             "cloud_history": True,
@@ -65,6 +78,17 @@ TIERS = {
             "priority_support": True,
             "framework_builder": True,
             "esp_integrations": True,
+            # Signal Intelligence (Phase 4)
+            "signal_score": True,             # Full 7 signals
+            "signal_csv_upload": True,
+            "signal_watch": True,             # Background monitoring every 6hr
+            "early_warning": True,            # Early Warning alerts
+            "signal_rules": True,             # Up to 10 active rules
+            "signal_advisor": True,           # Context-aware AI advisor
+            "recovery_sequences": True,       # Groq-generated re-engagement
+            "send_readiness": True,           # Pre-campaign gate
+            "engagement_trajectory_signal": True,
+            "acquisition_quality_signal": True,
         },
     },
     "agency": {
@@ -80,6 +104,8 @@ TIERS = {
             "subject_tests_per_day": 200,
             "placement_tests_per_day": 100,
             "esp_integrations": 10,
+            "signal_rules_max": 999,
+            "signal_advisor_chats_per_month": 999999,
         },
         "features": {
             "cloud_history": True,
@@ -96,6 +122,19 @@ TIERS = {
             "priority_support": True,
             "framework_builder": True,
             "esp_integrations": True,
+            # Signal Intelligence (Phase 4) — all unlocked
+            "signal_score": True,
+            "signal_csv_upload": True,
+            "signal_watch": True,
+            "early_warning": True,
+            "signal_rules": True,
+            "signal_advisor": True,
+            "recovery_sequences": True,
+            "send_readiness": True,
+            "engagement_trajectory_signal": True,
+            "acquisition_quality_signal": True,
+            # Agency gets unlimited signal rules (enforced in UI)
+            "signal_rules_unlimited": True,
         },
     },
     "api": {
@@ -111,6 +150,8 @@ TIERS = {
             "subject_tests_per_day": 1000,
             "placement_tests_per_day": 500,
             "esp_integrations": 10,
+            "signal_rules_max": 999,
+            "signal_advisor_chats_per_month": 999999,
         },
         "features": {
             "cloud_history": True,
@@ -127,6 +168,18 @@ TIERS = {
             "priority_support": True,
             "framework_builder": True,
             "esp_integrations": True,
+            # Signal Intelligence (Phase 4) — full API access
+            "signal_score": True,
+            "signal_csv_upload": True,
+            "signal_watch": True,
+            "early_warning": True,
+            "signal_rules": True,
+            "signal_advisor": True,
+            "recovery_sequences": True,
+            "send_readiness": True,
+            "engagement_trajectory_signal": True,
+            "acquisition_quality_signal": True,
+            "signal_rules_unlimited": True,
         },
         "api_pricing": {
             "domain_check": 0.02,

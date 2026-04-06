@@ -1,0 +1,85 @@
+{% extends "auth/base_auth.html" %}
+{% block title %}Signal Alerts — Early Warning{% endblock %}
+{% block content %}
+<style>
+.sa-header { margin-bottom: 20px; }
+.sa-header h1 { margin: 0; font-size: 1.6rem; }
+.sa-header__sub { font-size: 0.85rem; color: var(--text-3); margin: 4px 0 0; }
+
+.sa-alert { background: var(--bg-1, #fff); border: 1px solid var(--border); border-left: 4px solid var(--border); border-radius: var(--r-lg, 12px); padding: 18px; margin-bottom: 12px; }
+.sa-alert--info { border-left-color: #3b82f6; }
+.sa-alert--warning { border-left-color: #d97706; }
+.sa-alert--danger { border-left-color: #dc2626; }
+.sa-alert--critical { border-left-color: #7c2d12; background: rgba(220,38,38,0.03); }
+
+.sa-alert__header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 8px; }
+.sa-alert__title { font-size: 1rem; font-weight: 700; color: var(--text-1); margin: 0; }
+.sa-alert__type { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: var(--text-4); letter-spacing: 0.06em; }
+.sa-alert__dismiss { background: none; border: 1px solid var(--border); border-radius: var(--r-md, 8px); padding: 4px 10px; font-size: 0.75rem; cursor: pointer; color: var(--text-3); }
+.sa-alert__dismiss:hover { background: var(--bg-2); }
+.sa-alert__message { font-size: 0.88rem; color: var(--text-2); margin: 0 0 10px; line-height: 1.5; }
+.sa-alert__action { font-size: 0.82rem; color: var(--text-3); margin: 0; }
+.sa-alert__action-btn { display: inline-block; margin-top: 8px; padding: 6px 14px; background: var(--brand); color: #fff; border-radius: var(--r-md, 8px); font-size: 0.8rem; font-weight: 600; text-decoration: none; }
+.sa-alert__meta { font-size: 0.72rem; color: var(--text-4); margin-top: 6px; }
+
+.sa-empty { text-align: center; padding: 48px 20px; color: var(--text-3); background: var(--bg-1, #fff); border: 1px solid var(--border); border-radius: var(--r-lg, 12px); }
+</style>
+
+<div class="sa-header">
+  <h1>Signal Alerts</h1>
+  <p class="sa-header__sub">Early Warning alerts + Signal Rule firings</p>
+</div>
+
+{% if not alerts %}
+  <div class="sa-empty">
+    <p>No alerts yet.</p>
+    <p style="font-size:0.85rem;">Signal Watch will fire alerts as soon as any of your 7 signals need attention.</p>
+  </div>
+{% else %}
+  {% for alert in alerts %}
+    <div class="sa-alert sa-alert--{{ alert.severity or 'info' }}" id="alert-{{ alert.id }}">
+      <div class="sa-alert__header">
+        <div>
+          <span class="sa-alert__type">{{ alert.alert_type|replace('_', ' ') }}</span>
+          <h3 class="sa-alert__title">{{ alert.title }}</h3>
+        </div>
+        <button type="button" class="sa-alert__dismiss" onclick="dismissAlert({{ alert.id }})">Dismiss</button>
+      </div>
+      <p class="sa-alert__message">{{ alert.message }}</p>
+      {% if alert.recommended_action %}
+        <p class="sa-alert__action">
+          <strong>Recommended:</strong> {{ alert.recommended_action }}
+        </p>
+        {% if alert.action_url %}
+          <a href="{{ alert.action_url }}" class="sa-alert__action-btn">Take Action &rarr;</a>
+        {% endif %}
+      {% endif %}
+      {% if alert.signal_dimension %}
+        <div class="sa-alert__meta">
+          Signal: {{ alert.signal_dimension|replace('_', ' ')|title }} &middot; {{ alert.created_at[:16] }}
+        </div>
+      {% endif %}
+    </div>
+  {% endfor %}
+{% endif %}
+
+<p style="text-align:center;margin-top:20px;"><a href="/signal-score">&larr; Back to Signal Score</a></p>
+
+<script>
+function dismissAlert(id) {
+  fetch('/signal-alerts/' + id + '/dismiss', {
+    method: 'POST',
+    headers: {
+      'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.content || '',
+    },
+  })
+  .then(r => r.json())
+  .then(d => {
+    if (d.ok) {
+      const el = document.getElementById('alert-' + id);
+      if (el) el.remove();
+    }
+  });
+}
+</script>
+{% endblock %}

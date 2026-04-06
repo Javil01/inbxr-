@@ -1,0 +1,535 @@
+{% extends "auth/base_auth.html" %}
+{% block title %}Signal Score — The 7 Inbox Signals{% endblock %}
+{% block content %}
+<style>
+.sig-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; }
+.sig-header h1 { margin: 0; font-size: 1.6rem; }
+.sig-header__sub { font-size: 0.85rem; color: var(--text-3); margin: 4px 0 0; }
+.sig-actions { display: flex; gap: 8px; }
+
+/* Score hero */
+.sig-hero { display: flex; align-items: center; gap: 28px; padding: 28px; background: var(--bg-1, #fff); border: 1px solid var(--border, #e5e7eb); border-radius: var(--r-lg, 12px); margin-bottom: 20px; }
+.sig-score-ring { position: relative; width: 140px; height: 140px; flex-shrink: 0; }
+.sig-score-ring svg { width: 140px; height: 140px; transform: rotate(-90deg); }
+.sig-score-ring circle { fill: none; stroke-width: 10; }
+.sig-score-ring .ring-bg { stroke: var(--border, #e5e7eb); }
+.sig-score-ring .ring-fg { stroke-linecap: round; transition: stroke-dashoffset 1s ease, stroke 0.3s; }
+.sig-score-val { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.sig-score-num { font-size: 2.4rem; font-weight: 800; color: var(--text-1); line-height: 1; }
+.sig-score-grade { font-size: 0.9rem; font-weight: 700; margin-top: 4px; }
+.sig-score-label { font-size: 0.7rem; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 2px; }
+
+.sig-hero__info { flex: 1; min-width: 0; }
+.sig-hero__grade-label { font-size: 1.1rem; font-weight: 700; color: var(--text-1); margin: 0 0 8px; }
+.sig-hero__description { font-size: 0.9rem; color: var(--text-2); margin: 0 0 12px; }
+.sig-hero__cta { font-size: 0.85rem; color: var(--brand); font-weight: 600; }
+.sig-hero__meta { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 14px; font-size: 0.78rem; color: var(--text-3); }
+.sig-hero__meta-item { display: flex; align-items: center; gap: 6px; }
+.sig-hero__meta-icon { width: 14px; height: 14px; }
+
+/* Trajectory badge */
+.sig-trajectory { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: var(--r-full, 99px); font-size: 0.72rem; font-weight: 700; }
+.sig-trajectory--improving { background: rgba(5,150,105,0.1); color: #059669; }
+.sig-trajectory--stable { background: rgba(100,116,139,0.1); color: #64748b; }
+.sig-trajectory--declining { background: rgba(220,38,38,0.1); color: #dc2626; }
+.sig-trajectory--unknown { background: rgba(148,163,184,0.1); color: #94a3b8; }
+
+/* 7 Signal grid */
+.sig-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 14px; margin-bottom: 24px; }
+.sig-card { background: var(--bg-1, #fff); border: 1px solid var(--border, #e5e7eb); border-radius: var(--r-lg, 12px); padding: 18px; position: relative; }
+.sig-card--locked { opacity: 0.75; background: var(--bg-2); }
+.sig-card--locked::before { content: "Pro feature"; position: absolute; top: 12px; right: 12px; font-size: 0.65rem; font-weight: 700; color: var(--brand); background: rgba(37,99,235,0.08); padding: 3px 8px; border-radius: var(--r-full, 99px); }
+.sig-card__header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+.sig-card__num { font-size: 0.7rem; font-weight: 800; color: var(--text-4); letter-spacing: 0.08em; }
+.sig-card__name { font-size: 0.95rem; font-weight: 700; color: var(--text-1); margin: 2px 0 0; }
+.sig-card__note { font-size: 0.72rem; color: var(--text-3); margin-top: 2px; }
+.sig-card__score { text-align: right; font-size: 1.4rem; font-weight: 800; color: var(--text-1); line-height: 1; }
+.sig-card__score-max { font-size: 0.7rem; color: var(--text-4); font-weight: 600; }
+.sig-card__bar { height: 6px; background: var(--border, #e5e7eb); border-radius: 3px; overflow: hidden; margin: 12px 0; }
+.sig-card__bar-fill { height: 100%; border-radius: 3px; transition: width 0.8s ease; }
+.sig-card__bar-fill--green { background: #059669; }
+.sig-card__bar-fill--yellow { background: #d97706; }
+.sig-card__bar-fill--red { background: #dc2626; }
+.sig-card__tooltip { font-size: 0.78rem; color: var(--text-3); line-height: 1.5; margin: 8px 0 0; }
+.sig-card__badge { display: inline-block; font-size: 0.65rem; font-weight: 700; color: var(--brand); background: rgba(37,99,235,0.1); padding: 2px 8px; border-radius: var(--r-full, 99px); margin-top: 6px; }
+
+/* Recommended action */
+.sig-action { background: rgba(37,99,235,0.04); border: 1px solid rgba(37,99,235,0.15); border-radius: var(--r-lg, 12px); padding: 18px; margin-bottom: 20px; }
+.sig-action__label { font-size: 0.7rem; font-weight: 700; color: var(--brand); text-transform: uppercase; letter-spacing: 0.06em; }
+.sig-action__title { font-size: 1rem; font-weight: 700; color: var(--text-1); margin: 4px 0 6px; }
+.sig-action__cta { font-size: 0.85rem; color: var(--text-2); margin: 0 0 10px; }
+.sig-action__btn { display: inline-block; padding: 8px 16px; background: var(--brand); color: #fff; border-radius: var(--r-md, 8px); font-size: 0.82rem; font-weight: 600; text-decoration: none; transition: background 0.15s; }
+.sig-action__btn:hover { background: var(--brand-dark, #1d4ed8); }
+
+/* Segment composition */
+.sig-segments { background: var(--bg-1, #fff); border: 1px solid var(--border); border-radius: var(--r-lg, 12px); padding: 20px; margin-bottom: 20px; }
+.sig-segments__title { font-size: 0.95rem; font-weight: 700; margin: 0 0 14px; color: var(--text-1); }
+.sig-segments__row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+.sig-segments__label { width: 80px; font-size: 0.82rem; font-weight: 600; color: var(--text-2); }
+.sig-segments__bar { flex: 1; height: 22px; background: var(--bg-2); border-radius: 4px; position: relative; overflow: hidden; }
+.sig-segments__fill { height: 100%; border-radius: 4px; transition: width 0.6s ease; }
+.sig-segments__fill--active { background: #059669; }
+.sig-segments__fill--warm { background: #3b82f6; }
+.sig-segments__fill--at_risk { background: #d97706; }
+.sig-segments__fill--dormant { background: #dc2626; }
+.sig-segments__fill--unknown { background: #94a3b8; }
+.sig-segments__count { width: 70px; text-align: right; font-size: 0.82rem; font-weight: 700; color: var(--text-1); }
+.sig-segments__pct { width: 50px; text-align: right; font-size: 0.72rem; color: var(--text-3); }
+
+/* Alerts preview */
+.sig-alerts-preview { background: var(--bg-1, #fff); border: 1px solid var(--border); border-radius: var(--r-lg, 12px); padding: 18px; margin-bottom: 20px; }
+.sig-alerts-preview__header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.sig-alerts-preview__title { font-size: 0.9rem; font-weight: 700; margin: 0; }
+.sig-alerts-preview__more { font-size: 0.78rem; color: var(--brand); }
+.sig-alerts-preview__item { padding: 10px 0; border-bottom: 1px solid var(--bg-2); }
+.sig-alerts-preview__item:last-child { border-bottom: none; }
+.sig-alerts-preview__item-title { font-size: 0.85rem; font-weight: 600; color: var(--text-1); }
+.sig-alerts-preview__item-desc { font-size: 0.78rem; color: var(--text-3); margin-top: 2px; }
+
+/* Empty state */
+.sig-empty { text-align: center; padding: 48px 20px; background: var(--bg-1, #fff); border: 1px solid var(--border); border-radius: var(--r-lg, 12px); }
+.sig-empty__title { font-size: 1.2rem; font-weight: 700; margin: 0 0 8px; color: var(--text-1); }
+.sig-empty__text { font-size: 0.9rem; color: var(--text-3); max-width: 480px; margin: 0 auto 20px; line-height: 1.6; }
+.sig-empty__actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+
+.sig-btn { display: inline-block; padding: 10px 20px; border-radius: var(--r-md, 8px); font-size: 0.85rem; font-weight: 600; text-decoration: none; cursor: pointer; border: none; transition: all 0.15s; }
+.sig-btn--primary { background: var(--brand); color: #fff; }
+.sig-btn--primary:hover { background: var(--brand-dark, #1d4ed8); }
+.sig-btn--outline { background: transparent; color: var(--brand); border: 1px solid var(--brand); }
+.sig-btn--outline:hover { background: rgba(37,99,235,0.05); }
+
+/* MPP accuracy badge */
+.mpp-badge { display: inline-block; font-size: 0.65rem; font-weight: 700; padding: 2px 8px; border-radius: var(--r-full, 99px); text-transform: uppercase; }
+.mpp-badge--high { background: rgba(5,150,105,0.1); color: #059669; }
+.mpp-badge--medium { background: rgba(217,119,6,0.1); color: #d97706; }
+.mpp-badge--low { background: rgba(148,163,184,0.15); color: #64748b; }
+.mpp-badge--none { background: rgba(148,163,184,0.1); color: #94a3b8; }
+
+/* ── Connected Platform Health section ── */
+.sig-esp-section { margin-top: 32px; }
+.sig-esp-section__header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.sig-esp-section__title { font-size: 1.1rem; font-weight: 700; color: var(--text-1); margin: 0; }
+.sig-esp-section__sub { font-size: 0.82rem; color: var(--text-3); margin: 2px 0 14px; }
+.sig-esp-section__divider { height: 1px; background: var(--border, #e5e7eb); margin: 0 0 20px; }
+.sig-esp-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; margin-bottom: 16px; }
+.sig-esp-card { background: var(--bg-1, #fff); border: 1px solid var(--border, #e5e7eb); border-radius: var(--r-lg, 12px); padding: 18px; }
+.sig-esp-card__title { font-size: 0.9rem; font-weight: 700; color: var(--text-1); margin: 0 0 14px; display: flex; align-items: center; gap: 8px; }
+.sig-esp-card__badge { font-size: 0.65rem; padding: 2px 8px; border-radius: var(--r-full, 99px); font-weight: 700; background: rgba(37,99,235,0.08); color: var(--brand); }
+
+.sig-esp-intg { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--bg-2); }
+.sig-esp-intg:last-child { border-bottom: none; }
+.sig-esp-intg__icon { width: 34px; height: 34px; border-radius: var(--r-md, 8px); background: var(--bg-2); display: flex; align-items: center; justify-content: center; font-weight: 700; color: var(--brand); font-size: 0.9rem; flex-shrink: 0; }
+.sig-esp-intg__info { flex: 1; min-width: 0; }
+.sig-esp-intg__name { font-size: 0.82rem; font-weight: 600; color: var(--text-1); }
+.sig-esp-intg__meta { font-size: 0.7rem; color: var(--text-3); }
+.sig-esp-intg__score { text-align: right; font-size: 1rem; font-weight: 800; }
+
+.sig-esp-metric { margin-bottom: 12px; }
+.sig-esp-metric__head { display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 0.78rem; }
+.sig-esp-metric__label { color: var(--text-2); }
+.sig-esp-metric__val { font-weight: 700; }
+.sig-esp-metric__bar { height: 6px; background: var(--bg-2); border-radius: 3px; overflow: hidden; }
+.sig-esp-metric__fill { height: 100%; border-radius: 3px; transition: width 0.6s ease; }
+
+.sig-esp-warmup { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--bg-2); }
+.sig-esp-warmup:last-child { border-bottom: none; }
+.sig-esp-warmup__bar { width: 54px; height: 7px; background: var(--bg-2); border-radius: 3px; overflow: hidden; }
+.sig-esp-warmup__fill { height: 100%; border-radius: 3px; transition: width 0.6s ease; }
+.sig-esp-warmup__info { flex: 1; }
+.sig-esp-warmup__provider { font-size: 0.78rem; font-weight: 600; color: var(--text-1); }
+.sig-esp-warmup__detail { font-size: 0.68rem; color: var(--text-3); }
+.sig-esp-warmup__score { font-size: 0.95rem; font-weight: 800; }
+
+.sig-esp-isp { display: flex; align-items: center; gap: 10px; padding: 6px 0; }
+.sig-esp-isp__name { width: 90px; font-size: 0.75rem; font-weight: 600; color: var(--text-2); }
+.sig-esp-isp__bar { flex: 1; height: 6px; background: var(--bg-2); border-radius: 3px; overflow: hidden; }
+.sig-esp-isp__fill { height: 100%; background: var(--brand); border-radius: 3px; }
+.sig-esp-isp__pct { width: 46px; text-align: right; font-size: 0.72rem; font-weight: 700; color: var(--text-2); }
+
+.sig-esp-empty { text-align: center; padding: 20px; font-size: 0.82rem; color: var(--text-3); border: 1px dashed var(--border); border-radius: var(--r-lg, 12px); }
+.sig-esp-empty a { color: var(--brand); font-weight: 600; text-decoration: none; }
+
+.sig-esp-bg-green { background: #16a34a; }
+.sig-esp-bg-yellow { background: #d97706; }
+.sig-esp-bg-red { background: #dc2626; }
+.sig-esp-bg-brand { background: var(--brand); }
+</style>
+
+<div class="sig-header">
+  <div>
+    <h1>Signal Score</h1>
+    <p class="sig-header__sub">The 7 Inbox Signals — read every 6 hours</p>
+  </div>
+  <div class="sig-actions">
+    {% if latest %}
+      <button type="button" class="sig-btn sig-btn--outline" onclick="recalculateNow()">Recalculate</button>
+    {% endif %}
+    <a href="/signal-map" class="sig-btn sig-btn--outline">Signal Map</a>
+    {% if tier != 'free' %}
+      <a href="/signal-rules" class="sig-btn sig-btn--outline">Signal Rules</a>
+    {% endif %}
+  </div>
+</div>
+
+{% if not latest %}
+  {# Empty state: user has never run a signal score #}
+  <div class="sig-empty">
+    <h2 class="sig-empty__title">Ready for your first 7 Signal reading?</h2>
+    <p class="sig-empty__text">
+      InbXr reads The 7 Inbox Signals from your email list and tells you what's happening to your deliverability.
+      Connect your ESP for continuous monitoring, or upload a CSV for a one-shot reading.
+    </p>
+    <div class="sig-empty__actions">
+      {% if tier in ('pro', 'agency', 'api') %}
+        <a href="/account/integrations" class="sig-btn sig-btn--primary">Connect an ESP</a>
+      {% endif %}
+      <button type="button" class="sig-btn sig-btn--outline" onclick="document.getElementById('csvUploadInput').click()">Upload CSV</button>
+      <input type="file" id="csvUploadInput" accept=".csv" style="display:none" onchange="uploadCsv(this)" />
+    </div>
+  </div>
+{% else %}
+
+  {# Score hero #}
+  {% set grade_info = grade_copy.get(latest.signal_grade, {}) %}
+  {% set score_val = latest.total_signal_score|round|int %}
+  <div class="sig-hero">
+    <div class="sig-score-ring">
+      <svg viewBox="0 0 140 140">
+        <circle class="ring-bg" cx="70" cy="70" r="58"></circle>
+        <circle class="ring-fg" cx="70" cy="70" r="58"
+          stroke="{{ '#059669' if latest.signal_grade in ['A','B'] else ('#d97706' if latest.signal_grade == 'C' else '#dc2626') }}"
+          stroke-dasharray="{{ (3.14159 * 2 * 58)|round(1) }}"
+          stroke-dashoffset="{{ ((3.14159 * 2 * 58) * (1 - (latest.total_signal_score / 100)))|round(1) }}" />
+      </svg>
+      <div class="sig-score-val">
+        <span class="sig-score-num">{{ score_val }}</span>
+        <span class="sig-score-grade" style="color: {{ '#059669' if latest.signal_grade in ['A','B'] else ('#d97706' if latest.signal_grade == 'C' else '#dc2626') }};">
+          {{ latest.signal_grade }} — {{ grade_info.label }}
+        </span>
+        <span class="sig-score-label">Signal Score</span>
+      </div>
+    </div>
+    <div class="sig-hero__info">
+      <h2 class="sig-hero__grade-label">{{ grade_info.label }}</h2>
+      <p class="sig-hero__description">{{ grade_info.description }}</p>
+      <p class="sig-hero__cta">{{ grade_info.cta }}</p>
+      <div class="sig-hero__meta">
+        {% if latest.trajectory_direction %}
+          <span class="sig-trajectory sig-trajectory--{{ latest.trajectory_direction }}">
+            {{ trajectory_labels.get(latest.trajectory_direction, 'Unknown') }}
+          </span>
+        {% endif %}
+        <span class="sig-hero__meta-item">
+          {{ latest.total_contacts|default(0) }} contacts
+        </span>
+        {% if latest.mpp_accuracy and latest.mpp_accuracy != 'none' %}
+          <span class="sig-hero__meta-item">
+            MPP:
+            <span class="mpp-badge mpp-badge--{{ latest.mpp_accuracy }}">{{ latest.mpp_accuracy }}</span>
+          </span>
+        {% endif %}
+        <span class="sig-hero__meta-item">Data: {{ latest.data_source }}</span>
+        <span class="sig-hero__meta-item">Calculated: {{ latest.calculated_at[:16] if latest.calculated_at else 'unknown' }}</span>
+      </div>
+    </div>
+  </div>
+
+  {# Recommended action #}
+  {% if weakest_action and weakest_name %}
+  <div class="sig-action">
+    <div class="sig-action__label">Recommended Action</div>
+    <h3 class="sig-action__title">{{ weakest_action.label }}</h3>
+    <p class="sig-action__cta">Your weakest signal is {{ weakest_name }}. Fix it first for the biggest score improvement.</p>
+    <a href="{{ weakest_action.url }}" class="sig-action__btn">{{ weakest_action.feature }} &rarr;</a>
+  </div>
+  {% endif %}
+
+  {# The 7 Signals grid #}
+  {% set signal_order = ['bounce_exposure', 'engagement_trajectory', 'acquisition_quality', 'domain_reputation', 'dormancy_risk', 'authentication_standing', 'decay_velocity'] %}
+  <div class="sig-grid">
+    {% for sig_key in signal_order %}
+      {% set sig = signal_dimensions[sig_key] %}
+      {% set score = latest[sig_key ~ '_score']|default(0) %}
+      {% set weight = sig.weight %}
+      {% set pct = ((score / weight * 100) if weight else 0)|round|int %}
+      {% set bar_class = 'green' if pct >= 75 else ('yellow' if pct >= 50 else 'red') %}
+      {% set is_locked = sig_key in free_tier_locked and tier == 'free' %}
+
+      <div class="sig-card{% if is_locked %} sig-card--locked{% endif %}">
+        <div class="sig-card__header">
+          <div>
+            <div class="sig-card__num">{{ sig.number }}</div>
+            <div class="sig-card__name">{{ sig.name }}</div>
+            <div class="sig-card__note">{{ sig.note }}</div>
+          </div>
+          {% if not is_locked %}
+          <div class="sig-card__score">
+            {{ score|round(1) }}<span class="sig-card__score-max">/{{ weight }}</span>
+          </div>
+          {% endif %}
+        </div>
+        {% if not is_locked %}
+        <div class="sig-card__bar">
+          <div class="sig-card__bar-fill sig-card__bar-fill--{{ bar_class }}" style="width: {{ pct }}%"></div>
+        </div>
+        {% endif %}
+        <p class="sig-card__tooltip">{{ sig.tooltip }}</p>
+        {% if sig.market_first and sig.market_first_label %}
+          <span class="sig-card__badge">{{ sig.market_first_label }}</span>
+        {% endif %}
+      </div>
+    {% endfor %}
+  </div>
+
+  {# Segment composition #}
+  {% if latest.total_contacts %}
+  <div class="sig-segments">
+    <h3 class="sig-segments__title">Contact Segments</h3>
+    {% set total = latest.total_contacts %}
+    {% for seg_key in ['active', 'warm', 'at_risk', 'dormant'] %}
+      {% set count = latest[seg_key ~ '_contacts']|default(0) %}
+      {% set pct = (count / total * 100)|round|int if total else 0 %}
+      <div class="sig-segments__row">
+        <div class="sig-segments__label">{{ segment_labels[seg_key].label }}</div>
+        <div class="sig-segments__bar">
+          <div class="sig-segments__fill sig-segments__fill--{{ seg_key }}" style="width: {{ pct }}%"></div>
+        </div>
+        <div class="sig-segments__count">{{ count|default(0) }}</div>
+        <div class="sig-segments__pct">{{ pct }}%</div>
+      </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {# Recent alerts #}
+  {% if alerts %}
+  <div class="sig-alerts-preview">
+    <div class="sig-alerts-preview__header">
+      <h3 class="sig-alerts-preview__title">Recent Alerts{% if unread_alert_count %} ({{ unread_alert_count }} unread){% endif %}</h3>
+      <a href="/signal-alerts" class="sig-alerts-preview__more">See all &rarr;</a>
+    </div>
+    {% for alert in alerts[:5] %}
+      <div class="sig-alerts-preview__item">
+        <div class="sig-alerts-preview__item-title">{{ alert.title }}</div>
+        <div class="sig-alerts-preview__item-desc">{{ alert.message[:150] }}{% if alert.message|length > 150 %}...{% endif %}</div>
+      </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+{% endif %}
+
+{# Connected Platform Health — renders for all users (with or without Signal Score data) #}
+{% if tier in ('pro', 'agency', 'api') %}
+<div class="sig-esp-section" id="espHealthSection">
+  <div class="sig-esp-section__header">
+    <div>
+      <h3 class="sig-esp-section__title">Connected Platform Health</h3>
+      <p class="sig-esp-section__sub">Aggregate data from your connected email platforms &mdash; backward-looking supporting view for your Signal Score.</p>
+    </div>
+    <a href="{{ url_for('integrations.integrations_page') }}" class="sig-btn sig-btn--outline" style="font-size:0.78rem;padding:6px 14px;">Manage Integrations</a>
+  </div>
+  <div class="sig-esp-section__divider"></div>
+  <div id="espHealthContent">
+    <div class="sig-esp-empty">Loading connected platform data...</div>
+  </div>
+</div>
+{% endif %}
+
+<script>
+function recalculateNow() {
+  if (!confirm('Recalculate your Signal Score now? This pulls latest data from your connected ESP.')) return;
+  fetch('/signal-score/calculate', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.content || '',
+    },
+  })
+  .then(r => r.json())
+  .then(d => {
+    if (d.ok) {
+      location.reload();
+    } else {
+      alert('Recalculation failed: ' + (d.error || 'unknown error'));
+    }
+  })
+  .catch(e => alert('Network error: ' + e));
+}
+
+function uploadCsv(input) {
+  if (!input.files || !input.files.length) return;
+  const formData = new FormData();
+  formData.append('csv_file', input.files[0]);
+  fetch('/signal-score/from-csv', {
+    method: 'POST',
+    headers: {
+      'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.content || '',
+    },
+    body: formData,
+  })
+  .then(r => r.json())
+  .then(d => {
+    if (d.ok) {
+      location.reload();
+    } else {
+      alert('CSV upload failed: ' + (d.error || 'unknown error'));
+    }
+  })
+  .catch(e => alert('Network error: ' + e));
+}
+
+// ─────────────────────────────────────────────────────
+// Connected Platform Health (aggregate ESP data)
+// Reuses /api/integrations/health which already exists.
+// ─────────────────────────────────────────────────────
+
+(function() {
+  const espSection = document.getElementById('espHealthSection');
+  const espContent = document.getElementById('espHealthContent');
+  if (!espSection || !espContent) return;
+
+  function scoreColor(score) {
+    if (score >= 75) return '#16a34a';
+    if (score >= 50) return '#d97706';
+    return '#dc2626';
+  }
+  function gradeClass(grade) {
+    if (grade === 'A' || grade === 'B') return 'c-green';
+    if (grade === 'C') return 'c-yellow';
+    return 'c-red';
+  }
+  function fmt(n) { return n != null ? n.toLocaleString() : '—'; }
+  function metricBarClass(val, good, warn) {
+    if (val <= good) return 'sig-esp-bg-green';
+    if (val <= warn) return 'sig-esp-bg-yellow';
+    return 'sig-esp-bg-red';
+  }
+
+  function renderEspHealth(d) {
+    if (!d.has_data) {
+      espContent.innerHTML = `
+        <div class="sig-esp-empty">
+          No ESP connected yet.
+          <a href="/account/integrations">Connect a platform &rarr;</a>
+          to see aggregate bounce rates, warmup scores, and ISP delivery breakdown.
+        </div>`;
+      return;
+    }
+
+    let html = '<div class="sig-esp-grid">';
+
+    // Platform Health card
+    html += '<div class="sig-esp-card"><h3 class="sig-esp-card__title">Platform Health</h3>';
+    for (const intg of d.integrations) {
+      const ic = scoreColor(intg.health_score);
+      html += `
+        <div class="sig-esp-intg">
+          <div class="sig-esp-intg__icon">${(intg.account_name || intg.provider).charAt(0).toUpperCase()}</div>
+          <div class="sig-esp-intg__info">
+            <div class="sig-esp-intg__name">${intg.account_name || intg.provider}</div>
+            <div class="sig-esp-intg__meta">${fmt(intg.totals.sent)} sent &middot; ${intg.totals.bounce_rate}% bounced</div>
+          </div>
+          <div class="sig-esp-intg__score" style="color:${ic}">
+            ${intg.health_score}<span style="font-size:0.65rem;color:var(--text-4);"> / ${intg.health_grade}</span>
+          </div>
+        </div>`;
+    }
+    html += '</div>';
+
+    // Key Metrics card
+    const bounceCol = d.avg_bounce_rate > 2 ? '#dc2626' : (d.avg_bounce_rate > 1 ? '#d97706' : '#16a34a');
+    const complaintCol = d.avg_complaint_rate > 0.1 ? '#dc2626' : '#16a34a';
+    const openCol = d.avg_open_rate > 20 ? '#16a34a' : (d.avg_open_rate > 10 ? '#d97706' : '#dc2626');
+
+    html += `<div class="sig-esp-card">
+      <h3 class="sig-esp-card__title">Aggregate Metrics <span class="sig-esp-card__badge">7 days</span></h3>
+      <div class="sig-esp-metric">
+        <div class="sig-esp-metric__head">
+          <span class="sig-esp-metric__label">Bounce Rate</span>
+          <span class="sig-esp-metric__val" style="color:${bounceCol}">${d.avg_bounce_rate}%</span>
+        </div>
+        <div class="sig-esp-metric__bar"><div class="sig-esp-metric__fill ${metricBarClass(d.avg_bounce_rate, 1, 3)}" style="width:${Math.min(d.avg_bounce_rate * 10, 100)}%"></div></div>
+      </div>
+      <div class="sig-esp-metric">
+        <div class="sig-esp-metric__head">
+          <span class="sig-esp-metric__label">Complaint Rate</span>
+          <span class="sig-esp-metric__val" style="color:${complaintCol}">${d.avg_complaint_rate}%</span>
+        </div>
+        <div class="sig-esp-metric__bar"><div class="sig-esp-metric__fill ${metricBarClass(d.avg_complaint_rate, 0.05, 0.15)}" style="width:${Math.min(d.avg_complaint_rate * 100, 100)}%"></div></div>
+      </div>
+      <div class="sig-esp-metric">
+        <div class="sig-esp-metric__head">
+          <span class="sig-esp-metric__label">Open Rate</span>
+          <span class="sig-esp-metric__val" style="color:${openCol}">${d.avg_open_rate}%</span>
+        </div>
+        <div class="sig-esp-metric__bar"><div class="sig-esp-metric__fill ${d.avg_open_rate > 20 ? 'sig-esp-bg-green' : (d.avg_open_rate > 10 ? 'sig-esp-bg-yellow' : 'sig-esp-bg-red')}" style="width:${Math.min(d.avg_open_rate, 100)}%"></div></div>
+      </div>
+      <div class="sig-esp-metric" style="margin-top:12px;">
+        <div class="sig-esp-metric__head">
+          <span class="sig-esp-metric__label">Total Delivered</span>
+          <span class="sig-esp-metric__val">${fmt(d.total_sent - d.total_bounces)}</span>
+        </div>
+      </div>
+    </div>`;
+
+    // Warmup card (Instantly / Smartlead)
+    if (d.warmup_accounts && d.warmup_accounts.length > 0) {
+      html += `<div class="sig-esp-card">
+        <h3 class="sig-esp-card__title">
+          Warmup Status
+          <span class="sig-esp-card__badge">${d.warmup_accounts.length} account${d.warmup_accounts.length > 1 ? 's' : ''}</span>
+        </h3>`;
+      for (const w of d.warmup_accounts) {
+        const wc = scoreColor(w.score);
+        const statusLabel = w.status === 'healthy' ? 'Healthy' : (w.status === 'warming' ? 'Warming Up' : 'Cold');
+        html += `
+          <div class="sig-esp-warmup">
+            <div class="sig-esp-warmup__bar"><div class="sig-esp-warmup__fill" style="width:${w.score}%;background:${wc}"></div></div>
+            <div class="sig-esp-warmup__info">
+              <div class="sig-esp-warmup__provider">${w.provider}${w.label ? ' (' + w.label + ')' : ''}</div>
+              <div class="sig-esp-warmup__detail">${statusLabel} &middot; ${w.accounts_count || 0} accounts &middot; ${w.accounts_with_warmup || 0} warming</div>
+            </div>
+            <div class="sig-esp-warmup__score" style="color:${wc}">${w.score}</div>
+          </div>`;
+      }
+      html += '</div>';
+    }
+
+    // ISP Delivery Breakdown (from Mailchimp domain-performance)
+    const ispData = d.integrations.find(i => i.isp_breakdown && i.isp_breakdown.length > 0);
+    if (ispData) {
+      html += `<div class="sig-esp-card">
+        <h3 class="sig-esp-card__title">ISP Delivery Breakdown <span class="sig-esp-card__badge">Mailchimp</span></h3>`;
+      const maxSent = Math.max(...ispData.isp_breakdown.map(i => i.sent || 0), 1);
+      for (const isp of ispData.isp_breakdown.slice(0, 8)) {
+        const delivRate = isp.sent ? ((isp.delivered / isp.sent) * 100).toFixed(1) : '0.0';
+        const barPct = (isp.sent / maxSent) * 100;
+        html += `
+          <div class="sig-esp-isp">
+            <div class="sig-esp-isp__name">${isp.isp}</div>
+            <div class="sig-esp-isp__bar"><div class="sig-esp-isp__fill" style="width:${barPct}%"></div></div>
+            <div class="sig-esp-isp__pct">${delivRate}%</div>
+          </div>`;
+      }
+      html += '</div>';
+    }
+
+    html += '</div>'; // close sig-esp-grid
+    espContent.innerHTML = html;
+  }
+
+  fetch('/api/integrations/health', {
+    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+  })
+    .then(r => r.json())
+    .then(d => {
+      if (d.ok !== false) renderEspHealth(d);
+      else espContent.innerHTML = `<div class="sig-esp-empty">Could not load platform health: ${d.error || 'unknown error'}</div>`;
+    })
+    .catch(e => {
+      espContent.innerHTML = `<div class="sig-esp-empty">Network error loading platform health: ${e}</div>`;
+    });
+})();
+</script>
+{% endblock %}

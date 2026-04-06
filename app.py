@@ -139,6 +139,9 @@ app.register_blueprint(framework_bp)
 from blueprints.integration_routes import integration_bp
 app.register_blueprint(integration_bp)
 
+from blueprints.signal_routes import signal_bp
+app.register_blueprint(signal_bp)
+
 from modules.scheduler import init_scheduler
 init_scheduler(app)
 
@@ -1243,6 +1246,114 @@ def admin_revenue():
     if not _is_admin():
         return redirect("/admin/login")
     return render_template("admin_revenue.html", is_admin=True, active_page="admin_revenue")
+
+
+@app.route("/admin/signal-analytics")
+def admin_signal_analytics():
+    """Admin Signal Intelligence analytics — score distribution, danger users, rule adoption."""
+    if not _is_admin():
+        return redirect("/admin/login")
+    return render_template("admin_signal_analytics.html", is_admin=True, active_page="admin_signal_analytics")
+
+
+@app.route("/admin/api/signal-analytics")
+def admin_api_signal_analytics():
+    """JSON data for Signal Intelligence admin dashboard."""
+    if not _is_admin():
+        return jsonify({"error": "Unauthorized"}), 403
+
+    from modules.database import fetchone, fetchall
+    from datetime import datetime, timedelta
+
+    # Score distribution (latest score per user)
+    distribution = fetchall("""
+        SELECT signal_grade, COUNT(*) as cnt
+        FROM (
+            SELECT user_id, signal_grade,
+                   ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY calculated_at DESC) as rn
+            FROM signal_scores
+        )
+        WHERE rn = 1
+        GROUP BY signal_grade
+    """)
+    grade_buckets = {row["signal_grade"]: row["cnt"] for row in distribution}
+    for g in ['A', 'B', 'C', 'D', 'F']:
+        grade_buckets.setdefault(g, 0)
+
+    # Total users with any signal score
+    total_with_scores = fetchone("SELECT COUNT(DISTINCT user_id) as cnt FROM signal_scores")
+    total_with_scores = total_with_scores["cnt"] if total_with_scores else 0
+
+    # Users in Danger (F grade) — flag for outreach
+    danger_users = fetchall("""
+        SELECT u.id, u.email, u.tier, ss.total_signal_score, ss.calculated_at,
+               ss.total_contacts, ss.dormant_contacts
+        FROM users u
+        JOIN signal_scores ss ON ss.user_id = u.id
+        WHERE ss.signal_grade = 'F'
+        AND ss.calculated_at = (
+            SELECT MAX(calculated_at) FROM signal_scores WHERE user_id = u.id
+        )
+        ORDER BY ss.calculated_at DESC
+        LIMIT 50
+    """)
+
+    # Pro+ users count for adoption rate
+    pro_users_total = fetchone("SELECT COUNT(*) as cnt FROM users WHERE tier IN ('pro', 'agency', 'api')")
+    pro_users_total = pro_users_total["cnt"] if pro_users_total else 0
+
+    # Signal Rules adoption — % of Pro+ users with at least one active rule
+    users_with_rules = fetchone("""
+        SELECT COUNT(DISTINCT user_id) as cnt FROM signal_rules WHERE is_active = 1
+    """)
+    users_with_rules = users_with_rules["cnt"] if users_with_rules else 0
+    rules_adoption_pct = round((users_with_rules / pro_users_total * 100) if pro_users_total else 0, 1)
+
+    # Total active rules
+    total_active_rules = fetchone("SELECT COUNT(*) as cnt FROM signal_rules WHERE is_active = 1")
+    total_active_rules = total_active_rules["cnt"] if total_active_rules else 0
+
+    # Live rules (not dry-run)
+    live_rules = fetchone("SELECT COUNT(*) as cnt FROM signal_rules WHERE is_active = 1 AND action_dry_run = 0")
+    live_rules = live_rules["cnt"] if live_rules else 0
+
+    # Early Warning fire rate — last 7 days
+    week_ago = (datetime.utcnow() - timedelta(days=7)).isoformat()
+    alerts_this_week = fetchone(
+        "SELECT COUNT(*) as cnt FROM alerts WHERE alert_type = 'early_warning' AND created_at >= ?",
+        (week_ago,),
+    )
+    alerts_this_week = alerts_this_week["cnt"] if alerts_this_week else 0
+
+    # Rule firings this week
+    rules_fired_week = fetchone(
+        "SELECT COUNT(*) as cnt FROM signal_rule_log WHERE was_dry_run = 0 AND fired_at >= ?",
+        (week_ago,),
+    )
+    rules_fired_week = rules_fired_week["cnt"] if rules_fired_week else 0
+
+    # Total contacts under management
+    total_contacts = fetchone("SELECT COUNT(*) as cnt FROM contact_segments")
+    total_contacts = total_contacts["cnt"] if total_contacts else 0
+
+    return jsonify({
+        "ok": True,
+        "score_distribution": grade_buckets,
+        "total_users_with_scores": total_with_scores,
+        "danger_users": [dict(u) for u in danger_users],
+        "pro_users_total": pro_users_total,
+        "rules_adoption": {
+            "users_with_rules": users_with_rules,
+            "pct": rules_adoption_pct,
+            "total_active_rules": total_active_rules,
+            "live_rules": live_rules,
+        },
+        "early_warning": {
+            "fired_last_7d": alerts_this_week,
+            "rules_fired_last_7d": rules_fired_week,
+        },
+        "contacts_under_management": total_contacts,
+    })
 
 
 @app.route("/admin/api/revenue")

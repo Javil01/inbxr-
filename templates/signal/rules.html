@@ -1,0 +1,165 @@
+{% extends "auth/base_auth.html" %}
+{% block title %}Signal Rules{% endblock %}
+{% block content %}
+<style>
+.sr-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
+.sr-header h1 { margin: 0; font-size: 1.6rem; }
+.sr-header__sub { font-size: 0.85rem; color: var(--text-3); margin: 4px 0 0; }
+.sr-header__count { font-size: 0.8rem; color: var(--text-3); }
+
+.sr-section-title { font-size: 1rem; font-weight: 700; margin: 28px 0 12px; color: var(--text-1); }
+
+.sr-rule { background: var(--bg-1, #fff); border: 1px solid var(--border); border-radius: var(--r-lg, 12px); padding: 16px; margin-bottom: 10px; }
+.sr-rule__top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 8px; }
+.sr-rule__name { font-size: 0.95rem; font-weight: 700; color: var(--text-1); }
+.sr-rule__meta { font-size: 0.72rem; color: var(--text-3); margin-top: 2px; }
+.sr-rule__badges { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+.sr-badge { font-size: 0.68rem; font-weight: 700; padding: 2px 8px; border-radius: var(--r-full, 99px); }
+.sr-badge--active { background: rgba(5,150,105,0.1); color: #059669; }
+.sr-badge--inactive { background: rgba(100,116,139,0.1); color: #64748b; }
+.sr-badge--dry-run { background: rgba(217,119,6,0.1); color: #d97706; }
+.sr-badge--live { background: rgba(220,38,38,0.1); color: #dc2626; }
+.sr-rule__actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.sr-btn { padding: 5px 12px; border-radius: var(--r-md, 8px); font-size: 0.75rem; font-weight: 600; cursor: pointer; border: 1px solid var(--border); background: #fff; color: var(--text-2); }
+.sr-btn:hover { background: var(--bg-2); }
+.sr-btn--primary { background: var(--brand); color: #fff; border-color: var(--brand); }
+.sr-btn--danger { color: #dc2626; border-color: #dc2626; }
+
+.sr-templates { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
+.sr-template { background: var(--bg-1, #fff); border: 1px solid var(--border); border-radius: var(--r-lg, 12px); padding: 16px; }
+.sr-template__name { font-size: 0.9rem; font-weight: 700; color: var(--text-1); margin: 0 0 4px; }
+.sr-template__desc { font-size: 0.78rem; color: var(--text-3); margin: 0 0 10px; line-height: 1.5; }
+.sr-template__add { width: 100%; padding: 6px 12px; background: var(--brand); color: #fff; border-radius: var(--r-md, 8px); border: none; font-size: 0.78rem; font-weight: 600; cursor: pointer; }
+.sr-template__add:hover { background: var(--brand-dark, #1d4ed8); }
+
+.sr-warning { background: rgba(217,119,6,0.08); border: 1px solid rgba(217,119,6,0.2); padding: 14px 18px; border-radius: var(--r-md, 8px); font-size: 0.85rem; color: var(--text-2); margin-bottom: 20px; }
+.sr-warning strong { color: #d97706; }
+
+.sr-empty { text-align: center; padding: 32px 20px; color: var(--text-3); border: 1px dashed var(--border); border-radius: var(--r-lg, 12px); }
+</style>
+
+<div class="sr-header">
+  <div>
+    <h1>Signal Rules</h1>
+    <p class="sr-header__sub">Automation rules fired after every Signal Score calculation</p>
+  </div>
+  <div class="sr-header__count">{{ rules|length }} of {{ rules_max }} rules</div>
+</div>
+
+<div class="sr-warning">
+  <strong>⚠ Safety first:</strong> New rules default to <strong>dry-run mode</strong>.
+  Use the Preview button to see what a rule would do. Flip to Live only after you're confident in the preview.
+</div>
+
+<div class="sr-section-title">Your Rules</div>
+
+{% if not rules %}
+  <div class="sr-empty">
+    <p>No rules yet. Add one from the templates below.</p>
+  </div>
+{% else %}
+  {% for rule in rules %}
+    <div class="sr-rule" id="rule-{{ rule.id }}">
+      <div class="sr-rule__top">
+        <div>
+          <div class="sr-rule__name">{{ rule.rule_name }}</div>
+          <div class="sr-rule__meta">
+            {{ rule.condition_signal|replace('_', ' ') }}
+            {{ rule.condition_operator|replace('_', ' ') }}
+            {{ rule.condition_value }}
+            &rarr; {{ rule.action_type }}{% if rule.action_target %}: {{ rule.action_target }}{% endif %}
+          </div>
+          <div class="sr-rule__badges">
+            {% if rule.is_active %}<span class="sr-badge sr-badge--active">Active</span>{% else %}<span class="sr-badge sr-badge--inactive">Paused</span>{% endif %}
+            {% if rule.action_dry_run %}<span class="sr-badge sr-badge--dry-run">Dry Run</span>{% else %}<span class="sr-badge sr-badge--live">LIVE</span>{% endif %}
+            {% if rule.times_fired %}<span class="sr-badge sr-badge--inactive">Fired {{ rule.times_fired }}×</span>{% endif %}
+            {% if rule.last_preview_count is not none %}<span class="sr-badge sr-badge--inactive">Preview: {{ rule.last_preview_count }} matches</span>{% endif %}
+          </div>
+        </div>
+        <div class="sr-rule__actions">
+          <button type="button" class="sr-btn" onclick="previewRule({{ rule.id }})">Preview</button>
+          <button type="button" class="sr-btn" onclick="toggleRule({{ rule.id }})">{% if rule.is_active %}Pause{% else %}Resume{% endif %}</button>
+          <button type="button" class="sr-btn sr-btn--primary" onclick="flipDryRun({{ rule.id }})">{% if rule.action_dry_run %}Flip to Live{% else %}Back to Dry Run{% endif %}</button>
+          <button type="button" class="sr-btn sr-btn--danger" onclick="deleteRule({{ rule.id }})">Delete</button>
+        </div>
+      </div>
+    </div>
+  {% endfor %}
+{% endif %}
+
+<div class="sr-section-title">Add From Templates</div>
+
+<div class="sr-templates">
+  {% for tpl in templates %}
+    <div class="sr-template">
+      <h4 class="sr-template__name">{{ tpl.rule_name }}</h4>
+      <p class="sr-template__desc">{{ tpl.description }}</p>
+      <button type="button" class="sr-template__add" onclick="addTemplate('{{ tpl.template_id }}')">+ Add Rule (dry run)</button>
+    </div>
+  {% endfor %}
+</div>
+
+<p style="text-align:center;margin-top:20px;"><a href="/signal-score">&larr; Back to Signal Score</a></p>
+
+<script>
+function addTemplate(templateId) {
+  fetch('/signal-rules/create-from-template', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.content || '',
+    },
+    body: JSON.stringify({ template_id: templateId }),
+  })
+  .then(r => r.json())
+  .then(d => {
+    if (d.ok) location.reload();
+    else alert('Failed: ' + (d.error || 'unknown'));
+  });
+}
+
+function previewRule(ruleId) {
+  fetch('/signal-rules/' + ruleId + '/preview', {
+    method: 'POST',
+    headers: { 'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.content || '' },
+  })
+  .then(r => r.json())
+  .then(d => {
+    if (d.ok) {
+      alert(`Preview: ${d.affected_count} of ${d.total_list_size} contacts (${d.percentage_affected}%) would be affected.\n\nSample: ${d.sample_emails.slice(0, 5).join(', ')}`);
+    } else {
+      alert('Preview failed: ' + (d.error || 'unknown'));
+    }
+  });
+}
+
+function toggleRule(ruleId) {
+  fetch('/signal-rules/' + ruleId + '/toggle', {
+    method: 'POST',
+    headers: { 'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.content || '' },
+  })
+  .then(r => r.json())
+  .then(d => { if (d.ok) location.reload(); });
+}
+
+function flipDryRun(ruleId) {
+  if (!confirm('Flipping to LIVE mode means this rule will actually execute on your data during the next Signal Watch scan. Continue?')) return;
+  fetch('/signal-rules/' + ruleId + '/flip-dry-run', {
+    method: 'POST',
+    headers: { 'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.content || '' },
+  })
+  .then(r => r.json())
+  .then(d => { if (d.ok) location.reload(); });
+}
+
+function deleteRule(ruleId) {
+  if (!confirm('Delete this rule permanently?')) return;
+  fetch('/signal-rules/' + ruleId, {
+    method: 'DELETE',
+    headers: { 'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.content || '' },
+  })
+  .then(r => r.json())
+  .then(d => { if (d.ok) location.reload(); });
+}
+</script>
+{% endblock %}

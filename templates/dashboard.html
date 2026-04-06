@@ -26,23 +26,23 @@
       <span class="dash-nav__heading">Tools</span>
       <a class="dash-nav__item" data-tool="/" href="#">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-        Email Tester
+        Inboxer Send Test
       </a>
       <a class="dash-nav__item" data-tool="/analyzer" href="#">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
-        Email Analyzer
+        Copy Intelligence
       </a>
       <a class="dash-nav__item" data-tool="/sender" href="#">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-        Sender Check
+        Inboxer Sender Check
       </a>
       <a class="dash-nav__item" data-tool="/placement" href="#">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/></svg>
-        Inbox Placement
+        Inboxer Placement Test
       </a>
       <a class="dash-nav__item" data-tool="/subject-scorer" href="#">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="17" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="17" y1="18" x2="3" y2="18"/></svg>
-        Subject Scorer
+        Subject Intelligence
       </a>
       <a class="dash-nav__item" data-tool="/header-analyzer" href="#">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
@@ -50,7 +50,7 @@
       </a>
       <a class="dash-nav__item" data-tool="/email-verifier" href="#">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-        Email Verifier
+        Signal Verifier
       </a>
       <a class="dash-nav__item" data-tool="/bimi" href="#">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
@@ -61,16 +61,16 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
         Framework Lab
       </a>
-      <span class="dash-nav__heading">AI Assistant</span>
+      <span class="dash-nav__heading">Signal Advisor</span>
       {% if session.get('user_tier', 'free') in ('pro', 'agency', 'api') %}
       <a class="dash-nav__item" id="openAssistant" href="#">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M12 2a4 4 0 014 4v1a1 1 0 01-1 1H9a1 1 0 01-1-1V6a4 4 0 014-4z"/><path d="M9 8v1a3 3 0 006 0V8"/><path d="M12 14v3"/><path d="M7 17h10a2 2 0 012 2v1H5v-1a2 2 0 012-2z"/></svg>
-        Email Expert
+        Signal Advisor
       </a>
       {% else %}
       <a class="dash-nav__item dash-nav__item--locked" href="/account" title="Available on Pro &amp; Agency plans">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
-        Email Expert <span class="dash-nav__pro-badge">PRO</span>
+        Signal Advisor <span class="dash-nav__pro-badge">PRO</span>
       </a>
       {% endif %}
       <span class="dash-nav__heading">Support</span>
@@ -81,21 +81,50 @@
       <span class="dash-nav__heading">Monitors</span>
       <a class="dash-nav__item" data-tool="/blacklist-monitor" href="#">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
-        Blacklist Monitor
+        Reputation Watch
       </a>
       <a class="dash-nav__item" data-tool="/warmup" href="#">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-        Warmup Tracker
+        Inboxer Warmup
       </a>
+      <span class="dash-nav__heading">Signal Intelligence</span>
+      <a class="dash-nav__item" data-tool="/signal-score" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+        Signal Score
+      </a>
+      <a class="dash-nav__item" data-tool="/signal-map" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
+        Signal Map
+      </a>
+      {% if session.get('user_tier', 'free') in ('pro', 'agency', 'api') %}
+      <a class="dash-nav__item" data-tool="/signal-alerts" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        Early Warning
+      </a>
+      <a class="dash-nav__item" data-tool="/signal-rules" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+        Signal Rules
+      </a>
+      <a class="dash-nav__item" data-tool="/send-readiness" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        Send Readiness
+      </a>
+      <a class="dash-nav__item" data-tool="/recovery-sequences" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M3 12a9 9 0 0115-6.7L21 8"/><polyline points="21 3 21 8 16 8"/><path d="M21 12a9 9 0 01-15 6.7L3 16"/><polyline points="3 21 3 16 8 16"/></svg>
+        Recovery Sequences
+      </a>
+      {% else %}
+      <a class="dash-nav__item dash-nav__item--locked" href="/pricing" title="Available on Pro &amp; Agency plans">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+        Early Warning <span class="dash-nav__pro-badge">PRO</span>
+      </a>
+      {% endif %}
+
       {% if session.get('user_tier', 'free') in ('pro', 'agency', 'api') %}
       <span class="dash-nav__heading">Integrations</span>
       <a class="dash-nav__item" data-tool="/account/integrations" href="#">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
         Connected Accounts
-      </a>
-      <a class="dash-nav__item" data-tool="/deliverability" href="#">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-        Deliverability
       </a>
       {% endif %}
     </nav>
@@ -115,20 +144,20 @@
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
 </button>
 
-<!-- ── Email Expert Assistant Panel ── -->
+<!-- ── Signal Advisor Panel ── -->
 {% if session.get('user_tier', 'free') in ('pro', 'agency', 'api') %}
 <div class="ea-panel" id="eaPanel">
   <div class="ea-panel__header">
     <div class="ea-panel__header-info">
       <span class="ea-panel__dot"></span>
-      <span class="ea-panel__title">Email Expert</span>
+      <span class="ea-panel__title">Signal Advisor</span>
       <span class="ea-panel__badge">AI</span>
     </div>
     <button class="ea-panel__close" id="eaClose">&times;</button>
   </div>
   <div class="ea-panel__messages" id="eaMessages"></div>
   <div class="ea-panel__input">
-    <input type="text" id="eaInput" placeholder="Ask about your email deliverability..." autocomplete="off" />
+    <input type="text" id="eaInput" placeholder="Ask about your 7 Inbox Signals..." autocomplete="off" />
     <button class="ea-panel__send" id="eaSend">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
     </button>

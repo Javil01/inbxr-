@@ -1,0 +1,226 @@
+<!-- ──────────────────────────────────────────────────────
+     7 INBOX SIGNALS — Mechanism Section
+     Sits between the email test hero (cinema) and the existing
+     index marketing pain section. Introduces the new positioning
+     while preserving the free email test as the primary acquisition
+     funnel above.
+     ────────────────────────────────────────────────────── -->
+<section class="signal-mech">
+  <div class="signal-mech__inner">
+    <span class="signal-mech__eyebrow">The 7 Inbox Signals · Email deliverability intelligence</span>
+    <h2 class="signal-mech__h2">Most email tools read one inbox signal.<br>InbXr reads all 7.</h2>
+    <p class="signal-mech__sub">
+      Your email list broadcasts 7 signals about what's happening to your deliverability.
+      Every tool you've been using was reading 1 or 2. InbXr reads The 7 Inbox Signals &mdash;
+      including two dimensions no other platform currently measures &mdash; and tells you
+      what's changing, not just what broke.
+    </p>
+
+    <div class="signal-mech__pills">
+      <div class="signal-pill">
+        <span class="signal-pill__num">01</span>
+        <span class="signal-pill__name">Bounce Exposure</span>
+        <span class="signal-pill__note">Predictive, not historical</span>
+      </div>
+      <div class="signal-pill signal-pill--new">
+        <span class="signal-pill__num">02</span>
+        <span class="signal-pill__name">Engagement Trajectory</span>
+        <span class="signal-pill__note">MPP-adjusted</span>
+        <span class="signal-pill__badge">Market-first</span>
+      </div>
+      <div class="signal-pill signal-pill--new">
+        <span class="signal-pill__num">03</span>
+        <span class="signal-pill__name">Acquisition Quality</span>
+        <span class="signal-pill__note">Inferred from behaviour</span>
+        <span class="signal-pill__badge">Market-first</span>
+      </div>
+      <div class="signal-pill">
+        <span class="signal-pill__num">04</span>
+        <span class="signal-pill__name">Domain Reputation</span>
+        <span class="signal-pill__note">Sender + recipient side</span>
+      </div>
+      <div class="signal-pill">
+        <span class="signal-pill__num">05</span>
+        <span class="signal-pill__name">Dormancy Risk</span>
+        <span class="signal-pill__note">Age-weighted scoring</span>
+      </div>
+      <div class="signal-pill">
+        <span class="signal-pill__num">06</span>
+        <span class="signal-pill__name">Authentication Standing</span>
+        <span class="signal-pill__note">Scored vs 2025 ISP mandates</span>
+      </div>
+      <div class="signal-pill">
+        <span class="signal-pill__num">07</span>
+        <span class="signal-pill__name">Decay Velocity</span>
+        <span class="signal-pill__note">Rate &amp; direction of list change</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Verification vs prediction comparison ── -->
+<section class="signal-vs">
+  <div class="signal-vs__inner">
+    <h2 class="signal-vs__h2">Verification tells you what's valid. InbXr tells you what's coming.</h2>
+    <div class="signal-vs__grid">
+      <div class="signal-vs__card">
+        <div class="signal-vs__brand">ZeroBounce</div>
+        <div class="signal-vs__does">Validates addresses. Tells you what's invalid today.</div>
+      </div>
+      <div class="signal-vs__card">
+        <div class="signal-vs__brand">NeverBounce</div>
+        <div class="signal-vs__does">Verifies bounces. Tells you what failed last time.</div>
+      </div>
+      <div class="signal-vs__card signal-vs__card--us">
+        <div class="signal-vs__brand">InbXr</div>
+        <div class="signal-vs__does">Reads The 7 Inbox Signals. Tells you what's going to happen next.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+.signal-mech {
+  padding: 80px 24px 60px;
+  background: var(--bg-2, #f8fafc);
+}
+.signal-mech__inner {
+  max-width: 1080px;
+  margin: 0 auto;
+  text-align: center;
+}
+.signal-mech__eyebrow {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--brand);
+  background: var(--brand-muted);
+  border: 1px solid var(--brand-border);
+  border-radius: var(--r-full, 99px);
+  padding: 6px 16px;
+  margin-bottom: 18px;
+}
+.signal-mech__h2 {
+  font-size: 2.2rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+  color: var(--text-1);
+  margin: 0 0 18px;
+}
+.signal-mech__sub {
+  font-size: 1.05rem;
+  line-height: 1.7;
+  color: var(--text-2);
+  max-width: 720px;
+  margin: 0 auto 40px;
+}
+.signal-mech__pills {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 14px;
+  margin-top: 32px;
+}
+.signal-pill {
+  background: var(--bg-1, #fff);
+  border: 1px solid var(--border-1, #e2e8f0);
+  border-radius: var(--r-3, 12px);
+  padding: 18px 20px;
+  text-align: left;
+  position: relative;
+  transition: border-color 0.2s, transform 0.15s;
+}
+.signal-pill:hover {
+  border-color: var(--brand);
+  transform: translateY(-2px);
+}
+.signal-pill__num {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: var(--text-4, #94a3b8);
+  letter-spacing: 0.08em;
+  margin-bottom: 4px;
+}
+.signal-pill__name {
+  display: block;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-1);
+  margin-bottom: 4px;
+}
+.signal-pill__note {
+  display: block;
+  font-size: 0.78rem;
+  color: var(--text-3);
+}
+.signal-pill__badge {
+  display: inline-block;
+  margin-top: 8px;
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 3px 8px;
+  border-radius: var(--r-full, 99px);
+  background: rgba(37,99,235,0.08);
+  color: var(--brand);
+}
+.signal-pill--new {
+  border-color: var(--brand);
+  border-width: 1.5px;
+}
+
+.signal-vs {
+  padding: 60px 24px 80px;
+  background: var(--bg-1, #fff);
+}
+.signal-vs__inner {
+  max-width: 1080px;
+  margin: 0 auto;
+  text-align: center;
+}
+.signal-vs__h2 {
+  font-size: 1.7rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--text-1);
+  margin: 0 0 32px;
+  line-height: 1.25;
+}
+.signal-vs__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 18px;
+}
+.signal-vs__card {
+  background: var(--bg-1, #fff);
+  border: 1px solid var(--border-1, #e2e8f0);
+  border-radius: var(--r-3, 12px);
+  padding: 28px 24px;
+  text-align: left;
+}
+.signal-vs__card--us {
+  border-color: var(--brand);
+  border-width: 2px;
+  background: rgba(37,99,235,0.03);
+}
+.signal-vs__brand {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--text-1);
+  margin-bottom: 10px;
+}
+.signal-vs__does {
+  font-size: 0.92rem;
+  line-height: 1.6;
+  color: var(--text-2);
+}
+
+@media (max-width: 720px) {
+  .signal-mech__h2 { font-size: 1.6rem; }
+  .signal-vs__h2 { font-size: 1.3rem; }
+}
+</style>
