@@ -18,6 +18,7 @@ from datetime import datetime
 
 from modules.database import execute, fetchone, fetchall
 from modules.signal_copy import PRE_BUILT_RULE_TEMPLATES
+from modules.signal_score import _utcnow
 
 logger = logging.getLogger("inbxr.signal_rules")
 
@@ -83,7 +84,7 @@ def evaluate_rule_against_contacts(rule, contacts, signal_result):
         return []
 
     # Per-contact conditions
-    now = datetime.utcnow()
+    now = _utcnow()
     for c in contacts:
         matches = False
 

@@ -2,8 +2,8 @@
 {% set allow_index = True %}
 {% block title %}Pricing{% endblock %}
 {% block content %}
-<h1 class="auth-card__title pricing-title">Sales Delivered</h1>
-<p class="auth-card__sub">The 7 Inbox Signals + copy intelligence + always-on ESP monitoring in one platform. Every tool is free to start. Upgrade for Signal Watch, Signal Rules, Recovery Sequences, Framework Rewriter, and Early Warning alerts.</p>
+<h1 class="auth-card__title pricing-title">Read All 7 Inbox Signals</h1>
+<p class="auth-card__sub">InbXr reads the 7 inbox signals every email list is broadcasting — bounce exposure, MPP-adjusted engagement, dormancy risk, authentication standing, and more — and gives you one Signal Score. Every tool is free to start. Upgrade for Signal Watch, Signal Rules, Recovery Sequences, Send Readiness, and Early Warning alerts.</p>
 
 <div class="pricing-grid">
 
@@ -15,7 +15,7 @@
       <span class="pricing-card__amount">$0</span>
       <span class="pricing-card__period">forever</span>
     </div>
-    <p class="pricing-card__desc">Deliverability diagnostics, copy scoring, and 3 proven frameworks — free forever.</p>
+    <p class="pricing-card__desc">Signal Score (5-signal read normalized to 100), copy scoring, and 3 proven frameworks — free forever.</p>
     <ul class="pricing-card__features">
       <li>{{ t.limits.checks_per_day }} checks/day across all tools</li>
       <li>{{ t.limits.email_verifications_per_day }} email verifications/day</li>
@@ -31,8 +31,10 @@
       <li>3 frameworks unlocked (AIDA, PAS, C3PO)</li>
       <li>In-app alerts (manual scans only)</li>
       <li>Sales &amp; Technical Support chat</li>
+      <li>Signal Score via CSV upload (5 signals, normalized to 100)</li>
       <li>&mdash; No ESP integrations</li>
-      <li>&mdash; No deliverability dashboard</li>
+      <li>&mdash; No Signal Watch (automatic monitoring)</li>
+      <li>&mdash; No Signal Rules / Early Warning / Recovery Sequences</li>
     </ul>
     <div class="pricing-card__action">
       {% if user %}
@@ -56,7 +58,7 @@
       <span class="pricing-card__amount">${{ t.price_monthly }}</span>
       <span class="pricing-card__period">/month</span>
     </div>
-    <p class="pricing-card__desc">All 16 frameworks, AI copy rewrites, custom framework builder, and automated monitoring. Land in the inbox AND land the sale.</p>
+    <p class="pricing-card__desc">All 7 signals, Signal Watch every 6 hours, Early Warning alerts, Signal Rules, Recovery Sequences, Send Readiness gate, and all 16 copy frameworks.</p>
     <ul class="pricing-card__features">
       <li><strong>{{ t.limits.checks_per_day }}</strong> checks/day</li>
       <li><strong>{{ t.limits.email_verifications_per_day }}</strong> email verifications/day</li>
@@ -64,15 +66,20 @@
       <li><strong>{{ t.limits.subject_tests_per_day }}</strong> subject line tests/day</li>
       <li><strong>{{ t.limits.blocklist_domains }}</strong> monitored domains</li>
       <li><strong>{{ t.limits.warmup_campaigns }}</strong> warmup campaigns</li>
-      <li class="pricing-card__feature--highlight">Automated blocklist &amp; DNS auth monitoring</li>
-      <li class="pricing-card__feature--highlight">Instant/daily/weekly email alert digests</li>
-      <li class="pricing-card__feature--highlight">Signal Advisor — 20 conversations/mo</li>
+      <li class="pricing-card__feature--highlight">Full 7-signal Signal Score (all signals unlocked)</li>
+      <li class="pricing-card__feature--highlight">Signal Watch — automatic recalc every 6 hours</li>
+      <li class="pricing-card__feature--highlight">Early Warning alerts (8 pre-built rules)</li>
+      <li class="pricing-card__feature--highlight">Signal Rules — up to 10 live rules (dry-run by default)</li>
+      <li class="pricing-card__feature--highlight">Recovery Sequences — AI-generated re-engagement flows</li>
+      <li class="pricing-card__feature--highlight">Send Readiness gate (green/amber/red)</li>
+      <li class="pricing-card__feature--highlight">Signal Map — full contact segmentation</li>
+      <li class="pricing-card__feature--highlight">Signal Advisor — 20 context-aware chats/mo</li>
+      <li class="pricing-card__feature--highlight">MPP-adjusted engagement (User-Agent + timing detection)</li>
+      <li class="pricing-card__feature--highlight">1 ESP integration (Mailchimp, ActiveCampaign, Mailgun, AWeber)</li>
+      <li class="pricing-card__feature--highlight">All 16 copy frameworks + Custom Framework Builder</li>
       <li class="pricing-card__feature--highlight">Copy Rewriter (tone + framework-aware)</li>
-      <li class="pricing-card__feature--highlight">All 16 frameworks unlocked</li>
-      <li class="pricing-card__feature--highlight">Custom Framework Builder</li>
-      <li class="pricing-card__feature--highlight">Framework detection in analysis</li>
-      <li class="pricing-card__feature--highlight">1 ESP integration (Mailchimp, Instantly, etc.)</li>
-      <li class="pricing-card__feature--highlight">Deliverability dashboard with health score</li>
+      <li class="pricing-card__feature--highlight">Automated blocklist &amp; DNS auth monitoring</li>
+      <li class="pricing-card__feature--highlight">Weekly Signal Report emails</li>
       <li>SPF/DKIM/DMARC change detection</li>
       <li>Cloud test history &amp; PDF reports</li>
       <li>Bulk email verification (CSV)</li>
@@ -95,7 +102,7 @@
       <span class="pricing-card__amount">${{ t.price_monthly }}</span>
       <span class="pricing-card__period">/month</span>
     </div>
-    <p class="pricing-card__desc">Everything in Pro plus teams, API access, and webhooks. Full copy intelligence + deliverability for agencies.</p>
+    <p class="pricing-card__desc">Everything in Pro plus multi-client dashboard, unlimited Signal Rules, API access, and webhooks — built for agencies managing many lists.</p>
     <ul class="pricing-card__features">
       <li><strong>{{ t.limits.checks_per_day }}</strong> checks/day</li>
       <li><strong>{{ t.limits.email_verifications_per_day }}</strong> email verifications/day</li>
@@ -103,15 +110,14 @@
       <li><strong>{{ t.limits.subject_tests_per_day }}</strong> subject line tests/day</li>
       <li><strong>{{ t.limits.blocklist_domains }}</strong> monitored domains</li>
       <li><strong>{{ t.limits.warmup_campaigns }}</strong> warmup campaigns</li>
-      <li class="pricing-card__feature--highlight">Automated alerts for 50 domains</li>
-      <li class="pricing-card__feature--highlight">Signal Advisor — Unlimited</li>
-      <li class="pricing-card__feature--highlight">Copy Rewriter (tone + framework-aware)</li>
-      <li class="pricing-card__feature--highlight">All 16 frameworks + Custom Builder</li>
       <li>Everything in Pro, plus:</li>
+      <li class="pricing-card__feature--highlight">Unlimited Signal Rules (no 10-rule cap)</li>
+      <li class="pricing-card__feature--highlight">Signal Advisor — Unlimited chats</li>
+      <li class="pricing-card__feature--highlight">Multi-client dashboard (agency view)</li>
       <li class="pricing-card__feature--highlight">10 ESP integrations</li>
-      <li class="pricing-card__feature--highlight">Cross-platform deliverability dashboard</li>
-      <li class="pricing-card__feature--highlight">ISP-level delivery breakdown</li>
-      <li class="pricing-card__feature--highlight">Warmup score monitoring</li>
+      <li class="pricing-card__feature--highlight">Automated alerts for 50 domains</li>
+      <li class="pricing-card__feature--highlight">ISP-level delivery breakdown per client</li>
+      <li class="pricing-card__feature--highlight">White-label Signal Report PDFs</li>
       <li>Teams &amp; client workspaces</li>
       <li>API access &amp; Webhooks</li>
     </ul>
@@ -140,6 +146,26 @@
         </tr>
       </thead>
       <tbody>
+        <tr class="pricing-compare__section"><td colspan="4">The 7 Inbox Signals</td></tr>
+        <tr><td>Signal Score (composite /100)</td><td>5-signal, normalized</td><td>Full 7-signal</td><td>Full 7-signal</td></tr>
+        <tr><td>Bounce Exposure</td><td>&#10003;</td><td>&#10003;</td><td>&#10003;</td></tr>
+        <tr><td>Engagement Trajectory (MPP-adjusted)</td><td>&mdash;</td><td>&#10003;</td><td>&#10003;</td></tr>
+        <tr><td>Acquisition Quality (cohort analysis)</td><td>&#10003;</td><td>&#10003;</td><td>&#10003;</td></tr>
+        <tr><td>Domain Reputation</td><td>&#10003;</td><td>&#10003;</td><td>&#10003;</td></tr>
+        <tr><td>Dormancy Risk</td><td>&#10003;</td><td>&#10003;</td><td>&#10003;</td></tr>
+        <tr><td>Authentication Standing</td><td>&#10003;</td><td>&#10003;</td><td>&#10003;</td></tr>
+        <tr><td>Decay Velocity (trajectory)</td><td>&mdash;</td><td>&#10003;</td><td>&#10003;</td></tr>
+        <tr><td>CSV upload path (one-shot read)</td><td>&#10003;</td><td>&#10003;</td><td>&#10003;</td></tr>
+
+        <tr class="pricing-compare__section"><td colspan="4">Signal Intelligence Layer</td></tr>
+        <tr><td>Signal Watch (auto recalc every 6 hrs)</td><td>&mdash;</td><td>&#10003;</td><td>&#10003;</td></tr>
+        <tr><td>Early Warning alerts</td><td>&mdash;</td><td>&#10003;</td><td>&#10003;</td></tr>
+        <tr><td>Signal Rules (dry-run by default)</td><td>&mdash;</td><td>10 active</td><td>Unlimited</td></tr>
+        <tr><td>Recovery Sequences (AI-generated)</td><td>&mdash;</td><td>&#10003;</td><td>&#10003;</td></tr>
+        <tr><td>Send Readiness gate</td><td>&mdash;</td><td>&#10003;</td><td>&#10003;</td></tr>
+        <tr><td>Signal Map (segment visualization)</td><td>&mdash;</td><td>&#10003;</td><td>&#10003;</td></tr>
+        <tr><td>Weekly Signal Report email</td><td>&mdash;</td><td>&#10003;</td><td>&#10003;</td></tr>
+
         <tr class="pricing-compare__section"><td colspan="4">Deliverability Tools</td></tr>
         <tr><td>Inboxer Send Test (send &amp; analyze)</td><td>&#10003;</td><td>&#10003;</td><td>&#10003;</td></tr>
         <tr><td>Inboxer Sender Check (SPF/DKIM/DMARC)</td><td>&#10003;</td><td>&#10003;</td><td>&#10003;</td></tr>

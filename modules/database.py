@@ -1076,6 +1076,21 @@ Opportunity: Start your free InbXr audit today and see where you actually stand.
         -- We add these without CHECK constraints to avoid breaking existing rows
     """),
     ("022_alerts_signal_columns", _add_alerts_signal_columns),
+    ("023_onboarding_email_log", """
+        -- Tracks which onboarding emails have been sent to each user.
+        -- Prevents duplicate sends and gives the scheduler job a simple
+        -- idempotency key per (user_id, email_key).
+        CREATE TABLE IF NOT EXISTS onboarding_email_log (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            email_key TEXT NOT NULL,
+            sent_at TEXT NOT NULL DEFAULT (datetime('now')),
+            delivery_status TEXT DEFAULT 'sent',
+            UNIQUE(user_id, email_key)
+        );
+        CREATE INDEX IF NOT EXISTS idx_onboarding_email_log_user
+            ON onboarding_email_log(user_id);
+    """),
 ]
 
 

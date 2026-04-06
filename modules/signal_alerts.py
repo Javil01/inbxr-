@@ -18,6 +18,7 @@ import logging
 from datetime import datetime, timedelta
 
 from modules.database import execute, fetchone, fetchall
+from modules.signal_score import _utcnow
 
 logger = logging.getLogger("inbxr.signal_alerts")
 
@@ -183,7 +184,7 @@ ALERT_DEDUP_WINDOW_DAYS = 7
 
 def _alert_exists_recently(user_id, rule_title, window_days=ALERT_DEDUP_WINDOW_DAYS):
     """Check if the same early warning title fired in the last N days."""
-    since = (datetime.utcnow() - timedelta(days=window_days)).isoformat()
+    since = (_utcnow() - timedelta(days=window_days)).isoformat()
     existing = fetchone(
         """SELECT id FROM alerts
            WHERE user_id = ? AND alert_type = 'early_warning'

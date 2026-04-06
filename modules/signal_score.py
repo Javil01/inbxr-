@@ -13,9 +13,19 @@ Reference: SIGNAL_SPEC.md for locked decisions.
 
 import json
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from modules.database import execute, fetchone, fetchall
+
+
+def _utcnow():
+    """Return naive UTC datetime, matching the storage format used across the engine.
+
+    Replaces deprecated _utcnow() (Python 3.12+ deprecation warning).
+    Stays naive so comparisons with parsed-from-string datetimes still work
+    without breaking existing code.
+    """
+    return datetime.now(timezone.utc).replace(tzinfo=None)
 from modules.signal_copy import (
     PRO_SIGNAL_WEIGHTS,
     FREE_SIGNAL_WEIGHTS,
@@ -222,7 +232,7 @@ def calculate_engagement_trajectory(contacts, esp_type=None):
         }
 
     total = len(contacts)
-    now = datetime.utcnow()
+    now = _utcnow()
     accuracy = get_esp_mpp_accuracy(esp_type) if esp_type else 'medium'
 
     real_openers_30d = 0
@@ -470,7 +480,7 @@ def calculate_dormancy_risk(contacts):
         return 5, {'reason': 'no_data', 'risk_level': 'unknown'}
 
     total = len(contacts)
-    now = datetime.utcnow()
+    now = _utcnow()
 
     very_old_inactive = 0  # 365+ days
     old_inactive = 0       # 180-364 days
@@ -658,7 +668,7 @@ def segment_contacts(contacts):
     if not contacts:
         return {'active': 0, 'warm': 0, 'at_risk': 0, 'dormant': 0, 'total': 0}
 
-    now = datetime.utcnow()
+    now = _utcnow()
     segments = {'active': 0, 'warm': 0, 'at_risk': 0, 'dormant': 0, 'total': len(contacts)}
 
     for c in contacts:
@@ -791,7 +801,7 @@ def calculate_signal_score(
         'mpp_discount_rate': mpp_discount_rate,
         'tier': tier,
         'data_source': data_source,
-        'calculated_at': datetime.utcnow().isoformat(),
+        'calculated_at': _utcnow().isoformat(),
     }
 
 

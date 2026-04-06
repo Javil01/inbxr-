@@ -100,6 +100,26 @@ def _scheduled_weekly_digest():
         logger.error("[SCHEDULER] Weekly digest failed: %s", e)
 
 
+def _scheduled_onboarding_emails():
+    """Dispatch the signal-aware onboarding email sequence.
+
+    Fires once a day; each email in the sequence has its own signup-age
+    window + precondition SQL to avoid duplicate or irrelevant sends.
+    """
+    from modules.onboarding_emails import dispatch_onboarding_emails
+
+    try:
+        stats = dispatch_onboarding_emails()
+        logger.info(
+            "[SCHEDULER] Onboarding emails: sent=%d skipped_precond=%d "
+            "skipped_sent=%d errors=%d",
+            stats['sent'], stats['skipped_preconditions'],
+            stats['skipped_already_sent'], stats['errors'],
+        )
+    except Exception as e:
+        logger.exception("[SCHEDULER] Onboarding emails failed: %s", e)
+
+
 def _scheduled_daily_blog_post():
     """Auto-generate and publish one SEO blog post per day."""
     import json
@@ -483,6 +503,17 @@ def init_scheduler(app):
         CronTrigger(hour=9, minute=0),
         id="daily_blog_post",
         name="Daily Blog Post Generator",
+        replace_existing=True,
+    )
+
+    # Job 10: Onboarding email sequence — daily at 14:00 UTC
+    # Reads users table by signup age + existing signal state and sends
+    # the right nudge email for each user. Dedup via onboarding_email_log.
+    _scheduler.add_job(
+        _scheduled_onboarding_emails,
+        CronTrigger(hour=14, minute=0),
+        id="onboarding_emails",
+        name="Signal Onboarding Email Sequence",
         replace_existing=True,
     )
 
