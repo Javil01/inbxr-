@@ -626,18 +626,24 @@ def generate_recovery_sequence():
 
 def _generate_sequence_via_groq(segment, brand_name, tone, num_emails):
     """
-    Call Groq with a recovery sequence prompt. Reuses the existing
-    modules/ai_rewriter.py Groq client pattern.
+    Call Groq with a recovery sequence prompt. Uses the same HTTPSConnection
+    pattern as modules/ai_rewriter.py and modules/assistant_chat.py for
+    consistency (urllib's default User-Agent gets 403 from some endpoints).
 
     Returns a list of email dicts: [{subject_variants, preview_text, body, cta_text}, ...]
     """
     import os
-    import urllib.request
-    import urllib.error
+    import re
+    import ssl
+    from http.client import HTTPSConnection
 
     api_key = os.environ.get("GROQ_API_KEY")
     if not api_key:
         raise RuntimeError("GROQ_API_KEY not configured")
+
+    api_host = os.environ.get("AI_API_HOST", "api.groq.com")
+    api_path = os.environ.get("AI_API_PATH", "/openai/v1/chat/completions")
+    model = os.environ.get("AI_MODEL", "llama-3.3-70b-versatile")
 
     days_map = {"at_risk": "91-180", "dormant": "180+", "warm": "31-90", "cold_acquisition": "never engaged"}
     days_inactive = days_map.get(segment, "90+")
@@ -654,7 +660,7 @@ Structure:
 - Email 2 (Day 4): Value reminder — what they're missing
 {f"- Email 3 (Day 8): Stay or go? Binary final ask" if num_emails >= 3 else ""}
 
-Return ONLY valid JSON array. Each email object has:
+Return ONLY a valid JSON object with key "emails" mapping to an array. Each email object has:
 - subject_1, subject_2, subject_3 (3 subject line variants)
 - preview_text (preheader, ~50 chars)
 - body (150-200 words)
@@ -666,28 +672,48 @@ Rules:
 - Match tone: {tone}"""
 
     payload = json.dumps({
-        "model": "llama-3.3-70b-versatile",
+        "model": model,
         "messages": [{"role": "user", "content": prompt}],
         "temperature": 0.7,
         "max_tokens": 2500,
-    }).encode("utf-8")
+        "response_format": {"type": "json_object"},
+    })
 
-    req = urllib.request.Request(
-        "https://api.groq.com/openai/v1/chat/completions",
-        data=payload,
-        headers={
-            "Authorization": f"Bearer {api_key}",
+    ctx = ssl.create_default_context()
+    conn = HTTPSConnection(api_host, 443, timeout=60, context=ctx)
+
+    try:
+        conn.request("POST", api_path, body=payload, headers={
             "Content-Type": "application/json",
-        },
-    )
+            "Authorization": f"Bearer {api_key}",
+        })
+        resp = conn.getresponse()
+        body = resp.read().decode("utf-8", errors="replace")
 
-    with urllib.request.urlopen(req, timeout=60) as resp:
-        response = json.loads(resp.read().decode())
+        if resp.status != 200:
+            try:
+                err = json.loads(body).get("error", {}).get("message", body[:200])
+            except (json.JSONDecodeError, KeyError, TypeError):
+                err = body[:200]
+            raise RuntimeError(f"Groq API {resp.status}: {err}")
 
-    content = response["choices"][0]["message"]["content"]
+        response = json.loads(body)
+        content = response["choices"][0]["message"]["content"]
+    finally:
+        conn.close()
 
-    # Strip markdown fences if present
-    import re
+    # Parse the JSON response (response_format=json_object guarantees valid JSON)
     cleaned = re.sub(r"^```(?:json)?\s*|\s*```$", "", content.strip(), flags=re.MULTILINE)
+    parsed = json.loads(cleaned)
 
-    return json.loads(cleaned)
+    # Extract emails array — accept either {"emails": [...]} or a bare list
+    if isinstance(parsed, list):
+        return parsed
+    if isinstance(parsed, dict):
+        for key in ("emails", "sequence", "messages", "results"):
+            if key in parsed and isinstance(parsed[key], list):
+                return parsed[key]
+        # Fall back: if dict has email-like keys, wrap as single-item list
+        if "subject_1" in parsed or "body" in parsed:
+            return [parsed]
+    raise RuntimeError("Unexpected Groq response shape")

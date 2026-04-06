@@ -115,19 +115,41 @@ def _build_user_context(user_id, team_id=None):
 
 
 def chat(user_id, messages, team_id=None):
-    """Send a conversation to the expert assistant with user context."""
+    """
+    Send a conversation to the Signal Advisor (formerly Email Expert Assistant).
+
+    System prompt strategy:
+    - If the user has any Signal Score data: use the context-aware Signal Advisor
+      prompt (modules/signal_advisor.py) which injects all 7 signals + weakest
+      signal recommendation directly into the prompt.
+    - Otherwise: fall back to the legacy Email Expert prompt with check_history
+      context. This ensures users without Signal Score data still get useful
+      responses based on their existing test results.
+    """
     cfg = _get_config()
     if not cfg["api_key"]:
         return {"error": "AI service not configured."}
 
-    # Build personalized context from user's data
-    user_context = _build_user_context(user_id, team_id=team_id)
+    # Try Signal Advisor context-aware prompt first
+    try:
+        from modules.signal_advisor import build_signal_advisor_prompt
+        signal_prompt, has_signal_data = build_signal_advisor_prompt(user_id)
+    except Exception as e:
+        logger.warning(f"Signal Advisor prompt build failed, falling back: {e}")
+        signal_prompt, has_signal_data = None, False
 
-    system_with_context = (
-        SYSTEM_PROMPT
-        + "\n\n═══ USER'S InbXr DATA ═══\n"
-        + user_context
-    )
+    if has_signal_data and signal_prompt:
+        # User has Signal Score data — use the Signal Advisor prompt directly
+        # (it already includes all the 7-signal context the LLM needs)
+        system_with_context = signal_prompt
+    else:
+        # Fall back to legacy Email Expert prompt with check_history context
+        user_context = _build_user_context(user_id, team_id=team_id)
+        system_with_context = (
+            SYSTEM_PROMPT
+            + "\n\n═══ USER'S InbXr DATA ═══\n"
+            + user_context
+        )
 
     # Build messages array
     api_messages = [{"role": "system", "content": system_with_context}]
