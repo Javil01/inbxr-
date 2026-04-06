@@ -92,6 +92,59 @@
 .sig-empty__text { font-size: 0.9rem; color: var(--text-3); max-width: 480px; margin: 0 auto 20px; line-height: 1.6; }
 .sig-empty__actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
 
+/* Anonymous educational empty state */
+.sig-anon-hero { text-align: center; padding: 56px 20px 40px; background: linear-gradient(180deg, #f0f9ff 0%, #fff 100%); border: 1px solid var(--border); border-radius: var(--r-lg, 12px); margin-bottom: 24px; }
+.sig-anon-hero__eyebrow { display: inline-block; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; padding: 4px 12px; border-radius: var(--r-full, 99px); background: rgba(37,99,235,0.1); color: var(--brand); margin-bottom: 14px; }
+.sig-anon-hero__title { font-size: 2.1rem; font-weight: 800; color: var(--text-1); margin: 0 0 14px; line-height: 1.15; }
+.sig-anon-hero__sub { font-size: 1rem; color: var(--text-2); max-width: 620px; margin: 0 auto 28px; line-height: 1.55; }
+.sig-anon-hero__drop { max-width: 520px; margin: 0 auto; border: 2px dashed var(--brand); background: #fff; border-radius: var(--r-lg, 12px); padding: 32px 20px; cursor: pointer; transition: all 0.15s; }
+.sig-anon-hero__drop:hover { background: rgba(37,99,235,0.04); border-color: var(--brand-dark, #1d4ed8); }
+.sig-anon-hero__drop-icon { font-size: 2rem; margin-bottom: 8px; }
+.sig-anon-hero__drop-title { font-size: 0.95rem; font-weight: 700; color: var(--text-1); margin: 0 0 4px; }
+.sig-anon-hero__drop-sub { font-size: 0.78rem; color: var(--text-3); margin: 0; }
+.sig-anon-hero__trust { display: flex; gap: 20px; justify-content: center; margin-top: 24px; flex-wrap: wrap; font-size: 0.75rem; color: var(--text-3); }
+.sig-anon-hero__trust-item { display: flex; align-items: center; gap: 6px; }
+.sig-anon-hero__trust-item::before { content: "✓"; color: #16a34a; font-weight: 900; }
+
+/* Signal-by-signal educational cards (anonymous) */
+.sig-edu-header { text-align: center; margin: 40px 0 20px; }
+.sig-edu-header__title { font-size: 1.4rem; font-weight: 800; color: var(--text-1); margin: 0 0 6px; }
+.sig-edu-header__sub { font-size: 0.88rem; color: var(--text-3); margin: 0; }
+.sig-edu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 14px; margin-bottom: 32px; }
+.sig-edu-card { background: var(--bg-1, #fff); border: 1px solid var(--border); border-radius: var(--r-lg, 12px); padding: 18px; position: relative; }
+.sig-edu-card__num { position: absolute; top: 14px; right: 14px; font-size: 0.7rem; font-weight: 800; color: var(--text-3); }
+.sig-edu-card__name { font-size: 1rem; font-weight: 700; color: var(--text-1); margin: 0 0 4px; padding-right: 30px; }
+.sig-edu-card__weight { font-size: 0.7rem; color: var(--text-3); margin: 0 0 10px; }
+.sig-edu-card__desc { font-size: 0.83rem; color: var(--text-2); line-height: 1.5; margin: 0 0 10px; }
+.sig-edu-card__market-first { display: inline-block; font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; padding: 2px 8px; border-radius: var(--r-full, 99px); background: linear-gradient(135deg, #dbeafe 0%, #c7d2fe 100%); color: #3730a3; margin-left: 6px; }
+.sig-edu-card__bands { display: flex; gap: 4px; margin-top: 8px; }
+.sig-edu-card__band { flex: 1; height: 4px; border-radius: 2px; }
+.sig-edu-card__band--green { background: #16a34a; }
+.sig-edu-card__band--yellow { background: #d97706; }
+.sig-edu-card__band--red { background: #dc2626; }
+.sig-edu-card__band-labels { display: flex; justify-content: space-between; margin-top: 4px; font-size: 0.65rem; color: var(--text-3); }
+
+/* Inline result card (after anonymous CSV upload) */
+.sig-anon-result { background: var(--bg-1, #fff); border: 1px solid var(--border); border-radius: var(--r-lg, 12px); padding: 28px; margin-bottom: 24px; display: none; }
+.sig-anon-result.is-visible { display: block; animation: fadeInUp 0.4s ease; }
+@keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.sig-anon-result__hero { display: flex; gap: 24px; align-items: center; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
+.sig-anon-result__score { font-size: 3.2rem; font-weight: 900; line-height: 1; }
+.sig-anon-result__score--A, .sig-anon-result__score--B { color: #16a34a; }
+.sig-anon-result__score--C { color: #d97706; }
+.sig-anon-result__score--D, .sig-anon-result__score--F { color: #dc2626; }
+.sig-anon-result__grade { font-size: 1rem; font-weight: 700; margin-top: 6px; }
+.sig-anon-result__summary { flex: 1; }
+.sig-anon-result__summary-title { font-size: 1.1rem; font-weight: 700; color: var(--text-1); margin: 0 0 6px; }
+.sig-anon-result__summary-desc { font-size: 0.85rem; color: var(--text-2); margin: 0; line-height: 1.5; }
+.sig-anon-result__breakdown { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; margin-bottom: 24px; }
+.sig-anon-result__signal-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: var(--bg-2); border-radius: var(--r-md, 8px); }
+.sig-anon-result__signal-name { font-size: 0.78rem; font-weight: 600; color: var(--text-1); }
+.sig-anon-result__signal-val { font-size: 0.88rem; font-weight: 800; }
+.sig-anon-result__cta-box { background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border-radius: var(--r-md, 8px); padding: 20px; text-align: center; }
+.sig-anon-result__cta-title { font-size: 1rem; font-weight: 700; color: var(--text-1); margin: 0 0 6px; }
+.sig-anon-result__cta-sub { font-size: 0.82rem; color: var(--text-2); margin: 0 0 14px; }
+
 .sig-btn { display: inline-block; padding: 10px 20px; border-radius: var(--r-md, 8px); font-size: 0.85rem; font-weight: 600; text-decoration: none; cursor: pointer; border: none; transition: all 0.15s; }
 .sig-btn--primary { background: var(--brand); color: #fff; }
 .sig-btn--primary:hover { background: var(--brand-dark, #1d4ed8); }
@@ -172,21 +225,98 @@
 </div>
 
 {% if not latest %}
-  {# Empty state: user has never run a signal score #}
-  <div class="sig-empty">
-    <h2 class="sig-empty__title">Ready for your first 7 Signal reading?</h2>
+  {# ── Anonymous / empty-state: educational + working upload ── #}
+  <div class="sig-anon-hero">
+    <span class="sig-anon-hero__eyebrow">Free Signal Score · 60 seconds · No signup</span>
+    <h1 class="sig-anon-hero__title">Read all 7 signals your email list is broadcasting.</h1>
+    <p class="sig-anon-hero__sub">
+      Most email tools check one signal: bounce rate. Your list is broadcasting six more —
+      MPP-adjusted engagement, acquisition cohort quality, dormancy risk, domain reputation,
+      authentication standing, and decay velocity. InbXr reads all 7 and gives you one Signal Score.
+    </p>
+
+    <label for="csvUploadInput" class="sig-anon-hero__drop">
+      <div class="sig-anon-hero__drop-icon">📁</div>
+      <p class="sig-anon-hero__drop-title">Upload a CSV with an "email" column</p>
+      <p class="sig-anon-hero__drop-sub">We'll calculate your Signal Score instantly — nothing is saved without your permission.</p>
+    </label>
+    <input type="file" id="csvUploadInput" accept=".csv" style="display:none" onchange="uploadCsv(this)" />
+
+    <div class="sig-anon-hero__trust">
+      <span class="sig-anon-hero__trust-item">No signup required</span>
+      <span class="sig-anon-hero__trust-item">Your CSV is never stored</span>
+      <span class="sig-anon-hero__trust-item">Results in 60 seconds</span>
+    </div>
+  </div>
+
+  {# Inline result card — revealed via JS after anonymous CSV upload #}
+  <div id="anonResult" class="sig-anon-result" aria-live="polite"></div>
+
+  {# ── Educational signal-by-signal breakdown (also renders the 7 signals to SEO) ── #}
+  <div class="sig-edu-header">
+    <h2 class="sig-edu-header__title">The 7 Inbox Signals, explained</h2>
+    <p class="sig-edu-header__sub">Every signal you'll see in your result, the weight we give it, and what a healthy reading looks like.</p>
+  </div>
+
+  <div class="sig-edu-grid">
+    {% set edu_signals = [
+      {'key':'bounce_exposure','name':'01 · Bounce Exposure','weight':'25 pts','desc':'Historical bounce rate + predictive risk from role, disposable, and catch-all flags. The leading indicator for Gmail + Yahoo throttling.','market':False},
+      {'key':'engagement_trajectory','name':'02 · Engagement Trajectory','weight':'25 pts','desc':'Real human engagement over 30 days, adjusted for Apple Mail Privacy Protection using User-Agent, Apple IP range, and timing heuristics — not just @icloud domain matching.','market':True},
+      {'key':'acquisition_quality','name':'03 · Acquisition Quality','weight':'15 pts','desc':'Day-1, day-7, and day-30 engagement per acquisition cohort. Tells you which signup channel is dragging your list health down.','market':True},
+      {'key':'domain_reputation','name':'04 · Domain Reputation','weight':'15 pts','desc':'Sender-domain blocklist status + recipient provider concentration. High Yahoo/AOL density = spikier deliverability risk.','market':False},
+      {'key':'dormancy_risk','name':'05 · Dormancy Risk','weight':'10 pts','desc':'Percentage of contacts inactive for 180+ and 365+ days. The cohort most likely to become complaints, bounces, or trap hits.','market':False},
+      {'key':'authentication_standing','name':'06 · Authentication Standing','weight':'5 pts','desc':'SPF + DKIM + DMARC + List-Unsubscribe scored against the 2024-2025 Gmail, Yahoo, and Microsoft enforcement requirements.','market':False},
+      {'key':'decay_velocity','name':'07 · Decay Velocity','weight':'5 pts','desc':'Rate of change in your composite Signal Score. Trend language only — no fake day-count predictions.','market':False}
+    ] %}
+    {% for s in edu_signals %}
+    <div class="sig-edu-card">
+      <span class="sig-edu-card__num">Signal</span>
+      <h3 class="sig-edu-card__name">
+        {{ s.name }}
+        {% if s.market %}<span class="sig-edu-card__market-first">Market-first</span>{% endif %}
+      </h3>
+      <p class="sig-edu-card__weight">{{ s.weight }} of 100</p>
+      <p class="sig-edu-card__desc">{{ s.desc }}</p>
+      <div class="sig-edu-card__bands">
+        <div class="sig-edu-card__band sig-edu-card__band--red"></div>
+        <div class="sig-edu-card__band sig-edu-card__band--yellow"></div>
+        <div class="sig-edu-card__band sig-edu-card__band--green"></div>
+      </div>
+      <div class="sig-edu-card__band-labels">
+        <span>Danger</span>
+        <span>Watch</span>
+        <span>Healthy</span>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  {% if is_anonymous %}
+  <div class="sig-empty" style="margin-top:12px;">
+    <h2 class="sig-empty__title">Want continuous monitoring instead of a one-shot read?</h2>
     <p class="sig-empty__text">
-      InbXr reads The 7 Inbox Signals from your email list and tells you what's happening to your deliverability.
-      Connect your ESP for continuous monitoring, or upload a CSV for a one-shot reading.
+      Connect Mailchimp, ActiveCampaign, Mailgun, or AWeber and InbXr recalculates your
+      Signal Score every 6 hours, fires Early Warning alerts when any dimension trends toward
+      danger, and runs the Signal Rules you set up — all hands-off.
+    </p>
+    <div class="sig-empty__actions">
+      <a href="/signup" class="sig-btn sig-btn--primary">Create Free Account</a>
+      <a href="/pricing" class="sig-btn sig-btn--outline">See Pricing</a>
+    </div>
+  </div>
+  {% else %}
+  <div class="sig-empty" style="margin-top:12px;">
+    <h2 class="sig-empty__title">Ready for your first reading?</h2>
+    <p class="sig-empty__text">
+      Upload a CSV above, or connect an ESP for continuous monitoring.
     </p>
     <div class="sig-empty__actions">
       {% if tier in ('pro', 'agency', 'api') %}
         <a href="/account/integrations" class="sig-btn sig-btn--primary">Connect an ESP</a>
       {% endif %}
-      <button type="button" class="sig-btn sig-btn--outline" onclick="document.getElementById('csvUploadInput').click()">Upload CSV</button>
-      <input type="file" id="csvUploadInput" accept=".csv" style="display:none" onchange="uploadCsv(this)" />
     </div>
   </div>
+  {% endif %}
 {% else %}
 
   {# Score hero #}
@@ -361,6 +491,16 @@ function uploadCsv(input) {
   if (!input.files || !input.files.length) return;
   const formData = new FormData();
   formData.append('csv_file', input.files[0]);
+
+  // Visual busy state on the drop zone
+  const drop = document.querySelector('.sig-anon-hero__drop');
+  if (drop) {
+    drop.style.opacity = '0.6';
+    drop.style.pointerEvents = 'none';
+    const dt = drop.querySelector('.sig-anon-hero__drop-title');
+    if (dt) dt.textContent = 'Calculating your Signal Score…';
+  }
+
   fetch('/signal-score/from-csv', {
     method: 'POST',
     headers: {
@@ -370,13 +510,101 @@ function uploadCsv(input) {
   })
   .then(r => r.json())
   .then(d => {
-    if (d.ok) {
-      location.reload();
-    } else {
+    if (!d.ok) {
       alert('CSV upload failed: ' + (d.error || 'unknown error'));
+      if (drop) {
+        drop.style.opacity = '1';
+        drop.style.pointerEvents = 'auto';
+        const dt = drop.querySelector('.sig-anon-hero__drop-title');
+        if (dt) dt.textContent = 'Upload a CSV with an "email" column';
+      }
+      return;
     }
+
+    // Authenticated users: reload so the full saved dashboard renders
+    if (!d.is_anonymous) {
+      location.reload();
+      return;
+    }
+
+    // Anonymous users: render inline result card without reloading
+    renderAnonResult(d);
   })
   .catch(e => alert('Network error: ' + e));
+}
+
+function renderAnonResult(d) {
+  const box = document.getElementById('anonResult');
+  if (!box) return;
+
+  const gradeLabels = {
+    A: 'Healthy — safe to send',
+    B: 'Good — watch your weakest signal',
+    C: 'Watch — one bad send from trouble',
+    D: 'Risk — fix before your next campaign',
+    F: 'Danger — stop sending until cleaned'
+  };
+
+  const signalNames = {
+    bounce_exposure: '01 Bounce Exposure',
+    engagement_trajectory: '02 Engagement Trajectory',
+    acquisition_quality: '03 Acquisition Quality',
+    domain_reputation: '04 Domain Reputation',
+    dormancy_risk: '05 Dormancy Risk',
+    authentication_standing: '06 Authentication Standing',
+    decay_velocity: '07 Decay Velocity'
+  };
+
+  const score = Math.round(d.score || 0);
+  const grade = d.grade || 'F';
+  const gradeLabel = gradeLabels[grade] || '';
+
+  let signalRows = '';
+  const scores = d.scores || {};
+  Object.keys(signalNames).forEach(key => {
+    if (scores[key] === undefined || scores[key] === null) return;
+    const val = Math.round(scores[key]);
+    const color = val >= 75 ? '#16a34a' : val >= 50 ? '#d97706' : '#dc2626';
+    signalRows += `
+      <div class="sig-anon-result__signal-row">
+        <span class="sig-anon-result__signal-name">${signalNames[key]}</span>
+        <span class="sig-anon-result__signal-val" style="color:${color}">${val}</span>
+      </div>`;
+  });
+
+  box.innerHTML = `
+    <div class="sig-anon-result__hero">
+      <div>
+        <div class="sig-anon-result__score sig-anon-result__score--${grade}">${score}</div>
+        <div class="sig-anon-result__grade" style="color:inherit;">Grade ${grade}</div>
+      </div>
+      <div class="sig-anon-result__summary">
+        <h2 class="sig-anon-result__summary-title">Your Signal Score: ${score}/100 (${grade})</h2>
+        <p class="sig-anon-result__summary-desc">
+          ${gradeLabel}. Analyzed ${d.rows_parsed || 0} contacts from your CSV.
+          ${d.rows_skipped ? d.rows_skipped + ' rows skipped (invalid or duplicate).' : ''}
+        </p>
+      </div>
+    </div>
+
+    <div class="sig-anon-result__breakdown">${signalRows}</div>
+
+    <div class="sig-anon-result__cta-box">
+      <h3 class="sig-anon-result__cta-title">Want continuous monitoring on this list?</h3>
+      <p class="sig-anon-result__cta-sub">
+        Create a free account to save this report, track your Signal Score over time, set up
+        Signal Rules with dry-run preview, and get Early Warning alerts when any dimension
+        trends toward danger.
+      </p>
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+        <a href="/signup" class="sig-btn sig-btn--primary">Create Free Account</a>
+        <a href="/pricing" class="sig-btn sig-btn--outline">See Pricing</a>
+      </div>
+    </div>
+  `;
+  box.classList.add('is-visible');
+  // Scroll the result into view
+  setTimeout(() => box.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
 }
 
 // ─────────────────────────────────────────────────────

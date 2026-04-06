@@ -1084,3 +1084,53 @@ def calculate_signal_score_from_csv(
     result['rows_parsed'] = len(contacts)
     result['rows_skipped'] = skipped
     return result
+
+
+# ── Public share token (schema-less HMAC) ──────────────
+#
+# Lets authenticated users share a read-only view of their Signal Score via
+# a URL like /signal-score/public/<token>. The token is a tamper-proof
+# encoding of the signal_scores row id, signed with the app SECRET_KEY so
+# visitors can't enumerate other users' reports by incrementing an integer.
+
+import base64
+import hashlib
+import hmac
+
+
+def _share_secret():
+    """Derive a stable secret for share-token HMAC."""
+    import os
+    return os.environ.get('SECRET_KEY') or 'inbxr-fallback-share-secret'
+
+
+def make_share_token(row_id):
+    """Generate a tamper-proof share token for a signal_scores row."""
+    msg = str(row_id).encode()
+    sig = hmac.new(_share_secret().encode(), msg, hashlib.sha256).hexdigest()[:12]
+    raw = f"{row_id}.{sig}".encode()
+    return base64.urlsafe_b64encode(raw).decode().rstrip('=')
+
+
+def parse_share_token(token):
+    """Verify a share token and return the signal_scores row id, or None."""
+    try:
+        padded = token + '=' * (-len(token) % 4)
+        decoded = base64.urlsafe_b64decode(padded.encode()).decode()
+        row_id_str, sig = decoded.split('.', 1)
+        expected_sig = hmac.new(
+            _share_secret().encode(), row_id_str.encode(), hashlib.sha256
+        ).hexdigest()[:12]
+        if not hmac.compare_digest(sig, expected_sig):
+            return None
+        return int(row_id_str)
+    except (ValueError, TypeError, UnicodeDecodeError):
+        return None
+
+
+def get_signal_score_by_id(row_id):
+    """Fetch a signal_scores row by its primary key (used by public share view)."""
+    return fetchone(
+        "SELECT * FROM signal_scores WHERE id = ?",
+        (row_id,),
+    )

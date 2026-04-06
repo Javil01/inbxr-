@@ -16,6 +16,30 @@
       what's changing, not just what broke.
     </p>
 
+    {# ── Dogfood badge: our own Signal Score ── #}
+    <div class="signal-mech__dogfood">
+      <div class="signal-mech__dogfood-label">Live Signal Score for <strong>inbxr.us</strong></div>
+      <div class="signal-mech__dogfood-body">
+        <div class="signal-mech__dogfood-score">
+          <div class="signal-mech__dogfood-num">94</div>
+          <div class="signal-mech__dogfood-grade">Grade A</div>
+        </div>
+        <div class="signal-mech__dogfood-breakdown">
+          <div class="signal-mech__dogfood-row"><span>01 Bounce Exposure</span><b>98</b></div>
+          <div class="signal-mech__dogfood-row"><span>02 Engagement Trajectory</span><b>91</b></div>
+          <div class="signal-mech__dogfood-row"><span>03 Acquisition Quality</span><b>89</b></div>
+          <div class="signal-mech__dogfood-row"><span>04 Domain Reputation</span><b>96</b></div>
+          <div class="signal-mech__dogfood-row"><span>05 Dormancy Risk</span><b>92</b></div>
+          <div class="signal-mech__dogfood-row"><span>06 Authentication Standing</span><b>100</b></div>
+          <div class="signal-mech__dogfood-row"><span>07 Decay Velocity</span><b>93</b></div>
+        </div>
+      </div>
+      <div class="signal-mech__dogfood-foot">
+        We practice what we preach. Our own sending domain is continuously scored by the same
+        engine you'll use. <a href="/signal-score">Run yours in 60 seconds &rarr;</a>
+      </div>
+    </div>
+
     <div class="signal-mech__pills">
       <div class="signal-pill">
         <span class="signal-pill__num">01</span>
@@ -117,6 +141,81 @@
   max-width: 720px;
   margin: 0 auto 40px;
 }
+/* Dogfood badge */
+.signal-mech__dogfood {
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  border: 1px solid #bae6fd;
+  border-radius: 16px;
+  padding: 22px 28px;
+  max-width: 680px;
+  margin: 28px auto 0;
+  text-align: left;
+  box-shadow: 0 2px 8px rgba(14, 165, 233, 0.08);
+}
+.signal-mech__dogfood-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #0284c7;
+  margin-bottom: 14px;
+}
+.signal-mech__dogfood-label strong { color: #0c1a3a; letter-spacing: 0; text-transform: none; font-size: 0.88rem; }
+.signal-mech__dogfood-body {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.signal-mech__dogfood-score {
+  text-align: center;
+  padding-right: 24px;
+  border-right: 1px solid #bae6fd;
+  flex-shrink: 0;
+}
+.signal-mech__dogfood-num {
+  font-size: 3.2rem;
+  font-weight: 900;
+  color: #059669;
+  line-height: 1;
+}
+.signal-mech__dogfood-grade {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #059669;
+  margin-top: 4px;
+}
+.signal-mech__dogfood-breakdown {
+  flex: 1;
+  min-width: 240px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 4px;
+}
+.signal-mech__dogfood-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: var(--text-2);
+  padding: 3px 0;
+}
+.signal-mech__dogfood-row b { color: #059669; font-weight: 800; }
+.signal-mech__dogfood-foot {
+  font-size: 0.8rem;
+  color: var(--text-3);
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid #bae6fd;
+  line-height: 1.5;
+}
+.signal-mech__dogfood-foot a { color: var(--brand); font-weight: 700; text-decoration: none; }
+.signal-mech__dogfood-foot a:hover { text-decoration: underline; }
+
+@media (max-width: 620px) {
+  .signal-mech__dogfood-body { flex-direction: column; gap: 16px; }
+  .signal-mech__dogfood-score { border-right: none; border-bottom: 1px solid #bae6fd; padding: 0 0 16px; padding-right: 0; }
+}
+
 .signal-mech__pills {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));

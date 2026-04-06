@@ -1,0 +1,141 @@
+{% extends "auth/base_auth.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+
+<style>
+.ins-wrap { max-width: 960px; margin: 0 auto; }
+.ins-header { text-align: center; margin-bottom: 40px; }
+.ins-eyebrow { display: inline-block; font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; padding: 4px 14px; border-radius: 99px; background: rgba(37,99,235,0.1); color: var(--brand); }
+.ins-title { font-size: 2.4rem; font-weight: 900; color: var(--text-1); margin: 18px 0 12px; line-height: 1.1; }
+.ins-sub { font-size: 1.05rem; color: var(--text-3); max-width: 640px; margin: 0 auto; line-height: 1.5; }
+
+.ins-stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-bottom: 40px; }
+.ins-stat { background: var(--bg-1, #fff); border: 1px solid var(--border); border-radius: 12px; padding: 24px; text-align: center; }
+.ins-stat__num { font-size: 2.4rem; font-weight: 900; color: var(--brand); line-height: 1; }
+.ins-stat__label { font-size: 0.78rem; font-weight: 600; color: var(--text-3); margin-top: 10px; text-transform: uppercase; letter-spacing: 0.04em; }
+
+.ins-section { background: var(--bg-1, #fff); border: 1px solid var(--border); border-radius: 12px; padding: 32px; margin-bottom: 24px; }
+.ins-section__title { font-size: 1.3rem; font-weight: 800; color: var(--text-1); margin: 0 0 6px; }
+.ins-section__sub { font-size: 0.88rem; color: var(--text-3); margin: 0 0 24px; }
+
+.ins-grade-bar { display: flex; gap: 4px; margin-top: 16px; }
+.ins-grade-cell { flex: 1; text-align: center; }
+.ins-grade-cell__letter { font-size: 1.4rem; font-weight: 900; margin-bottom: 6px; }
+.ins-grade-cell__count { font-size: 0.78rem; color: var(--text-3); }
+.ins-grade-cell__bar { height: 100px; background: var(--bg-2); border-radius: 6px; position: relative; margin-bottom: 10px; }
+.ins-grade-cell__fill { position: absolute; bottom: 0; left: 0; right: 0; border-radius: 6px; transition: height 0.6s; }
+.ins-grade-cell--A .ins-grade-cell__letter { color: #16a34a; }
+.ins-grade-cell--A .ins-grade-cell__fill { background: #16a34a; }
+.ins-grade-cell--B .ins-grade-cell__letter { color: #65a30d; }
+.ins-grade-cell--B .ins-grade-cell__fill { background: #65a30d; }
+.ins-grade-cell--C .ins-grade-cell__letter { color: #d97706; }
+.ins-grade-cell--C .ins-grade-cell__fill { background: #d97706; }
+.ins-grade-cell--D .ins-grade-cell__letter { color: #ea580c; }
+.ins-grade-cell--D .ins-grade-cell__fill { background: #ea580c; }
+.ins-grade-cell--F .ins-grade-cell__letter { color: #dc2626; }
+.ins-grade-cell--F .ins-grade-cell__fill { background: #dc2626; }
+
+.ins-cta { background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border-radius: 14px; padding: 40px 28px; text-align: center; }
+.ins-cta__title { font-size: 1.4rem; font-weight: 800; color: var(--text-1); margin: 0 0 10px; }
+.ins-cta__sub { font-size: 0.92rem; color: var(--text-2); margin: 0 0 20px; max-width: 520px; margin-left: auto; margin-right: auto; }
+.ins-cta__btn { display: inline-block; background: var(--brand); color: #fff; padding: 14px 32px; border-radius: 8px; font-size: 0.95rem; font-weight: 700; text-decoration: none; }
+
+.ins-footnote { font-size: 0.78rem; color: var(--text-3); text-align: center; margin-top: 24px; font-style: italic; }
+</style>
+
+<div class="ins-wrap">
+
+<div class="ins-header">
+  <span class="ins-eyebrow">Live aggregate data · Updated hourly</span>
+  <h1 class="ins-title">What we're seeing across the email lists InbXr scores.</h1>
+  <p class="ins-sub">
+    Anonymous aggregate data from the Signal Score engine. No individual
+    lists, no personally identifiable information — just the patterns we see
+    across the email senders using InbXr to monitor their deliverability.
+  </p>
+</div>
+
+<div class="ins-stat-grid">
+  <div class="ins-stat">
+    <div class="ins-stat__num">{{ "{:,}".format(stats.total_lists_scored) }}</div>
+    <div class="ins-stat__label">Lists scored</div>
+  </div>
+  <div class="ins-stat">
+    <div class="ins-stat__num">{{ "{:,}".format(stats.total_contacts_analyzed) }}</div>
+    <div class="ins-stat__label">Contacts analyzed</div>
+  </div>
+  <div class="ins-stat">
+    <div class="ins-stat__num">{{ stats.avg_signal_score }}</div>
+    <div class="ins-stat__label">Avg Signal Score</div>
+  </div>
+  <div class="ins-stat">
+    <div class="ins-stat__num">{{ stats.mpp_inflation_pct }}%</div>
+    <div class="ins-stat__label">Contacts flagged MPP</div>
+  </div>
+</div>
+
+<div class="ins-section">
+  <h2 class="ins-section__title">Grade distribution</h2>
+  <p class="ins-section__sub">Where our users' lists are landing on the A-F scale. Most senders are surprised by their first reading.</p>
+
+  <div class="ins-grade-bar">
+    {% set max_count = stats.grade_distribution.values()|list|max if stats.grade_distribution else 1 %}
+    {% if max_count == 0 %}{% set max_count = 1 %}{% endif %}
+    {% for grade in ['A','B','C','D','F'] %}
+      {% set cnt = stats.grade_distribution[grade] %}
+      {% set pct = (cnt / max_count * 100)|round|int %}
+      <div class="ins-grade-cell ins-grade-cell--{{ grade }}">
+        <div class="ins-grade-cell__bar">
+          <div class="ins-grade-cell__fill" style="height: {{ pct }}%;"></div>
+        </div>
+        <div class="ins-grade-cell__letter">{{ grade }}</div>
+        <div class="ins-grade-cell__count">{{ cnt }} list{% if cnt != 1 %}s{% endif %}</div>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+
+<div class="ins-section">
+  <h2 class="ins-section__title">Signal health patterns</h2>
+  <p class="ins-section__sub">What the 7 signals look like across the sender base right now.</p>
+
+  <div style="display:grid;grid-template-columns:1fr;gap:16px;">
+    <div>
+      <div style="display:flex;justify-content:space-between;font-size:0.9rem;margin-bottom:6px;">
+        <span><strong>Apple Mail Privacy Protection inflation</strong></span>
+        <span style="color:var(--brand);font-weight:800;">{{ stats.mpp_inflation_pct }}%</span>
+      </div>
+      <div style="font-size:0.82rem;color:var(--text-3);">
+        of tracked contacts are flagged as likely MPP openers. If you're not adjusting
+        your engagement numbers for this, your reported open rate is overstated by a
+        factor of roughly {{ (100 / (100 - stats.mpp_inflation_pct))|round(1) if stats.mpp_inflation_pct < 95 else 5 }}x.
+      </div>
+    </div>
+
+    <div>
+      <div style="display:flex;justify-content:space-between;font-size:0.9rem;margin-bottom:6px;">
+        <span><strong>Dormancy risk</strong></span>
+        <span style="color:var(--brand);font-weight:800;">{{ stats.dormancy_risk_avg_pct }}%</span>
+      </div>
+      <div style="font-size:0.82rem;color:var(--text-3);">
+        of tracked contacts have been inactive for 180+ days. These are the contacts most
+        likely to become complaints, bounces, or recycled spam trap hits on your next send.
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="ins-cta">
+  <h2 class="ins-cta__title">Want to see where your list lands?</h2>
+  <p class="ins-cta__sub">Upload a CSV and get your Signal Score in 60 seconds. No signup, no card.</p>
+  <a href="/signal-score" class="ins-cta__btn">Get Your Signal Score &rarr;</a>
+</div>
+
+<p class="ins-footnote">
+  Aggregate data only. Individual list information is never shared, sold, or exposed
+  through this page. See our <a href="/methodology">methodology</a> for what we measure
+  and what we don't.
+</p>
+
+</div>
+{% endblock %}

@@ -48,6 +48,9 @@ from modules.signal_score import (
     save_signal_score,
     get_latest_signal_score,
     get_signal_history,
+    make_share_token,
+    parse_share_token,
+    get_signal_score_by_id,
 )
 from modules.signal_rules import (
     preview_signal_rule,
@@ -100,10 +103,42 @@ def _weakest_signal(latest_score):
 # ── Dashboard ──────────────────────────────────────────
 
 @signal_bp.route("/signal-score")
-@login_required
 def signal_score_dashboard():
-    """Signal Score Dashboard — main 7-signal visualization page."""
+    """
+    Signal Score Dashboard — main 7-signal visualization page.
+
+    PUBLIC ROUTE. Anonymous visitors see the educational empty state +
+    a working CSV upload path (the result renders inline without
+    requiring signup). This is the single most important marketing
+    surface — every pillar post, ad, and cold-outreach link funnels here.
+    """
     user = get_current_user()
+
+    # Anonymous visitor: render the empty/educational state.
+    if not user:
+        return render_template(
+            "signal/dashboard.html",
+            active_page="signal_score",
+            latest=None,
+            history=[],
+            weakest=None,
+            weakest_name=None,
+            weakest_action=None,
+            alerts=[],
+            unread_alert_count=0,
+            signal_dimensions=SIGNAL_DIMENSION_COPY,
+            grade_copy=SIGNAL_GRADE_COPY,
+            segment_labels=SEGMENT_LABELS,
+            mpp_labels=MPP_ACCURACY_LABELS,
+            trajectory_labels=TRAJECTORY_DIRECTION_LABELS,
+            trajectory_messages=TRAJECTORY_DIRECTION_MESSAGES,
+            free_tier_locked=list(FREE_TIER_LOCKED_SIGNALS),
+            tier="anon",
+            is_anonymous=True,
+            allow_index=True,
+            title="Free Signal Score — The 7 Inbox Signals",
+        )
+
     user_id = user["id"]
     tier = user.get("tier", "free")
 
@@ -152,6 +187,8 @@ def signal_score_dashboard():
         trajectory_messages=TRAJECTORY_DIRECTION_MESSAGES,
         free_tier_locked=list(FREE_TIER_LOCKED_SIGNALS),
         tier=tier,
+        is_anonymous=False,
+        allow_index=True,
         title="Signal Score",
     )
 
@@ -218,18 +255,30 @@ def calculate_signal_score_now():
 
 
 @signal_bp.route("/signal-score/from-csv", methods=["POST"])
-@login_required
 def calculate_signal_score_csv():
     """
     Calculate a Signal Score from an uploaded CSV file.
-    Free tier entry point — no ESP connection required.
+
+    PUBLIC ENDPOINT. Anonymous visitors get a full 7-signal reading
+    without signup — the result returns inline as JSON for the dashboard
+    to render. Saving the result to history / scheduling recalculation /
+    connecting an ESP all require signup (email-gate on the result card).
+
+    Authenticated users: result is saved to signal_scores + history and
+    the JSON response includes the same result payload.
     """
     user = get_current_user()
-    user_id = user["id"]
-    tier = user.get("tier", "free")
+    is_anonymous = user is None
 
-    if not has_feature(tier, "signal_csv_upload"):
-        return jsonify({"ok": False, "error": "CSV upload not available on your tier"}), 403
+    if is_anonymous:
+        user_id = None
+        tier = "free"
+    else:
+        user_id = user["id"]
+        tier = user.get("tier", "free")
+
+        if not has_feature(tier, "signal_csv_upload"):
+            return jsonify({"ok": False, "error": "CSV upload not available on your tier"}), 403
 
     if "csv_file" not in request.files:
         return jsonify({"ok": False, "error": "No file uploaded"}), 400
@@ -244,8 +293,11 @@ def calculate_signal_score_csv():
         except Exception:
             return jsonify({"ok": False, "error": "Could not decode CSV file. Use UTF-8."}), 400
 
-    from modules.scheduler import _get_auth_data_for_user
-    auth_data = _get_auth_data_for_user(user_id)
+    # Anonymous visitors skip auth data lookup (no user -> no DNS monitor data)
+    auth_data = None
+    if not is_anonymous:
+        from modules.scheduler import _get_auth_data_for_user
+        auth_data = _get_auth_data_for_user(user_id)
 
     result = calculate_signal_score_from_csv(
         user_id=user_id,
@@ -257,15 +309,101 @@ def calculate_signal_score_csv():
     if result.get("error"):
         return jsonify({"ok": False, "error": result.get("message", "CSV parse error")}), 400
 
-    save_signal_score(user_id, None, result)
+    # Only persist for authenticated users. Anonymous results are one-shot.
+    if not is_anonymous:
+        save_signal_score(user_id, None, result)
 
+    # Full payload so the dashboard can render inline for both anon + auth.
+    # Includes per-signal scores and metadata for the 7-signal cards.
     return jsonify({
         "ok": True,
+        "is_anonymous": is_anonymous,
         "score": result["total_signal_score"],
         "grade": result["signal_grade"],
         "rows_parsed": result["rows_parsed"],
         "rows_skipped": result["rows_skipped"],
         "total_contacts": result["segments"]["total"],
+        "scores": result.get("scores", {}),
+        "metadata": result.get("metadata", {}),
+        "segments": result.get("segments", {}),
+        "trajectory_direction": result.get("trajectory_direction"),
+        "mpp_accuracy": result.get("mpp_accuracy"),
+    })
+
+
+# ── Public share URL ──────────────────────────────────
+#
+# Read-only share of a saved Signal Score report. Token is HMAC-signed
+# against the app SECRET_KEY so visitors can't enumerate other users'
+# reports by incrementing an id. No auth required.
+
+@signal_bp.route("/signal-score/public/<token>")
+def signal_score_public(token):
+    """Public read-only Signal Score report by tamper-proof share token."""
+    row_id = parse_share_token(token)
+    if not row_id:
+        return render_template(
+            "signal/public_share.html",
+            row=None,
+            error="invalid_token",
+            signal_dimensions=SIGNAL_DIMENSION_COPY,
+            grade_copy=SIGNAL_GRADE_COPY,
+            allow_index=False,
+            title="Signal Score Report",
+        ), 404
+
+    row = get_signal_score_by_id(row_id)
+    if not row:
+        return render_template(
+            "signal/public_share.html",
+            row=None,
+            scores={},
+            error="not_found",
+            signal_dimensions=SIGNAL_DIMENSION_COPY,
+            grade_copy=SIGNAL_GRADE_COPY,
+            allow_index=False,
+            title="Signal Score Report",
+        ), 404
+
+    # Pre-parse the scores_json so the template doesn't need a custom filter
+    scores = {}
+    raw_scores = row.get("scores_json") if hasattr(row, "get") else row["scores_json"]
+    if raw_scores:
+        try:
+            scores = json.loads(raw_scores) if isinstance(raw_scores, str) else raw_scores
+        except (ValueError, TypeError):
+            scores = {}
+
+    return render_template(
+        "signal/public_share.html",
+        row=row,
+        scores=scores,
+        error=None,
+        signal_dimensions=SIGNAL_DIMENSION_COPY,
+        grade_copy=SIGNAL_GRADE_COPY,
+        trajectory_labels=TRAJECTORY_DIRECTION_LABELS,
+        allow_index=False,
+        title="Signal Score Report",
+    )
+
+
+@signal_bp.route("/signal-score/<int:row_id>/share-token")
+@login_required
+def signal_score_share_token(row_id):
+    """Return the share token URL for a saved Signal Score row (auth-only)."""
+    user = get_current_user()
+    row = fetchone(
+        "SELECT id, user_id FROM signal_scores WHERE id = ?",
+        (row_id,),
+    )
+    if not row or row["user_id"] != user["id"]:
+        return jsonify({"ok": False, "error": "not_found"}), 404
+
+    token = make_share_token(row_id)
+    return jsonify({
+        "ok": True,
+        "token": token,
+        "url": f"/signal-score/public/{token}",
     })
 
 

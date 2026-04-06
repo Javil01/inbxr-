@@ -142,6 +142,9 @@ app.register_blueprint(integration_bp)
 from blueprints.signal_routes import signal_bp
 app.register_blueprint(signal_bp)
 
+from blueprints.public_signal_routes import public_signal_bp
+app.register_blueprint(public_signal_bp)
+
 from modules.scheduler import init_scheduler
 init_scheduler(app)
 

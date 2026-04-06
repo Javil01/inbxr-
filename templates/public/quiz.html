@@ -1,0 +1,179 @@
+{% extends "auth/base_auth.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+
+<style>
+.qz-wrap { max-width: 640px; margin: 0 auto; }
+.qz-eyebrow { display: inline-block; font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; padding: 4px 14px; border-radius: 99px; background: rgba(37,99,235,0.1); color: var(--brand); margin-bottom: 14px; }
+.qz-title { font-size: 2.2rem; font-weight: 900; color: var(--text-1); margin: 0 0 12px; line-height: 1.15; }
+.qz-sub { font-size: 1rem; color: var(--text-3); margin-bottom: 36px; line-height: 1.55; }
+
+.qz-progress { display: flex; gap: 6px; margin-bottom: 24px; }
+.qz-progress__cell { flex: 1; height: 4px; background: var(--bg-2); border-radius: 2px; }
+.qz-progress__cell.is-done { background: var(--brand); }
+
+.qz-card { background: var(--bg-1, #fff); border: 1px solid var(--border); border-radius: 14px; padding: 32px; }
+.qz-q__num { font-size: 0.72rem; font-weight: 800; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.08em; }
+.qz-q__text { font-size: 1.25rem; font-weight: 700; color: var(--text-1); margin: 8px 0 24px; line-height: 1.35; }
+.qz-option { display: block; padding: 14px 18px; border: 1.5px solid var(--border); border-radius: 10px; margin-bottom: 10px; cursor: pointer; font-size: 0.92rem; color: var(--text-1); transition: all 0.15s; }
+.qz-option:hover { border-color: var(--brand); background: rgba(37,99,235,0.03); }
+.qz-option.is-selected { border-color: var(--brand); background: rgba(37,99,235,0.08); font-weight: 600; }
+
+.qz-nav { display: flex; justify-content: space-between; margin-top: 24px; gap: 10px; }
+.qz-btn { padding: 12px 24px; border-radius: 8px; font-size: 0.88rem; font-weight: 700; border: none; cursor: pointer; text-decoration: none; display: inline-block; }
+.qz-btn--primary { background: var(--brand); color: #fff; }
+.qz-btn--primary:hover { background: var(--brand-dark, #1d4ed8); }
+.qz-btn--primary[disabled] { opacity: 0.5; cursor: not-allowed; }
+.qz-btn--outline { background: transparent; color: var(--text-3); border: 1.5px solid var(--border); }
+
+/* Result card */
+.qz-result { display: none; }
+.qz-result.is-visible { display: block; }
+.qz-result__hero { background: var(--bg-1, #fff); border: 1px solid var(--border); border-radius: 14px; padding: 32px; text-align: center; margin-bottom: 20px; }
+.qz-result__score { font-size: 3.6rem; font-weight: 900; color: var(--brand); line-height: 1; }
+.qz-result__label { font-size: 0.85rem; color: var(--text-3); font-weight: 600; margin-top: 6px; }
+.qz-result__weakest { background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border-radius: 10px; padding: 22px; margin-top: 24px; text-align: left; }
+.qz-result__weakest-label { font-size: 0.7rem; font-weight: 800; color: #92400e; text-transform: uppercase; letter-spacing: 0.06em; }
+.qz-result__weakest-name { font-size: 1.2rem; font-weight: 800; color: #78350f; margin: 6px 0; }
+.qz-result__weakest-action { font-size: 0.92rem; color: #78350f; line-height: 1.5; }
+
+.qz-result__cta { background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border-radius: 14px; padding: 28px; text-align: center; margin-top: 20px; }
+.qz-result__cta-title { font-size: 1.1rem; font-weight: 800; color: var(--text-1); margin: 0 0 8px; }
+.qz-result__cta-sub { font-size: 0.88rem; color: var(--text-2); margin: 0 0 16px; }
+</style>
+
+<div class="qz-wrap">
+
+<!-- Intro -->
+<div id="qzIntro">
+  <span class="qz-eyebrow">60-second quiz · No signup</span>
+  <h1 class="qz-title">What's your weakest Inbox Signal?</h1>
+  <p class="qz-sub">
+    6 questions. You'll get back the signal most likely to be hurting your deliverability,
+    plus the one move that would have the biggest impact. No email required to see your result.
+  </p>
+  <button class="qz-btn qz-btn--primary" onclick="startQuiz()">Start Quiz &rarr;</button>
+</div>
+
+<!-- Quiz (hidden until Start) -->
+<div id="qzQuiz" style="display:none;">
+  <div class="qz-progress" id="qzProgress"></div>
+  <div class="qz-card" id="qzCard"></div>
+</div>
+
+<!-- Result (hidden until submit) -->
+<div class="qz-result" id="qzResult">
+  <div class="qz-result__hero">
+    <div class="qz-result__score" id="qzScore">0</div>
+    <div class="qz-result__label">Signal Awareness Score (out of 100)</div>
+
+    <div class="qz-result__weakest">
+      <div class="qz-result__weakest-label">Your weakest signal</div>
+      <div class="qz-result__weakest-name" id="qzWeakestName">—</div>
+      <div class="qz-result__weakest-action" id="qzWeakestAction">—</div>
+    </div>
+  </div>
+
+  <div class="qz-result__cta">
+    <h2 class="qz-result__cta-title">Want an actual reading on your list, not just the quiz?</h2>
+    <p class="qz-result__cta-sub">Upload a CSV and InbXr will read all 7 signals against your real contacts in 60 seconds.</p>
+    <a href="/signal-score" class="qz-btn qz-btn--primary">Get Your Signal Score &rarr;</a>
+  </div>
+</div>
+
+</div>
+
+<script>
+const QUESTIONS = {{ questions|tojson }};
+let currentQ = 0;
+const answers = {};
+
+function startQuiz() {
+  document.getElementById('qzIntro').style.display = 'none';
+  document.getElementById('qzQuiz').style.display = 'block';
+  renderProgress();
+  renderQuestion();
+}
+
+function renderProgress() {
+  const bar = document.getElementById('qzProgress');
+  bar.innerHTML = '';
+  for (let i = 0; i < QUESTIONS.length; i++) {
+    const cell = document.createElement('div');
+    cell.className = 'qz-progress__cell' + (i <= currentQ ? ' is-done' : '');
+    bar.appendChild(cell);
+  }
+}
+
+function renderQuestion() {
+  const q = QUESTIONS[currentQ];
+  const card = document.getElementById('qzCard');
+  const selected = answers[q.id];
+
+  let optionsHtml = '';
+  q.options.forEach(opt => {
+    const label = opt[0];
+    const isSelected = selected === label;
+    optionsHtml += `<label class="qz-option ${isSelected ? 'is-selected' : ''}" onclick="selectOption('${q.id}', this)">${label}</label>`;
+  });
+
+  card.innerHTML = `
+    <div class="qz-q__num">Question ${currentQ + 1} of ${QUESTIONS.length}</div>
+    <div class="qz-q__text">${q.text}</div>
+    ${optionsHtml}
+    <div class="qz-nav">
+      <button class="qz-btn qz-btn--outline" onclick="prevQ()" ${currentQ === 0 ? 'style="visibility:hidden;"' : ''}>&larr; Back</button>
+      <button class="qz-btn qz-btn--primary" id="qzNext" onclick="nextQ()" ${!selected ? 'disabled' : ''}>
+        ${currentQ === QUESTIONS.length - 1 ? 'See result' : 'Next →'}
+      </button>
+    </div>
+  `;
+  renderProgress();
+}
+
+function selectOption(qid, el) {
+  const label = el.textContent;
+  answers[qid] = label;
+  document.querySelectorAll('.qz-option').forEach(o => o.classList.remove('is-selected'));
+  el.classList.add('is-selected');
+  const btn = document.getElementById('qzNext');
+  if (btn) btn.disabled = false;
+}
+
+function prevQ() {
+  if (currentQ > 0) { currentQ--; renderQuestion(); }
+}
+
+function nextQ() {
+  if (currentQ < QUESTIONS.length - 1) {
+    currentQ++;
+    renderQuestion();
+  } else {
+    submitQuiz();
+  }
+}
+
+function submitQuiz() {
+  fetch('/quiz/score', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.content || '',
+    },
+    body: JSON.stringify({ answers: answers })
+  })
+  .then(r => r.json())
+  .then(d => {
+    if (!d.ok) { alert('Something went wrong'); return; }
+    document.getElementById('qzQuiz').style.display = 'none';
+    document.getElementById('qzResult').classList.add('is-visible');
+    document.getElementById('qzScore').textContent = Math.round(d.composite_score);
+    document.getElementById('qzWeakestName').textContent = d.weakest_name;
+    document.getElementById('qzWeakestAction').textContent = d.weakest_action;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  })
+  .catch(e => alert('Network error: ' + e));
+}
+</script>
+
+{% endblock %}

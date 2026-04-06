@@ -1,0 +1,257 @@
+{% extends "auth/base_auth.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+
+<style>
+.meth-wrap { max-width: 780px; margin: 0 auto; }
+.meth-eyebrow { display: inline-block; font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; padding: 4px 14px; border-radius: 99px; background: rgba(37,99,235,0.1); color: var(--brand); margin-bottom: 14px; }
+.meth-title { font-size: 2.2rem; font-weight: 900; color: var(--text-1); margin: 0 0 16px; line-height: 1.15; }
+.meth-intro { font-size: 1.05rem; color: var(--text-2); line-height: 1.6; margin-bottom: 40px; max-width: 680px; }
+
+.meth-signal { background: var(--bg-1, #fff); border: 1px solid var(--border); border-radius: 12px; padding: 28px; margin-bottom: 20px; }
+.meth-signal__num { font-size: 0.75rem; font-weight: 800; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.08em; }
+.meth-signal__name { font-size: 1.3rem; font-weight: 800; color: var(--text-1); margin: 6px 0 4px; }
+.meth-signal__weight { font-size: 0.78rem; color: var(--brand); font-weight: 700; margin-bottom: 18px; }
+.meth-signal__row { margin-bottom: 14px; }
+.meth-signal__label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--text-3); letter-spacing: 0.06em; margin-bottom: 6px; }
+.meth-signal__body { font-size: 0.92rem; color: var(--text-2); line-height: 1.55; }
+.meth-signal__code { background: var(--bg-2); padding: 10px 14px; border-radius: 6px; font-family: 'SF Mono', Monaco, Consolas, monospace; font-size: 0.82rem; color: var(--text-1); display: block; margin: 8px 0; }
+
+.meth-dont { background: #fef2f2; border: 1px solid #fecaca; border-radius: 12px; padding: 28px; margin: 40px 0; }
+.meth-dont__title { font-size: 1.2rem; font-weight: 800; color: #991b1b; margin: 0 0 10px; }
+.meth-dont__item { display: flex; gap: 12px; margin-bottom: 12px; }
+.meth-dont__item::before { content: "✗"; color: #dc2626; font-weight: 900; font-size: 1.2rem; flex-shrink: 0; }
+.meth-dont__item-body { font-size: 0.9rem; color: var(--text-2); line-height: 1.55; }
+.meth-dont__item-body strong { color: var(--text-1); }
+
+.meth-cta { background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border-radius: 14px; padding: 32px; text-align: center; margin-top: 40px; }
+.meth-cta__title { font-size: 1.3rem; font-weight: 800; color: var(--text-1); margin: 0 0 10px; }
+.meth-cta__btn { display: inline-block; background: var(--brand); color: #fff; padding: 12px 28px; border-radius: 8px; font-weight: 700; text-decoration: none; }
+</style>
+
+<div class="meth-wrap">
+
+<span class="meth-eyebrow">Methodology · How we calculate the 7 signals</span>
+<h1 class="meth-title">The math behind InbXr — and what we explicitly don't fake.</h1>
+<p class="meth-intro">
+  Every deliverability tool has a calculation methodology. Most keep theirs
+  opaque. We publish ours in full, including the formulas, the data sources,
+  and the things we refuse to claim to measure because we can't honestly
+  measure them. If a competitor's score sounds too good to be true, check
+  whether they publish methodology at this level of detail.
+</p>
+
+<!-- Signal 01 -->
+<div class="meth-signal">
+  <div class="meth-signal__num">Signal 01</div>
+  <div class="meth-signal__name">Bounce Exposure</div>
+  <div class="meth-signal__weight">Weight: 25 pts of 100</div>
+
+  <div class="meth-signal__row">
+    <div class="meth-signal__label">What it measures</div>
+    <div class="meth-signal__body">
+      The percentage of contacts likely to bounce or be filtered on your next send,
+      combining historical hard-bounce flags with predictive flags for role addresses
+      (info@, admin@), disposable domains, and catch-all mailboxes.
+    </div>
+  </div>
+  <div class="meth-signal__row">
+    <div class="meth-signal__label">Formula</div>
+    <span class="meth-signal__code">score = 100 − (hard_bounce_rate × 8) − (predictive_risk × 2)</span>
+    <div class="meth-signal__body">Clamped to 0-100. Predictive risk is derived from role/disposable/catch-all flags per contact.</div>
+  </div>
+  <div class="meth-signal__row">
+    <div class="meth-signal__label">Data source</div>
+    <div class="meth-signal__body">contact_segments.is_hard_bounce, is_role_address, is_disposable, is_catch_all (from ESP sync or CSV upload).</div>
+  </div>
+</div>
+
+<!-- Signal 02 -->
+<div class="meth-signal">
+  <div class="meth-signal__num">Signal 02 · Market-first</div>
+  <div class="meth-signal__name">Engagement Trajectory (MPP-adjusted)</div>
+  <div class="meth-signal__weight">Weight: 25 pts of 100</div>
+
+  <div class="meth-signal__row">
+    <div class="meth-signal__label">What it measures</div>
+    <div class="meth-signal__body">
+      Real human engagement over the last 30 days, after removing contacts flagged as
+      likely Apple Mail Privacy Protection machine openers. This is the signal most tools
+      get wrong — almost all competitors just check if the recipient is on iCloud, which
+      catches roughly 15% of real MPP opens.
+    </div>
+  </div>
+  <div class="meth-signal__row">
+    <div class="meth-signal__label">MPP detection (hybrid by ESP)</div>
+    <div class="meth-signal__body">
+      <strong>Mailgun:</strong> User-Agent string parsing + Apple IP range (17.0.0.0/8).
+      Confidence: HIGH.<br>
+      <strong>Mailchimp, ActiveCampaign:</strong> timing heuristic (opens within 2s of
+      delivery flagged as machine). Confidence: MEDIUM.<br>
+      <strong>AWeber and others:</strong> @icloud.com / @me.com / @mac.com domain fallback
+      only. Confidence: LOW.<br>
+      <strong>Sticky flag:</strong> once a contact is flagged in any sync, the flag
+      persists. MPP is a per-install attribute, not per-send.
+    </div>
+  </div>
+  <div class="meth-signal__row">
+    <div class="meth-signal__label">Formula</div>
+    <span class="meth-signal__code">real_engagement_30d = (non_mpp_opens_30d + clicks_30d) / non_mpp_contacts</span>
+    <div class="meth-signal__body">Score is a non-linear function of real_engagement_30d, giving credit to anything above 8% and strong credit above 25%.</div>
+  </div>
+</div>
+
+<!-- Signal 03 -->
+<div class="meth-signal">
+  <div class="meth-signal__num">Signal 03 · Market-first</div>
+  <div class="meth-signal__name">Acquisition Quality</div>
+  <div class="meth-signal__weight">Weight: 15 pts of 100</div>
+
+  <div class="meth-signal__row">
+    <div class="meth-signal__label">What it measures</div>
+    <div class="meth-signal__body">
+      Day-1, day-7, and day-30 engagement rates per acquisition cohort. Tells you which
+      signup source produces contacts that actually engage vs which are quietly dragging
+      your blended numbers down.
+    </div>
+  </div>
+  <div class="meth-signal__row">
+    <div class="meth-signal__label">Data source</div>
+    <div class="meth-signal__body">contact_segments.acquisition_date grouped into weekly cohorts, joined with engagement timestamps. Requires per-contact acquisition_date from the ESP or CSV upload.</div>
+  </div>
+</div>
+
+<!-- Signal 04 -->
+<div class="meth-signal">
+  <div class="meth-signal__num">Signal 04</div>
+  <div class="meth-signal__name">Domain Reputation</div>
+  <div class="meth-signal__weight">Weight: 15 pts of 100</div>
+
+  <div class="meth-signal__row">
+    <div class="meth-signal__label">What it measures</div>
+    <div class="meth-signal__body">
+      Sender-domain blocklist status (110+ RBLs checked every 6 hours) combined with
+      recipient provider distribution. High Yahoo/AOL concentration raises risk because
+      of tighter post-April-2024 filtering at those providers.
+    </div>
+  </div>
+</div>
+
+<!-- Signal 05 -->
+<div class="meth-signal">
+  <div class="meth-signal__num">Signal 05</div>
+  <div class="meth-signal__name">Dormancy Risk</div>
+  <div class="meth-signal__weight">Weight: 10 pts of 100</div>
+
+  <div class="meth-signal__row">
+    <div class="meth-signal__label">What it measures</div>
+    <div class="meth-signal__body">
+      Percentage of contacts inactive for 180+ and 365+ days. The cohort most likely to
+      become hard bounces, complaints, or hit recycled spam traps. Weighted more heavily
+      for 365+ than 180+.
+    </div>
+  </div>
+  <div class="meth-signal__row">
+    <div class="meth-signal__label">What this is NOT</div>
+    <div class="meth-signal__body">
+      This is not a spam trap score. See the "what we don't fake" section below.
+    </div>
+  </div>
+</div>
+
+<!-- Signal 06 -->
+<div class="meth-signal">
+  <div class="meth-signal__num">Signal 06</div>
+  <div class="meth-signal__name">Authentication Standing</div>
+  <div class="meth-signal__weight">Weight: 5 pts of 100 (gating)</div>
+
+  <div class="meth-signal__row">
+    <div class="meth-signal__label">What it measures</div>
+    <div class="meth-signal__body">
+      Compliance with the 2024-2025 Gmail, Yahoo, and Microsoft bulk sender requirements:
+      SPF valid, DKIM signed, DMARC policy (must be quarantine or reject, not none),
+      and one-click List-Unsubscribe headers. Weighted lightly because it's binary
+      gating — if broken, everything else is moot.
+    </div>
+  </div>
+  <div class="meth-signal__row">
+    <div class="meth-signal__label">Reference</div>
+    <div class="meth-signal__body">
+      Scored against our isp_compliance_requirements table, which is seeded with the
+      published enforcement requirements from each provider (Gmail/Yahoo Feb 2024,
+      Microsoft May 2025).
+    </div>
+  </div>
+</div>
+
+<!-- Signal 07 -->
+<div class="meth-signal">
+  <div class="meth-signal__num">Signal 07</div>
+  <div class="meth-signal__name">Decay Velocity</div>
+  <div class="meth-signal__weight">Weight: 5 pts of 100</div>
+
+  <div class="meth-signal__row">
+    <div class="meth-signal__label">What it measures</div>
+    <div class="meth-signal__body">
+      Rate of change in your composite Signal Score. A list trending downward 3 points/week
+      is in worse shape than a list trending upward from a lower starting point.
+    </div>
+  </div>
+  <div class="meth-signal__row">
+    <div class="meth-signal__label">Why we don't predict day counts</div>
+    <div class="meth-signal__body">
+      Some tools advertise "your list will hit danger in 23 days." That requires historical
+      training data on comparable senders which we don't yet have. Instead of making up a
+      number, we use trend language — "declining toward danger" is honest, "23 days" isn't.
+      Once we have 6+ months of cross-sender historical data, we may add proper predictions
+      with error bars disclosed.
+    </div>
+  </div>
+</div>
+
+<!-- What we don't fake -->
+<div class="meth-dont">
+  <h2 class="meth-dont__title">What InbXr refuses to fake</h2>
+
+  <div class="meth-dont__item">
+    <div class="meth-dont__item-body">
+      <strong>Spam trap exposure scores calculated from dormancy.</strong> Real spam traps
+      are honeypot addresses seeded by Spamhaus, Abusix, and Cloudmark. You cannot infer
+      them from list data. Signal 05 is named Dormancy Risk, not "Spam Trap Exposure,"
+      because we measure dormancy, not traps.
+    </div>
+  </div>
+
+  <div class="meth-dont__item">
+    <div class="meth-dont__item-body">
+      <strong>Day-count predictions without historical training data.</strong> See Signal 07
+      above. We use trend language only.
+    </div>
+  </div>
+
+  <div class="meth-dont__item">
+    <div class="meth-dont__item-body">
+      <strong>MPP adjustment based only on @icloud.com domain matching.</strong> That method
+      catches ~15% of real MPP opens. We use User-Agent, Apple IP range, timing heuristics,
+      and domain matching as a hybrid — with the confidence level disclosed per ESP.
+    </div>
+  </div>
+
+  <div class="meth-dont__item">
+    <div class="meth-dont__item-body">
+      <strong>Content-based "spam score" predictions.</strong> Content-based heuristics are
+      wildly unreliable in 2026 — inbox providers use ML models on hundreds of features.
+      We don't pretend a regex against your subject line tells you whether a campaign will
+      deliver. Instead we give you the 7 upstream signals that actually matter.
+    </div>
+  </div>
+</div>
+
+<div class="meth-cta">
+  <h2 class="meth-cta__title">Questions about the methodology?</h2>
+  <p style="font-size:0.9rem;color:var(--text-2);margin:0 0 16px;">Reply to any InbXr email — Joe reads every response personally.</p>
+  <a href="/signal-score" class="meth-cta__btn">Try it on your list &rarr;</a>
+</div>
+
+</div>
+{% endblock %}
