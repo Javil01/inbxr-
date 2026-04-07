@@ -2152,7 +2152,7 @@ def index():
                            is_admin=_is_admin(),
                            active_page="index",
                            page_title="InbXr · The 7 Inbox Signals · Email Deliverability Intelligence",
-                           page_description="Most email tools read one inbox signal. InbXr reveals all 7. including two dimensions no other platform measures. Get your free Signal Score in 60 seconds.",
+                           page_description="The only tool that scores your email list across all 7 inbox signals before you hit send. Including 2 dimensions no other platform measures. Get your free Signal Score in 30 seconds.",
                            canonical_url="https://inbxr.us/")
 
 
@@ -2206,7 +2206,7 @@ def how_different():
                            is_admin=_is_admin(),
                            active_page="how_different",
                            page_title="How InbXr Is Different · The 7 Inbox Signals",
-                           page_description="Most email tools read one inbox signal. InbXr reveals all 7. including two dimensions no other platform currently measures. Reads what is broadcasting and fixes what it found.",
+                           page_description="We're the only tool that scores your email list across all 7 inbox signals before you hit send. Including 2 dimensions no other platform currently measures. Reads what is broadcasting and fixes what it found.",
                            canonical_url="https://inbxr.us/how-inbxr-is-different")
 
 
