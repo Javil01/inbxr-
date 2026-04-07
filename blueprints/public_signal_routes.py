@@ -263,7 +263,7 @@ def quiz_score():
             "action": "Set up automated blocklist monitoring and run Inboxer Sender Check on your domain right now.",
         },
         "dormancy_risk": {
-            "name": "Dormancy Risk",
+            "name": "Spam Trap Exposure",
             "action": "Suppress contacts inactive for 365+ days and run a re-engagement sequence on the 180-day cohort.",
         },
         "authentication_standing": {

@@ -264,7 +264,7 @@
       {'key':'engagement_trajectory','name':'02 · Engagement Trajectory','weight':'25 pts','desc':'Real human engagement over 30 days, adjusted for Apple Mail Privacy Protection using User-Agent, Apple IP range, and timing heuristics — not just @icloud domain matching.','market':True},
       {'key':'acquisition_quality','name':'03 · Acquisition Quality','weight':'15 pts','desc':'Day-1, day-7, and day-30 engagement per acquisition cohort. Tells you which signup channel is dragging your list health down.','market':True},
       {'key':'domain_reputation','name':'04 · Domain Reputation','weight':'15 pts','desc':'Sender-domain blocklist status + recipient provider concentration. High Yahoo/AOL density = spikier deliverability risk.','market':False},
-      {'key':'dormancy_risk','name':'05 · Dormancy Risk','weight':'10 pts','desc':'Percentage of contacts inactive for 180+ and 365+ days. The cohort most likely to become complaints, bounces, or trap hits.','market':False},
+      {'key':'dormancy_risk','name':'05 · Spam Trap Exposure','weight':'10 pts','desc':'Probabilistic spam trap risk based on the conditions that produce trap hits — dormancy depth, list age, and acquisition source pattern. Score the segment most likely to carry trap risk before you send.','market':False},
       {'key':'authentication_standing','name':'06 · Authentication Standing','weight':'5 pts','desc':'SPF + DKIM + DMARC + List-Unsubscribe scored against the 2024-2025 Gmail, Yahoo, and Microsoft enforcement requirements.','market':False},
       {'key':'decay_velocity','name':'07 · Decay Velocity','weight':'5 pts','desc':'Rate of change in your composite Signal Score. Trend language only — no fake day-count predictions.','market':False}
     ] %}
@@ -550,7 +550,7 @@ function renderAnonResult(d) {
     engagement_trajectory: '02 Engagement Trajectory',
     acquisition_quality: '03 Acquisition Quality',
     domain_reputation: '04 Domain Reputation',
-    dormancy_risk: '05 Dormancy Risk',
+    dormancy_risk: '05 Spam Trap Exposure',
     authentication_standing: '06 Authentication Standing',
     decay_velocity: '07 Decay Velocity'
   };

@@ -140,21 +140,25 @@
 <!-- Signal 05 -->
 <div class="meth-signal">
   <div class="meth-signal__num">Signal 05</div>
-  <div class="meth-signal__name">Dormancy Risk</div>
+  <div class="meth-signal__name">Spam Trap Exposure</div>
   <div class="meth-signal__weight">Weight: 10 pts of 100</div>
 
   <div class="meth-signal__row">
     <div class="meth-signal__label">What it measures</div>
     <div class="meth-signal__body">
-      Percentage of contacts inactive for 180+ and 365+ days. The cohort most likely to
-      become hard bounces, complaints, or hit recycled spam traps. Weighted more heavily
-      for 365+ than 180+.
+      Probabilistic spam trap risk based on the conditions that produce trap hits:
+      dormancy depth (180+ and 365+ day inactive cohorts), list age, and acquisition
+      source pattern. We score the probability of hitting a trap before you send,
+      not after.
     </div>
   </div>
   <div class="meth-signal__row">
-    <div class="meth-signal__label">What this is NOT</div>
+    <div class="meth-signal__label">Honest scope</div>
     <div class="meth-signal__body">
-      This is not a spam trap score. See the "what we don't fake" section below.
+      We cannot confirm an individual address is a spam trap without hitting it. What
+      we can do is read the conditions that produce trap hits with high statistical
+      reliability — and score the segment most likely to carry that risk so you can
+      suppress them first. This is risk scoring, not trap identification.
     </div>
   </div>
 </div>
@@ -215,10 +219,12 @@
 
   <div class="meth-dont__item">
     <div class="meth-dont__item-body">
-      <strong>Spam trap exposure scores calculated from dormancy.</strong> Real spam traps
-      are honeypot addresses seeded by Spamhaus, Abusix, and Cloudmark. You cannot infer
-      them from list data. Signal 05 is named Dormancy Risk, not "Spam Trap Exposure,"
-      because we measure dormancy, not traps.
+      <strong>Confirming individual addresses as spam traps.</strong> We cannot confirm a
+      specific address is a Spamhaus, Abusix, or Cloudmark trap without hitting it. What
+      Signal 05 does is read the upstream <em>conditions</em> that produce trap hits
+      (dormancy depth, list age, acquisition source pattern) and score the probability
+      against your list before you send. Risk scoring, not trap identification — and
+      we say so on Signal 05 above.
     </div>
   </div>
 

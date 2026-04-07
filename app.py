@@ -2151,8 +2151,8 @@ def index():
     return render_template("email_test.html",
                            is_admin=_is_admin(),
                            active_page="index",
-                           page_title="InbXr — Sales Delivered",
-                           page_description="The only email tool that diagnoses deliverability AND fixes your copy. Spam risk scoring, 100-point copy analysis, 16 copywriting frameworks, and AI rewrites — free.",
+                           page_title="InbXr — The 7 Inbox Signals · Email Deliverability Intelligence",
+                           page_description="Most email tools read one inbox signal. InbXr reveals all 7 — including two dimensions no other platform measures. Get your free Signal Score in 60 seconds.",
                            canonical_url="https://inbxr.us/")
 
 
@@ -2205,8 +2205,8 @@ def how_different():
     return render_template("how_different.html",
                            is_admin=_is_admin(),
                            active_page="how_different",
-                           page_title="How InbXr Is Different — Sales Delivered",
-                           page_description="The only email platform with deliverability diagnostics AND copy intelligence. 100-point copy scoring, 16 copywriting frameworks, AI rewrites, and framework detection — starting at $0.",
+                           page_title="How InbXr Is Different — The 7 Inbox Signals",
+                           page_description="Most email tools read one inbox signal. InbXr reveals all 7 — including two dimensions no other platform currently measures. Reads what is broadcasting and fixes what it found.",
                            canonical_url="https://inbxr.us/how-inbxr-is-different")
 
 

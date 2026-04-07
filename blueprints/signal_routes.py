@@ -683,10 +683,10 @@ def _calculate_send_readiness(latest):
         issues.append("Bounce Exposure is elevated — risk of reputation damage")
         actions.append("Run List Verification before sending")
 
-    # Dormancy Risk
+    # Spam Trap Exposure
     dormancy = latest.get("dormancy_risk_score", 0)
     if dormancy < 5:
-        issues.append("Dormancy Risk is high — suppress dormant contacts first")
+        issues.append("Spam Trap Exposure is high — suppress dormant contacts first")
         actions.append("Apply Signal Rules to suppress 180+ day dormant contacts")
 
     # Segment composition

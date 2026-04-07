@@ -5,7 +5,7 @@ All user-facing copy for the 7 Inbox Signals system lives here.
 Reference: SIGNAL_SPEC.md for locked decisions.
 
 Key rules applied:
-- "Dormancy Risk" (not "Spam Trap Exposure")
+- "Spam Trap Exposure" (display name; internal id stays 'dormancy_risk')
 - Trend language only (no "30 days before" predictive claims)
 - Free tier weights normalized to 100 (not capped at 60)
 - MPP adjustment is market-first but honest about per-ESP accuracy
@@ -161,14 +161,17 @@ SIGNAL_DIMENSION_COPY = {
         'free_tier_locked': False,
     },
     'dormancy_risk': {
-        # Renamed from "Spam Trap Exposure" per Phase 1 decision —
-        # formula measures dormancy depth, not actual Spamhaus/Abusix traps.
-        'name': 'Dormancy Risk',
+        # Display name: "Spam Trap Exposure" (marketing decision, April 2026).
+        # Internal Python identifier stays 'dormancy_risk' to avoid renaming
+        # the entire signal pipeline. Formula calculates spam trap PROBABILITY
+        # from the conditions that produce trap hits (dormancy depth, list age,
+        # acquisition source pattern) — framed as "probabilistic risk scoring".
+        'name': 'Spam Trap Exposure',
         'number': '05',
         'weight': 10,
-        'note': 'Age-weighted dormancy scoring',
-        'tooltip': 'Age-weighted risk from dormant contacts. Longer the dormancy, higher the risk — old inactive addresses are the most likely to become trap hits, spam complaints, or hard bounces.',
-        'what_it_reads': 'Dormancy depth (180+ days, 365+ days) · list age · never-engaged percentage',
+        'note': 'Probabilistic risk scoring',
+        'tooltip': 'Probabilistic spam trap risk based on the conditions that produce trap hits — dormancy depth, list age, and acquisition source pattern. Cannot confirm a trap without hitting one, so we score the probability before you send.',
+        'what_it_reads': 'Dormancy depth (180+ days, 365+ days) · list age · acquisition source pattern',
         'market_first': False,
         'free_tier_locked': False,
     },
@@ -335,7 +338,7 @@ PRE_BUILT_RULE_TEMPLATES = [
     {
         'template_id': 'suppress_180_dormant',
         'rule_name': 'Suppress 180-day dormant contacts',
-        'description': 'Automatically suppress contacts with no engagement for 180+ days. Protects your Dormancy Risk and Engagement Trajectory signals.',
+        'description': 'Automatically suppress contacts with no engagement for 180+ days. Protects your Spam Trap Exposure and Engagement Trajectory signals.',
         'condition_signal': 'days_since_engagement',
         'condition_operator': 'greater_than',
         'condition_value': 180,
@@ -438,8 +441,8 @@ PRE_BUILT_RULE_TEMPLATES = [
     },
     {
         'template_id': 'alert_dormancy_risk',
-        'rule_name': 'Alert when Dormancy Risk is medium or higher',
-        'description': 'Fires an alert when Dormancy Risk signal score drops below 7/10.',
+        'rule_name': 'Alert when Spam Trap Exposure is medium or higher',
+        'description': 'Fires an alert when Spam Trap Exposure signal score drops below 7/10.',
         'condition_signal': 'dormancy_risk_score',
         'condition_operator': 'less_than',
         'condition_value': 7,

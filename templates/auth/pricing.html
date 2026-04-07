@@ -2,8 +2,10 @@
 {% set allow_index = True %}
 {% block title %}Pricing{% endblock %}
 {% block content %}
-<h1 class="auth-card__title pricing-title">Read All 7 Inbox Signals</h1>
-<p class="auth-card__sub">InbXr reads the 7 inbox signals every email list is broadcasting — bounce exposure, MPP-adjusted engagement, dormancy risk, authentication standing, and more — and gives you one Signal Score. Every tool is free to start. Upgrade for Signal Watch, Signal Rules, Recovery Sequences, Send Readiness, and Early Warning alerts.</p>
+<span class="pricing-eyebrow" style="display:inline-block;font-size:0.7rem;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;color:var(--brand);background:rgba(37,99,235,0.08);padding:4px 14px;border-radius:99px;margin-bottom:14px;">Start reading your 7 signals</span>
+<h1 class="auth-card__title pricing-title">You already know what the 5 invisible signals are. Here is what InbXr does with them.</h1>
+<p class="auth-card__sub">Reading the signals is step one. The intelligence layer is what acts on what they find. Signal Watch recalculates all 7 signals every 6 hours automatically. Early Warning fires 30 days before a deliverability event. Signal Rules execute suppression, segmentation, and tagging while you sleep. Recovery Sequences generates re-engagement copy for your at-risk contacts in 60 seconds. Send Readiness puts a green, amber, or red gate in front of every campaign before it goes out.</p>
+<p class="auth-card__sub" style="font-weight:600;color:var(--text-1);">No other tool evaluates and executes through the same 7-signal system end to end.</p>
 
 <div class="pricing-grid">
 
@@ -15,7 +17,7 @@
       <span class="pricing-card__amount">$0</span>
       <span class="pricing-card__period">forever</span>
     </div>
-    <p class="pricing-card__desc">Signal Score (5-signal read normalized to 100), copy scoring, and 3 proven frameworks — free forever.</p>
+    <p class="pricing-card__desc">Start reading. No decision required. Connect your list or upload a CSV. Get a 5-signal composite reading with a score out of 100 and a letter grade in 60 seconds. Most users find a problem they did not know existed before they reach the end of their first reading. The reading is yours regardless of what you decide next.</p>
     <ul class="pricing-card__features">
       <li>{{ t.limits.checks_per_day }} checks/day across all tools</li>
       <li>{{ t.limits.email_verifications_per_day }} email verifications/day</li>
@@ -58,7 +60,7 @@
       <span class="pricing-card__amount">${{ t.price_monthly }}</span>
       <span class="pricing-card__period">/month</span>
     </div>
-    <p class="pricing-card__desc">All 7 signals, Signal Watch every 6 hours, Early Warning alerts, Signal Rules, Recovery Sequences, Send Readiness gate, and all 16 copy frameworks.</p>
+    <p class="pricing-card__desc">All 7 signals plus the intelligence layer that fixes what it found. At current decay rates the average at-risk email segment doubles in size every 45 days. Signal Watch catches that movement in the first 6-hour cycle. Early Warning gives you 30 days to act. Signal Rules executes the suppression while you sleep. By the time most marketers notice the problem in their open rate, Pro users have already fixed it twice.</p>
     <ul class="pricing-card__features">
       <li><strong>{{ t.limits.checks_per_day }}</strong> checks/day</li>
       <li><strong>{{ t.limits.email_verifications_per_day }}</strong> email verifications/day</li>
@@ -102,7 +104,7 @@
       <span class="pricing-card__amount">${{ t.price_monthly }}</span>
       <span class="pricing-card__period">/month</span>
     </div>
-    <p class="pricing-card__desc">Everything in Pro plus multi-client dashboard, unlimited Signal Rules, API access, and webhooks — built for agencies managing many lists.</p>
+    <p class="pricing-card__desc">Everything in Pro across every client list. Your brand on the reports. The average agency loses a client after one bad campaign. The multi-client Signal Score dashboard catches the conditions that cause bad campaigns — across every client list simultaneously — before the send goes out. A single red Send Readiness gate that stops one client campaign has already paid for a year of Agency.</p>
     <ul class="pricing-card__features">
       <li><strong>{{ t.limits.checks_per_day }}</strong> checks/day</li>
       <li><strong>{{ t.limits.email_verifications_per_day }}</strong> email verifications/day</li>
@@ -132,9 +134,16 @@
 
 </div>
 
+{# ── No-brainer block ── #}
+<div class="no-brainer-block" style="max-width:880px;margin:32px auto;background:linear-gradient(135deg,#f0f9ff 0%,#e0f2fe 100%);border:1px solid #bae6fd;border-radius:14px;padding:28px;">
+  <p style="font-size:0.95rem;line-height:1.6;margin:0 0 14px;color:var(--text-2);"><strong style="color:var(--text-1);">Free:</strong> No credit card. No commitment. No setup. Get your first 7 Signal reading in 60 seconds. The reading is yours regardless of what you decide.</p>
+  <p style="font-size:0.95rem;line-height:1.6;margin:0 0 14px;color:var(--text-2);"><strong style="color:var(--text-1);">Pro at $29/month:</strong> Less than one wasted send costs you in suppressed revenue. If Early Warning catches one elevated Spam Trap Exposure signal before a campaign goes out to 20,000 contacts, it has paid for itself in the first alert it fires. Cancel any time. 30-day money-back guarantee.</p>
+  <p style="font-size:0.95rem;line-height:1.6;margin:0;color:var(--text-2);"><strong style="color:var(--text-1);">Agency at $79/month:</strong> One client retained because you caught a deliverability problem before their campaign went out pays for 12 months of Agency. Cancel any time. 30-day money-back guarantee.</p>
+</div>
+
 {# ── Feature comparison ── #}
 <div class="pricing-compare">
-  <h3 class="pricing-compare__title">Compare Plans</h3>
+  <h3 class="pricing-compare__title">Every other tool reads one inbox signal and charges you for the privilege.</h3>
   <div class="pricing-compare__table-wrap">
     <table class="pricing-compare__table">
       <thead>
@@ -152,7 +161,7 @@
         <tr><td>Engagement Trajectory (MPP-adjusted)</td><td>&mdash;</td><td>&#10003;</td><td>&#10003;</td></tr>
         <tr><td>Acquisition Quality (cohort analysis)</td><td>&#10003;</td><td>&#10003;</td><td>&#10003;</td></tr>
         <tr><td>Domain Reputation</td><td>&#10003;</td><td>&#10003;</td><td>&#10003;</td></tr>
-        <tr><td>Dormancy Risk</td><td>&#10003;</td><td>&#10003;</td><td>&#10003;</td></tr>
+        <tr><td>Spam Trap Exposure</td><td>&#10003;</td><td>&#10003;</td><td>&#10003;</td></tr>
         <tr><td>Authentication Standing</td><td>&#10003;</td><td>&#10003;</td><td>&#10003;</td></tr>
         <tr><td>Decay Velocity (trajectory)</td><td>&mdash;</td><td>&#10003;</td><td>&#10003;</td></tr>
         <tr><td>CSV upload path (one-shot read)</td><td>&#10003;</td><td>&#10003;</td><td>&#10003;</td></tr>
