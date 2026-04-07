@@ -1086,6 +1086,161 @@ def calculate_signal_score_from_csv(
     return result
 
 
+# ── Domain Signal Score (anonymous, no list required) ──
+#
+# Calculates a *partial* Signal Score from a sending domain alone.
+# Reads 2 of 7 signals using public DNS data only:
+#   - Authentication Standing (SPF/DKIM/DMARC + 2025 ISP enforcement)
+#   - Domain Reputation (DNSBL listings + sender reputation)
+#
+# The other 5 signals require list data and are returned as locked cards.
+# Composite score is normalized to 100 from the 2 visible signals weighted
+# by their full-model importance (15 + 5 = 20 → scaled to 100).
+#
+# This is the lowest-friction Signal Score entry point. 30 seconds, no signup,
+# no CSV. Type a domain. Get a real score. The 5 locked signals are the
+# upsell that funnels visitors into signup.
+
+def _validate_domain(domain):
+    """Validate a domain string. Returns normalized domain or None."""
+    if not domain or not isinstance(domain, str):
+        return None
+    d = domain.strip().lower().rstrip('.')
+    # Strip protocol if present
+    if d.startswith('http://'):
+        d = d[7:]
+    if d.startswith('https://'):
+        d = d[8:]
+    # Strip trailing path
+    d = d.split('/')[0]
+    # Strip port
+    d = d.split(':')[0]
+    # Strip @ prefix (someone might paste an email)
+    if '@' in d:
+        d = d.split('@')[-1]
+    # Basic format check
+    if not d or '.' not in d or len(d) > 253:
+        return None
+    if any(c for c in d if not (c.isalnum() or c in '.-')):
+        return None
+    return d
+
+
+def calculate_domain_signal_score(domain):
+    """
+    Calculate a partial Signal Score from a domain alone.
+    Returns the same result dict shape as calculate_signal_score(), with:
+      - 2 signals filled in: authentication_standing, domain_reputation
+      - 5 signals marked locked={'reason': 'needs_list_data'}
+      - total_signal_score: composite of the 2 visible signals (normalized 0-100)
+      - is_partial: True
+      - visible_signals: 2
+      - locked_signals: 5
+    """
+    normalized = _validate_domain(domain)
+    if not normalized:
+        return {
+            'error': 'invalid_domain',
+            'message': 'Please enter a valid sending domain (e.g. yourcompany.com).',
+        }
+
+    # Run the existing reputation analyzer for SPF/DKIM/DMARC + DNSBL data
+    try:
+        from modules.reputation_checker import ReputationChecker
+        rc = ReputationChecker(domain=normalized)
+        rep = rc.analyze()
+    except Exception as e:
+        logger.exception(f'Domain Signal Score: ReputationChecker failed for {normalized}')
+        return {
+            'error': 'analysis_failed',
+            'message': f'Could not analyze {normalized}. {type(e).__name__}',
+        }
+
+    # ── Signal 06: Authentication Standing (0-100 from rep.auth.score) ──
+    auth_score_100 = rep.get('auth', {}).get('score', 0)
+    auth_categories = rep.get('auth', {}).get('categories', [])
+    spf_status = next((c['status'] for c in auth_categories if c.get('label') == 'SPF'), 'unknown')
+    dkim_status = next((c['status'] for c in auth_categories if c.get('label') == 'DKIM'), 'unknown')
+    dmarc_cat = next((c for c in auth_categories if c.get('label') == 'DMARC'), {})
+    dmarc_status = dmarc_cat.get('status', 'unknown')
+    dmarc_policy = dmarc_cat.get('policy', 'none')
+
+    # ── Signal 04: Domain Reputation (0-100 from rep.reputation.score) ──
+    rep_score_100 = rep.get('reputation', {}).get('score', 0)
+    listed_count = rep.get('reputation', {}).get('listed_count', 0)
+
+    # ── Composite (weighted by full-model importance: auth=5, dom_rep=15) ──
+    # Normalize: (auth*5 + rep*15) / 20 = auth*0.25 + rep*0.75
+    composite = round(auth_score_100 * 0.25 + rep_score_100 * 0.75)
+
+    # Letter grade from composite
+    grade = _letter_grade(composite)
+
+    # Pull recommendations (top 5 by severity) for the result page
+    recommendations = rep.get('recommendations', [])[:5]
+
+    # Build the result dict in the same shape as calculate_signal_score()
+    return {
+        'is_partial': True,
+        'data_source': 'domain_only',
+        'domain': normalized,
+        'total_signal_score': composite,
+        'signal_grade': grade,
+        'visible_signals': 2,
+        'locked_signals': 5,
+        'scores': {
+            'authentication_standing': round(auth_score_100 * 5 / 100, 1),
+            'domain_reputation': round(rep_score_100 * 15 / 100, 1),
+            # Locked signals — null score, will render as locked cards
+            'bounce_exposure': None,
+            'engagement_trajectory': None,
+            'acquisition_quality': None,
+            'dormancy_risk': None,
+            'decay_velocity': None,
+        },
+        'metadata': {
+            'authentication_standing': {
+                'spf': spf_status,
+                'dkim': dkim_status,
+                'dmarc': dmarc_status,
+                'dmarc_policy': dmarc_policy,
+                'auth_score': auth_score_100,
+                'reason': 'computed_from_dns',
+            },
+            'domain_reputation': {
+                'rep_score': rep_score_100,
+                'listed_count': listed_count,
+                'blacklisted': listed_count > 0,
+                'reason': 'computed_from_dnsbl',
+            },
+            # Locked signals get a 'locked' marker for the UI
+            'bounce_exposure': {'locked': True, 'reason': 'needs_list_data'},
+            'engagement_trajectory': {'locked': True, 'reason': 'needs_list_data'},
+            'acquisition_quality': {'locked': True, 'reason': 'needs_list_data'},
+            'dormancy_risk': {'locked': True, 'reason': 'needs_list_data'},
+            'decay_velocity': {'locked': True, 'reason': 'needs_list_data'},
+        },
+        'recommendations': recommendations,
+        'segments': {'total': 0, 'active': 0, 'warm': 0, 'at_risk': 0, 'dormant': 0},
+        'trajectory_direction': 'unknown',
+        'mpp_accuracy': 'none',
+        'tier': 'anon',
+    }
+
+
+def _letter_grade(score):
+    """Map a 0-100 score to an A-F letter grade."""
+    if score >= 90:
+        return 'A'
+    if score >= 80:
+        return 'B'
+    if score >= 65:
+        return 'C'
+    if score >= 50:
+        return 'D'
+    return 'F'
+
+
 # ── Public share token (schema-less HMAC) ──────────────
 #
 # Lets authenticated users share a read-only view of their Signal Score via

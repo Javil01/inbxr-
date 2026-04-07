@@ -3,18 +3,96 @@
 
     <div class="hero-split">
       <div class="hero-split__copy">
-        <span class="sender-hero__eyebrow">The 7 Inbox Signals &middot; Email deliverability intelligence</span>
-        <h1 class="sender-hero__title">Are Your Emails Dead On Arrival?</h1>
-        <p class="sender-hero__sub">You cleaned your list. You authenticated your domain. You still got burned and you're still burning money every time you send.</p>
-        <p class="sender-hero__sub">Here's why: your email list broadcasts 7 inbox signals. Every tool you've been using was reading 1 or 2. The other 5 were invisible and that's where deliverability dies and revenue disappears.</p>
-        <p class="sender-hero__sub">InbXr reveals all 7. Including two that no other tool in the market currently measures.</p>
+        <span class="sender-hero__eyebrow">The 7 Inbox Signals &middot; Email Deliverability Intelligence</span>
+        <h1 class="sender-hero__title">Your email list has a Signal Score. You've never seen yours.</h1>
+        <p class="sender-hero__sub">It's the single best predictor of your next campaign's performance. We read 7 things about your list that bounce rate and open rate can't see. Including two that no other platform measures.</p>
 
-        <a href="#" class="hero-cta-btn js-scroll-to-test">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-          Reveal what's burning my revenue &rarr;
-        </a>
-        <p class="hero-price-anchor">Free &middot; No credit card &middot; 60 seconds</p>
+        <form id="heroDomainForm" class="hero-domain-form" autocomplete="off">
+          <input type="text" id="heroDomainInput" name="domain" placeholder="yourcompany.com" required aria-label="Your sending domain" />
+          <button type="submit" class="hero-cta-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+            Get my Signal Score
+          </button>
+        </form>
+        <p class="hero-price-anchor">30 seconds &middot; No signup &middot; No CSV needed</p>
+
+        <div class="hero-alt-options">
+          <a href="#emailTestTool" class="hero-alt-link js-scroll-to-test">Or score a real campaign email &rarr;</a>
+          <a href="/signal-score" class="hero-alt-link">Or upload a CSV for the full 7-signal read &rarr;</a>
+        </div>
       </div>
+
+<style>
+.hero-domain-form { display: flex; gap: 8px; margin: 24px 0 8px; max-width: 480px; flex-wrap: wrap; }
+.hero-domain-form input {
+  flex: 1; min-width: 220px;
+  padding: 14px 18px; font-size: 0.95rem; border-radius: 999px;
+  border: 1.5px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.05);
+  color: #fff; font-family: inherit;
+}
+.hero-domain-form input::placeholder { color: rgba(255,255,255,0.5); }
+.hero-domain-form input:focus { outline: none; border-color: #16a34a; background: rgba(255,255,255,0.08); }
+.hero-domain-form button {
+  white-space: nowrap; padding: 14px 22px; border-radius: 999px; border: none;
+  background: #16a34a; color: #fff; font-weight: 700; font-size: 0.92rem; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 8px;
+}
+.hero-domain-form button:hover { background: #15803d; }
+.hero-domain-form button[disabled] { opacity: 0.6; cursor: not-allowed; }
+.hero-alt-options { display: flex; flex-direction: column; gap: 6px; margin-top: 16px; }
+.hero-alt-link { font-size: 0.82rem; color: rgba(255,255,255,0.6); text-decoration: none; }
+.hero-alt-link:hover { color: #16a34a; }
+
+/* Inline result card rendered on the homepage after a domain check */
+#heroResultPanel {
+  display: none;
+  background: #fff;
+  color: #0c1a3a;
+  border-radius: 16px;
+  padding: 28px;
+  margin-top: 24px;
+  max-width: 560px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.18);
+}
+#heroResultPanel.is-visible { display: block; animation: fadeInUp 0.4s ease; }
+@keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+#heroResultPanel .res-hero { display: flex; gap: 18px; align-items: center; margin-bottom: 18px; padding-bottom: 14px; border-bottom: 1px solid #e5e7eb; }
+#heroResultPanel .res-num { font-size: 3.2rem; font-weight: 900; line-height: 1; }
+#heroResultPanel .res-num--A, #heroResultPanel .res-num--B { color: #16a34a; }
+#heroResultPanel .res-num--C { color: #d97706; }
+#heroResultPanel .res-num--D, #heroResultPanel .res-num--F { color: #dc2626; }
+#heroResultPanel .res-grade { font-size: 0.85rem; font-weight: 700; margin-top: 6px; color: inherit; }
+#heroResultPanel .res-summary { flex: 1; min-width: 0; }
+#heroResultPanel .res-summary h3 { font-size: 1.05rem; font-weight: 800; margin: 0 0 4px; color: #0c1a3a; }
+#heroResultPanel .res-summary p { font-size: 0.82rem; color: #475569; margin: 0; line-height: 1.45; }
+#heroResultPanel .res-signals { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 18px; }
+#heroResultPanel .res-sig {
+  padding: 10px 12px; border-radius: 8px; background: #f1f5f9;
+  font-size: 0.78rem; display: flex; justify-content: space-between; align-items: center;
+}
+#heroResultPanel .res-sig.is-locked {
+  background: #f8fafc; border: 1px dashed #cbd5e1; opacity: 0.7;
+}
+#heroResultPanel .res-sig-name { color: #0c1a3a; font-weight: 600; }
+#heroResultPanel .res-sig-val { font-weight: 800; }
+#heroResultPanel .res-sig-val.is-good { color: #16a34a; }
+#heroResultPanel .res-sig-val.is-warn { color: #d97706; }
+#heroResultPanel .res-sig-val.is-bad { color: #dc2626; }
+#heroResultPanel .res-sig-val.is-locked { color: #94a3b8; font-weight: 600; font-size: 0.7rem; text-transform: uppercase; }
+#heroResultPanel .res-cta {
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  border-radius: 10px; padding: 18px; text-align: center;
+}
+#heroResultPanel .res-cta h4 { font-size: 0.92rem; font-weight: 800; margin: 0 0 6px; color: #0c1a3a; }
+#heroResultPanel .res-cta p { font-size: 0.78rem; color: #475569; margin: 0 0 12px; line-height: 1.45; }
+#heroResultPanel .res-cta-btn {
+  display: inline-block; background: #16a34a; color: #fff;
+  padding: 10px 22px; border-radius: 999px; font-size: 0.85rem; font-weight: 700;
+  text-decoration: none;
+}
+#heroResultPanel .res-cta-btn:hover { background: #15803d; }
+#heroResultPanel .res-error { color: #dc2626; font-size: 0.85rem; padding: 12px; background: #fef2f2; border-radius: 8px; }
+</style>
 
       <div class="hero-split__visual">
         <div class="hero-cinema" id="heroCinema">
@@ -256,8 +334,114 @@
       </div>
     </div>
 
+    {# Inline result panel. Appears below the hero copy after a domain check #}
+    <div id="heroResultPanel" aria-live="polite"></div>
+
   </div>
 </div>
+
+<script>
+(function(){
+  var form = document.getElementById('heroDomainForm');
+  var input = document.getElementById('heroDomainInput');
+  var panel = document.getElementById('heroResultPanel');
+  if (!form || !input || !panel) return;
+
+  function classFor(score) {
+    if (score >= 75) return 'is-good';
+    if (score >= 50) return 'is-warn';
+    return 'is-bad';
+  }
+
+  function renderResult(d) {
+    var grade = d.grade || 'F';
+    var score = Math.round(d.score || 0);
+    var auth = d.scores && d.scores.authentication_standing != null
+      ? Math.round(d.scores.authentication_standing * 100 / 5) : 0;
+    var rep = d.scores && d.scores.domain_reputation != null
+      ? Math.round(d.scores.domain_reputation * 100 / 15) : 0;
+    var dmarc = (d.metadata && d.metadata.authentication_standing && d.metadata.authentication_standing.dmarc_policy) || 'unknown';
+    var listed = d.metadata && d.metadata.domain_reputation && d.metadata.domain_reputation.listed_count;
+
+    var summary;
+    if (grade === 'A' || grade === 'B') {
+      summary = "Your domain side is in solid shape. The 5 locked signals below are where most senders find their real problems.";
+    } else if (grade === 'C') {
+      summary = "Your domain has at least one issue. The 5 locked signals likely have more.";
+    } else {
+      summary = "Your domain has significant issues. Your 5 list-side signals almost certainly have more.";
+    }
+
+    var lockedSignals = [
+      ['01 Bounce Exposure', 'List required'],
+      ['02 Engagement Trajectory', 'List required'],
+      ['03 Acquisition Quality', 'List required'],
+      ['05 Spam Trap Exposure', 'List required'],
+      ['07 Decay Velocity', 'List required']
+    ];
+    var lockedHtml = lockedSignals.map(function(s){
+      return '<div class="res-sig is-locked"><span class="res-sig-name">' + s[0] + '</span><span class="res-sig-val is-locked">' + s[1] + '</span></div>';
+    }).join('');
+
+    panel.innerHTML =
+      '<div class="res-hero">' +
+        '<div>' +
+          '<div class="res-num res-num--' + grade + '">' + score + '</div>' +
+          '<div class="res-grade">Grade ' + grade + '</div>' +
+        '</div>' +
+        '<div class="res-summary">' +
+          '<h3>' + d.domain + ' &middot; Partial Signal Score</h3>' +
+          '<p>' + summary + '</p>' +
+        '</div>' +
+      '</div>' +
+      '<div class="res-signals">' +
+        '<div class="res-sig"><span class="res-sig-name">06 Authentication Standing</span><span class="res-sig-val ' + classFor(auth) + '">' + auth + '/100</span></div>' +
+        '<div class="res-sig"><span class="res-sig-name">04 Domain Reputation</span><span class="res-sig-val ' + classFor(rep) + '">' + rep + '/100</span></div>' +
+      '</div>' +
+      '<div class="res-signals">' + lockedHtml + '</div>' +
+      '<div class="res-cta">' +
+        '<h4>You just saw 2 of 7 signals.</h4>' +
+        '<p>Sign up free to unlock the other 5 (Bounce Exposure, Engagement Trajectory, Acquisition Quality, Spam Trap Exposure, Decay Velocity) by uploading a CSV or connecting your ESP.</p>' +
+        '<a href="/signup?from=signal-score&domain=' + encodeURIComponent(d.domain) + '" class="res-cta-btn">Sign up free to see all 7 &rarr;</a>' +
+      '</div>';
+    panel.classList.add('is-visible');
+    setTimeout(function(){ panel.scrollIntoView({behavior: 'smooth', block: 'center'}); }, 100);
+  }
+
+  function renderError(msg) {
+    panel.innerHTML = '<div class="res-error">' + msg + '</div>';
+    panel.classList.add('is-visible');
+  }
+
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    var domain = input.value.trim();
+    if (!domain) return;
+    var btn = form.querySelector('button');
+    var origText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Reading signals...';
+
+    fetch('/signal-score/from-domain', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({domain: domain})
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      btn.disabled = false;
+      btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg> Get my Signal Score';
+      if (d.ok) renderResult(d);
+      else renderError(d.error || 'Could not analyze that domain.');
+    })
+    .catch(function(){
+      btn.disabled = false;
+      btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg> Get my Signal Score';
+      renderError('Network error. Please try again.');
+    });
+  });
+})();
+</script>
 <script>
 (function(){
   var acts = document.querySelectorAll('.hero-act');

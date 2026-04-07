@@ -1,188 +1,76 @@
 <!-- ══════════════════════════════════════════════════════
-     HOMEPAGE MARKETING SECTIONS
-     The 7 Inbox Signals. Full marketing argument
+     HOMEPAGE MARKETING DIGEST
+     Slim 7-signal teaser. Full marketing argument lives at /seven-signals
      ══════════════════════════════════════════════════════ -->
 
 <style>
-.lp-arg-section { padding: 64px 24px; background: var(--bg-1, #fff); }
-.lp-arg-section--alt { background: var(--bg-2, #f8fafc); }
-.lp-arg-inner { max-width: 760px; margin: 0 auto; }
-.lp-arg-h2 { font-size: 2rem; font-weight: 900; line-height: 1.18; color: var(--text-1); margin: 0 0 24px; letter-spacing: -0.02em; }
-.lp-arg-p { font-size: 1rem; line-height: 1.7; color: var(--text-2); margin: 0 0 18px; }
-.lp-arg-p strong { color: var(--text-1); }
+.lp-digest { padding: 64px 24px; background: var(--bg-1, #fff); }
+.lp-digest__inner { max-width: 760px; margin: 0 auto; text-align: center; }
+.lp-digest__eyebrow { display: inline-block; font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; padding: 4px 14px; border-radius: 99px; background: rgba(37,99,235,0.08); color: var(--brand); margin-bottom: 16px; }
+.lp-digest__h2 { font-size: 1.9rem; font-weight: 900; line-height: 1.2; color: var(--text-1); margin: 0 0 18px; letter-spacing: -0.02em; }
+.lp-digest__lead { font-size: 1.02rem; line-height: 1.65; color: var(--text-2); max-width: 640px; margin: 0 auto 28px; }
+.lp-digest__lead strong { color: var(--text-1); }
+.lp-digest__cta { display: inline-block; background: var(--brand); color: #fff; padding: 14px 32px; border-radius: 999px; font-weight: 700; font-size: 0.92rem; text-decoration: none; box-shadow: 0 4px 12px rgba(37,99,235,0.2); }
+.lp-digest__cta:hover { background: var(--brand-dark, #1d4ed8); }
+.lp-digest__deep { display: block; margin-top: 16px; font-size: 0.85rem; color: var(--text-3); text-decoration: none; }
+.lp-digest__deep a { color: var(--brand); font-weight: 700; }
 
-/* Per-signal block */
-.lp-signal-block { background: var(--bg-1, #fff); border: 1px solid var(--border, #e2e8f0); border-radius: 14px; padding: 32px; margin-bottom: 18px; }
-.lp-signal-block__label { display: inline-block; font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; color: var(--brand); padding: 4px 12px; border-radius: 99px; background: rgba(37,99,235,0.08); margin-bottom: 14px; }
-.lp-signal-block__h3 { font-size: 1.35rem; font-weight: 800; line-height: 1.3; color: var(--text-1); margin: 0 0 18px; letter-spacing: -0.01em; }
-.lp-signal-block__p { font-size: 0.95rem; line-height: 1.65; color: var(--text-2); margin: 0 0 12px; }
-.lp-signal-block__p strong { color: var(--text-1); }
-
-/* Argument close */
-.lp-arg-close { background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border: 1px solid #bae6fd; border-radius: 14px; padding: 32px; margin: 28px 0; }
-.lp-arg-close h3 { font-size: 1.5rem; font-weight: 900; color: var(--text-1); margin: 0 0 14px; }
-.lp-arg-close p { font-size: 0.96rem; line-height: 1.65; color: var(--text-2); margin: 0 0 12px; }
-
-/* Mid CTA */
-.lp-mid-cta { text-align: center; padding: 56px 24px; background: var(--bg-2, #f8fafc); }
-.lp-mid-cta h3 { font-size: 1.6rem; font-weight: 900; color: var(--text-1); margin: 0 0 12px; }
-.lp-mid-cta p { font-size: 0.96rem; color: var(--text-2); max-width: 540px; margin: 0 auto 24px; line-height: 1.55; }
-.lp-mid-cta__btn { display: inline-block; background: var(--brand); color: #fff; padding: 14px 32px; border-radius: 999px; font-weight: 700; font-size: 0.95rem; text-decoration: none; box-shadow: 0 4px 12px rgba(37,99,235,0.2); }
-.lp-mid-cta__btn:hover { background: var(--brand-dark, #1d4ed8); }
-.lp-mid-cta__proof { display: block; margin-top: 14px; font-size: 0.78rem; color: var(--text-3); }
-
-/* Pain grid */
-.lp-pain-section { padding: 64px 24px; background: var(--bg-1, #fff); }
+/* Pain grid (kept slim) */
+.lp-pain-section { padding: 64px 24px; background: var(--bg-2, #f8fafc); }
 .lp-pain-inner { max-width: 1080px; margin: 0 auto; }
-.lp-pain-h2 { font-size: 2rem; font-weight: 900; text-align: center; color: var(--text-1); margin: 0 0 36px; letter-spacing: -0.02em; }
-.lp-pain-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 18px; }
-.lp-pain-card { background: var(--bg-1, #fff); border: 1px solid var(--border, #e2e8f0); border-radius: 14px; padding: 28px; }
-.lp-pain-card blockquote { font-size: 1.05rem; font-weight: 700; line-height: 1.4; color: var(--text-1); margin: 0 0 16px; padding: 0 0 0 16px; border-left: 3px solid var(--brand); font-style: italic; }
-.lp-pain-card p { font-size: 0.92rem; line-height: 1.6; color: var(--text-2); margin: 0; }
+.lp-pain-h2 { font-size: 1.7rem; font-weight: 800; text-align: center; color: var(--text-1); margin: 0 0 32px; letter-spacing: -0.02em; }
+.lp-pain-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+.lp-pain-card { background: var(--bg-1, #fff); border: 1px solid var(--border, #e2e8f0); border-radius: 12px; padding: 24px; }
+.lp-pain-card blockquote { font-size: 0.98rem; font-weight: 700; line-height: 1.4; color: var(--text-1); margin: 0 0 12px; padding: 0 0 0 14px; border-left: 3px solid var(--brand); font-style: italic; }
+.lp-pain-card p { font-size: 0.85rem; line-height: 1.55; color: var(--text-2); margin: 0; }
 
 @media (max-width: 720px) {
-  .lp-arg-h2, .lp-pain-h2 { font-size: 1.5rem; }
-  .lp-signal-block__h3 { font-size: 1.15rem; }
-  .lp-signal-block { padding: 24px; }
+  .lp-digest__h2 { font-size: 1.4rem; }
+  .lp-pain-h2 { font-size: 1.25rem; }
 }
 </style>
 
 <!-- ══════════════════════════════════════════════════════
-     SECTION 3: MARKETING ARGUMENT
+     SLIM 7-SIGNAL DIGEST
      ══════════════════════════════════════════════════════ -->
-<section class="lp-arg-section">
-  <div class="lp-arg-inner">
-    <h2 class="lp-arg-h2">Every marketer who followed every rule and still got burned was missing the same thing.</h2>
-
-    <p class="lp-arg-p">Not authentication. They had that. Not list cleaning. They did that. Not a better subject line or a warmer sending domain or a more engaged segment.</p>
-
-    <p class="lp-arg-p">They were missing 5 of the 7 inbox signals their list was broadcasting.</p>
-
-    <p class="lp-arg-p">And nobody told them those signals existed. Not their ESP. Not ZeroBounce. Not Mail-Tester. Not GlockApps. Because none of those tools were built to read them.</p>
-
-    <p class="lp-arg-p">Here is what was invisible to you. And what InbXr was built to reveal.</p>
-
-    <!-- Signal 01 -->
-    <div class="lp-signal-block">
-      <span class="lp-signal-block__label">01 &middot; Bounce Exposure &middot; 25 points</span>
-      <h3 class="lp-signal-block__h3">Your bounce rate tells you what broke last time. This tells you what will break next time.</h3>
-      <p class="lp-signal-block__p">Every tool shows you a backward number: how many emails bounced in the last send. By the time that number appears in your dashboard, the damage is already in your sender score.</p>
-      <p class="lp-signal-block__p"><strong>Claim:</strong> Your bounce rate is a lagging indicator. It tells you about damage already done.</p>
-      <p class="lp-signal-block__p"><strong>Proof:</strong> Domains age and expire. MX records change. Catch-all addresses accept every email and bounce later. Valid-today addresses become invalid-tomorrow at a rate that is calculable before you send.</p>
-      <p class="lp-signal-block__p"><strong>Benefit:</strong> Bounce Exposure reads 30 to 60 days forward, flags which contacts carry elevated bounce risk right now, and tells you before you send. Not after you have paid for it with your sender reputation.</p>
-    </div>
-
-    <!-- Signal 02 -->
-    <div class="lp-signal-block">
-      <span class="lp-signal-block__label">02 &middot; Engagement Trajectory &middot; 25 points &middot; Market-first</span>
-      <h3 class="lp-signal-block__h3">Your open rate has been wrong since 2021. Here is what really happened.</h3>
-      <p class="lp-signal-block__p">In September 2021, Apple launched Mail Privacy Protection. It prefetches emails automatically before anyone opens them. And registers that prefetch as an open. Your ESP counted it. Your deliverability tools scored it. Your campaign reports showed it.</p>
-      <p class="lp-signal-block__p">None of it was real.</p>
-      <p class="lp-signal-block__p"><strong>Claim:</strong> Every open rate in the market has been inflated since Apple Mail Privacy Protection launched.</p>
-      <p class="lp-signal-block__p"><strong>Proof:</strong> Apple devices automatically trigger open-tracking pixels for every email they receive, regardless of whether a human ever saw the email. Open rates across all ESPs are inflated by an estimated 20 to 40% as a result. No tool on the market removes this distortion from their engagement scoring except InbXr.</p>
-      <p class="lp-signal-block__p"><strong>Benefit:</strong> Engagement Trajectory removes the machine opens and measures where your real human engagement is heading. Weighted by clicks and replies, not prefetched pixel fires. Most InbXr users discover their real engagement rate is significantly lower than their ESP dashboard shows. That gap between what they thought and what was real is where deliverability decisions go wrong.</p>
-    </div>
-
-    <!-- Signal 03 -->
-    <div class="lp-signal-block">
-      <span class="lp-signal-block__label">03 &middot; Acquisition Quality &middot; 15 points &middot; Market-first</span>
-      <h3 class="lp-signal-block__h3">Two lists can pass the same verification check and destroy deliverability at completely different rates.</h3>
-      <p class="lp-signal-block__p">A list of people who opted in organically and a list of cold-outreached or purchased contacts look identical to a verifier. Same syntax checks. Same MX lookups. Same SMTP responses. Pass, pass, pass.</p>
-      <p class="lp-signal-block__p">They perform completely differently from day one.</p>
-      <p class="lp-signal-block__p"><strong>Claim:</strong> Where contacts came from predicts how they will behave. And most tools have no way to tell the difference.</p>
-      <p class="lp-signal-block__p"><strong>Proof:</strong> Segments where fewer than 15% of contacts engaged in the first 30 days after joining carry a cold acquisition signal. That signal predicts bounce rate, spam complaint rate, and sender reputation degradation at measurably higher levels than organic opt-in cohorts. Before a single campaign is sent to them.</p>
-      <p class="lp-signal-block__p"><strong>Benefit:</strong> InbXr infers acquisition quality from contact behaviour. Without you declaring anything. It identifies which segments of your list came from cold or poor-quality acquisition and flags them before you send a campaign their way. No other tool in the market reads this.</p>
-    </div>
-
-    <!-- Signal 04 -->
-    <div class="lp-signal-block">
-      <span class="lp-signal-block__label">04 &middot; Domain Reputation &middot; 15 points</span>
-      <h3 class="lp-signal-block__h3">Reputation is not just about your domain. It is about every domain in your list.</h3>
-      <p class="lp-signal-block__p">Every tool checks whether your sending domain is blacklisted. That is one side of the equation and every tool covers it.</p>
-      <p class="lp-signal-block__p"><strong>Claim:</strong> One-sided reputation checking misses half the picture.</p>
-      <p class="lp-signal-block__p"><strong>Proof:</strong> ISPs filter based on the sending domain AND the receiving domain concentration inside your list. A sender with a clean domain sending to a list where 40% of contacts are on Yahoo and AOL. After their 2025 filtering changes. Carries elevated deliverability risk regardless of their own sender reputation.</p>
-      <p class="lp-signal-block__p"><strong>Benefit:</strong> InbXr reads both sides simultaneously. Your domain reputation and the receiving domain composition of your list. Yours and theirs.</p>
-    </div>
-
-    <!-- Signal 05 -->
-    <div class="lp-signal-block">
-      <span class="lp-signal-block__label">05 &middot; Spam Trap Exposure &middot; 10 points</span>
-      <h3 class="lp-signal-block__h3">You cannot confirm a spam trap without hitting one. By then the damage is done.</h3>
-      <p class="lp-signal-block__p">Spam traps do not announce themselves. They sit inside old, dormant, poorly-acquired lists and wait.</p>
-      <p class="lp-signal-block__p"><strong>Claim:</strong> Spam trap risk is calculable before you send. Based on the conditions that produce trap hits.</p>
-      <p class="lp-signal-block__p"><strong>Proof:</strong> Lists with high proportions of very old inactive contacts from unknown or cold acquisition sources hit spam traps at measurably higher rates than recently engaged organic lists. The conditions. List age, dormancy depth, acquisition source pattern. Are all readable before the send.</p>
-      <p class="lp-signal-block__p"><strong>Benefit:</strong> InbXr calculates that probability and scores it against your list before the campaign goes out. It flags the specific segment most likely to carry trap risk so you can suppress them first, not discover them after.</p>
-    </div>
-
-    <!-- Signal 06 -->
-    <div class="lp-signal-block">
-      <span class="lp-signal-block__label">06 &middot; Authentication Standing &middot; 5 points</span>
-      <h3 class="lp-signal-block__h3">SPF and DKIM existing is not the same as authentication passing in 2025.</h3>
-      <p class="lp-signal-block__p">Gmail and Yahoo mandated SPF, DKIM, and DMARC for bulk senders in 2024. Microsoft followed in May 2025 with stricter requirements.</p>
-      <p class="lp-signal-block__p"><strong>Claim:</strong> Thousands of senders have a DMARC policy of p=none right now and do not know it is causing them to fail Microsoft's 2025 bulk sender requirements.</p>
-      <p class="lp-signal-block__p"><strong>Proof:</strong> Microsoft's May 2025 mandate requires a DMARC policy of p=quarantine or p=reject for bulk senders. p=none. Which passes the basic presence check and shows as "DMARC: present" in most tools. Fails this requirement.</p>
-      <p class="lp-signal-block__p"><strong>Benefit:</strong> Authentication Standing scores your full posture against each ISP's current requirements. Not just whether records exist. It flags every gap against the specific 2025 mandate it fails and generates the exact DNS records that fix it. Copy. Paste. Done.</p>
-    </div>
-
-    <!-- Signal 07 -->
-    <div class="lp-signal-block">
-      <span class="lp-signal-block__label">07 &middot; Decay Velocity &middot; 5 points</span>
-      <h3 class="lp-signal-block__h3">Every tool shows you a snapshot. This one shows you a trajectory. And a date.</h3>
-      <p class="lp-signal-block__p">Your at-risk contact segment is either growing or it is not. If it is growing, it is growing at a rate. That rate projects to a date when the damage becomes unavoidable.</p>
-      <p class="lp-signal-block__p"><strong>Claim:</strong> List health is not a static score. It is a direction and a velocity.</p>
-      <p class="lp-signal-block__p"><strong>Proof:</strong> The weekly rate at which contacts migrate from active to warm to at-risk to dormant is calculable from ESP sync data. That rate, projected forward, produces a date: the point at which the Signal Score crosses the danger threshold and deliverability damage becomes statistically likely.</p>
-      <p class="lp-signal-block__p"><strong>Benefit:</strong> InbXr tells you how many days you have before your signal score hits the danger threshold. "Your at-risk segment is growing at 340 contacts per week. At this rate you will cross the danger threshold in 18 days." That sentence does not exist in any other deliverability tool in the market. That is the difference between a rearview mirror and a windshield.</p>
-    </div>
-
-    <!-- Argument close -->
-    <div class="lp-arg-close">
-      <h3>Now you know what was invisible.</h3>
-      <p>Five signals, unread, while your deliverability degraded and your revenue leaked out on every send. The signals were not new. They were broadcasting the whole time. The tools you trusted were simply not built to hear them.</p>
-      <p>InbXr reads all 7 simultaneously. Every 6 hours. Across every connected ESP. In plain English. With the fix built in.</p>
-      <p>Evaluate through The 7 Inbox Signals. Execute through The 7 Inbox Signals. Get your email to the inbox and your copy to sell.</p>
-    </div>
+<section class="lp-digest">
+  <div class="lp-digest__inner">
+    <span class="lp-digest__eyebrow">What goes into your Signal Score</span>
+    <h2 class="lp-digest__h2">7 signals your list is broadcasting right now. Your ESP sees 1 or 2.</h2>
+    <p class="lp-digest__lead">
+      Bounce rate tells you what broke last time. <strong>Signal Score tells you what will break next time.</strong>
+      Built on 7 inbox signals including MPP-adjusted real engagement and acquisition cohort quality.
+      Two dimensions no other platform measures.
+    </p>
+    <a href="/" class="lp-digest__cta" onclick="document.getElementById('heroDomainInput')?.focus(); return true;">Get my Signal Score &rarr;</a>
+    <a href="/seven-signals" class="lp-digest__deep">Or read the full breakdown of all 7 signals &rarr;</a>
   </div>
 </section>
 
 <!-- ══════════════════════════════════════════════════════
-     MID-PAGE CTA
-     ══════════════════════════════════════════════════════ -->
-<section class="lp-mid-cta">
-  <h3>Your list is broadcasting 7 signals right now.</h3>
-  <p>You now know what 5 of them are. The question is which ones are firing in your list. And how loud.</p>
-  <a href="/signup" class="lp-mid-cta__btn">Reveal what's burning my revenue &rarr;</a>
-  <span class="lp-mid-cta__proof">Free &middot; No credit card &middot; First reading in 60 seconds</span>
-</section>
-
-<!-- ══════════════════════════════════════════════════════
-     PAIN-TO-SIGNAL MAPPING
+     PAIN GRID (kept. high-converting)
      ══════════════════════════════════════════════════════ -->
 <section class="lp-pain-section">
   <div class="lp-pain-inner">
     <h2 class="lp-pain-h2">Does any of this sound familiar?</h2>
 
     <div class="lp-pain-grid">
-
       <div class="lp-pain-card">
         <blockquote>"My open rates dropped 40% and nothing changed."</blockquote>
-        <p>Your open rate was already wrong before it dropped. Apple MPP inflated it for years. Machine prefetches counted as human opens. When real engagement fell, the gap between the number and reality finally became impossible to ignore. Engagement Trajectory would have flagged the real decline 30 days before it showed up in your report.</p>
+        <p>Your open rate was already wrong before it dropped. Apple MPP inflated it for years. When real engagement fell, the gap between the number and reality finally became impossible to ignore. Signal 02 would have flagged it 30 days earlier.</p>
       </div>
-
       <div class="lp-pain-card">
         <blockquote>"I verified my list, authenticated my domain, and still got flagged."</blockquote>
-        <p>Verification reads Signal 01. Authentication is Signal 06. You were clean on both. And still had 5 signals broadcasting problems your stack was not built to hear. Acquisition Quality and Spam Trap Exposure were the ones that got you.</p>
+        <p>You were clean on Signals 01 and 06. The other 5 were broadcasting problems your stack was not built to hear. Acquisition Quality and Spam Trap Exposure were the ones that got you.</p>
       </div>
-
       <div class="lp-pain-card">
         <blockquote>"I inherited a 200k list with no history attached."</blockquote>
-        <p>Upload it as a CSV. Get a full 7 Signal reading in 60 seconds. No ESP connection required. Most inherited lists fail 3 signals before the first send goes out. Now you will know which 3 before you touch them.</p>
+        <p>Upload it as a CSV. Get a full 7 Signal reading in 60 seconds. Most inherited lists fail 3 signals before the first send. Now you will know which 3 before you touch them.</p>
       </div>
-
       <div class="lp-pain-card">
-        <blockquote>"I got flagged, lost my sender score, and it took months to recover."</blockquote>
-        <p>Send Readiness and Early Warning read the exact conditions that produce that event. Before you send, not after. Once is expensive. Twice is avoidable.</p>
+        <blockquote>"I lost my sender score and it took months to recover."</blockquote>
+        <p>Send Readiness and Early Warning read the exact conditions that produce that event before you send, not after. Once is expensive. Twice is avoidable.</p>
       </div>
-
     </div>
   </div>
 </section>

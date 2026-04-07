@@ -45,6 +45,7 @@ from modules.signal_copy import (
 from modules.signal_score import (
     calculate_signal_score,
     calculate_signal_score_from_csv,
+    calculate_domain_signal_score,
     save_signal_score,
     get_latest_signal_score,
     get_signal_history,
@@ -251,6 +252,57 @@ def calculate_signal_score_now():
         "grade": result["signal_grade"],
         "trajectory": result["trajectory_direction"],
         "total_contacts": result["segments"]["total"],
+    })
+
+
+@signal_bp.route("/signal-score/from-domain", methods=["POST"])
+def calculate_signal_score_from_domain():
+    """
+    Calculate a partial Signal Score from a domain alone.
+
+    PUBLIC ENDPOINT. The lowest-friction Signal Score entry point. Anonymous
+    visitors type a domain, get back 2 of 7 signals (Authentication Standing
+    + Domain Reputation) calculated from public DNS data. The other 5 signals
+    require list data and return as locked cards in the UI.
+
+    Accepts JSON {domain: "example.com"} or form data {domain: "..."}.
+
+    Returns the same result dict shape as /signal-score/from-csv with:
+      - is_partial: True
+      - visible_signals: 2 / locked_signals: 5
+      - 2 visible signal scores filled in
+      - 5 locked signal scores set to None
+    """
+    # Accept both JSON and form-encoded
+    if request.is_json:
+        data = request.get_json(silent=True) or {}
+        domain = data.get("domain", "")
+    else:
+        domain = request.form.get("domain", "") or request.values.get("domain", "")
+
+    if not domain:
+        return jsonify({"ok": False, "error": "Domain is required."}), 400
+
+    result = calculate_domain_signal_score(domain)
+
+    if result.get("error"):
+        return jsonify({
+            "ok": False,
+            "error": result.get("message", result.get("error")),
+        }), 400
+
+    return jsonify({
+        "ok": True,
+        "is_partial": True,
+        "is_anonymous": True,
+        "domain": result["domain"],
+        "score": result["total_signal_score"],
+        "grade": result["signal_grade"],
+        "visible_signals": result["visible_signals"],
+        "locked_signals": result["locked_signals"],
+        "scores": result["scores"],
+        "metadata": result["metadata"],
+        "recommendations": result.get("recommendations", []),
     })
 
 

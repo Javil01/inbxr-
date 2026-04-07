@@ -2210,6 +2210,22 @@ def how_different():
                            canonical_url="https://inbxr.us/how-inbxr-is-different")
 
 
+@app.route("/seven-signals")
+def seven_signals():
+    """Dedicated deep-dive page for the 7 Inbox Signals marketing argument.
+
+    Cold ad traffic, pillar posts, AppSumo, and cold outreach can deep-link
+    here when they want the full mechanism explanation. The homepage carries
+    the slim digest and points here for the full breakdown.
+    """
+    return render_template("seven_signals.html",
+                           is_admin=_is_admin(),
+                           active_page="seven_signals",
+                           page_title="The 7 Inbox Signals · How InbXr Reads Your List",
+                           page_description="The full breakdown of the 7 inbox signals every email list is broadcasting. What each signal measures, why it matters, and how InbXr reads them all.",
+                           canonical_url="https://inbxr.us/seven-signals")
+
+
 @app.route("/api/support/chat", methods=["POST"])
 def support_chat_api():
     from modules.support_chat import chat, is_available
