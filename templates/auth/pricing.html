@@ -34,9 +34,9 @@
       <li>In-app alerts (manual scans only)</li>
       <li>Sales &amp; Technical Support chat</li>
       <li>Signal Score via CSV upload (5 signals, normalized to 100)</li>
-      <li>&mdash; No ESP integrations</li>
-      <li>&mdash; No Signal Watch (automatic monitoring)</li>
-      <li>&mdash; No Signal Rules / Early Warning / Recovery Sequences</li>
+      <li>No ESP integrations</li>
+      <li>No Signal Watch (automatic monitoring)</li>
+      <li>No Signal Rules / Early Warning / Recovery Sequences</li>
     </ul>
     <div class="pricing-card__action">
       {% if user %}
@@ -69,13 +69,13 @@
       <li><strong>{{ t.limits.blocklist_domains }}</strong> monitored domains</li>
       <li><strong>{{ t.limits.warmup_campaigns }}</strong> warmup campaigns</li>
       <li class="pricing-card__feature--highlight">Full 7-signal Signal Score (all signals unlocked)</li>
-      <li class="pricing-card__feature--highlight">Signal Watch — automatic recalc every 6 hours</li>
+      <li class="pricing-card__feature--highlight">Signal Watch. Automatic recalc every 6 hours</li>
       <li class="pricing-card__feature--highlight">Early Warning alerts (8 pre-built rules)</li>
-      <li class="pricing-card__feature--highlight">Signal Rules — up to 10 live rules (dry-run by default)</li>
-      <li class="pricing-card__feature--highlight">Recovery Sequences — AI-generated re-engagement flows</li>
+      <li class="pricing-card__feature--highlight">Signal Rules. Up to 10 live rules (dry-run by default)</li>
+      <li class="pricing-card__feature--highlight">Recovery Sequences. AI-generated re-engagement flows</li>
       <li class="pricing-card__feature--highlight">Send Readiness gate (green/amber/red)</li>
-      <li class="pricing-card__feature--highlight">Signal Map — full contact segmentation</li>
-      <li class="pricing-card__feature--highlight">Signal Advisor — 20 context-aware chats/mo</li>
+      <li class="pricing-card__feature--highlight">Signal Map. Full contact segmentation</li>
+      <li class="pricing-card__feature--highlight">Signal Advisor. 20 context-aware chats/mo</li>
       <li class="pricing-card__feature--highlight">MPP-adjusted engagement (User-Agent + timing detection)</li>
       <li class="pricing-card__feature--highlight">1 ESP integration (Mailchimp, ActiveCampaign, Mailgun, AWeber)</li>
       <li class="pricing-card__feature--highlight">All 16 copy frameworks + Custom Framework Builder</li>
@@ -104,7 +104,7 @@
       <span class="pricing-card__amount">${{ t.price_monthly }}</span>
       <span class="pricing-card__period">/month</span>
     </div>
-    <p class="pricing-card__desc">Everything in Pro across every client list. Your brand on the reports. The average agency loses a client after one bad campaign. The multi-client Signal Score dashboard catches the conditions that cause bad campaigns — across every client list simultaneously — before the send goes out. A single red Send Readiness gate that stops one client campaign has already paid for a year of Agency.</p>
+    <p class="pricing-card__desc">Everything in Pro across every client list. Your brand on the reports. The average agency loses a client after one bad campaign. The multi-client Signal Score dashboard catches the conditions that cause bad campaigns. Across every client list simultaneously. Before the send goes out. A single red Send Readiness gate that stops one client campaign has already paid for a year of Agency.</p>
     <ul class="pricing-card__features">
       <li><strong>{{ t.limits.checks_per_day }}</strong> checks/day</li>
       <li><strong>{{ t.limits.email_verifications_per_day }}</strong> email verifications/day</li>
@@ -114,7 +114,7 @@
       <li><strong>{{ t.limits.warmup_campaigns }}</strong> warmup campaigns</li>
       <li>Everything in Pro, plus:</li>
       <li class="pricing-card__feature--highlight">Unlimited Signal Rules (no 10-rule cap)</li>
-      <li class="pricing-card__feature--highlight">Signal Advisor — Unlimited chats</li>
+      <li class="pricing-card__feature--highlight">Signal Advisor. Unlimited chats</li>
       <li class="pricing-card__feature--highlight">Multi-client dashboard (agency view)</li>
       <li class="pricing-card__feature--highlight">10 ESP integrations</li>
       <li class="pricing-card__feature--highlight">Automated alerts for 50 domains</li>
@@ -158,22 +158,22 @@
         <tr class="pricing-compare__section"><td colspan="4">The 7 Inbox Signals</td></tr>
         <tr><td>Signal Score (composite /100)</td><td>5-signal, normalized</td><td>Full 7-signal</td><td>Full 7-signal</td></tr>
         <tr><td>Bounce Exposure</td><td>&#10003;</td><td>&#10003;</td><td>&#10003;</td></tr>
-        <tr><td>Engagement Trajectory (MPP-adjusted)</td><td>&mdash;</td><td>&#10003;</td><td>&#10003;</td></tr>
+        <tr><td>Engagement Trajectory (MPP-adjusted)</td><td>&times;</td><td>&#10003;</td><td>&#10003;</td></tr>
         <tr><td>Acquisition Quality (cohort analysis)</td><td>&#10003;</td><td>&#10003;</td><td>&#10003;</td></tr>
         <tr><td>Domain Reputation</td><td>&#10003;</td><td>&#10003;</td><td>&#10003;</td></tr>
         <tr><td>Spam Trap Exposure</td><td>&#10003;</td><td>&#10003;</td><td>&#10003;</td></tr>
         <tr><td>Authentication Standing</td><td>&#10003;</td><td>&#10003;</td><td>&#10003;</td></tr>
-        <tr><td>Decay Velocity (trajectory)</td><td>&mdash;</td><td>&#10003;</td><td>&#10003;</td></tr>
+        <tr><td>Decay Velocity (trajectory)</td><td>&times;</td><td>&#10003;</td><td>&#10003;</td></tr>
         <tr><td>CSV upload path (one-shot read)</td><td>&#10003;</td><td>&#10003;</td><td>&#10003;</td></tr>
 
         <tr class="pricing-compare__section"><td colspan="4">Signal Intelligence Layer</td></tr>
-        <tr><td>Signal Watch (auto recalc every 6 hrs)</td><td>&mdash;</td><td>&#10003;</td><td>&#10003;</td></tr>
-        <tr><td>Early Warning alerts</td><td>&mdash;</td><td>&#10003;</td><td>&#10003;</td></tr>
-        <tr><td>Signal Rules (dry-run by default)</td><td>&mdash;</td><td>10 active</td><td>Unlimited</td></tr>
-        <tr><td>Recovery Sequences (AI-generated)</td><td>&mdash;</td><td>&#10003;</td><td>&#10003;</td></tr>
-        <tr><td>Send Readiness gate</td><td>&mdash;</td><td>&#10003;</td><td>&#10003;</td></tr>
-        <tr><td>Signal Map (segment visualization)</td><td>&mdash;</td><td>&#10003;</td><td>&#10003;</td></tr>
-        <tr><td>Weekly Signal Report email</td><td>&mdash;</td><td>&#10003;</td><td>&#10003;</td></tr>
+        <tr><td>Signal Watch (auto recalc every 6 hrs)</td><td>&times;</td><td>&#10003;</td><td>&#10003;</td></tr>
+        <tr><td>Early Warning alerts</td><td>&times;</td><td>&#10003;</td><td>&#10003;</td></tr>
+        <tr><td>Signal Rules (dry-run by default)</td><td>&times;</td><td>10 active</td><td>Unlimited</td></tr>
+        <tr><td>Recovery Sequences (AI-generated)</td><td>&times;</td><td>&#10003;</td><td>&#10003;</td></tr>
+        <tr><td>Send Readiness gate</td><td>&times;</td><td>&#10003;</td><td>&#10003;</td></tr>
+        <tr><td>Signal Map (segment visualization)</td><td>&times;</td><td>&#10003;</td><td>&#10003;</td></tr>
+        <tr><td>Weekly Signal Report email</td><td>&times;</td><td>&#10003;</td><td>&#10003;</td></tr>
 
         <tr class="pricing-compare__section"><td colspan="4">Deliverability Tools</td></tr>
         <tr><td>Inboxer Send Test (send &amp; analyze)</td><td>&#10003;</td><td>&#10003;</td><td>&#10003;</td></tr>
@@ -188,41 +188,41 @@
 
         <tr class="pricing-compare__section"><td colspan="4">Copy Intelligence</td></tr>
         <tr><td>100-Point Copy Effectiveness Score</td><td>&#10003;</td><td>&#10003;</td><td>&#10003;</td></tr>
-        <tr><td>Framework Detection in Analysis</td><td>&mdash;</td><td>&#10003;</td><td>&#10003;</td></tr>
+        <tr><td>Framework Detection in Analysis</td><td>&times;</td><td>&#10003;</td><td>&#10003;</td></tr>
         <tr><td>Framework Lab (browse &amp; learn)</td><td>3 frameworks</td><td>All 16</td><td>All 16</td></tr>
-        <tr><td>Custom Framework Builder</td><td>&mdash;</td><td>&#10003;</td><td>&#10003;</td></tr>
-        <tr><td>Apply Frameworks to AI Rewrite</td><td>&mdash;</td><td>&#10003;</td><td>&#10003;</td></tr>
-        <tr><td>"Test This Rewrite" Loop</td><td>&mdash;</td><td>&#10003;</td><td>&#10003;</td></tr>
+        <tr><td>Custom Framework Builder</td><td>&times;</td><td>&#10003;</td><td>&#10003;</td></tr>
+        <tr><td>Apply Frameworks to AI Rewrite</td><td>&times;</td><td>&#10003;</td><td>&#10003;</td></tr>
+        <tr><td>"Test This Rewrite" Loop</td><td>&times;</td><td>&#10003;</td><td>&#10003;</td></tr>
 
         <tr class="pricing-compare__section"><td colspan="4">AI Features</td></tr>
-        <tr><td>Signal Advisor (context-aware AI)</td><td>&mdash;</td><td>20/month</td><td>Unlimited</td></tr>
-        <tr><td>Copy Rewriter (tone-aware)</td><td>&mdash;</td><td>&#10003;</td><td>&#10003;</td></tr>
-        <tr><td>Framework Rewriter</td><td>&mdash;</td><td>&#10003;</td><td>&#10003;</td></tr>
-        <tr><td>Primary Intelligence (inbox optimizer)</td><td>&mdash;</td><td>&#10003;</td><td>&#10003;</td></tr>
+        <tr><td>Signal Advisor (context-aware AI)</td><td>&times;</td><td>20/month</td><td>Unlimited</td></tr>
+        <tr><td>Copy Rewriter (tone-aware)</td><td>&times;</td><td>&#10003;</td><td>&#10003;</td></tr>
+        <tr><td>Framework Rewriter</td><td>&times;</td><td>&#10003;</td><td>&#10003;</td></tr>
+        <tr><td>Primary Intelligence (inbox optimizer)</td><td>&times;</td><td>&#10003;</td><td>&#10003;</td></tr>
         <tr><td>Support Chat (Sales &amp; Tech)</td><td>&#10003;</td><td>&#10003;</td><td>&#10003;</td></tr>
 
         <tr class="pricing-compare__section"><td colspan="4">ESP Integrations &amp; Monitoring</td></tr>
-        <tr><td>ESP Integrations (Mailchimp, Instantly, etc.)</td><td>&mdash;</td><td>1 account</td><td>10 accounts</td></tr>
-        <tr><td>Deliverability Dashboard (health score)</td><td>&mdash;</td><td>&#10003;</td><td>&#10003;</td></tr>
-        <tr><td>Bounce &amp; complaint rate tracking</td><td>&mdash;</td><td>&#10003;</td><td>&#10003;</td></tr>
-        <tr><td>Warmup score monitoring</td><td>&mdash;</td><td>&#10003;</td><td>&#10003;</td></tr>
-        <tr><td>ISP-level delivery breakdown</td><td>&mdash;</td><td>&mdash;</td><td>&#10003;</td></tr>
-        <tr><td>Auto-sync every 6 hours</td><td>&mdash;</td><td>&#10003;</td><td>&#10003;</td></tr>
-        <tr><td>Automated Blocklist Monitoring</td><td>&mdash;</td><td>Every 6 hrs</td><td>Every 6 hrs</td></tr>
-        <tr><td>DNS Auth Monitoring (SPF/DKIM/DMARC)</td><td>&mdash;</td><td>Every 12 hrs</td><td>Every 12 hrs</td></tr>
-        <tr><td>Email Alerts (instant/daily/weekly)</td><td>&mdash;</td><td>&#10003;</td><td>&#10003;</td></tr>
-        <tr><td>Alert Preferences &amp; Digest Emails</td><td>&mdash;</td><td>&#10003;</td><td>&#10003;</td></tr>
+        <tr><td>ESP Integrations (Mailchimp, Instantly, etc.)</td><td>&times;</td><td>1 account</td><td>10 accounts</td></tr>
+        <tr><td>Deliverability Dashboard (health score)</td><td>&times;</td><td>&#10003;</td><td>&#10003;</td></tr>
+        <tr><td>Bounce &amp; complaint rate tracking</td><td>&times;</td><td>&#10003;</td><td>&#10003;</td></tr>
+        <tr><td>Warmup score monitoring</td><td>&times;</td><td>&#10003;</td><td>&#10003;</td></tr>
+        <tr><td>ISP-level delivery breakdown</td><td>&times;</td><td>&times;</td><td>&#10003;</td></tr>
+        <tr><td>Auto-sync every 6 hours</td><td>&times;</td><td>&#10003;</td><td>&#10003;</td></tr>
+        <tr><td>Automated Blocklist Monitoring</td><td>&times;</td><td>Every 6 hrs</td><td>Every 6 hrs</td></tr>
+        <tr><td>DNS Auth Monitoring (SPF/DKIM/DMARC)</td><td>&times;</td><td>Every 12 hrs</td><td>Every 12 hrs</td></tr>
+        <tr><td>Email Alerts (instant/daily/weekly)</td><td>&times;</td><td>&#10003;</td><td>&#10003;</td></tr>
+        <tr><td>Alert Preferences &amp; Digest Emails</td><td>&times;</td><td>&#10003;</td><td>&#10003;</td></tr>
 
         <tr class="pricing-compare__section"><td colspan="4">Productivity</td></tr>
-        <tr><td>Signal History (cloud)</td><td>&mdash;</td><td>&#10003;</td><td>&#10003;</td></tr>
-        <tr><td>Signal Reports (PDF)</td><td>&mdash;</td><td>&#10003;</td><td>&#10003;</td></tr>
-        <tr><td>List Verification (CSV)</td><td>&mdash;</td><td>&#10003;</td><td>&#10003;</td></tr>
+        <tr><td>Signal History (cloud)</td><td>&times;</td><td>&#10003;</td><td>&#10003;</td></tr>
+        <tr><td>Signal Reports (PDF)</td><td>&times;</td><td>&#10003;</td><td>&#10003;</td></tr>
+        <tr><td>List Verification (CSV)</td><td>&times;</td><td>&#10003;</td><td>&#10003;</td></tr>
 
         <tr class="pricing-compare__section"><td colspan="4">Collaboration &amp; Scale</td></tr>
-        <tr><td>Teams &amp; Client Workspaces</td><td>&mdash;</td><td>&mdash;</td><td>&#10003;</td></tr>
-        <tr><td>API Access</td><td>&mdash;</td><td>&mdash;</td><td>&#10003;</td></tr>
-        <tr><td>Webhooks</td><td>&mdash;</td><td>&mdash;</td><td>&#10003;</td></tr>
-        <tr><td>Priority Support</td><td>&mdash;</td><td>&#10003;</td><td>&#10003;</td></tr>
+        <tr><td>Teams &amp; Client Workspaces</td><td>&times;</td><td>&times;</td><td>&#10003;</td></tr>
+        <tr><td>API Access</td><td>&times;</td><td>&times;</td><td>&#10003;</td></tr>
+        <tr><td>Webhooks</td><td>&times;</td><td>&times;</td><td>&#10003;</td></tr>
+        <tr><td>Priority Support</td><td>&times;</td><td>&#10003;</td><td>&#10003;</td></tr>
       </tbody>
     </table>
   </div>
@@ -236,7 +236,7 @@
 
 <script>
 (function(){
-  // Upgrade buttons — no login required, Stripe collects email
+  // Upgrade buttons. No login required, Stripe collects email
   document.querySelectorAll('[data-tier]').forEach(function(btn) {
     btn.addEventListener('click', function(e) {
       e.preventDefault();

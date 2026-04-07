@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>InbXr Admin — Users</title>
+  <title>InbXr Admin. Users</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/static/css/style.css?v=20260403f" />
@@ -461,13 +461,13 @@
     // Basic info
     html += '<div class="up-info">' +
       upField('Email', u.email) +
-      upField('Name', u.display_name || '—') +
+      upField('Name', u.display_name || '·') +
       upField('Tier', '<span class="au-tier au-tier--' + u.tier + '">' + u.tier + '</span>') +
       upField('Verified', u.email_verified ? '<span class="au-verified">Yes</span>' : '<span class="au-unverified">No</span>') +
       upField('Joined', shortDate(u.created_at)) +
       upField('Updated', shortDate(u.updated_at)) +
-      upField('Stripe', u.stripe_customer_id ? '<code style="font-size:0.7rem">' + esc(u.stripe_customer_id) + '</code>' : '—') +
-      upField('API Key', u.api_key ? '<code style="font-size:0.7rem">' + esc(u.api_key.substring(0, 12)) + '...</code>' : '—') +
+      upField('Stripe', u.stripe_customer_id ? '<code style="font-size:0.7rem">' + esc(u.stripe_customer_id) + '</code>' : '·') +
+      upField('API Key', u.api_key ? '<code style="font-size:0.7rem">' + esc(u.api_key.substring(0, 12)) + '...</code>' : '·') +
     '</div>';
 
     // Usage

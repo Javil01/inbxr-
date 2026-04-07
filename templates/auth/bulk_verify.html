@@ -28,7 +28,7 @@
     </div>
 
     <div style="text-align:center;padding:12px 0;font-size:0.82rem;color:var(--text-3);">
-      &mdash; or paste emails below &mdash;
+     . Or paste emails below &middot;
     </div>
 
     <textarea
@@ -102,7 +102,7 @@
               {% if job.summary %}
                 {{ job.summary.valid or 0 }} valid, {{ job.summary.invalid or 0 }} invalid, {{ job.summary.risky or 0 }} risky
               {% else %}
-                &mdash;
+                &middot;
               {% endif %}
             </td>
             <td style="font-size:0.8rem;color:var(--text-3);">{{ job.created_at[:16] }}</td>

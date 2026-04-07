@@ -1,5 +1,5 @@
 {% extends "auth/base_auth.html" %}
-{% block title %}Signal Score — The 7 Inbox Signals{% endblock %}
+{% block title %}Signal Score. The 7 Inbox Signals{% endblock %}
 {% block content %}
 <style>
 .sig-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; }
@@ -211,7 +211,7 @@
 <div class="sig-header">
   <div>
     <h1>Signal Score</h1>
-    <p class="sig-header__sub">The 7 Inbox Signals — read every 6 hours</p>
+    <p class="sig-header__sub">The 7 Inbox Signals. Read every 6 hours</p>
   </div>
   <div class="sig-actions">
     {% if latest %}
@@ -230,7 +230,7 @@
     <span class="sig-anon-hero__eyebrow">Free Signal Score · 60 seconds · No signup</span>
     <h1 class="sig-anon-hero__title">Read all 7 signals your email list is broadcasting.</h1>
     <p class="sig-anon-hero__sub">
-      Most email tools check one signal: bounce rate. Your list is broadcasting six more —
+      Most email tools check one signal: bounce rate. Your list is broadcasting six more ·
       MPP-adjusted engagement, acquisition cohort quality, dormancy risk, domain reputation,
       authentication standing, and decay velocity. InbXr reads all 7 and gives you one Signal Score.
     </p>
@@ -238,7 +238,7 @@
     <label for="csvUploadInput" class="sig-anon-hero__drop">
       <div class="sig-anon-hero__drop-icon">📁</div>
       <p class="sig-anon-hero__drop-title">Upload a CSV with an "email" column</p>
-      <p class="sig-anon-hero__drop-sub">We'll calculate your Signal Score instantly — nothing is saved without your permission.</p>
+      <p class="sig-anon-hero__drop-sub">We'll calculate your Signal Score instantly. Nothing is saved without your permission.</p>
     </label>
     <input type="file" id="csvUploadInput" accept=".csv" style="display:none" onchange="uploadCsv(this)" />
 
@@ -249,7 +249,7 @@
     </div>
   </div>
 
-  {# Inline result card — revealed via JS after anonymous CSV upload #}
+  {# Inline result card. Revealed via JS after anonymous CSV upload #}
   <div id="anonResult" class="sig-anon-result" aria-live="polite"></div>
 
   {# ── Educational signal-by-signal breakdown (also renders the 7 signals to SEO) ── #}
@@ -261,12 +261,12 @@
   <div class="sig-edu-grid">
     {% set edu_signals = [
       {'key':'bounce_exposure','name':'01 · Bounce Exposure','weight':'25 pts','desc':'Historical bounce rate + predictive risk from role, disposable, and catch-all flags. The leading indicator for Gmail + Yahoo throttling.','market':False},
-      {'key':'engagement_trajectory','name':'02 · Engagement Trajectory','weight':'25 pts','desc':'Real human engagement over 30 days, adjusted for Apple Mail Privacy Protection using User-Agent, Apple IP range, and timing heuristics — not just @icloud domain matching.','market':True},
+      {'key':'engagement_trajectory','name':'02 · Engagement Trajectory','weight':'25 pts','desc':'Real human engagement over 30 days, adjusted for Apple Mail Privacy Protection using User-Agent, Apple IP range, and timing heuristics. Not just @icloud domain matching.','market':True},
       {'key':'acquisition_quality','name':'03 · Acquisition Quality','weight':'15 pts','desc':'Day-1, day-7, and day-30 engagement per acquisition cohort. Tells you which signup channel is dragging your list health down.','market':True},
       {'key':'domain_reputation','name':'04 · Domain Reputation','weight':'15 pts','desc':'Sender-domain blocklist status + recipient provider concentration. High Yahoo/AOL density = spikier deliverability risk.','market':False},
-      {'key':'dormancy_risk','name':'05 · Spam Trap Exposure','weight':'10 pts','desc':'Probabilistic spam trap risk based on the conditions that produce trap hits — dormancy depth, list age, and acquisition source pattern. Score the segment most likely to carry trap risk before you send.','market':False},
+      {'key':'dormancy_risk','name':'05 · Spam Trap Exposure','weight':'10 pts','desc':'Probabilistic spam trap risk based on the conditions that produce trap hits. Dormancy depth, list age, and acquisition source pattern. Score the segment most likely to carry trap risk before you send.','market':False},
       {'key':'authentication_standing','name':'06 · Authentication Standing','weight':'5 pts','desc':'SPF + DKIM + DMARC + List-Unsubscribe scored against the 2024-2025 Gmail, Yahoo, and Microsoft enforcement requirements.','market':False},
-      {'key':'decay_velocity','name':'07 · Decay Velocity','weight':'5 pts','desc':'Rate of change in your composite Signal Score. Trend language only — no fake day-count predictions.','market':False}
+      {'key':'decay_velocity','name':'07 · Decay Velocity','weight':'5 pts','desc':'Rate of change in your composite Signal Score. Trend language only. No fake day-count predictions.','market':False}
     ] %}
     {% for s in edu_signals %}
     <div class="sig-edu-card">
@@ -297,7 +297,7 @@
     <p class="sig-empty__text">
       Connect Mailchimp, ActiveCampaign, Mailgun, or AWeber and InbXr recalculates your
       Signal Score every 6 hours, fires Early Warning alerts when any dimension trends toward
-      danger, and runs the Signal Rules you set up — all hands-off.
+      danger, and runs the Signal Rules you set up. All hands-off.
     </p>
     <div class="sig-empty__actions">
       <a href="/signup" class="sig-btn sig-btn--primary">Create Free Account</a>
@@ -334,7 +334,7 @@
       <div class="sig-score-val">
         <span class="sig-score-num">{{ score_val }}</span>
         <span class="sig-score-grade" style="color: {{ '#059669' if latest.signal_grade in ['A','B'] else ('#d97706' if latest.signal_grade == 'C' else '#dc2626') }};">
-          {{ latest.signal_grade }} — {{ grade_info.label }}
+          {{ latest.signal_grade }}. {{ grade_info.label }}
         </span>
         <span class="sig-score-label">Signal Score</span>
       </div>
@@ -449,13 +449,13 @@
 
 {% endif %}
 
-{# Connected Platform Health — renders for all users (with or without Signal Score data) #}
+{# Connected Platform Health. Renders for all users (with or without Signal Score data) #}
 {% if tier in ('pro', 'agency', 'api') %}
 <div class="sig-esp-section" id="espHealthSection">
   <div class="sig-esp-section__header">
     <div>
       <h3 class="sig-esp-section__title">Connected Platform Health</h3>
-      <p class="sig-esp-section__sub">Aggregate data from your connected email platforms &mdash; backward-looking supporting view for your Signal Score.</p>
+      <p class="sig-esp-section__sub">Aggregate data from your connected email platforms. Backward-looking supporting view for your Signal Score.</p>
     </div>
     <a href="{{ url_for('integrations.integrations_page') }}" class="sig-btn sig-btn--outline" style="font-size:0.78rem;padding:6px 14px;">Manage Integrations</a>
   </div>
@@ -538,11 +538,11 @@ function renderAnonResult(d) {
   if (!box) return;
 
   const gradeLabels = {
-    A: 'Healthy — safe to send',
-    B: 'Good — watch your weakest signal',
-    C: 'Watch — one bad send from trouble',
-    D: 'Risk — fix before your next campaign',
-    F: 'Danger — stop sending until cleaned'
+    A: 'Healthy. Safe to send',
+    B: 'Good. Watch your weakest signal',
+    C: 'Watch. One bad send from trouble',
+    D: 'Risk. Fix before your next campaign',
+    F: 'Danger. Stop sending until cleaned'
   };
 
   const signalNames = {
@@ -627,7 +627,7 @@ function renderAnonResult(d) {
     if (grade === 'C') return 'c-yellow';
     return 'c-red';
   }
-  function fmt(n) { return n != null ? n.toLocaleString() : '—'; }
+  function fmt(n) { return n != null ? n.toLocaleString() : '·'; }
   function metricBarClass(val, good, warn) {
     if (val <= good) return 'sig-esp-bg-green';
     if (val <= warn) return 'sig-esp-bg-yellow';

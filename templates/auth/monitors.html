@@ -251,7 +251,7 @@
     try { parsed = a.data_json ? JSON.parse(a.data_json) : null; } catch(e) {}
     if (!parsed) return '';
 
-    // Blocklist alerts — show listed/delisted blocklists with delist links
+    // Blocklist alerts. Show listed/delisted blocklists with delist links
     if (a.alert_type && a.alert_type.includes('blocklist') && parsed.listed_details) {
       const items = (parsed.listed_details || []).map(bl => {
         const weight = bl.weight ? `<span style="color:${bl.weight==='critical'?'#dc2626':bl.weight==='major'?'#f59e0b':'#94a3b8'};font-size:0.7rem;font-weight:600;text-transform:uppercase;margin-left:6px;">${bl.weight}</span>` : '';
@@ -265,7 +265,7 @@
       detail = items.concat(delisted).join('');
     }
 
-    // DNS auth alerts — show specific record changes
+    // DNS auth alerts. Show specific record changes
     if (a.alert_type === 'dns_auth_change' && parsed.dns_changes && parsed.dns_changes.length) {
       detail = parsed.dns_changes.map(ch => {
         let desc = `<strong>${ch.record}</strong>: `;

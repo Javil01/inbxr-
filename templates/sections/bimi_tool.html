@@ -12,7 +12,7 @@
       <div class="field">
         <label for="bimiSelector">BIMI Selector <span class="optional">(optional)</span></label>
         <input type="text" id="bimiSelector" name="selector" placeholder="default" autocomplete="off" spellcheck="false" />
-        <span class="field-hint">Usually "default" — only change if your provider uses a custom selector</span>
+        <span class="field-hint">Usually "default". Only change if your provider uses a custom selector</span>
       </div>
     </div>
     <button type="submit" class="btn-analyze sender-submit" id="bimiSubmitBtn">
@@ -35,7 +35,7 @@
   <!-- Status Overview -->
   <div class="bimi-overview" id="bimiOverview">
     <div class="bimi-overview__left">
-      <div class="bimi-status-badge" id="bimiStatusBadge">—</div>
+      <div class="bimi-status-badge" id="bimiStatusBadge">·</div>
       <div class="bimi-score" id="bimiScore">
         <span class="bimi-score__num">0</span><span class="bimi-score__max">/100</span>
       </div>
@@ -93,7 +93,7 @@
           <div class="field">
             <label for="bimiVmcUrl">VMC Certificate URL <span class="optional">(optional)</span></label>
             <input type="url" id="bimiVmcUrl" name="vmc_url" placeholder="https://example.com/vmc.pem" autocomplete="off" />
-            <span class="field-hint">Verified Mark Certificate — required for Gmail logo display</span>
+            <span class="field-hint">Verified Mark Certificate. Required for Gmail logo display</span>
           </div>
         </div>
         <button type="submit" class="btn-analyze sender-submit" id="bimiGenBtn">

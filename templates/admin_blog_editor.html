@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>InbXr Admin — {{ 'Edit Post' if post else 'New Post' }}</title>
+  <title>InbXr Admin. {{ 'Edit Post' if post else 'New Post' }}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/static/css/style.css?v=20260403f" />
@@ -163,7 +163,7 @@
     {% if post %}
     <div class="blog-editor__panel blog-editor__ai-panel">
       <h3 style="color:#a78bfa;">Newsletter Cross-Post</h3>
-      <p style="font-size:0.75rem; color:#94a3b8; margin-bottom:10px;">Rewrite this post for the InBoXr Beehiiv newsletter — punchy, direct, conversational.</p>
+      <p style="font-size:0.75rem; color:#94a3b8; margin-bottom:10px;">Rewrite this post for the InBoXr Beehiiv newsletter. Punchy, direct, conversational.</p>
       <button class="blog-editor__btn" onclick="rewriteForNewsletter()" id="nlBtn"
         style="width:100%; text-align:center; background:rgba(167,139,250,0.15); color:#a78bfa; border-color:rgba(167,139,250,0.3);">
         Convert to Newsletter

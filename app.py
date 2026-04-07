@@ -1,5 +1,5 @@
 """
-InbXr — Email Intelligence Platform
+InbXr · Email Intelligence Platform
 Flask backend: analysis API + file parsing + admin editor + user auth.
 """
 
@@ -657,7 +657,7 @@ def _rate_limit_response(info):
     """Build a 429 JSON response with signup prompt for anon users."""
     if info.get("anonymous"):
         return jsonify({
-            "error": "You've used your 3 free checks for today. Create a free account to keep going — it takes 10 seconds.",
+            "error": "You've used your 3 free checks for today. Create a free account to keep going. It takes 10 seconds.",
             "limit_info": info,
             "signup_url": "/signup",
         }), 429
@@ -2151,8 +2151,8 @@ def index():
     return render_template("email_test.html",
                            is_admin=_is_admin(),
                            active_page="index",
-                           page_title="InbXr — The 7 Inbox Signals · Email Deliverability Intelligence",
-                           page_description="Most email tools read one inbox signal. InbXr reveals all 7 — including two dimensions no other platform measures. Get your free Signal Score in 60 seconds.",
+                           page_title="InbXr · The 7 Inbox Signals · Email Deliverability Intelligence",
+                           page_description="Most email tools read one inbox signal. InbXr reveals all 7. including two dimensions no other platform measures. Get your free Signal Score in 60 seconds.",
                            canonical_url="https://inbxr.us/")
 
 
@@ -2161,7 +2161,7 @@ def analyzer():
     return render_template("index.html",
                            is_admin=_is_admin(),
                            active_page="analyzer",
-                           page_title="Email Copy Analyzer — InbXr",
+                           page_title="Email Copy Analyzer · InbXr",
                            page_description="Paste your email and get a 100-point copy score, framework detection, spam risk analysis, readability metrics, and AI-powered framework rewrites.",
                            canonical_url="https://inbxr.us/analyzer")
 
@@ -2171,8 +2171,8 @@ def sender():
     return render_template("sender.html",
                            is_admin=_is_admin(),
                            active_page="sender",
-                           page_title="Sender Reputation Check — InbXr",
-                           page_description="Check your domain's email authentication (SPF, DKIM, DMARC), scan 100+ blocklists, and get DNS fix records — all in one tool.",
+                           page_title="Sender Reputation Check · InbXr",
+                           page_description="Check your domain's email authentication (SPF, DKIM, DMARC), scan 100+ blocklists, and get DNS fix records. all in one tool.",
                            canonical_url="https://inbxr.us/sender")
 
 
@@ -2181,7 +2181,7 @@ def support_page():
     return render_template("support.html",
                            is_admin=_is_admin(),
                            active_page="support",
-                           page_title="Help & Support — InbXr",
+                           page_title="Help & Support · InbXr",
                            page_description="Get help with InbXr tools. FAQ, AI support chat, and contact information.",
                            canonical_url="https://inbxr.us/support")
 
@@ -2205,8 +2205,8 @@ def how_different():
     return render_template("how_different.html",
                            is_admin=_is_admin(),
                            active_page="how_different",
-                           page_title="How InbXr Is Different — The 7 Inbox Signals",
-                           page_description="Most email tools read one inbox signal. InbXr reveals all 7 — including two dimensions no other platform currently measures. Reads what is broadcasting and fixes what it found.",
+                           page_title="How InbXr Is Different · The 7 Inbox Signals",
+                           page_description="Most email tools read one inbox signal. InbXr reveals all 7. including two dimensions no other platform currently measures. Reads what is broadcasting and fixes what it found.",
                            canonical_url="https://inbxr.us/how-inbxr-is-different")
 
 
@@ -2343,7 +2343,7 @@ def subject_scorer():
     return render_template("subject_scorer.html",
                            is_admin=_is_admin(),
                            active_page="subject_scorer",
-                           page_title="Subject Line Scorer — InbXr",
+                           page_title="Subject Line Scorer · InbXr",
                            page_description="A/B test up to 10 subject lines across 7 dimensions. Get scores, rankings, and actionable tips to boost open rates.",
                            canonical_url="https://inbxr.us/subject-scorer")
 
@@ -2986,7 +2986,7 @@ def bimi():
     return render_template("bimi_checker.html",
                            is_admin=_is_admin(),
                            active_page="bimi",
-                           page_title="BIMI Checker — InbXr",
+                           page_title="BIMI Checker · InbXr",
                            page_description="Validate your BIMI record, SVG logo, and VMC certificate. Check if your brand logo will appear in email inboxes.",
                            canonical_url="https://inbxr.us/bimi")
 
@@ -2996,8 +2996,8 @@ def placement():
     return render_template("placement.html",
                            is_admin=_is_admin(),
                            active_page="placement",
-                           page_title="Inbox Placement Test — InbXr",
-                           page_description="Send a test email and see exactly where it lands — inbox, spam, or promotions — across Gmail, Yahoo, and Outlook.",
+                           page_title="Inbox Placement Test · InbXr",
+                           page_description="Send a test email and see exactly where it lands. inbox, spam, or promotions. Across Gmail, Yahoo, and Outlook.",
                            canonical_url="https://inbxr.us/placement")
 
 
@@ -3104,7 +3104,7 @@ def header_analyzer():
     return render_template("header_analyzer.html",
                            is_admin=_is_admin(),
                            active_page="header_analyzer",
-                           page_title="Email Header Analyzer — InbXr",
+                           page_title="Email Header Analyzer · InbXr",
                            page_description="Paste raw email headers and get authentication verdicts, routing details, TLS analysis, and delivery delay breakdowns.",
                            canonical_url="https://inbxr.us/header-analyzer")
 
@@ -3982,7 +3982,7 @@ def bulk_domain_check_page():
     return render_template("bulk_domain_check.html",
                            is_admin=_is_admin(),
                            active_page="bulk_domain_check",
-                           page_title="Bulk Domain Checker — InbXr",
+                           page_title="Bulk Domain Checker · InbXr",
                            page_description="Check up to 10 domains at once. Get instant SPF, DKIM, DMARC, MX, and blocklist health grades for all your sending domains.",
                            canonical_url="https://inbxr.us/bulk-domain-check")
 
@@ -4093,7 +4093,7 @@ def blacklist_monitor():
     return render_template("blacklist_monitor.html",
                            is_admin=_is_admin(),
                            active_page="blacklist_monitor",
-                           page_title="Blacklist Monitor — InbXr",
+                           page_title="Blacklist Monitor · InbXr",
                            page_description="Monitor your domains against 100+ email blocklists. Get alerts when your domain gets listed or delisted.",
                            canonical_url="https://inbxr.us/blacklist-monitor")
 
@@ -4171,7 +4171,7 @@ def warmup():
     return render_template("warmup.html",
                            is_admin=_is_admin(),
                            active_page="warmup",
-                           page_title="Warm-up Tracker — InbXr",
+                           page_title="Warm-up Tracker · InbXr",
                            page_description="Track your IP and domain warm-up campaigns with daily volume logging, progress charts, and best-practice guidance.",
                            canonical_url="https://inbxr.us/warmup")
 
@@ -4259,7 +4259,7 @@ def email_verifier():
     return render_template("email_verifier.html",
                            is_admin=_is_admin(),
                            active_page="email_verifier",
-                           page_title="Email Verifier — InbXr",
+                           page_title="Email Verifier · InbXr",
                            page_description="Verify any email address instantly. Check syntax, MX records, disposable status, and SMTP mailbox existence.",
                            canonical_url="https://inbxr.us/email-verifier")
 
@@ -4606,7 +4606,7 @@ def ai_rewrite():
     from modules.ai_rewriter import rewrite_email, is_available, AIRewriteError
 
     if not is_available():
-        return jsonify({"error": "AI rewrite not available — set GROQ_API_KEY environment variable."}), 503
+        return jsonify({"error": "AI rewrite not available. Set GROQ_API_KEY environment variable."}), 503
 
     try:
         result = rewrite_email(
@@ -4657,7 +4657,7 @@ def ai_rewrite_framework():
     from modules.ai_rewriter import rewrite_with_framework, is_available, AIRewriteError
 
     if not is_available():
-        return jsonify({"error": "AI rewrite not available — set GROQ_API_KEY environment variable."}), 503
+        return jsonify({"error": "AI rewrite not available. Set GROQ_API_KEY environment variable."}), 503
 
     framework_name = None
     framework_steps = None
@@ -4730,7 +4730,7 @@ def ai_optimize_primary():
     from modules.ai_rewriter import optimize_for_primary, is_available, AIRewriteError
 
     if not is_available():
-        return jsonify({"error": "AI not available — set GROQ_API_KEY environment variable."}), 503
+        return jsonify({"error": "AI not available. Set GROQ_API_KEY environment variable."}), 503
 
     try:
         result = optimize_for_primary(subject=subject, body=body)

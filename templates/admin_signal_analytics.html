@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>InbXr Admin — Signal Analytics</title>
+  <title>InbXr Admin. Signal Analytics</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/static/css/style.css?v=20260403f" />
@@ -62,37 +62,37 @@
   <div class="sa-header">
     <div>
       <h1>Signal Intelligence Analytics</h1>
-      <p class="sa-header__sub">7 Inbox Signals — adoption, scores, alerts, rules</p>
+      <p class="sa-header__sub">7 Inbox Signals. Adoption, scores, alerts, rules</p>
     </div>
     <a href="/admin" class="sa-back">&larr; Admin Dashboard</a>
   </div>
 
   <div class="sa-stats">
     <div class="sa-stat">
-      <span class="sa-stat__num sa-stat__num--blue" id="statTotalScores">—</span>
+      <span class="sa-stat__num sa-stat__num--blue" id="statTotalScores">·</span>
       <span class="sa-stat__label">Users with Signal Score</span>
     </div>
     <div class="sa-stat">
-      <span class="sa-stat__num sa-stat__num--red" id="statDangerCount">—</span>
+      <span class="sa-stat__num sa-stat__num--red" id="statDangerCount">·</span>
       <span class="sa-stat__label">In Danger (F grade)</span>
       <div class="sa-stat__sub">Flag for outreach</div>
     </div>
     <div class="sa-stat">
-      <span class="sa-stat__num sa-stat__num--amber" id="statRulesAdoption">—%</span>
+      <span class="sa-stat__num sa-stat__num--amber" id="statRulesAdoption">·%</span>
       <span class="sa-stat__label">Rules Adoption</span>
       <div class="sa-stat__sub" id="statRulesUsers">Pro+ users with rules</div>
     </div>
     <div class="sa-stat">
-      <span class="sa-stat__num sa-stat__num--green" id="statAlertsWeek">—</span>
+      <span class="sa-stat__num sa-stat__num--green" id="statAlertsWeek">·</span>
       <span class="sa-stat__label">Early Warnings (7d)</span>
     </div>
     <div class="sa-stat">
-      <span class="sa-stat__num sa-stat__num--blue" id="statRulesFiredWeek">—</span>
+      <span class="sa-stat__num sa-stat__num--blue" id="statRulesFiredWeek">·</span>
       <span class="sa-stat__label">Rules Fired (7d)</span>
       <div class="sa-stat__sub">Live rules only</div>
     </div>
     <div class="sa-stat">
-      <span class="sa-stat__num sa-stat__num--blue" id="statContacts">—</span>
+      <span class="sa-stat__num sa-stat__num--blue" id="statContacts">·</span>
       <span class="sa-stat__label">Contacts Tracked</span>
     </div>
   </div>
@@ -114,7 +114,7 @@
   </div>
 
   <div class="sa-panel">
-    <h3 class="sa-panel__title">Users in Danger Zone (F grade) — Outreach Targets</h3>
+    <h3 class="sa-panel__title">Users in Danger Zone (F grade). Outreach Targets</h3>
     <div id="dangerTable">
       <div class="sa-empty">Loading…</div>
     </div>
@@ -184,7 +184,7 @@ fetch('/admin/api/signal-analytics')
             `).join('')}
           </tbody>
         </table>`
-      : '<div class="sa-empty">No users in Danger Zone — that\\'s good news.</div>';
+      : '<div class="sa-empty">No users in Danger Zone. That\\'s good news.</div>';
     document.getElementById('dangerTable').innerHTML = dangerHtml;
   })
   .catch(e => {

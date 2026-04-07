@@ -44,9 +44,9 @@
       <div class="field">
         <label for="dmarcPolicy">DMARC Policy</label>
         <select id="dmarcPolicy" name="dmarc_policy">
-          <option value="none">none — monitor only</option>
-          <option value="quarantine">quarantine — send failures to spam</option>
-          <option value="reject" selected>reject — block failures entirely</option>
+          <option value="none">none. Monitor only</option>
+          <option value="quarantine">quarantine. Send failures to spam</option>
+          <option value="reject" selected>reject. Block failures entirely</option>
         </select>
         <span class="field-hint">Start with "none" if you're setting up DMARC for the first time</span>
       </div>
@@ -55,8 +55,8 @@
       <div class="field">
         <label for="spfMechanism">SPF Enforcement</label>
         <select id="spfMechanism" name="spf_mechanism">
-          <option value="-all" selected>-all (hard fail — recommended)</option>
-          <option value="~all">~all (soft fail — more lenient)</option>
+          <option value="-all" selected>-all (hard fail. Recommended)</option>
+          <option value="~all">~all (soft fail. More lenient)</option>
         </select>
       </div>
 

@@ -32,7 +32,7 @@
 <div class="meth-wrap">
 
 <span class="meth-eyebrow">Methodology · How we calculate the 7 signals</span>
-<h1 class="meth-title">The math behind InbXr — and what we explicitly don't fake.</h1>
+<h1 class="meth-title">The math behind InbXr. And what we explicitly don't fake.</h1>
 <p class="meth-intro">
   Every deliverability tool has a calculation methodology. Most keep theirs
   opaque. We publish ours in full, including the formulas, the data sources,
@@ -77,7 +77,7 @@
     <div class="meth-signal__body">
       Real human engagement over the last 30 days, after removing contacts flagged as
       likely Apple Mail Privacy Protection machine openers. This is the signal most tools
-      get wrong — almost all competitors just check if the recipient is on iCloud, which
+      get wrong. Almost all competitors just check if the recipient is on iCloud, which
       catches roughly 15% of real MPP opens.
     </div>
   </div>
@@ -157,7 +157,7 @@
     <div class="meth-signal__body">
       We cannot confirm an individual address is a spam trap without hitting it. What
       we can do is read the conditions that produce trap hits with high statistical
-      reliability — and score the segment most likely to carry that risk so you can
+      reliability. And score the segment most likely to carry that risk so you can
       suppress them first. This is risk scoring, not trap identification.
     </div>
   </div>
@@ -175,7 +175,7 @@
       Compliance with the 2024-2025 Gmail, Yahoo, and Microsoft bulk sender requirements:
       SPF valid, DKIM signed, DMARC policy (must be quarantine or reject, not none),
       and one-click List-Unsubscribe headers. Weighted lightly because it's binary
-      gating — if broken, everything else is moot.
+      gating. If broken, everything else is moot.
     </div>
   </div>
   <div class="meth-signal__row">
@@ -206,7 +206,7 @@
     <div class="meth-signal__body">
       Some tools advertise "your list will hit danger in 23 days." That requires historical
       training data on comparable senders which we don't yet have. Instead of making up a
-      number, we use trend language — "declining toward danger" is honest, "23 days" isn't.
+      number, we use trend language. "declining toward danger" is honest, "23 days" isn't.
       Once we have 6+ months of cross-sender historical data, we may add proper predictions
       with error bars disclosed.
     </div>
@@ -223,7 +223,7 @@
       specific address is a Spamhaus, Abusix, or Cloudmark trap without hitting it. What
       Signal 05 does is read the upstream <em>conditions</em> that produce trap hits
       (dormancy depth, list age, acquisition source pattern) and score the probability
-      against your list before you send. Risk scoring, not trap identification — and
+      against your list before you send. Risk scoring, not trap identification. And
       we say so on Signal 05 above.
     </div>
   </div>
@@ -239,14 +239,14 @@
     <div class="meth-dont__item-body">
       <strong>MPP adjustment based only on @icloud.com domain matching.</strong> That method
       catches ~15% of real MPP opens. We use User-Agent, Apple IP range, timing heuristics,
-      and domain matching as a hybrid — with the confidence level disclosed per ESP.
+      and domain matching as a hybrid. With the confidence level disclosed per ESP.
     </div>
   </div>
 
   <div class="meth-dont__item">
     <div class="meth-dont__item-body">
       <strong>Content-based "spam score" predictions.</strong> Content-based heuristics are
-      wildly unreliable in 2026 — inbox providers use ML models on hundreds of features.
+      wildly unreliable in 2026. Inbox providers use ML models on hundreds of features.
       We don't pretend a regex against your subject line tells you whether a campaign will
       deliver. Instead we give you the 7 upstream signals that actually matter.
     </div>
@@ -255,7 +255,7 @@
 
 <div class="meth-cta">
   <h2 class="meth-cta__title">Questions about the methodology?</h2>
-  <p style="font-size:0.9rem;color:var(--text-2);margin:0 0 16px;">Reply to any InbXr email — Joe reads every response personally.</p>
+  <p style="font-size:0.9rem;color:var(--text-2);margin:0 0 16px;">Reply to any InbXr email. Joe reads every response personally.</p>
   <a href="/signal-score" class="meth-cta__btn">Try it on your list &rarr;</a>
 </div>
 

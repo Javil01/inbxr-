@@ -72,7 +72,7 @@ function generateSequence() {
   const results = document.getElementById('results');
   btn.disabled = true;
   btn.textContent = 'Generating…';
-  results.innerHTML = '<div class="rs-loading">AI is writing your sequence — this takes 15-30 seconds…</div>';
+  results.innerHTML = '<div class="rs-loading">AI is writing your sequence. This takes 15-30 seconds…</div>';
 
   const body = {
     segment: document.getElementById('segment').value,

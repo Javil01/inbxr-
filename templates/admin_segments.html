@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>InbXr Admin — User Segments</title>
+  <title>InbXr Admin. User Segments</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/static/css/style.css?v=20260403f" />
@@ -163,12 +163,12 @@
     var el = document.getElementById('segmentContent');
     var data = segmentData[tab] || [];
     var descs = {
-      power_free: { title: 'Power Free Users', desc: 'Free tier users with 50+ total actions — prime upsell candidates for Pro.' },
-      at_risk: { title: 'At-Risk Paid Users', desc: 'Paid users with fewer than 5 actions in the last 30 days — may churn.' },
+      power_free: { title: 'Power Free Users', desc: 'Free tier users with 50+ total actions. Prime upsell candidates for Pro.' },
+      at_risk: { title: 'At-Risk Paid Users', desc: 'Paid users with fewer than 5 actions in the last 30 days. May churn.' },
       active_7d: { title: 'Active Users (Last 7 Days)', desc: 'Most active users this week, sorted by action count.' },
       dormant: { title: 'Dormant Users', desc: 'Users with no activity in 30+ days but have used the platform before.' },
-      new_users: { title: 'New Signups (Last 7 Days)', desc: 'Users who signed up this week — monitor onboarding.' },
-      never_used: { title: 'Never Used', desc: 'Signed up but never performed any action — need activation.' },
+      new_users: { title: 'New Signups (Last 7 Days)', desc: 'Users who signed up this week. Monitor onboarding.' },
+      never_used: { title: 'Never Used', desc: 'Signed up but never performed any action. Need activation.' },
     };
 
     var info = descs[tab] || { title: tab, desc: '' };
@@ -386,7 +386,7 @@
           var found = d.hourly_logins.find(function(r){ return parseInt(r.hour) === h; });
           var cnt = found ? found.cnt : 0;
           var pct = Math.max(1, cnt / maxH * 100);
-          html += '<div class="as-hour-bar" style="height:' + pct + '%" title="' + h + ':00 — ' + cnt + ' logins"></div>';
+          html += '<div class="as-hour-bar" style="height:' + pct + '%" title="' + h + ':00. ' + cnt + ' logins"></div>';
         }
         html += '</div><div style="display:flex;justify-content:space-between;font-size:0.58rem;color:var(--text-3);margin-top:4px"><span>0:00</span><span>6:00</span><span>12:00</span><span>18:00</span><span>23:00</span></div>';
       } else {

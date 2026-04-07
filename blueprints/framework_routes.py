@@ -31,7 +31,7 @@ def frameworks_page():
     return render_template(
         "frameworks.html",
         active_page="frameworks",
-        page_title="Framework Lab — Copywriting Frameworks for Email | InbXr",
+        page_title="Framework Lab · Copywriting Frameworks for Email | InbXr",
         page_description="Browse 16 proven copywriting frameworks, build custom frameworks, and apply them to AI rewrites. Master email copy with the InbXr Method.",
         canonical_url="https://inbxr.us/frameworks",
     )

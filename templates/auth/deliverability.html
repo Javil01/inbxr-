@@ -131,14 +131,14 @@ function gradeClass(grade) {
 }
 
 function metricColor(val, thresholds) {
-  // thresholds = { good: X, warn: Y } — lower is better for bounce/complaint
+  // thresholds = { good: X, warn: Y }. Lower is better for bounce/complaint
   if (val <= thresholds.good) return 'bg-green';
   if (val <= thresholds.warn) return 'bg-yellow';
   return 'bg-red';
 }
 
 function pct(n, d) { return d ? ((n / d) * 100).toFixed(1) : '0.0'; }
-function fmt(n) { return n != null ? n.toLocaleString() : '—'; }
+function fmt(n) { return n != null ? n.toLocaleString() : '·'; }
 
 function renderDashboard(d) {
   const el = document.getElementById('dashContent');

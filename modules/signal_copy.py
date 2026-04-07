@@ -1,5 +1,5 @@
 """
-InbXr Signal Intelligence — Copy Constants
+InbXr Signal Intelligence. Copy Constants
 
 All user-facing copy for the 7 Inbox Signals system lives here.
 Reference: SIGNAL_SPEC.md for locked decisions.
@@ -74,7 +74,7 @@ SIGNAL_GRADE_COPY = {
         'label': 'Excellent',
         'color': 'success',
         'description': 'Your list is in strong condition. Signal Watch is monitoring for drift.',
-        'cta': 'Maintain your score — set Signal Rules to stay here automatically.',
+        'cta': 'Maintain your score. Set Signal Rules to stay here automatically.',
     },
     'B': {
         'label': 'Good',
@@ -123,7 +123,7 @@ SIGNAL_DIMENSION_COPY = {
         'number': '01',
         'weight': 25,
         'note': 'Predictive, not historical',
-        'tooltip': 'Predictive bounce risk — not just past bounces, but how many valid-today addresses will bounce in the next 30–60 days.',
+        'tooltip': 'Predictive bounce risk. Not just past bounces, but how many valid-today addresses will bounce in the next 30–60 days.',
         'what_it_reads': 'Domain aging · MX record changes · catch-all probability · role address concentration · disposable domain detection',
         'market_first': False,
         'free_tier_locked': False,
@@ -133,7 +133,7 @@ SIGNAL_DIMENSION_COPY = {
         'number': '02',
         'weight': 25,
         'note': 'MPP-adjusted · Market-first',
-        'tooltip': 'The direction your real human engagement is moving — with Apple MPP machine opens removed where detectable.',
+        'tooltip': 'The direction your real human engagement is moving. With Apple MPP machine opens removed where detectable.',
         'what_it_reads': 'Click signals · reply signals · real opens (MPP removed) · 30/60/90 day trends',
         'market_first': True,
         'market_first_label': 'MPP-adjusted · Detection accuracy varies by ESP',
@@ -144,7 +144,7 @@ SIGNAL_DIMENSION_COPY = {
         'number': '03',
         'weight': 15,
         'note': 'Inferred from behaviour · Market-first',
-        'tooltip': 'How your contacts were acquired — inferred from their day-1 engagement patterns, not declared by you.',
+        'tooltip': 'How your contacts were acquired. Inferred from their day-1 engagement patterns, not declared by you.',
         'what_it_reads': 'Day-1 engagement rate per import cohort · engagement onset patterns · cohort vs cohort drift',
         'market_first': True,
         'market_first_label': 'Inferred from behaviour · No other tool reads this',
@@ -155,7 +155,7 @@ SIGNAL_DIMENSION_COPY = {
         'number': '04',
         'weight': 15,
         'note': 'Sender and recipient side',
-        'tooltip': 'Your sending domain AND the receiving domains in your list — both sides of the reputation equation.',
+        'tooltip': 'Your sending domain AND the receiving domains in your list. Both sides of the reputation equation.',
         'what_it_reads': 'Sender blacklist status · recipient domain concentration · Yahoo/AOL risk · free-email ratio',
         'market_first': False,
         'free_tier_locked': False,
@@ -165,12 +165,12 @@ SIGNAL_DIMENSION_COPY = {
         # Internal Python identifier stays 'dormancy_risk' to avoid renaming
         # the entire signal pipeline. Formula calculates spam trap PROBABILITY
         # from the conditions that produce trap hits (dormancy depth, list age,
-        # acquisition source pattern) — framed as "probabilistic risk scoring".
+        # acquisition source pattern). Framed as "probabilistic risk scoring".
         'name': 'Spam Trap Exposure',
         'number': '05',
         'weight': 10,
         'note': 'Probabilistic risk scoring',
-        'tooltip': 'Probabilistic spam trap risk based on the conditions that produce trap hits — dormancy depth, list age, and acquisition source pattern. Cannot confirm a trap without hitting one, so we score the probability before you send.',
+        'tooltip': 'Probabilistic spam trap risk based on the conditions that produce trap hits. Dormancy depth, list age, and acquisition source pattern. Cannot confirm a trap without hitting one, so we score the probability before you send.',
         'what_it_reads': 'Dormancy depth (180+ days, 365+ days) · list age · acquisition source pattern',
         'market_first': False,
         'free_tier_locked': False,
@@ -190,7 +190,7 @@ SIGNAL_DIMENSION_COPY = {
         'number': '07',
         'weight': 5,
         'note': 'Rate and direction of list degradation',
-        'tooltip': 'How fast your list is changing — expressed as a direction (improving / stable / declining) and a rate. No specific day predictions.',
+        'tooltip': 'How fast your list is changing. Expressed as a direction (improving / stable / declining) and a rate. No specific day predictions.',
         'what_it_reads': 'Weekly segment migration rate · Active/At-Risk/Dormant ratio trends · Signal Score history',
         'market_first': False,
         'free_tier_locked': False,
@@ -317,7 +317,7 @@ SEGMENT_LABELS = {
     'dormant': {
         'label': 'Dormant',
         'days_range': '180+ days',
-        'description': 'No engagement for 6+ months. High deliverability risk — suppress or re-permission.',
+        'description': 'No engagement for 6+ months. High deliverability risk. Suppress or re-permission.',
         'color': 'red',
     },
     'unknown': {
@@ -332,7 +332,7 @@ SEGMENT_LABELS = {
 # ── 8. Signal Rule Pre-Built Templates ────────────────
 
 # Pre-built templates users can enable with one click.
-# All default to dry-run mode — user must explicitly flip to live.
+# All default to dry-run mode. User must explicitly flip to live.
 
 PRE_BUILT_RULE_TEMPLATES = [
     {
