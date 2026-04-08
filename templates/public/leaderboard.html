@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{ title }}</title>
+  <meta name="description" content="{{ meta_description }}">
+  <meta property="og:title" content="{{ title }}">
+  <meta property="og:description" content="{{ meta_description }}">
+  <meta property="og:url" content="https://inbxr.us/leaderboard">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://inbxr.us/leaderboard">
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/style.css?v=20260408f" />
+  {% include 'sections/_head_meta.html' %}
+</head>
+<body class="email-test-page">
+
+{% include 'sections/header.html' %}
+
+<style>
+.lb-wrap { max-width: 960px; margin: 0 auto; padding: 60px 24px 80px; }
+.lb-eyebrow {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 4px 14px;
+  border-radius: 99px;
+  background: rgba(37,99,235,0.08);
+  color: var(--brand, #2563eb);
+  margin-bottom: 18px;
+}
+.lb-h1 {
+  font-size: 2.4rem;
+  font-weight: 900;
+  line-height: 1.15;
+  color: var(--text-1);
+  margin: 0 0 14px;
+  letter-spacing: -0.02em;
+}
+.lb-sub {
+  font-size: 1.1rem;
+  color: var(--text-2);
+  margin: 0 0 28px;
+  line-height: 1.55;
+  max-width: 680px;
+}
+
+.lb-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 14px;
+  margin: 0 0 32px;
+}
+.lb-stat {
+  background: #f8fafc;
+  border: 1px solid var(--border-1, #e2e8f0);
+  border-radius: 12px;
+  padding: 18px 20px;
+}
+.lb-stat__num { font-size: 1.8rem; font-weight: 900; color: var(--text-1); line-height: 1.1; }
+.lb-stat__label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-3); margin-top: 4px; }
+
+.lb-grade-strip {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 0 0 24px;
+}
+.lb-grade-chip {
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding: 6px 14px;
+  border-radius: 999px;
+  color: var(--text-2);
+  background: #f8fafc;
+  border: 1px solid var(--border-1, #e2e8f0);
+  text-decoration: none;
+}
+.lb-grade-chip:hover { background: #f0f9ff; border-color: #bae6fd; }
+.lb-grade-chip--active { background: var(--brand, #2563eb); color: #fff; border-color: var(--brand, #2563eb); }
+.lb-grade-chip b { margin-left: 6px; opacity: 0.7; font-weight: 600; }
+
+.lb-focus {
+  background: #fffbeb;
+  border: 1px solid #fcd34d;
+  border-left-width: 4px;
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 0 0 24px;
+  font-size: 0.92rem;
+  color: #78350f;
+}
+.lb-focus strong { color: #0f172a; }
+.lb-focus__rank { font-weight: 900; color: var(--brand, #2563eb); }
+
+.lb-table-wrap { overflow-x: auto; }
+.lb-table { width: 100%; border-collapse: collapse; }
+.lb-table th {
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-3);
+  text-align: left;
+  padding: 10px 14px;
+  border-bottom: 2px solid var(--border-1, #e2e8f0);
+  background: #f8fafc;
+}
+.lb-table td {
+  padding: 14px;
+  border-bottom: 1px solid var(--border-1, #e2e8f0);
+  font-size: 0.92rem;
+  color: var(--text-2);
+}
+.lb-table tr:hover { background: #f8fafc; }
+.lb-table tr.lb-row--focus { background: #fffbeb; border-left: 4px solid #fcd34d; }
+
+.lb-rank {
+  font-weight: 900;
+  color: var(--text-1);
+  width: 40px;
+  font-variant-numeric: tabular-nums;
+}
+.lb-rank--top { color: var(--brand, #2563eb); }
+.lb-domain { font-weight: 700; color: var(--text-1); }
+.lb-domain a { color: inherit; text-decoration: none; }
+.lb-domain a:hover { color: var(--brand, #2563eb); }
+
+.lb-score { font-variant-numeric: tabular-nums; font-weight: 800; color: var(--text-1); }
+.lb-grade-pill {
+  display: inline-block;
+  font-size: 0.78rem;
+  font-weight: 800;
+  padding: 4px 12px;
+  border-radius: 999px;
+  min-width: 32px;
+  text-align: center;
+}
+.lb-grade-pill--A { background: rgba(5,150,105,0.1); color: #065f46; }
+.lb-grade-pill--B { background: rgba(8,145,178,0.1); color: #155e75; }
+.lb-grade-pill--C { background: rgba(217,119,6,0.1); color: #92400e; }
+.lb-grade-pill--D { background: rgba(220,38,38,0.1); color: #991b1b; }
+.lb-grade-pill--F { background: rgba(153,27,27,0.15); color: #7f1d1d; }
+
+.lb-signals {
+  display: flex;
+  gap: 16px;
+  font-size: 0.78rem;
+  color: var(--text-3);
+}
+.lb-signals span { white-space: nowrap; }
+.lb-signals b { color: var(--text-1); font-weight: 700; }
+
+.lb-scans {
+  font-size: 0.78rem;
+  color: var(--text-3);
+  white-space: nowrap;
+}
+
+.lb-empty {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-3);
+  border: 2px dashed var(--border-1, #e2e8f0);
+  border-radius: 14px;
+}
+
+.lb-cta {
+  text-align: center;
+  padding: 32px 24px;
+  background: linear-gradient(135deg, #f0f9ff 0%, #fff 100%);
+  border: 1px solid #bae6fd;
+  border-radius: 16px;
+  margin-top: 40px;
+}
+.lb-cta__h { font-size: 1.4rem; font-weight: 800; color: var(--text-1); margin: 0 0 6px; }
+.lb-cta__sub { font-size: 0.95rem; color: var(--text-2); margin: 0 0 20px; line-height: 1.5; }
+.lb-cta__btn {
+  display: inline-block;
+  background: var(--brand, #2563eb);
+  color: #fff;
+  padding: 14px 32px;
+  border-radius: 999px;
+  font-weight: 700;
+  text-decoration: none;
+  font-size: 0.95rem;
+}
+
+@media (max-width: 680px) {
+  .lb-h1 { font-size: 1.7rem; }
+  .lb-signals { display: none; }
+}
+</style>
+
+<main class="lb-wrap">
+
+  <span class="lb-eyebrow">Public leaderboard &middot; Updated in real time</span>
+  <h1 class="lb-h1">Top-scoring email domains</h1>
+  <p class="lb-sub">
+    Every domain typed into the InbXr homepage gets scored by the
+    <strong>Signal Engine</strong>. This board shows the top 50 by Domain
+    Signal Score, ranked across authentication and reputation. Anonymized
+    aggregate data. Add your own in 30 seconds.
+  </p>
+
+  {% if stats.total_domains %}
+  <div class="lb-stats">
+    <div class="lb-stat">
+      <div class="lb-stat__num">{{ '{:,}'.format(stats.total_domains) }}</div>
+      <div class="lb-stat__label">Unique domains scored</div>
+    </div>
+    <div class="lb-stat">
+      <div class="lb-stat__num">{{ '{:,}'.format(stats.total_scans) }}</div>
+      <div class="lb-stat__label">Total scans run</div>
+    </div>
+    <div class="lb-stat">
+      <div class="lb-stat__num">{{ stats.avg_score|round|int }}</div>
+      <div class="lb-stat__label">Average Signal Score</div>
+    </div>
+    <div class="lb-stat">
+      <div class="lb-stat__num">{{ stats.grade_distribution.get('A', 0) + stats.grade_distribution.get('B', 0) }}</div>
+      <div class="lb-stat__label">Domains grade A or B</div>
+    </div>
+  </div>
+
+  <div class="lb-grade-strip">
+    <a href="/leaderboard" class="lb-grade-chip{% if not grade_filter %} lb-grade-chip--active{% endif %}">All grades</a>
+    {% for g in ['A', 'B', 'C', 'D', 'F'] %}
+      <a href="/leaderboard?grade={{ g }}" class="lb-grade-chip{% if grade_filter == g %} lb-grade-chip--active{% endif %}">Grade {{ g }}<b>{{ stats.grade_distribution.get(g, 0) }}</b></a>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {% if focus_rank %}
+  <div class="lb-focus">
+    <strong>{{ focus_rank.domain }}</strong> is currently ranked <span class="lb-focus__rank">#{{ focus_rank.rank }}</span> with a score of <strong>{{ focus_rank.score }}/100</strong> (Grade {{ focus_rank.grade }}).
+  </div>
+  {% endif %}
+
+  {% if top_domains %}
+  <div class="lb-table-wrap">
+    <table class="lb-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Domain</th>
+          <th>Score</th>
+          <th>Grade</th>
+          <th>Signals</th>
+          <th>Scans</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for d in top_domains %}
+          <tr{% if focus_domain and d.domain == focus_domain %} class="lb-row--focus"{% endif %}>
+            <td class="lb-rank {% if loop.index <= 10 %}lb-rank--top{% endif %}">{{ loop.index }}</td>
+            <td class="lb-domain"><a href="/?domain={{ d.domain }}" title="Re-score {{ d.domain }}">{{ d.domain }}</a></td>
+            <td class="lb-score">{{ d.total_score }}</td>
+            <td><span class="lb-grade-pill lb-grade-pill--{{ d.grade }}">{{ d.grade }}</span></td>
+            <td class="lb-signals">
+              <span>Auth <b>{{ d.auth_score }}</b></span>
+              <span>Rep <b>{{ d.rep_score }}</b></span>
+            </td>
+            <td class="lb-scans">{{ d.scan_count }}x</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="lb-empty">
+    <p style="font-size: 1.05rem; color: var(--text-2); margin: 0 0 6px;">The leaderboard is just getting started.</p>
+    <p style="font-size: 0.88rem; margin: 0;">Be the first. Type your domain into the homepage form to add it.</p>
+  </div>
+  {% endif %}
+
+  <div class="lb-cta">
+    <h3 class="lb-cta__h">Add your domain to the board</h3>
+    <p class="lb-cta__sub">Type your sending domain on the homepage and get your Signal Score in 30 seconds. Your score automatically updates on this board.</p>
+    <a href="/" class="lb-cta__btn">Score my domain &rarr;</a>
+  </div>
+
+</main>
+
+{% include 'sections/email_test_footer.html' %}
+
+</body>
+</html>

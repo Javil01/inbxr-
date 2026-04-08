@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{ title }}</title>
+  <meta name="robots" content="noindex">
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/style.css?v=20260408f" />
+  {% include 'sections/_head_meta.html' %}
+</head>
+<body class="email-test-page">
+
+{% include 'sections/header.html' %}
+
+<style>
+.rdm-wrap { max-width: 640px; margin: 0 auto; padding: 60px 24px 80px; }
+.rdm-eyebrow { display:inline-block;font-size:0.72rem;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;padding:5px 14px;border-radius:99px;background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;margin-bottom:18px; }
+.rdm-h1 { font-size: 2.2rem; font-weight: 900; color: var(--text-1); margin: 0 0 14px; letter-spacing: -0.02em; }
+.rdm-sub { font-size: 1.02rem; color: var(--text-2); line-height: 1.55; margin: 0 0 28px; }
+
+.rdm-status {
+  background: #fffbeb;
+  border: 1px solid #fcd34d;
+  border-radius: 14px;
+  padding: 22px 26px;
+  margin-bottom: 28px;
+}
+.rdm-status__label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #92400e; margin: 0 0 6px; }
+.rdm-status__tier { font-size: 1.6rem; font-weight: 900; color: #0f172a; margin: 0 0 4px; }
+.rdm-status__codes { font-size: 0.88rem; color: var(--text-2); margin: 0; }
+.rdm-status__codes b { color: var(--text-1); }
+
+.rdm-form {
+  background: #f8fafc;
+  border: 1px solid var(--border-1, #e2e8f0);
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 22px;
+}
+.rdm-form label { display: block; font-size: 0.82rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-3); margin-bottom: 8px; }
+.rdm-form input {
+  width: 100%; padding: 14px 18px; border: 1px solid var(--border-1, #e2e8f0); border-radius: 10px;
+  font-family: "SF Mono", Menlo, Consolas, monospace; font-size: 1rem; text-transform: uppercase; letter-spacing: 0.05em;
+  box-sizing: border-box;
+}
+.rdm-form input:focus { outline: none; border-color: #d97706; box-shadow: 0 0 0 3px rgba(217,119,6,0.15); }
+.rdm-form button { margin-top: 14px; width: 100%; padding: 14px; background: #d97706; color: #fff; border: none; border-radius: 999px; font-size: 0.95rem; font-weight: 800; cursor: pointer; font-family: inherit; }
+.rdm-form button:hover { background: #b45309; }
+.rdm-form button[disabled] { opacity: 0.6; cursor: not-allowed; }
+.rdm-form .helper { font-size: 0.8rem; color: var(--text-3); margin: 10px 0 0; }
+
+.rdm-result { display: none; padding: 16px 20px; border-radius: 10px; font-size: 0.9rem; margin-top: 16px; }
+.rdm-result.visible { display: block; }
+.rdm-result--success { background: #ecfdf5; border: 1px solid #6ee7b7; color: #065f46; }
+.rdm-result--error { background: #fef2f2; border: 1px solid #fca5a5; color: #991b1b; }
+
+.rdm-codes-list { background: #fff; border: 1px solid var(--border-1, #e2e8f0); border-radius: 10px; overflow: hidden; }
+.rdm-codes-list__row { display: flex; justify-content: space-between; padding: 12px 16px; font-size: 0.85rem; border-bottom: 1px solid #f1f5f9; }
+.rdm-codes-list__row:last-child { border: none; }
+.rdm-codes-list__row code { font-family: "SF Mono", Menlo, Consolas, monospace; color: var(--text-1); font-weight: 600; }
+.rdm-codes-list__row time { color: var(--text-3); font-size: 0.78rem; }
+
+.rdm-next-steps {
+  background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 12px;
+  padding: 20px 24px; margin-top: 24px;
+}
+.rdm-next-steps h3 { font-size: 0.92rem; font-weight: 800; color: var(--text-1); margin: 0 0 8px; }
+.rdm-next-steps ul { margin: 0; padding-left: 18px; font-size: 0.88rem; color: var(--text-2); line-height: 1.7; }
+.rdm-next-steps a { color: var(--brand, #2563eb); font-weight: 600; text-decoration: none; }
+</style>
+
+<main class="rdm-wrap">
+
+  <span class="rdm-eyebrow">AppSumo Redemption</span>
+  <h1 class="rdm-h1">Redeem your AppSumo code</h1>
+  <p class="rdm-sub">Enter the code you bought on AppSumo. It's tied to your InbXr account immediately. Stack more codes any time to level up.</p>
+
+  {% if code_count > 0 %}
+  <div class="rdm-status">
+    <p class="rdm-status__label">Current status</p>
+    <h2 class="rdm-status__tier">{{ tier.label }}</h2>
+    <p class="rdm-status__codes">
+      <b>{{ code_count }}</b> code{{ 's' if code_count != 1 else '' }} stacked &middot;
+      <b>{{ tier.domains_monitored }}</b> domains monitored &middot;
+      <b>{{ tier.csv_scans_per_month if tier.csv_scans_per_month < 9999 else 'Unlimited' }}</b> CSV scans/mo
+    </p>
+  </div>
+  {% endif %}
+
+  <form id="rdmForm" class="rdm-form">
+    <label for="codeInput">AppSumo code</label>
+    <input type="text" id="codeInput" placeholder="TEST-AB12CD34" required autocomplete="off" />
+    <button type="submit" id="rdmBtn">Redeem code</button>
+    <p class="helper">Your code unlocks lifetime Toolkit access. Codes are single-use. You can stack up to 3.</p>
+    <div id="rdmResult" class="rdm-result"></div>
+  </form>
+
+  {% if codes %}
+  <h3 style="font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-3); margin: 28px 0 10px;">Your redeemed codes</h3>
+  <div class="rdm-codes-list">
+    {% for c in codes %}
+      <div class="rdm-codes-list__row">
+        <code>{{ c.code }}</code>
+        <time>{{ c.redeemed_at or 'just now' }}</time>
+      </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <div class="rdm-next-steps">
+    <h3>What's next</h3>
+    <ul>
+      <li>Open the <a href="/signal-score">Signal Score dashboard</a> and run your first reading</li>
+      <li>Install the <a href="/badge">embed badge</a> on your site</li>
+      <li>Download the <a href="https://chrome.google.com/webstore/detail/inbxr" target="_blank" rel="noopener">Chrome extension</a> for on-the-go checks</li>
+      <li>Want continuous monitoring? <a href="/pricing">Add Intelligence (MRR)</a> on top without losing your lifetime Toolkit</li>
+    </ul>
+  </div>
+
+</main>
+
+<script>
+(function(){
+  var form = document.getElementById('rdmForm');
+  var input = document.getElementById('codeInput');
+  var btn = document.getElementById('rdmBtn');
+  var result = document.getElementById('rdmResult');
+
+  input.addEventListener('input', function(){
+    this.value = this.value.toUpperCase();
+  });
+
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    var code = input.value.trim();
+    if (!code) return;
+    btn.disabled = true;
+    btn.textContent = 'Redeeming...';
+    result.className = 'rdm-result';
+    result.textContent = '';
+
+    fetch('/appsumo/redeem', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.content || '',
+      },
+      body: JSON.stringify({ code: code }),
+    })
+    .then(function(r){ return r.json().then(function(d){ return {status: r.status, data: d}; }); })
+    .then(function(wrap){
+      btn.disabled = false;
+      btn.textContent = 'Redeem code';
+      var d = wrap.data;
+      if (d.ok) {
+        result.className = 'rdm-result rdm-result--success visible';
+        result.innerHTML = '<strong>Code redeemed.</strong> You are now on <strong>' + d.tier_label + '</strong> with ' + d.codes_stacked + ' code(s) stacked. Reloading...';
+        setTimeout(function(){ location.reload(); }, 2000);
+      } else {
+        result.className = 'rdm-result rdm-result--error visible';
+        result.textContent = d.error || 'Redemption failed.';
+      }
+    })
+    .catch(function(){
+      btn.disabled = false;
+      btn.textContent = 'Redeem code';
+      result.className = 'rdm-result rdm-result--error visible';
+      result.textContent = 'Network error. Try again.';
+    });
+  });
+})();
+</script>
+
+{% include 'sections/email_test_footer.html' %}
+
+</body>
+</html>

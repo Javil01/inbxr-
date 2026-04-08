@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>InbXr Signal Score</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+
+  <header class="ext-header">
+    <div class="ext-brand">
+      <img src="icons/icon-32.png" alt="" width="20" height="20" />
+      <span>InbXr Signal Score</span>
+    </div>
+    <a href="https://inbxr.us" target="_blank" rel="noopener" class="ext-link">inbxr.us</a>
+  </header>
+
+  <main class="ext-body">
+
+    <form id="domainForm" class="ext-form">
+      <label for="domainInput">Check any sending domain</label>
+      <div class="ext-input-row">
+        <input type="text" id="domainInput" placeholder="yourcompany.com" autocomplete="off" required />
+        <button type="submit" id="submitBtn">Check</button>
+      </div>
+      <p class="ext-hint">30 seconds &middot; No signup &middot; Powered by the Signal Engine</p>
+    </form>
+
+    <div id="loading" class="ext-loading" hidden>
+      <div class="ext-spinner"></div>
+      <p>Running the Signal Engine</p>
+    </div>
+
+    <div id="error" class="ext-error" hidden></div>
+
+    <div id="result" class="ext-result" hidden>
+      <div class="ext-score-row">
+        <div class="ext-score-big">
+          <div id="scoreValue" class="ext-score-num">0</div>
+          <div class="ext-score-label">Signal Score</div>
+        </div>
+        <div id="gradePill" class="ext-grade-pill ext-grade-pill--C">C</div>
+      </div>
+
+      <div class="ext-breakdown">
+        <div class="ext-breakdown-row">
+          <span>06 Authentication Standing</span>
+          <b id="authValue">—</b>
+        </div>
+        <div class="ext-breakdown-row">
+          <span>04 Domain Reputation</span>
+          <b id="repValue">—</b>
+        </div>
+        <div class="ext-breakdown-row ext-breakdown-row--locked">
+          <span>01 Bounce Exposure</span>
+          <span class="ext-locked">list data</span>
+        </div>
+        <div class="ext-breakdown-row ext-breakdown-row--locked">
+          <span>02 Engagement Trajectory</span>
+          <span class="ext-locked">list data</span>
+        </div>
+        <div class="ext-breakdown-row ext-breakdown-row--locked">
+          <span>03 Acquisition Quality</span>
+          <span class="ext-locked">list data</span>
+        </div>
+        <div class="ext-breakdown-row ext-breakdown-row--locked">
+          <span>05 Spam Trap Exposure</span>
+          <span class="ext-locked">list data</span>
+        </div>
+        <div class="ext-breakdown-row ext-breakdown-row--locked">
+          <span>07 Decay Velocity</span>
+          <span class="ext-locked">list data</span>
+        </div>
+      </div>
+
+      <div class="ext-cta">
+        <a id="reportLink" href="#" target="_blank" rel="noopener">See full report on inbxr.us &rarr;</a>
+      </div>
+    </div>
+
+    <div id="history" class="ext-history" hidden>
+      <h3>Recent checks</h3>
+      <ul id="historyList"></ul>
+    </div>
+
+  </main>
+
+  <footer class="ext-footer">
+    Made with <span style="color:#dc2626">&hearts;</span> by <a href="https://inbxr.us" target="_blank" rel="noopener">InbXr</a>
+  </footer>
+
+  <script src="popup.js"></script>
+</body>
+</html>

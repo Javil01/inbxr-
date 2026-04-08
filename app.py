@@ -148,6 +148,9 @@ app.register_blueprint(public_signal_bp)
 from blueprints.webhook_routes import webhook_bp
 app.register_blueprint(webhook_bp)
 
+from blueprints.appsumo_routes import appsumo_bp
+app.register_blueprint(appsumo_bp)
+
 from modules.scheduler import init_scheduler
 init_scheduler(app)
 
@@ -502,6 +505,9 @@ def sitemap_xml():
         ('/bulk-domain-check', '0.7', 'monthly'),
         ('/why-am-i-in-spam', '0.9', 'weekly'),
         ('/inherited-list-first-aid', '0.9', 'weekly'),
+        ('/leaderboard', '0.8', 'daily'),
+        ('/badge', '0.7', 'monthly'),
+        ('/appsumo', '0.9', 'weekly'),
         ('/zerobounce-alternative', '0.7', 'monthly'),
         ('/mail-tester-alternative', '0.7', 'monthly'),
         ('/mxtoolbox-alternative', '0.7', 'monthly'),

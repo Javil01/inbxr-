@@ -1183,6 +1183,49 @@ Opportunity: Start your free InbXr audit today and see where you actually stand.
         );
         CREATE INDEX IF NOT EXISTS idx_weekly_report_user ON weekly_signal_report_log(user_id);
     """),
+    ("030_domain_leaderboard", """
+        -- Public leaderboard of domains scored by the Domain Signal
+        -- Score engine. Fully anonymized: no user association, just
+        -- (domain, score, grade, last_scanned_at). Populated every
+        -- time a Domain Signal Score runs. UNIQUE on domain so we
+        -- keep only the most recent score per domain.
+        CREATE TABLE IF NOT EXISTS domain_leaderboard (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            domain TEXT NOT NULL UNIQUE,
+            total_score INTEGER NOT NULL,
+            grade TEXT NOT NULL,
+            auth_score INTEGER,
+            rep_score INTEGER,
+            scan_count INTEGER NOT NULL DEFAULT 1,
+            first_scanned_at TEXT NOT NULL DEFAULT (datetime('now')),
+            last_scanned_at TEXT NOT NULL DEFAULT (datetime('now'))
+        );
+        CREATE INDEX IF NOT EXISTS idx_leaderboard_score ON domain_leaderboard(total_score DESC);
+        CREATE INDEX IF NOT EXISTS idx_leaderboard_last_scanned ON domain_leaderboard(last_scanned_at DESC);
+    """),
+    ("031_appsumo_ltd", """
+        -- AppSumo LTD code storage + toolkit stack tracking.
+        -- Codes imported from the AppSumo CSV once the listing is approved.
+        -- Each code is single-use and ties the redeeming user to the
+        -- lifetime Toolkit tier. Stacking multiple codes unlocks higher
+        -- capacity (T1 = 1 code, T2 = 2 codes, T3 = 3+ codes).
+        CREATE TABLE IF NOT EXISTS appsumo_codes (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            code TEXT NOT NULL UNIQUE,
+            batch_label TEXT,
+            redeemed_by_user_id INTEGER,
+            redeemed_at TEXT,
+            created_at TEXT DEFAULT (datetime('now')),
+            FOREIGN KEY (redeemed_by_user_id) REFERENCES users(id) ON DELETE SET NULL
+        );
+        CREATE INDEX IF NOT EXISTS idx_appsumo_codes_code ON appsumo_codes(code);
+        CREATE INDEX IF NOT EXISTS idx_appsumo_codes_redeemed_by ON appsumo_codes(redeemed_by_user_id);
+
+        -- Track stacked toolkit tier level on the user row.
+        -- 0 = no LTD, 1 = T1 (1 code), 2 = T2 (2 codes), 3 = T3 (3+ codes).
+        -- toolkit_ok (from migration 025) is flipped to 1 at first redeem.
+        ALTER TABLE users ADD COLUMN toolkit_tier_level INTEGER DEFAULT 0;
+    """),
 ]
 
 

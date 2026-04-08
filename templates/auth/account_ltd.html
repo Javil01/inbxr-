@@ -1,0 +1,129 @@
+{% extends "auth/base_auth.html" %}
+{% block title %}LTD Status &middot; InbXr{% endblock %}
+{% block content %}
+<style>
+.ltd-wrap { max-width: 680px; margin: 0 auto; }
+.ltd-head h1 { margin: 0 0 6px; font-size: 1.6rem; }
+.ltd-head p { font-size: 0.88rem; color: var(--text-3); margin: 0 0 22px; }
+
+.ltd-status {
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+  border: 1px solid #fcd34d;
+  border-radius: 14px;
+  padding: 22px 26px;
+  margin-bottom: 22px;
+}
+.ltd-status__label { font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; color: #92400e; margin: 0 0 6px; }
+.ltd-status__tier { font-size: 1.6rem; font-weight: 900; color: #0f172a; margin: 0 0 4px; }
+.ltd-status__codes { font-size: 0.88rem; color: var(--text-2); margin: 0 0 14px; }
+.ltd-status__caps { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; margin-top: 16px; }
+.ltd-cap { background: #fff; border-radius: 8px; padding: 12px 14px; border: 1px solid #fcd34d; }
+.ltd-cap__num { font-size: 1.3rem; font-weight: 900; color: #0f172a; line-height: 1.1; }
+.ltd-cap__label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-3); margin-top: 2px; font-weight: 700; }
+
+.ltd-section { background: #fff; border: 1px solid var(--border-1, #e2e8f0); border-radius: 12px; padding: 22px 24px; margin-bottom: 18px; }
+.ltd-section h2 { font-size: 0.95rem; font-weight: 800; color: var(--text-1); margin: 0 0 10px; text-transform: uppercase; letter-spacing: 0.05em; }
+.ltd-section p { font-size: 0.88rem; color: var(--text-2); line-height: 1.6; margin: 0 0 12px; }
+
+.ltd-codes-list { list-style: none; padding: 0; margin: 0; }
+.ltd-codes-list li { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f1f5f9; font-size: 0.85rem; }
+.ltd-codes-list li:last-child { border: none; }
+.ltd-codes-list code { font-family: "SF Mono", Menlo, Consolas, monospace; font-weight: 600; color: var(--text-1); }
+.ltd-codes-list time { color: var(--text-3); font-size: 0.78rem; }
+
+.ltd-stack-btn {
+  display: inline-block;
+  background: #d97706;
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-decoration: none;
+  margin-top: 10px;
+}
+.ltd-stack-btn:hover { background: #b45309; }
+
+.ltd-upgrade-bridge {
+  background: linear-gradient(135deg, #f0f9ff 0%, #fff 100%);
+  border: 1px solid #bae6fd;
+  border-radius: 12px;
+  padding: 22px 26px;
+  margin-top: 18px;
+}
+.ltd-upgrade-bridge h2 { font-size: 1.05rem; font-weight: 800; color: var(--text-1); margin: 0 0 6px; text-transform: none; letter-spacing: 0; }
+.ltd-upgrade-bridge p { font-size: 0.88rem; color: var(--text-2); line-height: 1.6; margin: 0 0 14px; }
+.ltd-upgrade-bridge a { display: inline-block; background: var(--brand, #2563eb); color: #fff; padding: 10px 22px; border-radius: 999px; font-size: 0.85rem; font-weight: 700; text-decoration: none; }
+
+.ltd-empty { text-align: center; padding: 40px 20px; color: var(--text-3); border: 2px dashed var(--border-1, #e2e8f0); border-radius: 12px; }
+.ltd-empty a { display: inline-block; background: #d97706; color: #fff; padding: 10px 22px; border-radius: 999px; font-size: 0.85rem; font-weight: 700; text-decoration: none; margin-top: 12px; }
+</style>
+
+<div class="ltd-wrap">
+
+  <div class="ltd-head">
+    <h1>AppSumo LTD status</h1>
+    <p>Your lifetime Toolkit tier, stacked codes, and capacity.</p>
+  </div>
+
+  {% if code_count == 0 %}
+    <div class="ltd-empty">
+      <p style="font-size: 1rem; color: var(--text-2); margin: 0 0 4px;">You don't have any AppSumo codes redeemed yet.</p>
+      <p style="font-size: 0.85rem; margin: 0;">Visit the AppSumo listing page or redeem a code you already bought.</p>
+      <a href="/appsumo">See the lifetime deal &rarr;</a>
+    </div>
+  {% else %}
+
+    <div class="ltd-status">
+      <p class="ltd-status__label">Current tier</p>
+      <h2 class="ltd-status__tier">{{ tier.label }}</h2>
+      <p class="ltd-status__codes"><strong>{{ code_count }}</strong> code{{ 's' if code_count != 1 else '' }} stacked &middot; lifetime access to the Toolkit</p>
+      <div class="ltd-status__caps">
+        <div class="ltd-cap">
+          <div class="ltd-cap__num">{{ tier.domains_monitored }}</div>
+          <div class="ltd-cap__label">Domains</div>
+        </div>
+        <div class="ltd-cap">
+          <div class="ltd-cap__num">{{ tier.csv_scans_per_month if tier.csv_scans_per_month < 9999 else '&infin;' | safe }}</div>
+          <div class="ltd-cap__label">CSV scans / mo</div>
+        </div>
+        <div class="ltd-cap">
+          <div class="ltd-cap__num">{{ tier.team_seats }}</div>
+          <div class="ltd-cap__label">Team seats</div>
+        </div>
+        {% if tier.max_client_slots > 0 %}
+        <div class="ltd-cap">
+          <div class="ltd-cap__num">{{ tier.max_client_slots }}</div>
+          <div class="ltd-cap__label">Client slots</div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="ltd-section">
+      <h2>Redeemed codes</h2>
+      <ul class="ltd-codes-list">
+        {% for c in codes %}
+          <li>
+            <code>{{ c.code }}</code>
+            <time>{{ c.redeemed_at or 'just now' }}</time>
+          </li>
+        {% endfor %}
+      </ul>
+
+      {% if code_count < 3 %}
+        <p style="margin-top: 14px; font-size: 0.82rem; color: var(--text-3);">You can stack up to 3 codes total. Level up by redeeming another code.</p>
+        <a href="/appsumo/redeem" class="ltd-stack-btn">Stack another code</a>
+      {% endif %}
+    </div>
+
+    <div class="ltd-upgrade-bridge">
+      <h2>Want continuous watching?</h2>
+      <p>Your Toolkit tier is yours for life. For ongoing Signal Watch, Early Warning alerts, live ESP sync, and weekly reports, add the Intelligence subscription on top. Your lifetime Toolkit stays intact regardless.</p>
+      <a href="/pricing">See Intelligence tiers &rarr;</a>
+    </div>
+
+  {% endif %}
+
+</div>
+{% endblock %}

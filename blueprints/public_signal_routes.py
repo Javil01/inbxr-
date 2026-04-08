@@ -8,6 +8,10 @@ Public-facing (no auth) pages that support the 7 Inbox Signals positioning:
 - /<slug>-alternative          Competitor comparison pages (SEO)
 - /why-am-i-in-spam            Unified spam diagnostic
 - /inherited-list-first-aid    CSV triage (Remove / Re-engage / Keep)
+- /leaderboard                 Public top-scoring domains board
+- /badge                       Embeddable score badge doc page
+- /api/badge/<domain>.svg      Server-rendered SVG badge
+- /api/badge/<domain>.json     JSON score for badge JS / Chrome extension
 
 All routes are indexable and designed to rank for positioning keywords.
 """
@@ -786,4 +790,264 @@ def inherited_list_first_aid_export():
             "Content-Disposition": 'attachment; filename="inbxr-suppression-list.csv"',
             "Cache-Control": "no-store",
         },
+    )
+
+
+# ── /leaderboard — public domain leaderboard ─────────────
+#
+# Every time the Domain Signal Score engine runs against a domain,
+# a row lands in domain_leaderboard. This page shows the top 50,
+# plus aggregate stats. Pure SEO surface: auto-updates, deep
+# anonymization, and a permanent incentive for visitors to type
+# their own domain into the homepage form (to either get on the
+# board or see where they rank).
+
+
+@public_signal_bp.route("/leaderboard")
+def leaderboard_page():
+    """Render the public leaderboard. Supports ?grade=A|B|C|D|F for
+    filtering and ?focus=<domain> to highlight a specific row the
+    visitor came from (e.g. after running their own scan)."""
+    from modules.leaderboard import get_top_domains, get_leaderboard_stats, get_domain_rank
+
+    grade_filter = (request.args.get("grade") or "").strip().upper()
+    if grade_filter not in ("A", "B", "C", "D", "F"):
+        grade_filter = None
+
+    focus_domain = (request.args.get("focus") or "").strip().lower()
+
+    top = get_top_domains(limit=50, grade_filter=grade_filter)
+    stats = get_leaderboard_stats()
+
+    focus_rank = None
+    if focus_domain:
+        focus_rank = get_domain_rank(focus_domain)
+
+    return render_template(
+        "public/leaderboard.html",
+        allow_index=True,
+        title="Email Deliverability Leaderboard · Top Scored Domains · InbXr",
+        meta_description=(
+            "See the top-scoring domains on InbXr's Signal Engine, ranked by "
+            "authentication, reputation, and DNS health. Updated in real time "
+            "from live scans. Add your own domain in 30 seconds."
+        ),
+        top_domains=top,
+        stats=stats,
+        grade_filter=grade_filter,
+        focus_domain=focus_domain,
+        focus_rank=focus_rank,
+    )
+
+
+# ── Embeddable Signal Score badge ───────────────────────
+#
+# Two badge formats, both keyed to a domain:
+#
+#   /api/badge/<domain>.svg   Static SVG, works as <img src> in any
+#                             markdown, HTML, GitHub README, or email
+#                             signature. No JS required. Distributes
+#                             the brand wherever HTML renders.
+#
+#   /api/badge/<domain>.json  Raw score JSON for the JS loader
+#                             (/badge.js) and the Chrome extension.
+#
+#   /badge                    Copy-paste documentation page with
+#                             examples for GitHub, HTML, Markdown.
+#
+# Badges are tied to the shared domain_leaderboard cache, so they
+# render fast (single row lookup) and update automatically as the
+# domain is re-scored. If the domain has never been scored, we
+# render a "not scored yet" badge that CTAs to the homepage.
+
+
+def _normalize_badge_domain(domain):
+    """Shared domain cleanup for badge endpoints."""
+    import re as _re
+    if not domain:
+        return ""
+    d = (domain or "").strip().lower()
+    d = _re.sub(r"^https?://", "", d)
+    d = _re.sub(r"/.*$", "", d)
+    return d.split(":")[0]
+
+
+def _grade_color(grade):
+    return {
+        "A": "#059669",
+        "B": "#0891b2",
+        "C": "#d97706",
+        "D": "#dc2626",
+        "F": "#991b1b",
+    }.get((grade or "").upper(), "#64748b")
+
+
+def _get_badge_data(domain):
+    """Look up a domain's score from the leaderboard cache. If not
+    cached, kick off a fresh scan (synchronous — bounded to a few
+    seconds via the reputation checker's own timeouts). Returns a
+    dict with score, grade, and a not_found flag."""
+    from modules.database import fetchone
+    row = fetchone(
+        "SELECT total_score, grade, last_scanned_at FROM domain_leaderboard "
+        "WHERE domain = ?",
+        (domain,),
+    )
+    if row:
+        return {
+            "domain": domain,
+            "score": row["total_score"],
+            "grade": row["grade"],
+            "last_scanned_at": row["last_scanned_at"],
+            "not_found": False,
+        }
+
+    # Not yet scored — run the Domain Signal Score engine now to seed
+    # the leaderboard, then re-read. This doubles as a "badge install"
+    # that automatically populates the public leaderboard.
+    try:
+        from modules.signal_score import calculate_domain_signal_score
+        result = calculate_domain_signal_score(domain)
+        if result and not result.get("error"):
+            return {
+                "domain": domain,
+                "score": result.get("total_signal_score"),
+                "grade": result.get("signal_grade"),
+                "last_scanned_at": None,
+                "not_found": False,
+            }
+    except Exception:
+        logger.exception("[BADGE] fresh scan failed for %s", domain)
+
+    return {"domain": domain, "score": None, "grade": None, "not_found": True}
+
+
+@public_signal_bp.route("/api/badge/<domain>.json")
+def badge_json(domain):
+    """Raw badge data as JSON. Used by /badge.js loader and Chrome ext."""
+    from flask import Response
+    clean = _normalize_badge_domain(domain)
+    if not clean or "." not in clean:
+        return jsonify({"ok": False, "error": "invalid domain"}), 400
+    data = _get_badge_data(clean)
+    resp = jsonify({
+        "ok": not data["not_found"],
+        "domain": data["domain"],
+        "score": data["score"],
+        "grade": data["grade"],
+        "last_scanned_at": data.get("last_scanned_at"),
+        "badge_url_svg": f"https://inbxr.us/api/badge/{clean}.svg",
+        "report_url": f"https://inbxr.us/?domain={clean}",
+    })
+    # Short cache + CORS so any website can call this endpoint
+    resp.headers["Cache-Control"] = "public, max-age=3600"
+    resp.headers["Access-Control-Allow-Origin"] = "*"
+    return resp
+
+
+@public_signal_bp.route("/api/badge/<domain>.svg")
+def badge_svg(domain):
+    """Static SVG badge. Width/height designed to look right as a
+    `<img>` inline with text on GitHub READMEs and websites."""
+    from flask import Response
+    clean = _normalize_badge_domain(domain)
+    if not clean or "." not in clean:
+        return Response("invalid domain", status=400)
+
+    data = _get_badge_data(clean)
+    if data["not_found"]:
+        label = "Signal Score"
+        value = "not scored"
+        fill = "#64748b"
+    else:
+        label = "Signal Score"
+        value = f"{data['score']} ({data['grade']})"
+        fill = _grade_color(data["grade"])
+
+    # Approximate text widths for the shields.io-style layout
+    label_w = 8 * len(label) + 10
+    value_w = 8 * len(value) + 10
+    total_w = label_w + value_w
+
+    svg = f'''<svg xmlns="http://www.w3.org/2000/svg" width="{total_w}" height="22" role="img" aria-label="InbXr {label}: {value}">
+  <title>InbXr {label}: {value}</title>
+  <linearGradient id="s" x2="0" y2="100%">
+    <stop offset="0" stop-color="#ffffff" stop-opacity=".15"/>
+    <stop offset="1" stop-opacity=".15"/>
+  </linearGradient>
+  <clipPath id="r"><rect width="{total_w}" height="22" rx="4" fill="#ffffff"/></clipPath>
+  <g clip-path="url(#r)">
+    <rect width="{label_w}" height="22" fill="#0f172a"/>
+    <rect x="{label_w}" width="{value_w}" height="22" fill="{fill}"/>
+    <rect width="{total_w}" height="22" fill="url(#s)"/>
+  </g>
+  <g fill="#ffffff" text-anchor="middle" font-family="Verdana,Geneva,DejaVu Sans,sans-serif" font-size="11" text-rendering="geometricPrecision">
+    <text x="{label_w/2}" y="16">{label}</text>
+    <text x="{label_w + value_w/2}" y="16">{value}</text>
+  </g>
+</svg>'''
+    resp = Response(svg, mimetype="image/svg+xml")
+    resp.headers["Cache-Control"] = "public, max-age=3600"
+    resp.headers["Access-Control-Allow-Origin"] = "*"
+    return resp
+
+
+@public_signal_bp.route("/badge.js")
+def badge_js_loader():
+    """JavaScript loader. Website owners drop a single <script> tag
+    like:
+        <script src="https://inbxr.us/badge.js" data-domain="yoursite.com"></script>
+    and the script finds the tag, fetches the JSON, and injects a
+    styled badge HTML element right where the <script> sits.
+
+    The SVG form is simpler and works without JS, but the JS form
+    gives us analytics (we log every loader fetch to the leaderboard
+    via the underlying badge JSON endpoint) and a nicer visual.
+    """
+    from flask import Response
+    js = '''(function() {
+  var scripts = document.getElementsByTagName("script");
+  var self = scripts[scripts.length - 1];
+  var domain = self.getAttribute("data-domain");
+  if (!domain) return;
+
+  var wrap = document.createElement("a");
+  wrap.href = "https://inbxr.us/?domain=" + encodeURIComponent(domain);
+  wrap.target = "_blank";
+  wrap.rel = "noopener";
+  wrap.style.cssText = "display:inline-flex;align-items:center;gap:0;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Arial,sans-serif;font-size:11px;font-weight:700;text-decoration:none;border-radius:4px;overflow:hidden;line-height:1;vertical-align:middle;";
+  wrap.innerHTML = '<span style="background:#0f172a;color:#fff;padding:5px 8px;">Signal Score</span><span style="background:#64748b;color:#fff;padding:5px 8px;">loading</span>';
+  self.parentNode.insertBefore(wrap, self);
+
+  fetch("https://inbxr.us/api/badge/" + encodeURIComponent(domain) + ".json")
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      var color = {A:"#059669",B:"#0891b2",C:"#d97706",D:"#dc2626",F:"#991b1b"}[d.grade] || "#64748b";
+      var right = d.ok ? (d.score + " (" + d.grade + ")") : "not scored";
+      wrap.innerHTML = '<span style="background:#0f172a;color:#fff;padding:5px 8px;">Signal Score</span><span style="background:' + color + ';color:#fff;padding:5px 8px;">' + right + '</span>';
+    })
+    .catch(function() {});
+})();
+'''
+    resp = Response(js, mimetype="application/javascript")
+    resp.headers["Cache-Control"] = "public, max-age=86400"
+    resp.headers["Access-Control-Allow-Origin"] = "*"
+    return resp
+
+
+@public_signal_bp.route("/badge")
+def badge_docs_page():
+    """Documentation page explaining how to install the badge on a
+    website, GitHub README, or email signature. Copy-paste examples
+    for all 3 formats. Primary audience: devs and brand owners who
+    want to display their score publicly."""
+    return render_template(
+        "public/badge_docs.html",
+        allow_index=True,
+        title="Embeddable Signal Score Badge · Show Off Your Deliverability · InbXr",
+        meta_description=(
+            "Embed your InbXr Signal Score on your website, GitHub README, "
+            "or email signature. Single script tag or image URL. Live, "
+            "auto-updating. Works anywhere HTML renders."
+        ),
     )

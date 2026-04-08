@@ -1179,7 +1179,20 @@ def calculate_domain_signal_score(domain):
     # Pull recommendations (top 5 by severity) for the result page
     recommendations = rep.get('recommendations', [])[:5]
 
-    # Build the result dict in the same shape as calculate_signal_score()
+    # Log this scan to the public leaderboard (fire-and-forget, never
+    # blocks the return to the caller).
+    try:
+        from modules.leaderboard import upsert_leaderboard_entry
+        upsert_leaderboard_entry(
+            domain=normalized,
+            total_score=composite,
+            grade=grade,
+            auth_score=int(round(auth_score_100)),
+            rep_score=int(round(rep_score_100)),
+        )
+    except Exception:
+        logger.exception(f'Leaderboard upsert failed for {normalized}')
+
     return {
         'is_partial': True,
         'data_source': 'domain_only',
@@ -1191,7 +1204,6 @@ def calculate_domain_signal_score(domain):
         'scores': {
             'authentication_standing': round(auth_score_100 * 5 / 100, 1),
             'domain_reputation': round(rep_score_100 * 15 / 100, 1),
-            # Locked signals — null score, will render as locked cards
             'bounce_exposure': None,
             'engagement_trajectory': None,
             'acquisition_quality': None,
@@ -1213,7 +1225,6 @@ def calculate_domain_signal_score(domain):
                 'blacklisted': listed_count > 0,
                 'reason': 'computed_from_dnsbl',
             },
-            # Locked signals get a 'locked' marker for the UI
             'bounce_exposure': {'locked': True, 'reason': 'needs_list_data'},
             'engagement_trajectory': {'locked': True, 'reason': 'needs_list_data'},
             'acquisition_quality': {'locked': True, 'reason': 'needs_list_data'},

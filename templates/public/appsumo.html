@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{ title }}</title>
+  <meta name="description" content="{{ meta_description }}">
+  <meta property="og:title" content="{{ title }}">
+  <meta property="og:description" content="{{ meta_description }}">
+  <meta property="og:url" content="https://inbxr.us/appsumo">
+  <meta property="og:type" content="website">
+  <link rel="canonical" href="https://inbxr.us/appsumo">
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/style.css?v=20260408f" />
+  {% include 'sections/_head_meta.html' %}
+</head>
+<body class="email-test-page">
+
+{% include 'sections/header.html' %}
+
+<style>
+.as-wrap { max-width: 1040px; margin: 0 auto; padding: 60px 24px 80px; }
+.as-eyebrow {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 5px 14px;
+  border-radius: 99px;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #fff;
+  margin-bottom: 18px;
+}
+.as-h1 {
+  font-size: 2.8rem;
+  font-weight: 900;
+  line-height: 1.1;
+  color: var(--text-1);
+  margin: 0 0 14px;
+  letter-spacing: -0.025em;
+}
+.as-h1 em { color: #d97706; font-style: normal; }
+.as-sub {
+  font-size: 1.15rem;
+  color: var(--text-2);
+  margin: 0 0 28px;
+  line-height: 1.55;
+  max-width: 720px;
+}
+
+.as-intro-bullets { display: flex; flex-wrap: wrap; gap: 10px; margin: 0 0 36px; }
+.as-intro-bullets span {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 0.85rem; color: var(--text-2);
+  background: #fffbeb; border: 1px solid #fcd34d;
+  padding: 6px 14px; border-radius: 99px;
+}
+.as-intro-bullets span::before { content: "✓"; color: #059669; font-weight: 800; }
+
+.as-tiers {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 18px;
+  margin: 40px 0;
+}
+.as-tier {
+  background: #ffffff;
+  border: 2px solid var(--border-1, #e2e8f0);
+  border-radius: 16px;
+  padding: 26px 24px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+.as-tier--featured {
+  border-color: #d97706;
+  box-shadow: 0 0 0 4px rgba(217,119,6,0.1);
+}
+.as-tier--featured::before {
+  content: "Most popular";
+  position: absolute;
+  top: -11px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #d97706;
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 4px 14px;
+  border-radius: 99px;
+  white-space: nowrap;
+}
+.as-tier__level { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-3); font-weight: 700; }
+.as-tier__label { font-size: 1.3rem; font-weight: 900; color: var(--text-1); margin: 4px 0 10px; }
+.as-tier__codes { font-size: 0.85rem; color: var(--text-3); margin-bottom: 14px; }
+.as-tier__price { font-size: 2.1rem; font-weight: 900; color: var(--text-1); margin: 0; line-height: 1.1; }
+.as-tier__price small { font-size: 0.85rem; font-weight: 600; color: var(--text-3); display: block; margin-top: 4px; }
+
+.as-tier__features { list-style: none; padding: 0; margin: 20px 0 0; font-size: 0.88rem; color: var(--text-2); flex: 1; }
+.as-tier__features li { padding: 6px 0 6px 22px; position: relative; line-height: 1.5; border-bottom: 1px solid #f1f5f9; }
+.as-tier__features li::before { content: "✓"; color: #059669; position: absolute; left: 4px; font-weight: 800; }
+.as-tier__features li:last-child { border: none; }
+.as-tier__features li.excluded { color: var(--text-3); text-decoration: line-through; }
+.as-tier__features li.excluded::before { content: "×"; color: #94a3b8; text-decoration: none; }
+
+.as-redeem-cta { margin-top: 36px; text-align: center; }
+.as-redeem-cta p { font-size: 0.95rem; color: var(--text-2); margin: 0 0 14px; }
+.as-redeem-cta__btn {
+  display: inline-block;
+  background: #d97706;
+  color: #fff;
+  padding: 16px 36px;
+  border-radius: 999px;
+  font-size: 1.02rem;
+  font-weight: 800;
+  text-decoration: none;
+}
+.as-redeem-cta__btn:hover { background: #b45309; }
+
+.as-compare-section { margin: 48px 0; }
+.as-compare-section h2 { font-size: 1.4rem; font-weight: 800; color: var(--text-1); margin: 0 0 10px; }
+.as-compare-section p { color: var(--text-2); line-height: 1.6; font-size: 0.98rem; }
+
+.as-compare {
+  background: #f8fafc;
+  border: 1px solid var(--border-1, #e2e8f0);
+  border-radius: 14px;
+  padding: 24px;
+  margin-top: 18px;
+}
+.as-compare h3 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-3); margin: 0 0 8px; }
+.as-compare__cols { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.as-compare__col h4 { font-size: 1.05rem; font-weight: 800; color: var(--text-1); margin: 0 0 6px; }
+.as-compare__col p { font-size: 0.88rem; color: var(--text-2); margin: 0 0 10px; }
+.as-compare__col ul { font-size: 0.85rem; color: var(--text-2); padding-left: 18px; margin: 0; }
+.as-compare__col li { padding: 2px 0; }
+
+.as-faq { margin: 48px 0; }
+.as-faq h2 { font-size: 1.4rem; font-weight: 800; color: var(--text-1); margin: 0 0 16px; }
+.as-faq details { background: #f8fafc; border: 1px solid var(--border-1, #e2e8f0); border-radius: 10px; padding: 14px 20px; margin-bottom: 10px; }
+.as-faq summary { cursor: pointer; font-weight: 700; font-size: 0.95rem; color: var(--text-1); }
+.as-faq details[open] summary { margin-bottom: 10px; }
+.as-faq p { margin: 0; color: var(--text-2); font-size: 0.9rem; line-height: 1.6; }
+
+@media (max-width: 720px) {
+  .as-h1 { font-size: 1.8rem; }
+  .as-compare__cols { grid-template-columns: 1fr; }
+}
+</style>
+
+<main class="as-wrap">
+
+  <span class="as-eyebrow">AppSumo Lifetime Deal</span>
+  <h1 class="as-h1">The <em>Signal Engine</em> for life. Not another monthly bill.</h1>
+  <p class="as-sub">
+    Stack AppSumo codes to unlock the InbXr Toolkit: 7 Inbox Signals scoring,
+    PDF reports, Chrome extension, bulk CSV triage, and every deliverability
+    utility. Pay once, own it.
+  </p>
+
+  <div class="as-intro-bullets">
+    <span>Lifetime access to Toolkit</span>
+    <span>60-day money-back guarantee</span>
+    <span>Stack up to 3 codes for more capacity</span>
+    <span>Free upgrades to future Toolkit features</span>
+  </div>
+
+  <div class="as-tiers">
+    {# Tier 1 #}
+    <div class="as-tier">
+      <div class="as-tier__level">Tier 1</div>
+      <div class="as-tier__label">{{ tiers[1].label }}</div>
+      <div class="as-tier__codes">1 AppSumo code</div>
+      <p class="as-tier__price">${{ tiers[1].price_usd }}<small>one-time</small></p>
+      <ul class="as-tier__features">
+        <li><strong>{{ tiers[1].domains_monitored }}</strong> domains monitored</li>
+        <li><strong>{{ tiers[1].csv_scans_per_month }}</strong> CSV triage scans/month</li>
+        <li>Full 7-signal Signal Score reading</li>
+        <li>Signal Report PDF (basic)</li>
+        <li>Chrome extension + embed badge</li>
+        <li>Inbox Placement + Sender Check + all Toolkit utilities</li>
+        <li>Signal Recommendations (alert-only)</li>
+        <li class="excluded">Live ESP monitoring</li>
+        <li class="excluded">Weekly Signal Report email</li>
+      </ul>
+    </div>
+
+    {# Tier 2 — Featured #}
+    <div class="as-tier as-tier--featured">
+      <div class="as-tier__level">Tier 2</div>
+      <div class="as-tier__label">{{ tiers[2].label }}</div>
+      <div class="as-tier__codes">2 AppSumo codes stacked</div>
+      <p class="as-tier__price">${{ tiers[2].price_usd }}<small>one-time</small></p>
+      <ul class="as-tier__features">
+        <li><strong>{{ tiers[2].domains_monitored }}</strong> domains monitored</li>
+        <li><strong>{{ tiers[2].csv_scans_per_month }}</strong> CSV triage scans/month</li>
+        <li><strong>{{ tiers[2].team_seats }}</strong> team seats</li>
+        <li>Full 7-signal Signal Score reading</li>
+        <li>Signal Report PDF (basic)</li>
+        <li>Chrome extension + embed badge</li>
+        <li>All Toolkit utilities</li>
+        <li>Playbooks library (community rules)</li>
+        <li class="excluded">Live ESP monitoring</li>
+      </ul>
+    </div>
+
+    {# Tier 3 #}
+    <div class="as-tier">
+      <div class="as-tier__level">Tier 3</div>
+      <div class="as-tier__label">{{ tiers[3].label }}</div>
+      <div class="as-tier__codes">3 AppSumo codes stacked</div>
+      <p class="as-tier__price">${{ tiers[3].price_usd }}<small>one-time</small></p>
+      <ul class="as-tier__features">
+        <li><strong>{{ tiers[3].domains_monitored }}</strong> domains monitored</li>
+        <li><strong>Unlimited</strong> CSV triage scans/month</li>
+        <li><strong>{{ tiers[3].team_seats }}</strong> team seats</li>
+        <li><strong>{{ tiers[3].max_client_slots }}</strong> client slots (agency view)</li>
+        <li>Signal Report PDF <strong>white-label</strong></li>
+        <li>Bulk list grading (multi-CSV)</li>
+        <li>All Toolkit utilities</li>
+        <li>Priority support</li>
+        <li class="excluded">Live ESP monitoring</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="as-redeem-cta">
+    <p>Already bought a code on AppSumo?</p>
+    <a href="/appsumo/redeem" class="as-redeem-cta__btn">Redeem your code &rarr;</a>
+  </div>
+
+  <div class="as-compare-section">
+    <h2>Toolkit vs Intelligence &mdash; Pick one, or stack both</h2>
+    <p>
+      InbXr runs on two motions. The <strong>Toolkit</strong> is the one-time
+      lifetime purchase you're reading about. The <strong>Intelligence</strong>
+      layer is an optional monthly subscription that adds continuous list
+      monitoring, Early Warning alerts, weekly reports, and live ESP sync.
+      Toolkit buyers keep their lifetime Toolkit forever, and can add
+      Intelligence on top whenever they need it. The two never conflict.
+    </p>
+    <div class="as-compare">
+      <div class="as-compare__cols">
+        <div class="as-compare__col">
+          <h4>Toolkit (this LTD)</h4>
+          <p>One-time purchase. Yours forever.</p>
+          <ul>
+            <li>7-signal Signal Score (on demand)</li>
+            <li>PDF reports + Chrome extension + embed badge</li>
+            <li>CSV triage + list cleaning tools</li>
+            <li>All deliverability utilities</li>
+            <li>No ongoing subscription</li>
+          </ul>
+        </div>
+        <div class="as-compare__col">
+          <h4>Intelligence (MRR subscription)</h4>
+          <p>Optional monthly add-on. Ongoing watching.</p>
+          <ul>
+            <li>Signal Watch (every 6 hours)</li>
+            <li>Early Warning alerts</li>
+            <li>Live ESP per-contact sync</li>
+            <li>Weekly Signal Report emails</li>
+            <li>Signal Recommendations with ESP write-back</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="as-faq">
+    <h2>Frequently asked questions</h2>
+
+    <details>
+      <summary>What's the difference between Toolkit and Intelligence?</summary>
+      <p>Toolkit gives you the Signal Engine and every utility on demand &mdash; point it at a domain or upload a CSV whenever you need an answer. Intelligence is the subscription that adds continuous watching: Signal Watch runs every 6 hours, Early Warning alerts fire when signals drift, and Mailchimp suppressions actually propagate. Toolkit buyers can add Intelligence any time without losing their lifetime Toolkit.</p>
+    </details>
+
+    <details>
+      <summary>Can I stack more than 3 codes?</summary>
+      <p>No. The Toolkit maxes out at T3 (3 codes). Beyond that, additional code purchases would stay dormant and waste your money. If you need more capacity than T3 provides, add the Intelligence subscription instead &mdash; it's cheaper and gives you unlimited everything.</p>
+    </details>
+
+    <details>
+      <summary>What if AppSumo closes the deal later? Do I lose access?</summary>
+      <p>No. Your codes are redeemed to your InbXr account and the Toolkit is yours for the lifetime of InbXr. If AppSumo pulls the listing, existing buyers keep everything they already have.</p>
+    </details>
+
+    <details>
+      <summary>Lifetime of what? Toolkit features, or everything InbXr builds?</summary>
+      <p>Lifetime of the current Toolkit feature set, plus all future Toolkit features we ship. New Intelligence features (anything that requires continuous watching or ongoing cost) will be added to the MRR tier, not Toolkit. This is standard AppSumo practice and we'll always be upfront about which bucket a new feature lands in.</p>
+    </details>
+
+    <details>
+      <summary>Can I refund the codes?</summary>
+      <p>Yes, through AppSumo's standard 60-day money-back guarantee. If you refund, your Toolkit access reverts to Free and your redeemed codes return to AppSumo's pool.</p>
+    </details>
+
+    <details>
+      <summary>Will you publish the code to inbxr.us one day for free?</summary>
+      <p>No. The Toolkit is the lifetime product. The free tier on inbxr.us is a 5-signal CSV preview &mdash; useful, but the full 7-signal reading, PDF reports, and utilities are paid. AppSumo buyers get the lifetime version of the paid tier.</p>
+    </details>
+  </div>
+
+</main>
+
+{% include 'sections/email_test_footer.html' %}
+
+</body>
+</html>
