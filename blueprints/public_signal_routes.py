@@ -793,6 +793,149 @@ def inherited_list_first_aid_export():
     )
 
 
+# ── /verified-sender — InbXr Verified Sender certification ──
+#
+# Public product page + badge serving endpoints. Brands pay for an
+# annual certification that requires a Signal Score >= 80 (Grade B+).
+# The badge is a static SVG served from /api/verified/<domain>.svg
+# and is the distribution vehicle for the product.
+
+
+@public_signal_bp.route("/verified-sender")
+def verified_sender_landing():
+    """Public landing page for the Verified Sender product."""
+    from modules.verified_sender import TIER_PRICING, get_all_verified
+    verified = get_all_verified(limit=20)
+    return render_template(
+        "public/verified_sender.html",
+        allow_index=True,
+        title="InbXr Verified Sender · Trust Badge for Email Senders",
+        meta_description=(
+            "Display the InbXr Verified Sender badge on your website, "
+            "email signature, and marketing pages. Proof that your "
+            "sending domain scores 80+ (Grade B or better) on the "
+            "7 Inbox Signals model. Annual certification from $99."
+        ),
+        tiers=TIER_PRICING,
+        verified=verified,
+    )
+
+
+@public_signal_bp.route("/verified/<domain>")
+def verified_sender_domain_page(domain):
+    """Public certification detail page. Shown when a badge is clicked."""
+    from modules.verified_sender import get_certification, increment_badge_clicks
+    from flask import abort
+
+    clean = (domain or "").strip().lower()
+    cert = get_certification(clean)
+    if not cert:
+        abort(404)
+
+    increment_badge_clicks(clean)
+
+    return render_template(
+        "public/verified_sender_detail.html",
+        allow_index=True,
+        title=f"{clean} · Verified Sender · InbXr",
+        meta_description=(
+            f"{clean} is a verified InbXr Sender. Certified with a Signal "
+            f"Score of {cert['last_verified_score']} (Grade {cert['last_verified_grade']})."
+        ),
+        cert=cert,
+    )
+
+
+@public_signal_bp.route("/api/verified/<domain>.svg")
+def verified_badge_svg(domain):
+    """Static SVG trust badge. Served to any site that embeds it.
+    Returns a different look for active/expired/unknown states so the
+    badge always renders even if the certification lapses."""
+    from flask import Response
+    from modules.verified_sender import get_certification, increment_badge_clicks, is_certified
+
+    clean = (domain or "").strip().lower().replace("https://", "").replace("http://", "").split("/")[0]
+    if not clean or "." not in clean:
+        return Response("invalid domain", status=400)
+
+    cert = get_certification(clean)
+    active = is_certified(clean)
+
+    if active and cert:
+        # Active cert — gold/blue badge
+        score = cert["last_verified_score"]
+        grade = cert["last_verified_grade"]
+        label = "InbXr Verified"
+        value = f"Score {score} ({grade})"
+        fill_left = "#0f172a"
+        fill_right = "#059669"
+        increment_badge_clicks(clean)
+    elif cert and not active:
+        # Expired — muted badge
+        label = "InbXr Verified"
+        value = "expired"
+        fill_left = "#0f172a"
+        fill_right = "#94a3b8"
+    else:
+        # Not certified — CTA badge
+        label = "Not verified"
+        value = "get certified"
+        fill_left = "#64748b"
+        fill_right = "#94a3b8"
+
+    label_w = 8 * len(label) + 14
+    value_w = 8 * len(value) + 14
+    total_w = label_w + value_w
+
+    svg = f'''<svg xmlns="http://www.w3.org/2000/svg" width="{total_w}" height="24" role="img" aria-label="InbXr: {label} {value}">
+  <title>InbXr Verified Sender: {clean} — {value}</title>
+  <linearGradient id="s" x2="0" y2="100%">
+    <stop offset="0" stop-color="#ffffff" stop-opacity=".15"/>
+    <stop offset="1" stop-opacity=".15"/>
+  </linearGradient>
+  <clipPath id="r"><rect width="{total_w}" height="24" rx="4" fill="#ffffff"/></clipPath>
+  <g clip-path="url(#r)">
+    <rect width="{label_w}" height="24" fill="{fill_left}"/>
+    <rect x="{label_w}" width="{value_w}" height="24" fill="{fill_right}"/>
+    <rect width="{total_w}" height="24" fill="url(#s)"/>
+  </g>
+  <g fill="#ffffff" text-anchor="middle" font-family="Verdana,Geneva,DejaVu Sans,sans-serif" font-size="11" font-weight="700">
+    <text x="{label_w/2}" y="17">{label}</text>
+    <text x="{label_w + value_w/2}" y="17">{value}</text>
+  </g>
+</svg>'''
+    resp = Response(svg, mimetype="image/svg+xml")
+    resp.headers["Cache-Control"] = "public, max-age=1800"
+    resp.headers["Access-Control-Allow-Origin"] = "*"
+    return resp
+
+
+# ── /insights/annual-report — State of Email Deliverability ──
+
+
+@public_signal_bp.route("/insights/annual-report")
+def annual_report_page():
+    """State of Email Deliverability annual report. Aggregate data
+    from domain_leaderboard. Updates in real time as new domains are
+    scanned. Press hook and permanent SEO anchor."""
+    from modules.leaderboard import get_annual_report_data
+
+    data = get_annual_report_data()
+
+    return render_template(
+        "public/annual_report.html",
+        allow_index=True,
+        title="State of Email Deliverability · Annual Report · InbXr",
+        meta_description=(
+            "InbXr's State of Email Deliverability report. Aggregate data "
+            "from thousands of domains scored by the Signal Engine. Grade "
+            "distribution, percentile thresholds, common failure modes, "
+            "and what the deliverability landscape actually looks like."
+        ),
+        data=data,
+    )
+
+
 # ── /leaderboard — public domain leaderboard ─────────────
 #
 # Every time the Domain Signal Score engine runs against a domain,

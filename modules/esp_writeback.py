@@ -125,6 +125,207 @@ def suppress_mailchimp_contact(api_key, list_id, email, reason="signal_rule"):
         return False, f"unexpected: {type(e).__name__}: {str(e)[:200]}"
 
 
+# ── ActiveCampaign ──────────────────────────────────────
+
+
+def suppress_activecampaign_contact(api_key, server_prefix, email, reason="signal_rule"):
+    """Unsubscribe a contact from ActiveCampaign. AC uses a different
+    pattern than Mailchimp: you first look up the contact by email,
+    then update their status on each list.
+
+    Returns (ok: bool, message: str).
+    """
+    if not api_key or not server_prefix or not email:
+        return False, "missing required arguments"
+
+    base = server_prefix.rstrip("/")
+    if not base.startswith("http"):
+        base = f"https://{base}"
+
+    # Step 1: Find the contact by email
+    search_url = f"{base}/api/3/contacts?email={email}"
+    req = urllib.request.Request(
+        search_url,
+        headers={"Api-Token": api_key, "Accept": "application/json"},
+    )
+
+    try:
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            data = json.loads(resp.read().decode())
+            contacts = data.get("contacts", [])
+            if not contacts:
+                return True, "contact not in list (nothing to do)"
+            contact_id = contacts[0].get("id")
+    except urllib.error.HTTPError as e:
+        return False, f"contact lookup HTTP {e.code}"
+    except Exception as e:
+        logger.exception("[ESP_WRITEBACK] AC contact lookup failed")
+        return False, f"lookup error: {type(e).__name__}"
+
+    if not contact_id:
+        return True, "no contact id returned"
+
+    # Step 2: Find the contact's list memberships and unsubscribe from each
+    list_url = f"{base}/api/3/contacts/{contact_id}/contactLists"
+    req2 = urllib.request.Request(
+        list_url,
+        headers={"Api-Token": api_key, "Accept": "application/json"},
+    )
+    try:
+        with urllib.request.urlopen(req2, timeout=15) as resp:
+            list_data = json.loads(resp.read().decode())
+    except Exception as e:
+        return False, f"list lookup error: {type(e).__name__}"
+
+    memberships = list_data.get("contactLists", [])
+    if not memberships:
+        return True, "contact not on any list"
+
+    updated = 0
+    for m in memberships:
+        list_id = m.get("list")
+        # POST /contactLists with status=2 = unsubscribed
+        update_url = f"{base}/api/3/contactLists"
+        payload = json.dumps({
+            "contactList": {
+                "list": list_id,
+                "contact": contact_id,
+                "status": 2,  # unsubscribed
+            }
+        }).encode()
+        req3 = urllib.request.Request(
+            update_url,
+            data=payload,
+            method="POST",
+            headers={
+                "Api-Token": api_key,
+                "Content-Type": "application/json",
+            },
+        )
+        try:
+            with urllib.request.urlopen(req3, timeout=15) as resp:
+                if 200 <= resp.status < 300:
+                    updated += 1
+        except Exception:
+            pass
+
+    if updated:
+        return True, f"unsubscribed from {updated} list(s)"
+    return False, "no lists updated"
+
+
+# ── Mailgun ─────────────────────────────────────────────
+
+
+def suppress_mailgun_contact(api_key, domain, email, reason="signal_rule"):
+    """Add an email to the Mailgun suppression list (type=unsubscribes).
+    Mailgun uses the domain as a URL path parameter."""
+    if not api_key or not domain or not email:
+        return False, "missing required arguments"
+
+    url = f"https://api.mailgun.net/v3/{domain}/unsubscribes"
+    # Mailgun uses form-encoded POST, not JSON
+    form_data = f"address={email}&tag=inbxr_{reason}".encode()
+
+    creds = base64.b64encode(f"api:{api_key}".encode()).decode()
+    req = urllib.request.Request(
+        url,
+        data=form_data,
+        method="POST",
+        headers={
+            "Authorization": f"Basic {creds}",
+            "Content-Type": "application/x-www-form-urlencoded",
+            "User-Agent": "InbXr/1.0 SignalEngine",
+        },
+    )
+
+    try:
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            if 200 <= resp.status < 300:
+                return True, f"added to suppression list (HTTP {resp.status})"
+            return False, f"HTTP {resp.status}"
+    except urllib.error.HTTPError as e:
+        try:
+            body = e.read().decode()
+        except Exception:
+            body = ""
+        return False, f"HTTP {e.code}: {body[:200]}"
+    except Exception as e:
+        logger.exception("[ESP_WRITEBACK] Mailgun suppression failed")
+        return False, f"unexpected: {type(e).__name__}"
+
+
+# ── AWeber ──────────────────────────────────────────────
+
+
+def suppress_aweber_contact(access_token, email, reason="signal_rule"):
+    """Unsubscribe a contact from AWeber. AWeber requires OAuth 2.0
+    with a full path lookup: /accounts/{id}/lists/{id}/subscribers/{id}.
+
+    For V3 we ship a best-effort implementation. If an AWeber user needs
+    write-back, they can ask us to harden it against their specific
+    account structure.
+    """
+    if not access_token or not email:
+        return False, "missing required arguments"
+
+    # Step 1: Get the account
+    try:
+        req = urllib.request.Request(
+            "https://api.aweber.com/1.0/accounts",
+            headers={"Authorization": f"Bearer {access_token}"},
+        )
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            data = json.loads(resp.read().decode())
+            entries = data.get("entries", [])
+            if not entries:
+                return False, "no AWeber accounts on this token"
+            account_url = entries[0].get("self_link", "")
+    except Exception as e:
+        return False, f"account lookup error: {type(e).__name__}"
+
+    if not account_url:
+        return False, "no account self_link"
+
+    # Step 2: Search for the subscriber by email across lists
+    find_url = f"{account_url}?ws.op=findSubscribers&email={email}"
+    try:
+        req = urllib.request.Request(
+            find_url,
+            headers={"Authorization": f"Bearer {access_token}"},
+        )
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            found = json.loads(resp.read().decode())
+            subs = found.get("entries", [])
+            if not subs:
+                return True, "subscriber not found (nothing to do)"
+    except Exception as e:
+        return False, f"find error: {type(e).__name__}"
+
+    # Step 3: For each subscriber record, send a DELETE (which archives them
+    # in AWeber terms; this is how you unsubscribe via the API)
+    archived = 0
+    for sub in subs:
+        sub_url = sub.get("self_link")
+        if not sub_url:
+            continue
+        try:
+            req = urllib.request.Request(
+                sub_url,
+                method="DELETE",
+                headers={"Authorization": f"Bearer {access_token}"},
+            )
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                if 200 <= resp.status < 300:
+                    archived += 1
+        except Exception:
+            pass
+
+    if archived:
+        return True, f"archived {archived} subscriber record(s)"
+    return False, "no records archived"
+
+
 # ── Main entry point ────────────────────────────────────
 
 
@@ -182,25 +383,42 @@ def suppress_contact(user_id, esp_integration_id, email, reason="signal_rule"):
         _log_writeback(user_id, esp_integration_id, provider, email, "suppress", "failed", "could not decrypt API key")
         return False, "could not decrypt API key"
 
+    server_prefix = integration.get("server_prefix") or ""
+
     if provider == "mailchimp":
-        # server_prefix historically stores the data center for Mailchimp,
-        # but the list id is discovered at call time because most users
-        # only have one list anyway.
         list_id = _discover_mailchimp_list_id(api_key)
         if not list_id:
             msg = "could not discover Mailchimp list (is the integration active?)"
             _log_writeback(user_id, esp_integration_id, provider, email, "suppress", "failed", msg)
             return False, msg
-
         ok, message = suppress_mailchimp_contact(api_key, list_id, email, reason=reason)
-        status = "success" if ok else "failed"
-        _log_writeback(user_id, esp_integration_id, provider, email, "suppress", status, message)
-        return ok, message
 
-    # Other providers not yet supported for write-back in V1
-    msg = f"write-back not supported for {provider} yet"
-    _log_writeback(user_id, esp_integration_id, provider, email, "suppress", "skipped", msg)
-    return False, msg
+    elif provider == "activecampaign":
+        if not server_prefix:
+            msg = "ActiveCampaign integration missing server_prefix"
+            _log_writeback(user_id, esp_integration_id, provider, email, "suppress", "failed", msg)
+            return False, msg
+        ok, message = suppress_activecampaign_contact(api_key, server_prefix, email, reason=reason)
+
+    elif provider == "mailgun":
+        if not server_prefix:
+            msg = "Mailgun integration missing domain (server_prefix)"
+            _log_writeback(user_id, esp_integration_id, provider, email, "suppress", "failed", msg)
+            return False, msg
+        ok, message = suppress_mailgun_contact(api_key, server_prefix, email, reason=reason)
+
+    elif provider == "aweber":
+        # AWeber stores OAuth access token in api_key_encrypted
+        ok, message = suppress_aweber_contact(api_key, email, reason=reason)
+
+    else:
+        msg = f"write-back not supported for {provider} yet"
+        _log_writeback(user_id, esp_integration_id, provider, email, "suppress", "skipped", msg)
+        return False, msg
+
+    status = "success" if ok else "failed"
+    _log_writeback(user_id, esp_integration_id, provider, email, "suppress", status, message)
+    return ok, message
 
 
 def count_writebacks_for_rule(rule_id):

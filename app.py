@@ -151,6 +151,9 @@ app.register_blueprint(webhook_bp)
 from blueprints.appsumo_routes import appsumo_bp
 app.register_blueprint(appsumo_bp)
 
+from blueprints.api_v1_routes import api_v1_bp
+app.register_blueprint(api_v1_bp)
+
 from modules.scheduler import init_scheduler
 init_scheduler(app)
 
@@ -508,6 +511,8 @@ def sitemap_xml():
         ('/leaderboard', '0.8', 'daily'),
         ('/badge', '0.7', 'monthly'),
         ('/appsumo', '0.9', 'weekly'),
+        ('/insights/annual-report', '0.8', 'weekly'),
+        ('/verified-sender', '0.8', 'monthly'),
         ('/zerobounce-alternative', '0.7', 'monthly'),
         ('/mail-tester-alternative', '0.7', 'monthly'),
         ('/mxtoolbox-alternative', '0.7', 'monthly'),
@@ -2161,6 +2166,105 @@ def admin_settings():
     if not _is_admin():
         return redirect("/admin/login")
     return render_template("admin_settings.html", is_admin=True, active_page="admin_settings")
+
+
+# ── Admin: AppSumo LTD ───────────────────────────────────
+
+
+@app.route("/admin/appsumo")
+def admin_appsumo():
+    """Admin panel for AppSumo LTD code management.
+    Shows redemption stats, tier distribution, and a bulk import form."""
+    if not _is_admin():
+        return redirect("/admin/login")
+
+    from modules.database import fetchone as _fo, fetchall as _fa
+
+    stats_row = _fo(
+        "SELECT COUNT(*) AS total, "
+        "COALESCE(SUM(CASE WHEN redeemed_by_user_id IS NOT NULL THEN 1 ELSE 0 END), 0) AS redeemed, "
+        "COALESCE(SUM(CASE WHEN redeemed_by_user_id IS NULL THEN 1 ELSE 0 END), 0) AS available "
+        "FROM appsumo_codes",
+        (),
+    )
+
+    tier_dist = _fa(
+        "SELECT toolkit_tier_level AS level, COUNT(*) AS n "
+        "FROM users WHERE toolkit_tier_level > 0 GROUP BY toolkit_tier_level",
+        (),
+    )
+
+    # LTD -> MRR upgrade funnel (users who have both toolkit + intelligence)
+    bridge_row = _fo(
+        "SELECT COUNT(*) AS n FROM users "
+        "WHERE toolkit_ok = 1 AND intelligence_ok = 1",
+        (),
+    )
+
+    recent_redemptions = _fa(
+        "SELECT ac.code, ac.batch_label, ac.redeemed_at, u.email "
+        "FROM appsumo_codes ac "
+        "LEFT JOIN users u ON u.id = ac.redeemed_by_user_id "
+        "WHERE ac.redeemed_by_user_id IS NOT NULL "
+        "ORDER BY ac.redeemed_at DESC LIMIT 20",
+        (),
+    )
+
+    return render_template(
+        "admin_appsumo.html",
+        is_admin=True,
+        active_page="admin_appsumo",
+        stats={
+            "total": stats_row.get("total", 0) if stats_row else 0,
+            "redeemed": stats_row.get("redeemed", 0) if stats_row else 0,
+            "available": stats_row.get("available", 0) if stats_row else 0,
+        },
+        tier_distribution={row["level"]: row["n"] for row in tier_dist},
+        bridge_users=bridge_row.get("n", 0) if bridge_row else 0,
+        recent_redemptions=recent_redemptions,
+    )
+
+
+@app.route("/admin/appsumo/import", methods=["POST"])
+def admin_appsumo_import():
+    """Bulk import AppSumo codes. Accepts one code per line in a
+    textarea field or a CSV upload. Skips duplicates silently via
+    INSERT OR IGNORE."""
+    if not _is_admin():
+        return jsonify({"ok": False, "error": "Unauthorized"}), 403
+
+    from modules.database import execute as _ex
+
+    codes_text = request.form.get("codes", "").strip()
+    batch_label = (request.form.get("batch_label") or "manual_import").strip()[:64]
+
+    if not codes_text:
+        return jsonify({"ok": False, "error": "No codes provided."}), 400
+
+    # Split on newlines and commas, normalize each code
+    raw_codes = []
+    for line in codes_text.splitlines():
+        for piece in line.split(","):
+            piece = piece.strip().upper()
+            if piece and len(piece) >= 6:
+                raw_codes.append(piece)
+
+    imported = 0
+    for code in raw_codes:
+        try:
+            _ex(
+                "INSERT OR IGNORE INTO appsumo_codes (code, batch_label) VALUES (?, ?)",
+                (code, batch_label),
+            )
+            imported += 1
+        except Exception:
+            pass
+
+    return jsonify({
+        "ok": True,
+        "imported": imported,
+        "total_received": len(raw_codes),
+    })
 
 
 # ══════════════════════════════════════════════════════

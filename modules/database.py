@@ -1226,6 +1226,52 @@ Opportunity: Start your free InbXr audit today and see where you actually stand.
         -- toolkit_ok (from migration 025) is flipped to 1 at first redeem.
         ALTER TABLE users ADD COLUMN toolkit_tier_level INTEGER DEFAULT 0;
     """),
+    ("032_verified_senders", """
+        -- Verified Sender certification product. A domain is certified
+        -- when its Signal Score is >= 80 (B+) and the user pays the
+        -- annual fee. The verified_senders row is the source of truth
+        -- for the /api/verified/<domain>.svg trust badge. Expiry is
+        -- 1 year from certified_at. Re-verification required annually.
+        CREATE TABLE IF NOT EXISTS verified_senders (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            domain TEXT NOT NULL UNIQUE,
+            tier TEXT NOT NULL DEFAULT 'standard' CHECK(tier IN ('standard', 'pro', 'elite')),
+            annual_fee_usd INTEGER NOT NULL DEFAULT 99,
+            certified_at TEXT NOT NULL DEFAULT (datetime('now')),
+            expires_at TEXT NOT NULL DEFAULT (datetime('now', '+365 days')),
+            last_verified_score INTEGER,
+            last_verified_grade TEXT,
+            status TEXT DEFAULT 'active' CHECK(status IN ('active', 'expired', 'revoked', 'suspended')),
+            badge_clicks INTEGER NOT NULL DEFAULT 0,
+            stripe_subscription_id TEXT,
+            created_at TEXT DEFAULT (datetime('now')),
+            updated_at TEXT DEFAULT (datetime('now')),
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        );
+        CREATE INDEX IF NOT EXISTS idx_verified_senders_user ON verified_senders(user_id);
+        CREATE INDEX IF NOT EXISTS idx_verified_senders_domain ON verified_senders(domain);
+        CREATE INDEX IF NOT EXISTS idx_verified_senders_status ON verified_senders(status);
+    """),
+    ("033_agency_clients", """
+        -- Agency multi-client dashboard. Each row is a client the
+        -- agency user tracks. Clients are associated by sending domain,
+        -- which the Signal Engine scores via the existing leaderboard
+        -- cache. This avoids requiring per-client ESP integrations.
+        CREATE TABLE IF NOT EXISTS agency_clients (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            agency_user_id INTEGER NOT NULL,
+            client_name TEXT NOT NULL,
+            domain TEXT NOT NULL,
+            contact_email TEXT,
+            notes TEXT,
+            created_at TEXT DEFAULT (datetime('now')),
+            updated_at TEXT DEFAULT (datetime('now')),
+            FOREIGN KEY (agency_user_id) REFERENCES users(id) ON DELETE CASCADE,
+            UNIQUE(agency_user_id, domain)
+        );
+        CREATE INDEX IF NOT EXISTS idx_agency_clients_user ON agency_clients(agency_user_id);
+    """),
 ]
 
 

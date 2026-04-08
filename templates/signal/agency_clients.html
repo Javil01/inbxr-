@@ -1,0 +1,181 @@
+{% extends "auth/base_auth.html" %}
+{% block title %}Multi-client dashboard &middot; InbXr{% endblock %}
+{% block content %}
+<style>
+.ac-head { display: flex; justify-content: space-between; align-items: start; margin-bottom: 22px; flex-wrap: wrap; gap: 14px; }
+.ac-head h1 { margin: 0 0 4px; font-size: 1.6rem; }
+.ac-head__sub { font-size: 0.85rem; color: var(--text-3); margin: 0; }
+.ac-head__add-btn { background: var(--brand, #2563eb); color: #fff; border: none; border-radius: 999px; padding: 10px 22px; font-size: 0.88rem; font-weight: 700; cursor: pointer; font-family: inherit; }
+
+.ac-form { background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 12px; padding: 22px 24px; margin-bottom: 22px; display: none; }
+.ac-form.visible { display: block; }
+.ac-form h3 { font-size: 0.88rem; text-transform: uppercase; letter-spacing: 0.05em; color: #0284c7; margin: 0 0 14px; font-weight: 800; }
+.ac-form__grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+.ac-field { display: flex; flex-direction: column; gap: 4px; }
+.ac-field label { font-size: 0.78rem; color: var(--text-3); font-weight: 600; }
+.ac-field input, .ac-field textarea { padding: 10px 12px; border: 1px solid var(--border-1, #e2e8f0); border-radius: 8px; font-size: 0.9rem; font-family: inherit; }
+.ac-field textarea { min-height: 60px; resize: vertical; }
+.ac-form__actions { display: flex; gap: 10px; margin-top: 14px; }
+.ac-form__actions button { padding: 9px 20px; border: none; border-radius: 999px; font-size: 0.85rem; font-weight: 700; cursor: pointer; font-family: inherit; }
+.ac-form__actions .primary { background: #0284c7; color: #fff; }
+.ac-form__actions .cancel { background: none; border: 1px solid var(--border-1, #e2e8f0); color: var(--text-3); }
+.ac-err { display: none; padding: 10px 14px; background: #fef2f2; border: 1px solid #fca5a5; color: #991b1b; border-radius: 8px; font-size: 0.85rem; margin-bottom: 10px; }
+.ac-err.visible { display: block; }
+
+.ac-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+.ac-card { background: #fff; border: 1px solid var(--border-1, #e2e8f0); border-radius: 14px; padding: 22px; border-left-width: 4px; }
+.ac-card--A { border-left-color: #059669; }
+.ac-card--B { border-left-color: #0891b2; }
+.ac-card--C { border-left-color: #d97706; }
+.ac-card--D { border-left-color: #dc2626; }
+.ac-card--F { border-left-color: #991b1b; }
+.ac-card--unscored { border-left-color: #94a3b8; }
+.ac-card__header { display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px; }
+.ac-card__name { font-size: 1rem; font-weight: 800; color: var(--text-1); margin: 0; line-height: 1.25; }
+.ac-card__domain { font-size: 0.8rem; color: var(--text-3); font-family: "SF Mono", Menlo, monospace; margin-top: 2px; }
+.ac-card__grade { font-size: 1.4rem; font-weight: 900; color: var(--text-1); padding: 4px 12px; border-radius: 8px; }
+.ac-card__grade--A { background: rgba(5,150,105,0.1); color: #065f46; }
+.ac-card__grade--B { background: rgba(8,145,178,0.1); color: #155e75; }
+.ac-card__grade--C { background: rgba(217,119,6,0.1); color: #92400e; }
+.ac-card__grade--D { background: rgba(220,38,38,0.1); color: #991b1b; }
+.ac-card__grade--F { background: rgba(153,27,27,0.15); color: #7f1d1d; }
+.ac-card__grade--unscored { background: #f1f5f9; color: #64748b; font-size: 0.88rem; }
+.ac-card__score { font-size: 1.8rem; font-weight: 900; color: var(--text-1); line-height: 1; margin: 10px 0 4px; }
+.ac-card__score small { font-size: 0.82rem; color: var(--text-3); font-weight: 600; }
+.ac-card__meta { font-size: 0.78rem; color: var(--text-3); margin-top: 6px; }
+.ac-card__notes { font-size: 0.82rem; color: var(--text-2); margin: 12px 0 0; padding: 10px; background: #f8fafc; border-radius: 6px; line-height: 1.5; }
+.ac-card__actions { display: flex; gap: 6px; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border-1, #e2e8f0); }
+.ac-card__actions button, .ac-card__actions a { font-size: 0.74rem; font-weight: 700; padding: 6px 12px; border-radius: 999px; text-decoration: none; cursor: pointer; border: 1px solid var(--border-1, #e2e8f0); background: #fff; color: var(--text-2); font-family: inherit; }
+.ac-card__actions .rescore { border-color: #bae6fd; color: #0284c7; }
+.ac-card__actions .delete { border-color: #fca5a5; color: #dc2626; }
+.ac-card__actions a { color: var(--brand, #2563eb); border-color: #bae6fd; }
+
+.ac-empty { text-align: center; padding: 60px 20px; color: var(--text-3); border: 2px dashed var(--border-1, #e2e8f0); border-radius: 14px; }
+</style>
+
+<div class="ac-head">
+  <div>
+    <h1>Multi-client dashboard</h1>
+    <p class="ac-head__sub">All your clients in one view. Each card pulls a live Signal Score from the Signal Engine.</p>
+  </div>
+  <button type="button" class="ac-head__add-btn" onclick="toggleAddForm()">+ Add client</button>
+</div>
+
+<div id="addForm" class="ac-form">
+  <h3>Add a client</h3>
+  <div id="addErr" class="ac-err"></div>
+  <div class="ac-form__grid">
+    <div class="ac-field">
+      <label for="clientName">Client name</label>
+      <input type="text" id="clientName" placeholder="Acme Corp" required />
+    </div>
+    <div class="ac-field">
+      <label for="clientDomain">Sending domain</label>
+      <input type="text" id="clientDomain" placeholder="acme.com" required />
+    </div>
+    <div class="ac-field">
+      <label for="clientContact">Contact email (optional)</label>
+      <input type="email" id="clientContact" placeholder="founder@acme.com" />
+    </div>
+  </div>
+  <div class="ac-field">
+    <label for="clientNotes">Notes (optional)</label>
+    <textarea id="clientNotes" placeholder="Preferred ESP, current issues, last audit date..."></textarea>
+  </div>
+  <div class="ac-form__actions">
+    <button type="button" class="primary" onclick="submitClient()">Add client</button>
+    <button type="button" class="cancel" onclick="toggleAddForm()">Cancel</button>
+  </div>
+</div>
+
+{% if clients %}
+  <div class="ac-grid">
+    {% for c in clients %}
+      <div class="ac-card ac-card--{{ c.grade if c.grade else 'unscored' }}">
+        <div class="ac-card__header">
+          <div>
+            <p class="ac-card__name">{{ c.client_name }}</p>
+            <p class="ac-card__domain">{{ c.domain }}</p>
+          </div>
+          <span class="ac-card__grade ac-card__grade--{{ c.grade if c.grade else 'unscored' }}">{{ c.grade if c.grade else '—' }}</span>
+        </div>
+        {% if c.total_score is not none %}
+          <div class="ac-card__score">{{ c.total_score }}<small>/100</small></div>
+          <p class="ac-card__meta">Last scanned: {{ c.last_scanned_at[:10] if c.last_scanned_at else 'pending' }}</p>
+        {% else %}
+          <div class="ac-card__score" style="font-size: 1rem; color: var(--text-3);">Awaiting first scan</div>
+        {% endif %}
+        {% if c.notes %}
+          <p class="ac-card__notes">{{ c.notes }}</p>
+        {% endif %}
+        <div class="ac-card__actions">
+          <button type="button" class="rescore" onclick="rescoreClient({{ c.id }})">Rescore</button>
+          <a href="/?domain={{ c.domain }}">Full report</a>
+          <button type="button" class="delete" onclick="deleteClient({{ c.id }})" style="margin-left: auto;">Delete</button>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="ac-empty">
+    <p style="font-size: 1.05rem; color: var(--text-2); margin: 0 0 6px;">No clients yet.</p>
+    <p style="font-size: 0.88rem; margin: 0;">Click "Add client" to start tracking your first client's sending domain.</p>
+  </div>
+{% endif %}
+
+<script>
+function toggleAddForm() {
+  document.getElementById('addForm').classList.toggle('visible');
+}
+
+function submitClient() {
+  var name = document.getElementById('clientName').value.trim();
+  var domain = document.getElementById('clientDomain').value.trim();
+  var contact = document.getElementById('clientContact').value.trim();
+  var notes = document.getElementById('clientNotes').value.trim();
+  var err = document.getElementById('addErr');
+
+  if (!name || !domain) {
+    err.textContent = 'Client name and domain are required.';
+    err.classList.add('visible');
+    return;
+  }
+
+  fetch('/clients/add', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.content || '',
+    },
+    body: JSON.stringify({ client_name: name, domain: domain, contact_email: contact, notes: notes }),
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    if (d.ok) location.reload();
+    else {
+      err.textContent = d.error || 'Add failed.';
+      err.classList.add('visible');
+    }
+  });
+}
+
+function deleteClient(id) {
+  if (!confirm('Remove this client from your dashboard?')) return;
+  fetch('/clients/' + id + '/delete', {
+    method: 'POST',
+    headers: {'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.content || ''},
+  }).then(function(){ location.reload(); });
+}
+
+function rescoreClient(id) {
+  fetch('/clients/' + id + '/rescore', {
+    method: 'POST',
+    headers: {'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.content || ''},
+  }).then(function(r){ return r.json(); })
+  .then(function(d){
+    if (d.ok) location.reload();
+    else alert('Rescore failed: ' + (d.error || 'unknown'));
+  });
+}
+</script>
+{% endblock %}

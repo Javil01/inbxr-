@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin &middot; AppSumo LTD &middot; InbXr</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/style.css?v=20260408f" />
+  {% include 'sections/_head_meta.html' %}
+</head>
+<body class="dashboard-page">
+
+{% include 'sections/header.html' %}
+
+<style>
+.admin-wrap { max-width: 1000px; margin: 0 auto; padding: 40px 24px 80px; }
+.admin-head h1 { margin: 0 0 6px; font-size: 1.8rem; }
+.admin-head__sub { font-size: 0.88rem; color: var(--text-3); margin: 0 0 28px; }
+
+.admin-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 28px; }
+.admin-kpi { background: #fff; border: 1px solid var(--border-1, #e2e8f0); border-radius: 12px; padding: 20px 22px; }
+.admin-kpi__num { font-size: 2rem; font-weight: 900; color: var(--text-1); line-height: 1.1; }
+.admin-kpi__label { font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-3); margin-top: 4px; }
+.admin-kpi--featured { background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); border-color: #fcd34d; }
+
+.admin-section { background: #fff; border: 1px solid var(--border-1, #e2e8f0); border-radius: 14px; padding: 24px 26px; margin-bottom: 20px; }
+.admin-section h2 { font-size: 0.92rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-1); margin: 0 0 12px; }
+.admin-section p { font-size: 0.88rem; color: var(--text-2); line-height: 1.55; margin: 0 0 14px; }
+
+.admin-tier-bars { display: flex; flex-direction: column; gap: 8px; }
+.admin-tier-bar { display: grid; grid-template-columns: 60px 1fr 60px; gap: 12px; align-items: center; font-size: 0.88rem; }
+.admin-tier-bar__track { background: #f1f5f9; border-radius: 999px; height: 18px; overflow: hidden; }
+.admin-tier-bar__fill { height: 100%; background: linear-gradient(90deg, #f59e0b, #d97706); border-radius: 999px; }
+
+.admin-import-form { display: flex; flex-direction: column; gap: 10px; }
+.admin-import-form input, .admin-import-form textarea { padding: 10px 14px; border: 1px solid var(--border-1, #e2e8f0); border-radius: 8px; font-family: "SF Mono", Menlo, monospace; font-size: 0.85rem; }
+.admin-import-form textarea { min-height: 140px; resize: vertical; }
+.admin-import-form button { padding: 11px 24px; background: var(--brand, #2563eb); color: #fff; border: none; border-radius: 999px; font-size: 0.88rem; font-weight: 700; cursor: pointer; font-family: inherit; align-self: flex-start; }
+#importResult { font-size: 0.85rem; margin-top: 10px; }
+#importResult.success { color: #059669; }
+#importResult.error { color: #dc2626; }
+
+.admin-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+.admin-table th, .admin-table td { padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--border-1, #e2e8f0); }
+.admin-table th { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-3); font-weight: 800; background: #f8fafc; }
+.admin-table code { font-family: "SF Mono", Menlo, monospace; font-weight: 600; color: var(--text-1); }
+.admin-table time { color: var(--text-3); font-size: 0.78rem; }
+</style>
+
+<main class="admin-wrap">
+
+  <div class="admin-head">
+    <h1>AppSumo LTD administration</h1>
+    <p class="admin-head__sub">Code import, redemption stats, and LTD-to-MRR upgrade bridge tracking.</p>
+  </div>
+
+  <div class="admin-kpis">
+    <div class="admin-kpi">
+      <div class="admin-kpi__num">{{ '{:,}'.format(stats.total) }}</div>
+      <div class="admin-kpi__label">Total codes</div>
+    </div>
+    <div class="admin-kpi">
+      <div class="admin-kpi__num">{{ '{:,}'.format(stats.redeemed) }}</div>
+      <div class="admin-kpi__label">Redeemed</div>
+    </div>
+    <div class="admin-kpi">
+      <div class="admin-kpi__num">{{ '{:,}'.format(stats.available) }}</div>
+      <div class="admin-kpi__label">Available</div>
+    </div>
+    <div class="admin-kpi admin-kpi--featured">
+      <div class="admin-kpi__num">{{ '{:,}'.format(bridge_users) }}</div>
+      <div class="admin-kpi__label">LTD &rarr; MRR upgraded</div>
+    </div>
+  </div>
+
+  <div class="admin-section">
+    <h2>Toolkit tier distribution</h2>
+    <p>Users broken down by how many codes they've stacked. Higher tiers = more revenue per buyer.</p>
+    <div class="admin-tier-bars">
+      {% for level in [1, 2, 3] %}
+        {% set count = tier_distribution.get(level, 0) %}
+        {% set pct = (count * 100 / stats.redeemed) if stats.redeemed else 0 %}
+        <div class="admin-tier-bar">
+          <span><b>T{{ level }}</b></span>
+          <div class="admin-tier-bar__track">
+            <div class="admin-tier-bar__fill" style="width: {{ pct }}%;"></div>
+          </div>
+          <span>{{ count }}</span>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="admin-section">
+    <h2>Import codes</h2>
+    <p>Paste codes (one per line or comma-separated) and assign a batch label for tracking. Duplicates are silently skipped.</p>
+    <form class="admin-import-form" id="importForm">
+      <input type="text" id="batchLabel" placeholder="Batch label (e.g. appsumo_wave_1)" value="manual_import" />
+      <textarea id="codesInput" placeholder="TEST-AB12CD34&#10;TEST-EF56GH78&#10;..." required></textarea>
+      <button type="submit">Import codes</button>
+      <div id="importResult"></div>
+    </form>
+  </div>
+
+  {% if recent_redemptions %}
+  <div class="admin-section">
+    <h2>Recent redemptions</h2>
+    <table class="admin-table">
+      <thead>
+        <tr><th>Code</th><th>Batch</th><th>Redeemed by</th><th>When</th></tr>
+      </thead>
+      <tbody>
+        {% for r in recent_redemptions %}
+          <tr>
+            <td><code>{{ r.code }}</code></td>
+            <td>{{ r.batch_label or '—' }}</td>
+            <td>{{ r.email or '—' }}</td>
+            <td><time>{{ r.redeemed_at[:16] if r.redeemed_at else '—' }}</time></td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+
+</main>
+
+<script>
+document.getElementById('importForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  var codes = document.getElementById('codesInput').value;
+  var label = document.getElementById('batchLabel').value;
+  var out = document.getElementById('importResult');
+  out.className = '';
+  out.textContent = 'Importing...';
+
+  var fd = new FormData();
+  fd.append('codes', codes);
+  fd.append('batch_label', label);
+
+  fetch('/admin/appsumo/import', { method: 'POST', body: fd })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (d.ok) {
+        out.className = 'success';
+        out.textContent = 'Imported ' + d.imported + ' of ' + d.total_received + ' codes. Reloading...';
+        setTimeout(function() { location.reload(); }, 1500);
+      } else {
+        out.className = 'error';
+        out.textContent = d.error || 'Import failed.';
+      }
+    })
+    .catch(function() {
+      out.className = 'error';
+      out.textContent = 'Network error.';
+    });
+});
+</script>
+
+</body>
+</html>

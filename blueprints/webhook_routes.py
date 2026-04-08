@@ -260,3 +260,159 @@ def _handle_subscribe(user_id, integration_id, email):
             (user_id, integration_id, email),
         )
     logger.info("[WEBHOOK] Mailchimp subscribe: %s", email)
+
+
+# ── ActiveCampaign webhook ──────────────────────────────
+#
+# ActiveCampaign posts webhooks as application/x-www-form-urlencoded
+# with a nested "contact" + "type" field pattern. The full event set
+# includes subscribe, unsubscribe, bounce, update, and several others.
+# We handle the deliverability-relevant ones and ignore the rest.
+#
+# Auth pattern: like Mailchimp, AC doesn't sign payloads. We use the
+# same per-user HMAC token in the URL path.
+#
+# AC field shape:
+#     contact[email], contact[id], contact[list], type
+
+
+def _user_from_ac_token(token):
+    """Reverse-lookup for ActiveCampaign. Mirrors the Mailchimp pattern."""
+    from modules.database import fetchall
+    candidates = fetchall(
+        "SELECT DISTINCT user_id FROM esp_integrations "
+        "WHERE provider = 'activecampaign' AND status = 'active'",
+        (),
+    )
+    for c in candidates:
+        uid = c["user_id"]
+        if verify_user_webhook_token(uid, "activecampaign", token):
+            return uid
+    return None
+
+
+@webhook_bp.route("/activecampaign/<token>", methods=["GET", "POST"])
+def activecampaign_webhook(token):
+    """Handle ActiveCampaign webhook events."""
+    if request.method == "GET":
+        return "OK", 200
+
+    user_id = _user_from_ac_token(token)
+    if not user_id:
+        logger.warning("[WEBHOOK] ActiveCampaign unknown token")
+        return "OK", 200
+
+    integration = fetchone(
+        """SELECT id FROM esp_integrations
+           WHERE user_id = ? AND provider = 'activecampaign' AND status = 'active'
+           ORDER BY id DESC LIMIT 1""",
+        (user_id,),
+    )
+    if not integration:
+        return "OK", 200
+
+    integration_id = integration["id"]
+
+    event_type = (request.form.get("type") or "").strip().lower()
+    email = (request.form.get("contact[email]") or "").strip().lower()
+
+    if not event_type:
+        return "OK", 200
+
+    try:
+        if event_type == "subscribe":
+            _handle_subscribe(user_id, integration_id, email)
+        elif event_type == "unsubscribe":
+            _handle_unsubscribe(user_id, integration_id, email)
+        elif event_type in ("bounce", "hard_bounce"):
+            _handle_cleaned(user_id, integration_id, email)
+        elif event_type == "update":
+            _handle_profile_update(user_id, integration_id, email)
+        else:
+            logger.info("[WEBHOOK] ActiveCampaign unknown event: %s", event_type)
+    except Exception:
+        logger.exception("[WEBHOOK] AC handler failed for event %s", event_type)
+
+    return "OK", 200
+
+
+# ── Brevo webhook ───────────────────────────────────────
+#
+# Brevo (formerly Sendinblue) posts JSON payloads with an "event"
+# field. Supported events include delivered, soft_bounce, hard_bounce,
+# blocked, spam, invalid_email, deferred, click, request, opened,
+# unique_opened, unsubscribed.
+#
+# Brevo has no payload signing; we use the same per-user URL token.
+# They POST JSON so we read request.get_json() instead of form data.
+#
+# Brevo field shape (typical):
+#     { "event": "hard_bounce", "email": "foo@bar.com", "id": 123, ... }
+
+
+def _user_from_brevo_token(token):
+    """Brevo is less common as a per-user ESP integration (we mainly
+    use it for transactional sending) but we still support webhook
+    delivery for users who have it connected."""
+    from modules.database import fetchall
+    # Brevo isn't in the current ESP_PROVIDERS whitelist yet, but the
+    # webhook listener is still available for future integration work.
+    # We check for any integration labelled 'brevo' in the sync_data_json
+    # or server_prefix field as a forward-compatible fallback.
+    candidates = fetchall(
+        "SELECT DISTINCT user_id FROM esp_integrations "
+        "WHERE provider = 'brevo' AND status = 'active'",
+        (),
+    )
+    for c in candidates:
+        uid = c["user_id"]
+        if verify_user_webhook_token(uid, "brevo", token):
+            return uid
+    return None
+
+
+@webhook_bp.route("/brevo/<token>", methods=["GET", "POST"])
+def brevo_webhook(token):
+    """Handle Brevo (Sendinblue) webhook events. JSON payload."""
+    if request.method == "GET":
+        return "OK", 200
+
+    user_id = _user_from_brevo_token(token)
+    if not user_id:
+        logger.warning("[WEBHOOK] Brevo unknown token")
+        return "OK", 200
+
+    integration = fetchone(
+        """SELECT id FROM esp_integrations
+           WHERE user_id = ? AND provider = 'brevo' AND status = 'active'
+           ORDER BY id DESC LIMIT 1""",
+        (user_id,),
+    )
+    if not integration:
+        return "OK", 200
+
+    integration_id = integration["id"]
+
+    payload = request.get_json(silent=True) or {}
+    event = (payload.get("event") or "").strip().lower()
+    email = (payload.get("email") or "").strip().lower()
+
+    if not event or not email:
+        return "OK", 200
+
+    try:
+        if event in ("hard_bounce", "invalid_email", "blocked"):
+            _handle_cleaned(user_id, integration_id, email)
+        elif event in ("unsubscribed", "unsubscribe"):
+            _handle_unsubscribe(user_id, integration_id, email)
+        elif event in ("spam", "complaint"):
+            # Treat spam complaints as high-severity suppressions
+            _handle_unsubscribe(user_id, integration_id, email)
+        elif event in ("opened", "unique_opened", "click"):
+            _handle_profile_update(user_id, integration_id, email)
+        else:
+            logger.info("[WEBHOOK] Brevo unknown event: %s", event)
+    except Exception:
+        logger.exception("[WEBHOOK] Brevo handler failed for event %s", event)
+
+    return "OK", 200

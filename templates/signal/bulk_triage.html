@@ -1,0 +1,151 @@
+{% extends "auth/base_auth.html" %}
+{% block title %}Bulk List Grading &middot; InbXr{% endblock %}
+{% block content %}
+<style>
+.bt-head h1 { margin: 0 0 4px; font-size: 1.6rem; }
+.bt-head__sub { font-size: 0.85rem; color: var(--text-3); margin: 0 0 22px; }
+
+.bt-upload { background: #f8fafc; border: 2px dashed var(--border-1, #cbd5e1); border-radius: 14px; padding: 32px 24px; text-align: center; margin-bottom: 24px; }
+.bt-upload.dragover { border-color: var(--brand, #2563eb); background: #f0f9ff; }
+.bt-upload h3 { font-size: 1rem; font-weight: 700; color: var(--text-1); margin: 0 0 6px; }
+.bt-upload p { font-size: 0.82rem; color: var(--text-3); margin: 0 0 14px; }
+.bt-upload__btn { display: inline-block; padding: 10px 22px; background: var(--brand, #2563eb); color: #fff; border: none; border-radius: 999px; font-size: 0.88rem; font-weight: 700; cursor: pointer; font-family: inherit; }
+.bt-upload__btn:hover { background: #1e40af; }
+
+.bt-actions { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+.bt-actions h2 { margin: 0; font-size: 0.88rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-3); }
+.bt-actions button { background: none; border: 1px solid var(--border-1, #e2e8f0); color: var(--text-3); font-size: 0.78rem; font-weight: 600; padding: 6px 14px; border-radius: 999px; cursor: pointer; }
+.bt-actions button:hover { color: #dc2626; border-color: #fca5a5; }
+
+.bt-results { background: #fff; border: 1px solid var(--border-1, #e2e8f0); border-radius: 12px; overflow: hidden; }
+.bt-results__empty { padding: 40px 20px; text-align: center; color: var(--text-3); font-size: 0.92rem; }
+
+.bt-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+.bt-table th { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-3); font-weight: 800; text-align: left; padding: 12px 16px; background: #f8fafc; border-bottom: 2px solid var(--border-1, #e2e8f0); }
+.bt-table td { padding: 14px 16px; border-bottom: 1px solid var(--border-1, #e2e8f0); }
+.bt-table tr:last-child td { border: none; }
+.bt-table tr.severity-danger { background: rgba(220,38,38,0.03); }
+.bt-table tr.severity-warning { background: rgba(217,119,6,0.03); }
+.bt-table__filename { font-weight: 700; color: var(--text-1); }
+.bt-table__counts { display: flex; gap: 10px; font-size: 0.78rem; color: var(--text-2); }
+.bt-table__counts span { white-space: nowrap; }
+.bt-table__counts b { color: var(--text-1); font-weight: 700; }
+.bt-badge { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 0.68rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; }
+.bt-badge--danger { background: rgba(220,38,38,0.1); color: #991b1b; }
+.bt-badge--warning { background: rgba(217,119,6,0.1); color: #92400e; }
+.bt-badge--good { background: rgba(5,150,105,0.1); color: #065f46; }
+</style>
+
+<div class="bt-head">
+  <h1>Bulk list grading</h1>
+  <p class="bt-head__sub">Upload multiple CSVs in one session. Each list is triaged separately and results are held in your browser session only.</p>
+</div>
+
+<form id="btForm" class="bt-upload" enctype="multipart/form-data">
+  <h3>Upload a CSV</h3>
+  <p>Drop one list at a time. Max 5 MB per CSV. Required column: email.</p>
+  <input type="file" id="btFile" accept=".csv" style="display:none" />
+  <button type="button" id="btBrowse" class="bt-upload__btn">Choose CSV</button>
+  <p id="btStatus" style="margin: 12px 0 0; font-size: 0.82rem;"></p>
+</form>
+
+<div class="bt-actions">
+  <h2>Results ({{ results|length }} list{{ 's' if results|length != 1 else '' }})</h2>
+  {% if results %}
+    <button type="button" onclick="clearResults()">Clear all</button>
+  {% endif %}
+</div>
+
+<div class="bt-results">
+  {% if results %}
+    <table class="bt-table">
+      <thead>
+        <tr>
+          <th>List</th>
+          <th>Total</th>
+          <th>Distribution</th>
+          <th>Severity</th>
+        </tr>
+      </thead>
+      <tbody id="btTbody">
+        {% for r in results %}
+          <tr class="severity-{{ r.severity }}">
+            <td class="bt-table__filename">{{ r.filename }}</td>
+            <td><b>{{ '{:,}'.format(r.total_parsed) }}</b></td>
+            <td>
+              <div class="bt-table__counts">
+                <span>Remove <b>{{ r.percentages.remove }}%</b></span>
+                <span>Re-engage <b>{{ r.percentages.reengage }}%</b></span>
+                <span>Keep <b>{{ r.percentages.keep }}%</b></span>
+              </div>
+            </td>
+            <td><span class="bt-badge bt-badge--{{ r.severity }}">{{ r.severity }}</span></td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <div class="bt-results__empty">Upload a CSV to get started. Results stay in your session only and are never stored server-side.</div>
+  {% endif %}
+</div>
+
+<script>
+(function(){
+  var form = document.getElementById('btForm');
+  var fileInput = document.getElementById('btFile');
+  var browseBtn = document.getElementById('btBrowse');
+  var statusEl = document.getElementById('btStatus');
+
+  browseBtn.addEventListener('click', function(){ fileInput.click(); });
+  fileInput.addEventListener('change', function(){
+    if (fileInput.files && fileInput.files[0]) uploadCSV(fileInput.files[0]);
+  });
+
+  ['dragover', 'dragenter'].forEach(function(ev){
+    form.addEventListener(ev, function(e){ e.preventDefault(); form.classList.add('dragover'); });
+  });
+  ['dragleave', 'drop'].forEach(function(ev){
+    form.addEventListener(ev, function(e){ e.preventDefault(); form.classList.remove('dragover'); });
+  });
+  form.addEventListener('drop', function(e){
+    if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]) {
+      uploadCSV(e.dataTransfer.files[0]);
+    }
+  });
+
+  function uploadCSV(file) {
+    statusEl.textContent = 'Triaging ' + file.name + '...';
+    statusEl.style.color = 'var(--text-3)';
+    var fd = new FormData();
+    fd.append('file', file);
+    fetch('/bulk-triage/upload', {
+      method: 'POST', body: fd,
+      headers: {'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.content || ''},
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if (d.ok) {
+        statusEl.textContent = 'Added ' + file.name + ' (' + d.total_lists + ' lists total). Reloading...';
+        statusEl.style.color = '#059669';
+        setTimeout(function(){ location.reload(); }, 800);
+      } else {
+        statusEl.textContent = 'Failed: ' + (d.error || 'unknown error');
+        statusEl.style.color = '#dc2626';
+      }
+    })
+    .catch(function(){
+      statusEl.textContent = 'Network error. Try again.';
+      statusEl.style.color = '#dc2626';
+    });
+  }
+
+  window.clearResults = function() {
+    if (!confirm('Clear all triage results from this session?')) return;
+    fetch('/bulk-triage/clear', {
+      method: 'POST',
+      headers: {'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.content || ''},
+    }).then(function(){ location.reload(); });
+  };
+})();
+</script>
+{% endblock %}

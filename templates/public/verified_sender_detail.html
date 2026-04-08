@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{ title }}</title>
+  <meta name="description" content="{{ meta_description }}">
+  <meta property="og:title" content="{{ title }}">
+  <meta property="og:description" content="{{ meta_description }}">
+  <meta property="og:url" content="https://inbxr.us/verified/{{ cert.domain }}">
+  <link rel="canonical" href="https://inbxr.us/verified/{{ cert.domain }}">
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/style.css?v=20260408f" />
+  {% include 'sections/_head_meta.html' %}
+</head>
+<body class="email-test-page">
+
+{% include 'sections/header.html' %}
+
+<style>
+.vd-wrap { max-width: 680px; margin: 0 auto; padding: 60px 24px 80px; text-align: center; }
+.vd-eyebrow { display: inline-block; font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; padding: 5px 14px; border-radius: 99px; background: #059669; color: #fff; margin-bottom: 18px; }
+.vd-h1 { font-size: 2.4rem; font-weight: 900; line-height: 1.1; color: var(--text-1); margin: 0 0 8px; letter-spacing: -0.02em; }
+.vd-domain { font-size: 1.2rem; font-weight: 700; color: #059669; font-family: "SF Mono", Menlo, monospace; margin: 0 0 28px; }
+.vd-cert { background: #fff; border: 2px solid #059669; border-radius: 16px; padding: 32px; margin: 0 0 32px; text-align: left; }
+.vd-cert__row { display: flex; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid #f1f5f9; font-size: 0.95rem; }
+.vd-cert__row:last-child { border: none; }
+.vd-cert__row b { font-weight: 700; color: var(--text-1); }
+.vd-cert__row span { color: var(--text-3); }
+.vd-back { display: inline-block; padding: 12px 26px; background: var(--brand, #2563eb); color: #fff; border-radius: 999px; font-weight: 700; text-decoration: none; font-size: 0.9rem; }
+</style>
+
+<main class="vd-wrap">
+
+  <span class="vd-eyebrow">InbXr Verified Sender</span>
+  <h1 class="vd-h1">This sender is certified</h1>
+  <p class="vd-domain">{{ cert.domain }}</p>
+
+  <div class="vd-cert">
+    <div class="vd-cert__row">
+      <span>Certification tier</span>
+      <b>{{ cert.tier|capitalize }}</b>
+    </div>
+    <div class="vd-cert__row">
+      <span>Signal Score at certification</span>
+      <b>{{ cert.last_verified_score }}/100 (Grade {{ cert.last_verified_grade }})</b>
+    </div>
+    <div class="vd-cert__row">
+      <span>Certified on</span>
+      <b>{{ cert.certified_at[:10] if cert.certified_at else '—' }}</b>
+    </div>
+    <div class="vd-cert__row">
+      <span>Expires</span>
+      <b>{{ cert.expires_at[:10] if cert.expires_at else '—' }}</b>
+    </div>
+    <div class="vd-cert__row">
+      <span>Status</span>
+      <b style="color: #059669;">{{ cert.status|capitalize }}</b>
+    </div>
+  </div>
+
+  <p style="font-size: 0.9rem; color: var(--text-2); margin: 0 0 24px;">
+    <strong>{{ cert.domain }}</strong> has been verified by InbXr's Signal Engine against
+    the 7 Inbox Signals model. Certification requires a score of 80 or higher
+    (Grade B+) at both issue and annual renewal.
+  </p>
+
+  <a href="/verified-sender" class="vd-back">About Verified Sender certification &rarr;</a>
+
+</main>
+
+{% include 'sections/email_test_footer.html' %}
+
+</body>
+</html>

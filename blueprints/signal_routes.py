@@ -459,6 +459,186 @@ def signal_score_share_token(row_id):
     })
 
 
+@signal_bp.route("/clients")
+@login_required
+@tier_required("agency", "api")
+def agency_clients_page():
+    """Multi-client dashboard for Agency tier. Lists all clients the
+    agency tracks, with a live Signal Score card per client pulled from
+    the domain_leaderboard cache. Agencies add clients via the form and
+    re-score on demand."""
+    user = get_current_user()
+    clients = fetchall(
+        """SELECT ac.id, ac.client_name, ac.domain, ac.contact_email, ac.notes,
+                  ac.created_at, dl.total_score, dl.grade, dl.last_scanned_at
+           FROM agency_clients ac
+           LEFT JOIN domain_leaderboard dl ON dl.domain = ac.domain
+           WHERE ac.agency_user_id = ?
+           ORDER BY ac.client_name""",
+        (user["id"],),
+    )
+    return render_template(
+        "signal/agency_clients.html",
+        active_page="clients",
+        clients=clients,
+        title="Multi-client dashboard",
+    )
+
+
+@signal_bp.route("/clients/add", methods=["POST"])
+@login_required
+@tier_required("agency", "api")
+def agency_clients_add():
+    """Add a new client to the agency's dashboard. Requires client_name
+    and domain. Scoring happens in the background by calling the
+    Domain Signal Score engine immediately so the card renders with
+    real data right away."""
+    user = get_current_user()
+    data = request.get_json(silent=True) or request.form.to_dict()
+    client_name = (data.get("client_name") or "").strip()
+    domain = (data.get("domain") or "").strip().lower().replace("https://", "").replace("http://", "").split("/")[0]
+    contact_email = (data.get("contact_email") or "").strip()
+    notes = (data.get("notes") or "").strip()[:500]
+
+    if not client_name or not domain or "." not in domain:
+        return jsonify({"ok": False, "error": "Client name and domain are required."}), 400
+
+    try:
+        execute(
+            """INSERT INTO agency_clients
+                (agency_user_id, client_name, domain, contact_email, notes)
+               VALUES (?, ?, ?, ?, ?)""",
+            (user["id"], client_name, domain, contact_email, notes),
+        )
+    except Exception:
+        return jsonify({"ok": False, "error": "A client with that domain already exists."}), 400
+
+    # Trigger a fresh score so the card has data immediately
+    try:
+        calculate_domain_signal_score(domain)
+    except Exception:
+        logger.exception("[AGENCY_CLIENTS] initial score failed for %s", domain)
+
+    return jsonify({"ok": True})
+
+
+@signal_bp.route("/clients/<int:client_id>/delete", methods=["POST"])
+@login_required
+@tier_required("agency", "api")
+def agency_clients_delete(client_id):
+    """Remove a client from the dashboard. Does not affect
+    domain_leaderboard (that's public shared data)."""
+    user = get_current_user()
+    execute(
+        "DELETE FROM agency_clients WHERE id = ? AND agency_user_id = ?",
+        (client_id, user["id"]),
+    )
+    return jsonify({"ok": True})
+
+
+@signal_bp.route("/clients/<int:client_id>/rescore", methods=["POST"])
+@login_required
+@tier_required("agency", "api")
+def agency_clients_rescore(client_id):
+    """Re-run the Domain Signal Score for a specific client's domain.
+    Used when the agency has just deployed a DNS fix and wants to see
+    the updated score immediately rather than waiting for the next
+    user-initiated scan."""
+    user = get_current_user()
+    row = fetchone(
+        "SELECT domain FROM agency_clients WHERE id = ? AND agency_user_id = ?",
+        (client_id, user["id"]),
+    )
+    if not row:
+        return jsonify({"ok": False, "error": "Client not found."}), 404
+
+    try:
+        result = calculate_domain_signal_score(row["domain"])
+    except Exception:
+        logger.exception("[AGENCY_CLIENTS] rescore failed")
+        return jsonify({"ok": False, "error": "Rescore failed."}), 500
+
+    return jsonify({
+        "ok": True,
+        "domain": row["domain"],
+        "score": result.get("total_signal_score"),
+        "grade": result.get("signal_grade"),
+    })
+
+
+@signal_bp.route("/bulk-triage")
+@login_required
+@tier_required("agency", "api")
+def bulk_triage_page():
+    """Bulk list grading UI for Agency tier. Users upload multiple CSVs
+    in one session; each is triaged and shown in a dashboard table.
+    Results are held in the session (not persisted) so the user can
+    review + download without us storing client list data."""
+    from flask import session
+    results = session.get("_bulk_triage_results") or []
+    return render_template(
+        "signal/bulk_triage.html",
+        active_page="bulk_triage",
+        results=results,
+        title="Bulk List Grading",
+    )
+
+
+@signal_bp.route("/bulk-triage/upload", methods=["POST"])
+@login_required
+@tier_required("agency", "api")
+def bulk_triage_upload():
+    """Accept one CSV, triage it, append to the session bulk results."""
+    from modules.list_triage import triage_list
+    from flask import session
+
+    upload = request.files.get("file") if request.files else None
+    if not upload or not upload.filename:
+        return jsonify({"ok": False, "error": "No file uploaded."}), 400
+
+    raw = upload.read(5 * 1024 * 1024 + 1)
+    if len(raw) > 5 * 1024 * 1024:
+        return jsonify({"ok": False, "error": "File too large. Max 5 MB per list."}), 400
+
+    try:
+        csv_content = raw.decode("utf-8", errors="replace")
+    except Exception:
+        return jsonify({"ok": False, "error": "Could not decode CSV."}), 400
+
+    result = triage_list(csv_content)
+    if not result.get("ok"):
+        return jsonify(result), 400
+
+    # Slim down for session storage — drop the full buckets, keep counts + summaries
+    slim = {
+        "filename": upload.filename,
+        "total_parsed": result.get("total_parsed"),
+        "counts": result.get("counts"),
+        "percentages": result.get("percentages"),
+        "summaries": result.get("summaries"),
+        "severity": "danger" if result["percentages"]["remove"] > 40 else (
+            "warning" if result["percentages"]["remove"] > 20 else "good"
+        ),
+    }
+
+    existing = session.get("_bulk_triage_results") or []
+    existing.insert(0, slim)
+    existing = existing[:50]  # cap at 50 lists per session
+    session["_bulk_triage_results"] = existing
+
+    return jsonify({"ok": True, "result": slim, "total_lists": len(existing)})
+
+
+@signal_bp.route("/bulk-triage/clear", methods=["POST"])
+@login_required
+@tier_required("agency", "api")
+def bulk_triage_clear():
+    """Clear the session's bulk triage results."""
+    from flask import session
+    session.pop("_bulk_triage_results", None)
+    return jsonify({"ok": True})
+
+
 @signal_bp.route("/signal-score/pdf")
 @login_required
 def signal_score_pdf():

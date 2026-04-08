@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{ title }}</title>
+  <meta name="description" content="{{ meta_description }}">
+  <meta property="og:title" content="{{ title }}">
+  <meta property="og:description" content="{{ meta_description }}">
+  <meta property="og:url" content="https://inbxr.us/insights/annual-report">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://inbxr.us/insights/annual-report">
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/style.css?v=20260408f" />
+  {% include 'sections/_head_meta.html' %}
+</head>
+<body class="email-test-page">
+
+{% include 'sections/header.html' %}
+
+<style>
+.rpt-wrap { max-width: 920px; margin: 0 auto; padding: 60px 24px 80px; }
+.rpt-eyebrow { display: inline-block; font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; padding: 5px 14px; border-radius: 99px; background: rgba(37,99,235,0.08); color: var(--brand, #2563eb); margin-bottom: 18px; }
+.rpt-h1 { font-size: 2.6rem; font-weight: 900; line-height: 1.1; color: var(--text-1); margin: 0 0 14px; letter-spacing: -0.025em; }
+.rpt-sub { font-size: 1.15rem; color: var(--text-2); margin: 0 0 36px; line-height: 1.55; max-width: 740px; }
+
+.rpt-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin: 36px 0; }
+.rpt-kpi { background: #f8fafc; border: 1px solid var(--border-1, #e2e8f0); border-radius: 14px; padding: 22px 24px; }
+.rpt-kpi__num { font-size: 2rem; font-weight: 900; color: var(--text-1); line-height: 1.1; font-variant-numeric: tabular-nums; }
+.rpt-kpi__label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-3); margin-top: 4px; }
+
+.rpt-section { margin: 48px 0; }
+.rpt-section h2 { font-size: 1.5rem; font-weight: 800; color: var(--text-1); margin: 0 0 10px; letter-spacing: -0.01em; }
+.rpt-section p { font-size: 0.98rem; line-height: 1.65; color: var(--text-2); margin: 0 0 16px; max-width: 720px; }
+
+.rpt-grade-bars { display: flex; flex-direction: column; gap: 10px; margin: 20px 0; }
+.rpt-grade-row { display: grid; grid-template-columns: 60px 1fr 80px; gap: 12px; align-items: center; }
+.rpt-grade-label { font-weight: 800; color: var(--text-1); }
+.rpt-grade-track { background: #f1f5f9; border-radius: 999px; height: 22px; overflow: hidden; position: relative; }
+.rpt-grade-fill { height: 100%; border-radius: 999px; }
+.rpt-grade-fill--A { background: #059669; }
+.rpt-grade-fill--B { background: #0891b2; }
+.rpt-grade-fill--C { background: #d97706; }
+.rpt-grade-fill--D { background: #dc2626; }
+.rpt-grade-fill--F { background: #991b1b; }
+.rpt-grade-count { font-size: 0.88rem; color: var(--text-2); text-align: right; font-variant-numeric: tabular-nums; }
+.rpt-grade-count b { color: var(--text-1); font-weight: 700; }
+
+.rpt-percentiles { background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 14px; padding: 22px 24px; margin-top: 18px; }
+.rpt-percentiles h3 { font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.06em; color: #0284c7; margin: 0 0 14px; font-weight: 800; }
+.rpt-percentile-row { display: grid; grid-template-columns: 90px 1fr 80px; gap: 14px; align-items: center; font-size: 0.92rem; padding: 8px 0; border-bottom: 1px solid #bae6fd; }
+.rpt-percentile-row:last-child { border: none; }
+.rpt-percentile-row b { font-weight: 700; color: var(--text-1); }
+
+.rpt-failures { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin: 18px 0; }
+.rpt-failure { background: #fef2f2; border: 1px solid #fca5a5; border-left-width: 4px; border-radius: 10px; padding: 18px 20px; }
+.rpt-failure__num { font-size: 1.8rem; font-weight: 900; color: #991b1b; line-height: 1.1; }
+.rpt-failure__label { font-size: 0.82rem; color: #7f1d1d; margin-top: 6px; line-height: 1.4; }
+
+.rpt-most-scanned { margin-top: 20px; }
+.rpt-most-scanned table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+.rpt-most-scanned th, .rpt-most-scanned td { padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--border-1, #e2e8f0); }
+.rpt-most-scanned th { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-3); font-weight: 800; background: #f8fafc; }
+.rpt-most-scanned td:last-child, .rpt-most-scanned th:last-child { text-align: right; }
+
+.rpt-takeaways { background: #fffbeb; border: 1px solid #fcd34d; border-left-width: 4px; border-radius: 14px; padding: 24px 28px; margin: 32px 0; }
+.rpt-takeaways h3 { font-size: 1.1rem; font-weight: 800; color: #0f172a; margin: 0 0 12px; }
+.rpt-takeaways ul { margin: 0; padding-left: 20px; font-size: 0.96rem; line-height: 1.7; color: var(--text-2); }
+
+.rpt-cta { text-align: center; padding: 32px 24px; background: linear-gradient(135deg, #f0f9ff 0%, #fff 100%); border: 1px solid #bae6fd; border-radius: 16px; margin-top: 40px; }
+.rpt-cta__h { font-size: 1.3rem; font-weight: 800; color: var(--text-1); margin: 0 0 6px; }
+.rpt-cta__sub { font-size: 0.92rem; color: var(--text-2); margin: 0 0 18px; }
+.rpt-cta__btn { display: inline-block; background: var(--brand, #2563eb); color: #fff; padding: 14px 32px; border-radius: 999px; font-weight: 700; text-decoration: none; font-size: 0.95rem; }
+
+.rpt-empty { text-align: center; padding: 60px 20px; color: var(--text-3); border: 2px dashed var(--border-1, #e2e8f0); border-radius: 14px; }
+
+@media (max-width: 680px) {
+  .rpt-h1 { font-size: 1.8rem; }
+  .rpt-grade-row { grid-template-columns: 44px 1fr 60px; }
+  .rpt-percentile-row { grid-template-columns: 60px 1fr 60px; }
+}
+</style>
+
+<main class="rpt-wrap">
+
+  <span class="rpt-eyebrow">Annual Report &middot; Updated in real time</span>
+  <h1 class="rpt-h1">State of Email Deliverability</h1>
+  <p class="rpt-sub">
+    Aggregate data from every domain scored by the <strong>InbXr Signal
+    Engine</strong>. What the deliverability landscape actually looks
+    like, grade by grade, scored against the same 2025 ISP mandates
+    every sender now has to meet.
+  </p>
+
+  {% if not data or not data.has_data %}
+
+    <div class="rpt-empty">
+      <p style="font-size: 1.1rem; color: var(--text-2); margin: 0 0 6px;">The dataset is building.</p>
+      <p style="font-size: 0.9rem; margin: 0;">Come back once we have enough scans to publish meaningful aggregate statistics.</p>
+    </div>
+
+  {% else %}
+
+    <div class="rpt-kpis">
+      <div class="rpt-kpi">
+        <div class="rpt-kpi__num">{{ '{:,}'.format(data.total_domains) }}</div>
+        <div class="rpt-kpi__label">Unique domains scored</div>
+      </div>
+      <div class="rpt-kpi">
+        <div class="rpt-kpi__num">{{ '{:,}'.format(data.total_scans) }}</div>
+        <div class="rpt-kpi__label">Total scans run</div>
+      </div>
+      <div class="rpt-kpi">
+        <div class="rpt-kpi__num">{{ data.avg_score|round|int }}</div>
+        <div class="rpt-kpi__label">Average Signal Score</div>
+      </div>
+      <div class="rpt-kpi">
+        <div class="rpt-kpi__num">{{ data.distribution_pct.get('A', 0) + data.distribution_pct.get('B', 0) }}%</div>
+        <div class="rpt-kpi__label">Passing (A or B)</div>
+      </div>
+    </div>
+
+    <div class="rpt-section">
+      <h2>Grade distribution</h2>
+      <p>Every domain we've scanned, sorted by grade. The largest bucket is the category health snapshot: where most senders actually sit when measured against the full 7 Inbox Signals model.</p>
+
+      <div class="rpt-grade-bars">
+        {% for g in ['A', 'B', 'C', 'D', 'F'] %}
+          <div class="rpt-grade-row">
+            <div class="rpt-grade-label">Grade {{ g }}</div>
+            <div class="rpt-grade-track">
+              <div class="rpt-grade-fill rpt-grade-fill--{{ g }}" style="width: {{ data.distribution_pct.get(g, 0) }}%;"></div>
+            </div>
+            <div class="rpt-grade-count"><b>{{ '{:,}'.format(data.distribution.get(g, 0)) }}</b> ({{ data.distribution_pct.get(g, 0) }}%)</div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="rpt-section">
+      <h2>Percentile thresholds</h2>
+      <p>If your Signal Score is 80 and you're wondering whether that's good, these are the bands. A score at the P75 line puts you in the top quartile of scanned senders.</p>
+
+      <div class="rpt-percentiles">
+        <h3>Score distribution (percentiles)</h3>
+        <div class="rpt-percentile-row"><span>P10</span><span>Bottom decile &mdash; needs immediate work</span><b>{{ data.percentiles.p10 }}</b></div>
+        <div class="rpt-percentile-row"><span>P25</span><span>Bottom quartile</span><b>{{ data.percentiles.p25 }}</b></div>
+        <div class="rpt-percentile-row"><span>P50</span><span>Median sender</span><b>{{ data.percentiles.p50 }}</b></div>
+        <div class="rpt-percentile-row"><span>P75</span><span>Top quartile</span><b>{{ data.percentiles.p75 }}</b></div>
+        <div class="rpt-percentile-row"><span>P90</span><span>Top decile &mdash; best in class</span><b>{{ data.percentiles.p90 }}</b></div>
+      </div>
+    </div>
+
+    <div class="rpt-section">
+      <h2>Most common failure modes</h2>
+      <p>Where domains actually break. If you're in any of these buckets, fix this category first &mdash; it's where the biggest score gains live.</p>
+
+      <div class="rpt-failures">
+        <div class="rpt-failure">
+          <div class="rpt-failure__num">{{ '{:,}'.format(data.failure_modes.weak_auth) }}</div>
+          <div class="rpt-failure__label">Domains with weak Authentication Standing (SPF/DKIM/DMARC below 50)</div>
+        </div>
+        <div class="rpt-failure">
+          <div class="rpt-failure__num">{{ '{:,}'.format(data.failure_modes.weak_rep) }}</div>
+          <div class="rpt-failure__label">Domains with weak Domain Reputation (blacklist + DNSBL below 50)</div>
+        </div>
+        <div class="rpt-failure">
+          <div class="rpt-failure__num">{{ '{:,}'.format(data.failure_modes.both_weak) }}</div>
+          <div class="rpt-failure__label">Domains failing both auth <strong>and</strong> reputation (critical)</div>
+        </div>
+      </div>
+
+      <p><strong>Signal average breakdown:</strong> Authentication Standing averages <strong>{{ data.avg_auth|round|int }}/100</strong> across all scanned domains, and Domain Reputation averages <strong>{{ data.avg_rep|round|int }}/100</strong>.</p>
+    </div>
+
+    {% if data.most_scanned %}
+    <div class="rpt-section rpt-most-scanned">
+      <h2>Most frequently scanned domains</h2>
+      <p>The domains our users look up the most. A proxy for which senders the market is most curious about.</p>
+      <table>
+        <thead>
+          <tr><th>#</th><th>Domain</th><th>Score</th><th>Grade</th><th>Scans</th></tr>
+        </thead>
+        <tbody>
+          {% for d in data.most_scanned %}
+            <tr>
+              <td>{{ loop.index }}</td>
+              <td><a href="/?domain={{ d.domain }}">{{ d.domain }}</a></td>
+              <td>{{ d.total_score }}</td>
+              <td>{{ d.grade }}</td>
+              <td>{{ d.scan_count }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+
+    <div class="rpt-takeaways">
+      <h3>What this tells us</h3>
+      <ul>
+        <li>The average domain scores <strong>{{ data.avg_score|round|int }}/100</strong>, which puts the median sender in the Grade C band &mdash; good enough to deliver, not good enough to consistently inbox.</li>
+        <li>The gap between authentication and reputation tells you which half of the problem is more universal. When auth averages <strong>{{ data.avg_auth|round|int }}</strong> and reputation averages <strong>{{ data.avg_rep|round|int }}</strong>, the category's weaker half is the lever you want to pull first.</li>
+        <li>Only <strong>{{ data.distribution_pct.get('A', 0) + data.distribution_pct.get('B', 0) }}%</strong> of scanned domains achieve A or B grades. The top 10% of senders score <strong>{{ data.percentiles.p90 }}+</strong> &mdash; that's the actual bar for "best in class".</li>
+      </ul>
+    </div>
+
+    <div class="rpt-cta">
+      <h3 class="rpt-cta__h">Where does your domain sit?</h3>
+      <p class="rpt-cta__sub">Run your sending domain through the Signal Engine in 30 seconds and find out.</p>
+      <a href="/" class="rpt-cta__btn">Score my domain &rarr;</a>
+    </div>
+
+  {% endif %}
+
+</main>
+
+{% include 'sections/email_test_footer.html' %}
+
+</body>
+</html>

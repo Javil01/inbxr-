@@ -163,6 +163,122 @@ def get_leaderboard_stats():
         }
 
 
+def get_annual_report_data():
+    """Build the aggregate dataset for the State of Email Deliverability
+    annual report. Returns all the metrics the /insights/annual-report
+    page needs to render: grade distribution, common failure modes,
+    percentile thresholds, signal concentration stats.
+
+    The report is computed at request time from live leaderboard data
+    rather than cached, because (a) the dataset is small enough (<100k
+    rows expected), and (b) the page should always reflect the most
+    recent scans. If cache becomes necessary later, wrap this function
+    in an LRU cache with a 6-hour TTL.
+    """
+    try:
+        total_row = fetchone(
+            "SELECT COUNT(*) AS n, "
+            "AVG(total_score) AS avg_score, "
+            "MIN(total_score) AS min_score, "
+            "MAX(total_score) AS max_score, "
+            "SUM(scan_count) AS total_scans, "
+            "AVG(auth_score) AS avg_auth, "
+            "AVG(rep_score) AS avg_rep "
+            "FROM domain_leaderboard",
+            (),
+        )
+    except Exception:
+        logger.exception("[LEADERBOARD] annual report totals fetch failed")
+        return None
+
+    if not total_row or not total_row.get("n"):
+        return {
+            "has_data": False,
+            "total_domains": 0,
+        }
+
+    # Grade distribution
+    grade_rows = fetchall(
+        "SELECT grade, COUNT(*) AS n FROM domain_leaderboard GROUP BY grade",
+        (),
+    )
+    distribution = {row["grade"]: row["n"] for row in grade_rows}
+    for g in ("A", "B", "C", "D", "F"):
+        distribution.setdefault(g, 0)
+
+    total = total_row["n"]
+    distribution_pct = {
+        g: round(distribution[g] / total * 100, 1) if total else 0
+        for g in distribution
+    }
+
+    # Percentiles (approximation via NTILE-like rank since SQLite lacks PERCENTILE_CONT)
+    percentile_rows = fetchall(
+        "SELECT total_score FROM domain_leaderboard ORDER BY total_score",
+        (),
+    )
+    scores_sorted = [r["total_score"] for r in percentile_rows]
+    def _pct(p):
+        if not scores_sorted:
+            return 0
+        idx = max(0, min(len(scores_sorted) - 1, int(len(scores_sorted) * p / 100)))
+        return scores_sorted[idx]
+
+    percentiles = {
+        "p10": _pct(10),
+        "p25": _pct(25),
+        "p50": _pct(50),
+        "p75": _pct(75),
+        "p90": _pct(90),
+    }
+
+    # Common failure modes (derived from grade + auth/rep splits)
+    weak_auth = fetchone(
+        "SELECT COUNT(*) AS n FROM domain_leaderboard WHERE auth_score < 50",
+        (),
+    )
+    weak_rep = fetchone(
+        "SELECT COUNT(*) AS n FROM domain_leaderboard WHERE rep_score < 50",
+        (),
+    )
+    both_weak = fetchone(
+        "SELECT COUNT(*) AS n FROM domain_leaderboard "
+        "WHERE auth_score < 50 AND rep_score < 50",
+        (),
+    )
+
+    # Most scanned (proxy for most searched / top interest)
+    most_scanned = fetchall(
+        "SELECT domain, total_score, grade, scan_count "
+        "FROM domain_leaderboard "
+        "WHERE domain NOT IN ({}) "
+        "ORDER BY scan_count DESC LIMIT 10".format(
+            ",".join("?" * len(_EXCLUDED_FROM_PUBLIC))
+        ),
+        tuple(_EXCLUDED_FROM_PUBLIC),
+    )
+
+    return {
+        "has_data": True,
+        "total_domains": total,
+        "total_scans": total_row.get("total_scans") or 0,
+        "avg_score": round(total_row.get("avg_score") or 0, 1),
+        "min_score": total_row.get("min_score") or 0,
+        "max_score": total_row.get("max_score") or 0,
+        "avg_auth": round(total_row.get("avg_auth") or 0, 1),
+        "avg_rep": round(total_row.get("avg_rep") or 0, 1),
+        "distribution": distribution,
+        "distribution_pct": distribution_pct,
+        "percentiles": percentiles,
+        "failure_modes": {
+            "weak_auth": weak_auth.get("n") if weak_auth else 0,
+            "weak_rep": weak_rep.get("n") if weak_rep else 0,
+            "both_weak": both_weak.get("n") if both_weak else 0,
+        },
+        "most_scanned": most_scanned,
+    }
+
+
 def get_domain_rank(domain):
     """Given a domain, return its current rank on the leaderboard
     (1-indexed) and score. Used by the /leaderboard page when a user

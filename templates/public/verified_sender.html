@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{ title }}</title>
+  <meta name="description" content="{{ meta_description }}">
+  <meta property="og:title" content="{{ title }}">
+  <meta property="og:description" content="{{ meta_description }}">
+  <meta property="og:url" content="https://inbxr.us/verified-sender">
+  <link rel="canonical" href="https://inbxr.us/verified-sender">
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/style.css?v=20260408f" />
+  {% include 'sections/_head_meta.html' %}
+</head>
+<body class="email-test-page">
+
+{% include 'sections/header.html' %}
+
+<style>
+.vs-wrap { max-width: 1000px; margin: 0 auto; padding: 60px 24px 80px; }
+.vs-eyebrow { display: inline-block; font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; padding: 5px 14px; border-radius: 99px; background: linear-gradient(135deg, #059669, #047857); color: #fff; margin-bottom: 18px; }
+.vs-h1 { font-size: 2.6rem; font-weight: 900; line-height: 1.1; color: var(--text-1); margin: 0 0 14px; letter-spacing: -0.025em; }
+.vs-sub { font-size: 1.15rem; color: var(--text-2); margin: 0 0 36px; line-height: 1.55; max-width: 720px; }
+
+.vs-how { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 18px; margin: 0 0 48px; }
+.vs-how__item { background: #f8fafc; border: 1px solid var(--border-1, #e2e8f0); border-radius: 12px; padding: 20px 22px; }
+.vs-how__num { font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: #059669; margin: 0 0 4px; }
+.vs-how__h { font-size: 1.02rem; font-weight: 800; color: var(--text-1); margin: 0 0 6px; }
+.vs-how__p { font-size: 0.88rem; color: var(--text-2); line-height: 1.5; margin: 0; }
+
+.vs-preview { text-align: center; padding: 40px 20px; background: #f8fafc; border: 1px solid var(--border-1, #e2e8f0); border-radius: 14px; margin: 32px 0 48px; }
+.vs-preview h2 { font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-3); margin: 0 0 14px; }
+.vs-preview img { max-height: 32px; vertical-align: middle; }
+.vs-preview p { font-size: 0.82rem; color: var(--text-3); margin: 14px 0 0; }
+
+.vs-tiers { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 18px; margin: 40px 0; }
+.vs-tier { background: #fff; border: 2px solid var(--border-1, #e2e8f0); border-radius: 16px; padding: 26px 24px; display: flex; flex-direction: column; position: relative; }
+.vs-tier--featured { border-color: #059669; box-shadow: 0 0 0 4px rgba(5,150,105,0.1); }
+.vs-tier--featured::before { content: "Most popular"; position: absolute; top: -11px; left: 50%; transform: translateX(-50%); background: #059669; color: #fff; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; padding: 4px 14px; border-radius: 99px; white-space: nowrap; }
+.vs-tier__name { font-size: 1.3rem; font-weight: 900; color: var(--text-1); margin: 0 0 6px; }
+.vs-tier__price { font-size: 2.1rem; font-weight: 900; color: var(--text-1); margin: 0; line-height: 1.1; }
+.vs-tier__price small { font-size: 0.85rem; font-weight: 600; color: var(--text-3); display: block; margin-top: 4px; }
+.vs-tier__features { list-style: none; padding: 0; margin: 20px 0 0; font-size: 0.88rem; color: var(--text-2); flex: 1; }
+.vs-tier__features li { padding: 6px 0 6px 22px; position: relative; line-height: 1.5; border-bottom: 1px solid #f1f5f9; }
+.vs-tier__features li:last-child { border: none; }
+.vs-tier__features li::before { content: "✓"; color: #059669; position: absolute; left: 4px; font-weight: 800; }
+
+.vs-requirements { background: #fffbeb; border: 1px solid #fcd34d; border-left-width: 4px; border-radius: 12px; padding: 22px 26px; margin: 32px 0; }
+.vs-requirements h3 { font-size: 1.05rem; font-weight: 800; color: var(--text-1); margin: 0 0 8px; }
+.vs-requirements p { font-size: 0.9rem; color: var(--text-2); line-height: 1.6; margin: 0; }
+
+.vs-verified-list { margin-top: 48px; }
+.vs-verified-list h2 { font-size: 1.4rem; font-weight: 800; color: var(--text-1); margin: 0 0 14px; }
+.vs-verified-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
+.vs-verified-card { background: #fff; border: 1px solid var(--border-1, #e2e8f0); border-left: 4px solid #059669; border-radius: 8px; padding: 12px 14px; font-size: 0.85rem; }
+.vs-verified-card a { color: var(--text-1); font-weight: 700; text-decoration: none; }
+.vs-verified-card a:hover { color: #059669; }
+.vs-verified-card__meta { font-size: 0.72rem; color: var(--text-3); margin-top: 3px; }
+
+.vs-cta { text-align: center; padding: 32px 24px; background: linear-gradient(135deg, #ecfdf5 0%, #fff 100%); border: 1px solid #6ee7b7; border-radius: 16px; margin-top: 40px; }
+.vs-cta__h { font-size: 1.3rem; font-weight: 800; color: var(--text-1); margin: 0 0 6px; }
+.vs-cta__sub { font-size: 0.92rem; color: var(--text-2); margin: 0 0 18px; }
+.vs-cta__btn { display: inline-block; background: #059669; color: #fff; padding: 14px 32px; border-radius: 999px; font-weight: 700; text-decoration: none; font-size: 0.95rem; }
+
+@media (max-width: 720px) { .vs-h1 { font-size: 1.8rem; } }
+</style>
+
+<main class="vs-wrap">
+
+  <span class="vs-eyebrow">Verified Sender Certification</span>
+  <h1 class="vs-h1">Prove your deliverability with the InbXr badge</h1>
+  <p class="vs-sub">
+    Display the <strong>InbXr Verified Sender</strong> badge on your website,
+    email signature, and marketing pages. Third-party proof that your
+    sending domain scores 80+ on the 7 Inbox Signals model. Annual
+    certification from $99.
+  </p>
+
+  <div class="vs-how">
+    <div class="vs-how__item">
+      <p class="vs-how__num">Step 1</p>
+      <h3 class="vs-how__h">Score 80+</h3>
+      <p class="vs-how__p">Your sending domain must score 80 or higher (Grade B+) on the Signal Engine. Fix the flagged signals first.</p>
+    </div>
+    <div class="vs-how__item">
+      <p class="vs-how__num">Step 2</p>
+      <h3 class="vs-how__h">Apply for certification</h3>
+      <p class="vs-how__p">Pick a tier, pay the annual fee, and we verify the current score. Certification is issued immediately if you qualify.</p>
+    </div>
+    <div class="vs-how__item">
+      <p class="vs-how__num">Step 3</p>
+      <h3 class="vs-how__h">Embed the badge</h3>
+      <p class="vs-how__p">Drop the SVG on your site, footer, or email signature. Re-verified annually. Click-tracked.</p>
+    </div>
+  </div>
+
+  <div class="vs-preview">
+    <h2>Badge preview (live SVG)</h2>
+    <img src="/api/verified/google.com.svg" alt="InbXr Verified Sender badge" />
+    <p>This is the actual badge served from <code>inbxr.us/api/verified/&lt;your-domain&gt;.svg</code></p>
+  </div>
+
+  <h2 style="font-size: 1.5rem; font-weight: 800; color: var(--text-1); margin: 40px 0 14px;">Certification tiers</h2>
+  <div class="vs-tiers">
+    {% for key, t in tiers.items() %}
+      <div class="vs-tier{% if key == 'pro' %} vs-tier--featured{% endif %}">
+        <h3 class="vs-tier__name">{{ t.label }}</h3>
+        <p class="vs-tier__price">${{ t.price_usd }}<small>per year</small></p>
+        <ul class="vs-tier__features">
+          {% for f in t.features %}<li>{{ f }}</li>{% endfor %}
+        </ul>
+      </div>
+    {% endfor %}
+  </div>
+
+  <div class="vs-requirements">
+    <h3>Certification requirements</h3>
+    <p>Your sending domain must score 80 or higher (Grade B or better) on the InbXr Signal Engine at the time of certification and at every annual renewal. If your score drops below 80 during the year, your active certification remains valid until expiry &mdash; we don't punish mid-cycle dips &mdash; but the domain must re-qualify at renewal time.</p>
+  </div>
+
+  {% if verified %}
+  <div class="vs-verified-list">
+    <h2>Currently verified senders</h2>
+    <div class="vs-verified-grid">
+      {% for v in verified %}
+        <div class="vs-verified-card">
+          <a href="/verified/{{ v.domain }}">{{ v.domain }}</a>
+          <div class="vs-verified-card__meta">Score {{ v.last_verified_score }} ({{ v.last_verified_grade }}) &middot; {{ v.tier|capitalize }}</div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="vs-cta">
+    <h3 class="vs-cta__h">Ready to get certified?</h3>
+    <p class="vs-cta__sub">Run your domain through the Signal Engine first. If you're scoring 80+, sign in and apply for certification from your account.</p>
+    <a href="/" class="vs-cta__btn">Check my Signal Score &rarr;</a>
+  </div>
+
+</main>
+
+{% include 'sections/email_test_footer.html' %}
+
+</body>
+</html>
