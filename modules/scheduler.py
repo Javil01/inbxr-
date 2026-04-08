@@ -120,6 +120,41 @@ def _scheduled_onboarding_emails():
         logger.exception("[SCHEDULER] Onboarding emails failed: %s", e)
 
 
+def _scheduled_dogfood_refresh():
+    """Refresh the dogfood Signal Score for inbxr.us once per night.
+    The homepage dogfood badge reads the latest row from dogfood_score
+    so "this score updates automatically" is a claim the engine backs up.
+    """
+    from modules.dogfood import refresh_dogfood_score
+
+    try:
+        row = refresh_dogfood_score()
+        if row:
+            logger.info(
+                "[SCHEDULER] Dogfood: %s → %d (%s)",
+                row['domain'], row['total'], row['grade'],
+            )
+        else:
+            logger.warning("[SCHEDULER] Dogfood refresh returned no row")
+    except Exception as e:
+        logger.exception("[SCHEDULER] Dogfood refresh failed: %s", e)
+
+
+def _scheduled_weekly_signal_report():
+    """Dispatch the weekly Signal Report email to all eligible users.
+    Runs Monday 08:00 UTC. Dedup via weekly_signal_report_log table."""
+    from modules.weekly_signal_report import dispatch_weekly_reports
+
+    try:
+        stats = dispatch_weekly_reports()
+        logger.info(
+            "[SCHEDULER] Weekly report: eligible=%d sent=%d skipped=%d failed=%d",
+            stats['total_eligible'], stats['sent'], stats['skipped'], stats['failed'],
+        )
+    except Exception as e:
+        logger.exception("[SCHEDULER] Weekly report failed: %s", e)
+
+
 def _scheduled_daily_blog_post():
     """Auto-generate and publish one SEO blog post per day."""
     import json
@@ -497,14 +532,18 @@ def init_scheduler(app):
         next_run_time=None,
     )
 
-    # Job 8: Auto-generate one blog post daily at 9:00 AM UTC
-    _scheduler.add_job(
-        _scheduled_daily_blog_post,
-        CronTrigger(hour=9, minute=0),
-        id="daily_blog_post",
-        name="Daily Blog Post Generator",
-        replace_existing=True,
-    )
+    # Job 8: Auto-generate one blog post daily — DISABLED for V1.
+    # Reason: daily AI-generated posts produce filler that hurts SEO authority
+    # more than helps. Google spam updates specifically target this pattern.
+    # V1 moves to 2 high-quality pieces per month, written deliberately.
+    # Function is kept in this module so it can be re-enabled manually if needed.
+    # _scheduler.add_job(
+    #     _scheduled_daily_blog_post,
+    #     CronTrigger(hour=9, minute=0),
+    #     id="daily_blog_post",
+    #     name="Daily Blog Post Generator",
+    #     replace_existing=True,
+    # )
 
     # Job 10: Onboarding email sequence — daily at 14:00 UTC
     # Reads users table by signup age + existing signal state and sends
@@ -516,6 +555,30 @@ def init_scheduler(app):
         name="Signal Onboarding Email Sequence",
         replace_existing=True,
     )
+
+    # Job 12: Weekly Signal Report email — Monday 08:00 UTC
+    # Retention loop for Pro/Agency users. One concrete email per week
+    # with their current score, delta, weakest signal, and one action.
+    _scheduler.add_job(
+        _scheduled_weekly_signal_report,
+        CronTrigger(day_of_week='mon', hour=8, minute=0),
+        id="weekly_signal_report",
+        name="Weekly Signal Report Email",
+        replace_existing=True,
+    )
+
+    # Job 11: Dogfood Signal Score refresh — DISABLED for V1.
+    # The homepage badge was removed to avoid broadcasting a weak self-score
+    # before inbxr.us's own SPF/DKIM/DMARC are tightened. Engine + table
+    # remain available for manual testing and for later re-enablement once
+    # the brand domain can ship an A-grade score cleanly.
+    # _scheduler.add_job(
+    #     _scheduled_dogfood_refresh,
+    #     CronTrigger(hour=3, minute=0),
+    #     id="dogfood_refresh",
+    #     name="Dogfood Signal Score Refresh",
+    #     replace_existing=True,
+    # )
 
     _scheduler.start()
     logger.info("[SCHEDULER] Started with %d jobs", len(_scheduler.get_jobs()))

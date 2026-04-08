@@ -1091,6 +1091,98 @@ Opportunity: Start your free InbXr audit today and see where you actually stand.
         CREATE INDEX IF NOT EXISTS idx_onboarding_email_log_user
             ON onboarding_email_log(user_id);
     """),
+    ("024_dogfood_score", """
+        -- Live dogfood Signal Score for inbxr.us itself.
+        -- Refreshed nightly by scheduler. Used by the homepage dogfood badge
+        -- instead of hardcoded numbers. Single-row table (id = 1).
+        CREATE TABLE IF NOT EXISTS dogfood_score (
+            id INTEGER PRIMARY KEY,
+            domain TEXT NOT NULL DEFAULT 'inbxr.us',
+            total_score REAL NOT NULL,
+            grade TEXT NOT NULL,
+            auth_score REAL NOT NULL,
+            rep_score REAL NOT NULL,
+            visible_signals INTEGER NOT NULL DEFAULT 2,
+            locked_signals INTEGER NOT NULL DEFAULT 5,
+            calculated_at TEXT NOT NULL DEFAULT (datetime('now'))
+        );
+    """),
+    ("025_dual_motion_flags", """
+        -- Dual-motion feature flags: LTD Toolkit access vs MRR Intelligence access.
+        -- A user can hold both. Defaults: existing pro/agency users get
+        -- intelligence_ok=1 (set via UPDATE in migration runner). LTD users
+        -- added in V2 will get toolkit_ok=1.
+        ALTER TABLE users ADD COLUMN toolkit_ok INTEGER DEFAULT 0;
+        ALTER TABLE users ADD COLUMN intelligence_ok INTEGER DEFAULT 0;
+        UPDATE users SET intelligence_ok = 1 WHERE tier IN ('pro', 'agency', 'api');
+    """),
+    ("026_pdf_generations", """
+        -- Logs every Signal Report PDF generation.
+        -- Used to (a) enforce daily rate limits per tier, (b) measure the V1
+        -- success metric of >=5 PDFs exported per week, (c) power admin
+        -- analytics on feature adoption.
+        CREATE TABLE IF NOT EXISTS pdf_generations (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            tier TEXT NOT NULL,
+            variant TEXT NOT NULL,
+            signal_score INTEGER,
+            file_size_bytes INTEGER,
+            generated_at TEXT NOT NULL DEFAULT (datetime('now')),
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        );
+        CREATE INDEX IF NOT EXISTS idx_pdf_generations_user
+            ON pdf_generations(user_id);
+        CREATE INDEX IF NOT EXISTS idx_pdf_generations_date
+            ON pdf_generations(generated_at);
+    """),
+    ("027_agency_white_label", """
+        -- Agency tier white-label settings for Signal Report PDFs.
+        -- Agency users can upload a logo, pick a primary color, set custom
+        -- footer text, and optionally hide all InbXr branding from PDFs.
+        -- Used by the agency variant of modules/signal_report_pdf.py.
+        ALTER TABLE users ADD COLUMN agency_logo_url TEXT;
+        ALTER TABLE users ADD COLUMN agency_primary_color TEXT DEFAULT '#2563eb';
+        ALTER TABLE users ADD COLUMN agency_footer_text TEXT;
+        ALTER TABLE users ADD COLUMN agency_hide_inbxr_brand INTEGER DEFAULT 0;
+    """),
+    ("028_esp_writeback_log", """
+        -- Logs every ESP write-back attempt (suppress, tag, move_segment).
+        -- Source of truth for what Signal Recommendations have actually
+        -- pushed into the user's connected ESP. Read by the UI to show
+        -- per-rule counts and by future undo functionality.
+        CREATE TABLE IF NOT EXISTS esp_writeback_log (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            esp_integration_id INTEGER,
+            provider TEXT,
+            email TEXT,
+            action TEXT,
+            status TEXT CHECK(status IN ('pending', 'success', 'failed', 'skipped')),
+            message TEXT,
+            created_at TEXT DEFAULT (datetime('now'))
+        );
+        CREATE INDEX IF NOT EXISTS idx_esp_writeback_user ON esp_writeback_log(user_id);
+        CREATE INDEX IF NOT EXISTS idx_esp_writeback_integration ON esp_writeback_log(esp_integration_id);
+        CREATE INDEX IF NOT EXISTS idx_esp_writeback_status ON esp_writeback_log(status);
+    """),
+    ("029_weekly_signal_report_log", """
+        -- Dedup log for the weekly Signal Report email. One row per
+        -- (user_id, week_start_date) combination. The scheduler job
+        -- queries this before sending to prevent duplicate Monday
+        -- emails if the job accidentally fires twice.
+        CREATE TABLE IF NOT EXISTS weekly_signal_report_log (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            week_start_date TEXT NOT NULL,
+            sent_at TEXT NOT NULL DEFAULT (datetime('now')),
+            current_score INTEGER,
+            delta INTEGER,
+            delivery_status TEXT DEFAULT 'sent',
+            UNIQUE(user_id, week_start_date)
+        );
+        CREATE INDEX IF NOT EXISTS idx_weekly_report_user ON weekly_signal_report_log(user_id);
+    """),
 ]
 
 

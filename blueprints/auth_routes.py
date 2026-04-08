@@ -199,6 +199,126 @@ def regenerate_api_key():
     return jsonify({"ok": True, "api_key": key})
 
 
+# ── Agency white-label settings for Signal Report PDFs ──
+#
+# Agency tier users can upload a logo, pick a primary color, write a
+# custom footer, and optionally hide all InbXr branding. These values
+# are read by modules/signal_report_pdf.py when rendering the agency
+# variant of the Signal Report PDF. GET renders the form, POST saves.
+
+_ALLOWED_LOGO_EXT = {"png", "jpg", "jpeg", "svg", "webp"}
+_MAX_LOGO_BYTES = 2 * 1024 * 1024  # 2 MB
+_HEX_COLOR_RE = re.compile(r"^#[0-9a-fA-F]{6}$")
+
+
+def _agency_logo_dir():
+    """Where agency logos land. Served from static/ so they're reachable."""
+    base = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "static")
+    path = os.path.join(base, "uploads", "agency")
+    os.makedirs(path, exist_ok=True)
+    return path
+
+
+@auth_bp.route("/account/agency", methods=["GET"])
+def agency_settings():
+    """Render the agency white-label settings form. Gated to agency tier."""
+    user = get_current_user()
+    if not user:
+        return redirect(url_for("auth.login"))
+    if user["tier"] != "agency":
+        # Not an error — show an upsell message instead
+        return render_template(
+            "auth/agency_settings.html",
+            user=user,
+            locked=True,
+            active_page="account",
+        )
+
+    from modules.database import fetchone as _fetchone
+    row = _fetchone(
+        "SELECT agency_logo_url, agency_primary_color, agency_footer_text, "
+        "agency_hide_inbxr_brand FROM users WHERE id = ?",
+        (user["id"],),
+    )
+    return render_template(
+        "auth/agency_settings.html",
+        user=user,
+        locked=False,
+        agency_logo_url=row.get("agency_logo_url") if row else None,
+        agency_primary_color=(row.get("agency_primary_color") if row else None) or "#2563eb",
+        agency_footer_text=row.get("agency_footer_text") if row else "",
+        agency_hide_inbxr_brand=bool(row.get("agency_hide_inbxr_brand") if row else 0),
+        active_page="account",
+    )
+
+
+@auth_bp.route("/account/agency", methods=["POST"])
+def agency_settings_save():
+    """Save white-label settings. Accepts multipart/form-data for the
+    logo upload, or plain form data for color/footer/hide fields."""
+    user = get_current_user()
+    if not user:
+        return jsonify({"ok": False, "error": "Not authenticated."}), 401
+    if user["tier"] != "agency":
+        return jsonify({"ok": False, "error": "Agency tier required."}), 403
+
+    primary_color = (request.form.get("primary_color") or "#2563eb").strip()
+    footer_text = (request.form.get("footer_text") or "").strip()[:200]
+    hide_brand = 1 if request.form.get("hide_inbxr_brand") in ("on", "1", "true") else 0
+
+    if not _HEX_COLOR_RE.match(primary_color):
+        return jsonify({"ok": False, "error": "Primary color must be a 6-digit hex like #2563eb."}), 400
+
+    # Handle optional logo upload
+    logo_url = None
+    logo_file = request.files.get("logo") if request.files else None
+    if logo_file and logo_file.filename:
+        fname = logo_file.filename.lower()
+        ext = fname.rsplit(".", 1)[-1] if "." in fname else ""
+        if ext not in _ALLOWED_LOGO_EXT:
+            return jsonify({
+                "ok": False,
+                "error": f"Logo must be one of: {', '.join(sorted(_ALLOWED_LOGO_EXT))}",
+            }), 400
+
+        # Size check (read into memory since we also need to write it)
+        data = logo_file.read()
+        if len(data) > _MAX_LOGO_BYTES:
+            return jsonify({
+                "ok": False,
+                "error": f"Logo must be smaller than {_MAX_LOGO_BYTES // 1024 // 1024} MB.",
+            }), 400
+
+        save_dir = _agency_logo_dir()
+        safe_name = f"{user['id']}.{ext}"
+        full_path = os.path.join(save_dir, safe_name)
+        try:
+            with open(full_path, "wb") as f:
+                f.write(data)
+        except Exception:
+            logger.exception("[AGENCY] Failed to save uploaded logo")
+            return jsonify({"ok": False, "error": "Could not save logo upload."}), 500
+
+        logo_url = f"/static/uploads/agency/{safe_name}"
+
+    # Update the user row
+    from modules.database import execute as _execute
+    if logo_url:
+        _execute(
+            "UPDATE users SET agency_logo_url = ?, agency_primary_color = ?, "
+            "agency_footer_text = ?, agency_hide_inbxr_brand = ? WHERE id = ?",
+            (logo_url, primary_color, footer_text, hide_brand, user["id"]),
+        )
+    else:
+        _execute(
+            "UPDATE users SET agency_primary_color = ?, agency_footer_text = ?, "
+            "agency_hide_inbxr_brand = ? WHERE id = ?",
+            (primary_color, footer_text, hide_brand, user["id"]),
+        )
+
+    return jsonify({"ok": True, "logo_url": logo_url})
+
+
 @auth_bp.route("/resend-verification", methods=["POST"])
 def resend_verification():
     user = get_current_user()

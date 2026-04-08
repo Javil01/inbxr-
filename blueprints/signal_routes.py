@@ -25,7 +25,7 @@ All routes use raw SQLite + session auth (not SQLAlchemy + Flask-Login).
 import json
 import logging
 
-from flask import Blueprint, render_template, request, jsonify
+from flask import Blueprint, render_template, request, jsonify, Response
 
 from modules.auth import login_required, tier_required, get_current_user
 from modules.database import execute, fetchone, fetchall
@@ -459,6 +459,79 @@ def signal_score_share_token(row_id):
     })
 
 
+@signal_bp.route("/signal-score/pdf")
+@login_required
+def signal_score_pdf():
+    """Generate and stream a Signal Report PDF for the current user.
+
+    Variant is resolved from the user's tier: free users get the basic
+    one-page report with InbXr branding, pro users get history charts,
+    agency users get white-label output. Daily rate limit enforced via
+    signal_pdfs_per_day in tiers.py. Every generation is logged to
+    pdf_generations for success-metric tracking.
+    """
+    from modules.signal_report_pdf import (
+        generate_pdf,
+        log_pdf_generation,
+        count_pdfs_today,
+    )
+
+    user = get_current_user()
+    user_id = user["id"]
+    tier = user.get("tier", "free")
+
+    # Rate limit check
+    daily_limit = get_tier_limit(tier, "signal_pdfs_per_day") or 0
+    if daily_limit <= 0:
+        return jsonify({
+            "ok": False,
+            "error": "PDF export is not available on your plan.",
+            "upgrade_url": "/pricing",
+        }), 403
+
+    used_today = count_pdfs_today(user_id)
+    if used_today >= daily_limit:
+        return jsonify({
+            "ok": False,
+            "error": f"Daily PDF limit reached ({daily_limit}/day on {tier}).",
+            "upgrade_url": "/pricing",
+        }), 429
+
+    # Generate
+    pdf_bytes, meta = generate_pdf(user_id)
+    if pdf_bytes is None:
+        reason = meta.get("error", "unknown")
+        if reason == "no_score_yet":
+            return jsonify({
+                "ok": False,
+                "error": "Run your first Signal Score before exporting a PDF.",
+            }), 400
+        return jsonify({"ok": False, "error": f"PDF generation failed ({reason})."}), 500
+
+    # Log the generation (non-blocking: failure to log should not block the download)
+    log_pdf_generation(
+        user_id=user_id,
+        tier=tier,
+        variant=meta.get("variant", "free"),
+        score=meta.get("score"),
+        size_bytes=meta.get("size_bytes"),
+    )
+
+    # Stream with a descriptive filename so downloads land cleanly
+    from datetime import datetime as _dt
+    date_str = _dt.utcnow().strftime("%Y-%m-%d")
+    filename = f"inbxr-signal-report-{date_str}.pdf"
+    return Response(
+        pdf_bytes,
+        mimetype="application/pdf",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "Content-Length": str(len(pdf_bytes)),
+            "Cache-Control": "no-store",
+        },
+    )
+
+
 @signal_bp.route("/signal-score/history")
 @login_required
 def signal_score_history():
@@ -671,7 +744,7 @@ def send_readiness_page():
         active_page="send_readiness",
         latest=latest,
         readiness=readiness,
-        title="Send Readiness",
+        title="Pre-send Check",
     )
 
 
@@ -812,6 +885,64 @@ def generate_recovery_sequence():
     except Exception as e:
         logger.exception("Recovery Sequences generation failed")
         return jsonify({"ok": False, "error": "Generation failed. Try again."}), 500
+
+
+@signal_bp.route("/recovery-sequences/export-mailchimp", methods=["POST"])
+@login_required
+@tier_required("pro", "agency", "api")
+def export_recovery_to_mailchimp():
+    """Take a generated recovery sequence and push each email as a
+    draft campaign into the user's connected Mailchimp account.
+
+    Expected JSON body:
+        sequence: list of email dicts (from /recovery-sequences/generate)
+        from_name: sender display name
+        reply_to: reply-to email address
+
+    The user must have an active Mailchimp integration. Each email in
+    the sequence becomes a separate draft campaign — the user opens
+    Mailchimp, reviews, edits styling, and schedules from there.
+    Every generation is logged to esp_writeback_log with outcome.
+    """
+    from modules.esp_writeback import export_recovery_sequence_to_mailchimp
+
+    user = get_current_user()
+    user_id = user["id"]
+
+    data = request.get_json(silent=True) or {}
+    sequence = data.get("sequence") or []
+    from_name = (data.get("from_name") or user.get("display_name") or "Your Brand").strip()[:100]
+    reply_to = (data.get("reply_to") or user.get("email") or "").strip()
+
+    if not sequence:
+        return jsonify({"ok": False, "error": "No sequence provided."}), 400
+
+    # Find the user's active Mailchimp integration
+    integration = fetchone(
+        """SELECT id FROM esp_integrations
+           WHERE user_id = ? AND provider = 'mailchimp' AND status = 'active'
+           ORDER BY id DESC LIMIT 1""",
+        (user_id,),
+    )
+    if not integration:
+        return jsonify({
+            "ok": False,
+            "error": "No active Mailchimp integration found. Connect Mailchimp first in Settings → Integrations.",
+        }), 400
+
+    try:
+        result = export_recovery_sequence_to_mailchimp(
+            user_id=user_id,
+            esp_integration_id=integration["id"],
+            sequence=sequence,
+            from_name=from_name,
+            reply_to=reply_to,
+        )
+    except Exception:
+        logger.exception("Recovery Sequences Mailchimp export failed")
+        return jsonify({"ok": False, "error": "Export failed. Please try again."}), 500
+
+    return jsonify(result)
 
 
 def _generate_sequence_via_groq(segment, brand_name, tone, num_emails):

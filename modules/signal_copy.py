@@ -74,7 +74,7 @@ SIGNAL_GRADE_COPY = {
         'label': 'Excellent',
         'color': 'success',
         'description': 'Your list is in strong condition. Signal Watch is monitoring for drift.',
-        'cta': 'Maintain your score. Set Signal Rules to stay here automatically.',
+        'cta': 'Maintain your score. Set Signal Recommendations to stay here automatically.',
     },
     'B': {
         'label': 'Good',
@@ -212,9 +212,9 @@ ACTION_RECOMMENDATIONS = {
         'feature': 'Recovery Sequences',
     },
     'acquisition_quality': {
-        'label': 'Set Signal Rules to flag cold-acquisition contacts',
+        'label': 'Set Signal Recommendations to flag cold-acquisition contacts',
         'url': '/signal-rules',
-        'feature': 'Signal Rules',
+        'feature': 'Signal Recommendations',
     },
     'domain_reputation': {
         'label': 'Check Domain Reputation in Inboxer Sender Check',
@@ -222,9 +222,9 @@ ACTION_RECOMMENDATIONS = {
         'feature': 'Inboxer Sender Check',
     },
     'dormancy_risk': {
-        'label': 'Suppress dormant contacts with Signal Rules',
+        'label': 'Suppress dormant contacts with Signal Recommendations',
         'url': '/signal-rules',
-        'feature': 'Signal Rules',
+        'feature': 'Signal Recommendations',
     },
     'authentication_standing': {
         'label': 'Fix authentication issues in Inboxer Sender Check',
@@ -455,7 +455,7 @@ PRE_BUILT_RULE_TEMPLATES = [
     {
         'template_id': 'block_send_danger',
         'rule_name': 'Block send when Signal Score drops below 45',
-        'description': 'Fires a Send Readiness alert if total Signal Score drops below 45 (D/F grade). You decide whether to send.',
+        'description': 'Fires a Pre-send Check alert if total Signal Score drops below 45 (D/F grade). You decide whether to send.',
         'condition_signal': 'total_signal_score',
         'condition_operator': 'less_than',
         'condition_value': 45,

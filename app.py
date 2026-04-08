@@ -145,6 +145,9 @@ app.register_blueprint(signal_bp)
 from blueprints.public_signal_routes import public_signal_bp
 app.register_blueprint(public_signal_bp)
 
+from blueprints.webhook_routes import webhook_bp
+app.register_blueprint(webhook_bp)
+
 from modules.scheduler import init_scheduler
 init_scheduler(app)
 
@@ -273,6 +276,11 @@ def inject_user_context():
         "current_team_role": session.get("team_role"),
         "tracking_tags": _get_tracking_tags(),
     }
+
+
+# Dogfood context processor removed — the homepage badge was cut in V1
+# to avoid broadcasting a weak self-score. modules/dogfood.py is still
+# importable for manual/admin testing.
 
 
 # ── Email verification enforcement ────────────────────
@@ -490,8 +498,15 @@ def sitemap_xml():
         ('/blog', '0.8', 'daily'),
         ('/pricing', '0.7', 'monthly'),
         ('/support', '0.5', 'monthly'),
-        ('/how-inbxr-is-different', '0.6', 'monthly'),
+        ('/seven-signals', '0.8', 'weekly'),
         ('/bulk-domain-check', '0.7', 'monthly'),
+        ('/why-am-i-in-spam', '0.9', 'weekly'),
+        ('/inherited-list-first-aid', '0.9', 'weekly'),
+        ('/zerobounce-alternative', '0.7', 'monthly'),
+        ('/mail-tester-alternative', '0.7', 'monthly'),
+        ('/mxtoolbox-alternative', '0.7', 'monthly'),
+        ('/glockapps-alternative', '0.7', 'monthly'),
+        ('/warmy-alternative', '0.7', 'monthly'),
     ]
     xml = ['<?xml version="1.0" encoding="UTF-8"?>']
     xml.append('<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">')
@@ -2202,12 +2217,8 @@ def terms_page():
 
 @app.route("/how-inbxr-is-different")
 def how_different():
-    return render_template("how_different.html",
-                           is_admin=_is_admin(),
-                           active_page="how_different",
-                           page_title="How InbXr Is Different · The 7 Inbox Signals",
-                           page_description="We're the only tool that scores your email list across all 7 inbox signals before you hit send. Including 2 dimensions no other platform currently measures. Reads what is broadcasting and fixes what it found.",
-                           canonical_url="https://inbxr.us/how-inbxr-is-different")
+    """V1: merged into /seven-signals deep-dive page. 301 for SEO continuity."""
+    return redirect("/seven-signals", code=301)
 
 
 @app.route("/seven-signals")

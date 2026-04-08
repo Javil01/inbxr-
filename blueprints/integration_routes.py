@@ -59,39 +59,11 @@ ESP_PROVIDERS = {
         "icon": "mailgun",
         "data_points": ["Deliveries", "Bounces", "Complaints", "DNS status", "Suppressions"],
     },
-    "gohighlevel": {
-        "name": "GoHighLevel",
-        "description": "Agency multi-account stats, bounce/complaint events, sending domains",
-        "auth_type": "api_key",
-        "fields": [
-            {"key": "api_key", "label": "API Key", "placeholder": "Your location API key", "help": "Found in Settings > Business Info > API Key"},
-        ],
-        "docs_url": "https://developers.gohighlevel.com/",
-        "icon": "gohighlevel",
-        "data_points": ["Deliveries", "Opens", "Clicks", "Bounces", "Complaints"],
-    },
-    "instantly": {
-        "name": "Instantly",
-        "description": "Warmup reputation scores, campaign bounce rates, account health",
-        "auth_type": "api_key",
-        "fields": [
-            {"key": "api_key", "label": "API Key", "placeholder": "Your Instantly API key", "help": "Found in Settings > Integrations > API"},
-        ],
-        "docs_url": "https://developer.instantly.ai/",
-        "icon": "instantly",
-        "data_points": ["Warmup score", "Bounces", "Opens", "Replies", "Account health"],
-    },
-    "smartlead": {
-        "name": "Smartlead",
-        "description": "Warmup stats, per-account health, campaign deliverability",
-        "auth_type": "api_key",
-        "fields": [
-            {"key": "api_key", "label": "API Key", "placeholder": "Your Smartlead API key", "help": "Found in Settings > General > API"},
-        ],
-        "docs_url": "https://api.smartlead.ai/reference",
-        "icon": "smartlead",
-        "data_points": ["Warmup stats", "Bounces", "Opens", "Replies", "Account health"],
-    },
+    # GoHighLevel, Instantly, Smartlead — REMOVED from V1 ESP list.
+    # Reason: these are cold email platforms that do not expose per-contact
+    # engagement data. The 7 Signal engine cannot run honestly against them.
+    # Users of these tools get directed to the CSV upload path instead.
+    # The _test_* functions below remain in the file for reference.
     "aweber": {
         "name": "AWeber",
         "description": "Subscriber activity, open/click/bounce tracking",
@@ -145,11 +117,17 @@ def integrations_page():
     """Page showing connected ESP integrations."""
     user = get_current_user()
     limit = get_tier_limit(user["tier"], "esp_integrations")
+    # Build the user's per-provider webhook URLs so the UI can show them
+    # in the Mailchimp "connect" flow.
+    from blueprints.webhook_routes import make_user_webhook_token
+    mailchimp_token = make_user_webhook_token(user["id"], "mailchimp")
+    mailchimp_webhook_url = f"https://inbxr.us/webhooks/mailchimp/{mailchimp_token}"
     return render_template(
         "auth/integrations.html",
         active_page="integrations",
         providers=ESP_PROVIDERS,
         tier_limit=limit,
+        mailchimp_webhook_url=mailchimp_webhook_url,
     )
 
 

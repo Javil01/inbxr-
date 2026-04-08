@@ -216,10 +216,14 @@
   <div class="sig-actions">
     {% if latest %}
       <button type="button" class="sig-btn sig-btn--outline" onclick="recalculateNow()">Recalculate</button>
+      <a href="/signal-score/pdf" class="sig-btn sig-btn--primary" title="Download Signal Report PDF">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" style="vertical-align:-2px;margin-right:5px;"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Download PDF
+      </a>
     {% endif %}
     <a href="/signal-map" class="sig-btn sig-btn--outline">Signal Map</a>
     {% if tier != 'free' %}
-      <a href="/signal-rules" class="sig-btn sig-btn--outline">Signal Rules</a>
+      <a href="/signal-rules" class="sig-btn sig-btn--outline">Signal Recommendations</a>
     {% endif %}
   </div>
 </div>
@@ -297,7 +301,7 @@
     <p class="sig-empty__text">
       Connect Mailchimp, ActiveCampaign, Mailgun, or AWeber and InbXr recalculates your
       Signal Score every 6 hours, fires Early Warning alerts when any dimension trends toward
-      danger, and runs the Signal Rules you set up. All hands-off.
+      danger, and runs the Signal Recommendations you set up. All hands-off.
     </p>
     <div class="sig-empty__actions">
       <a href="/signup" class="sig-btn sig-btn--primary">Create Free Account</a>
@@ -593,7 +597,7 @@ function renderAnonResult(d) {
       <h3 class="sig-anon-result__cta-title">Want continuous monitoring on this list?</h3>
       <p class="sig-anon-result__cta-sub">
         Create a free account to save this report, track your Signal Score over time, set up
-        Signal Rules with dry-run preview, and get Early Warning alerts when any dimension
+        Signal Recommendations with dry-run preview, and get Early Warning alerts when any dimension
         trends toward danger.
       </p>
       <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">

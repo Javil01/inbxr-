@@ -22,6 +22,18 @@
 
 .rs-loading { text-align: center; padding: 20px; color: var(--text-3); }
 .rs-empty { text-align: center; padding: 32px; color: var(--text-3); border: 1px dashed var(--border); border-radius: var(--r-lg, 12px); }
+
+/* Export panel */
+.rs-export { margin-top: 18px; padding: 18px 22px; background: #f0f9ff; border: 1px solid #bae6fd; border-radius: var(--r-lg, 12px); }
+.rs-export h3 { font-size: 0.95rem; margin: 0 0 6px; color: var(--text-1); }
+.rs-export p { font-size: 0.82rem; color: var(--text-2); margin: 0 0 12px; line-height: 1.5; }
+.rs-export__btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; background: var(--brand); color: #fff; border: none; border-radius: 999px; font-size: 0.88rem; font-weight: 700; cursor: pointer; }
+.rs-export__btn:hover { background: var(--brand-dark, #1d4ed8); }
+.rs-export__btn[disabled] { opacity: 0.6; cursor: not-allowed; }
+.rs-export__result { margin-top: 12px; font-size: 0.82rem; }
+.rs-export__result--success { color: #059669; }
+.rs-export__result--error { color: #dc2626; }
+.rs-export__result ul { margin: 6px 0 0 18px; padding: 0; }
 </style>
 
 <div class="rs-header">
@@ -106,7 +118,10 @@ function generateSequence() {
   });
 }
 
+let __lastSequence = null;
+
 function renderSequence(sequence) {
+  __lastSequence = sequence;
   const results = document.getElementById('results');
   results.innerHTML = '';
   sequence.forEach((email, i) => {
@@ -125,6 +140,72 @@ function renderSequence(sequence) {
       ${email.cta_text ? `<div class="rs-email__cta">CTA: ${escapeHtml(email.cta_text)}</div>` : ''}
     `;
     results.appendChild(div);
+  });
+
+  // Append the Mailchimp export panel below the sequence
+  const exportPanel = document.createElement('div');
+  exportPanel.className = 'rs-export';
+  exportPanel.innerHTML = `
+    <h3>Export to Mailchimp as draft campaigns</h3>
+    <p>Each email in this sequence becomes a separate draft campaign in your connected Mailchimp account. You can review, edit styling, and schedule them from Mailchimp. Requires an active Mailchimp integration.</p>
+    <button type="button" class="rs-export__btn" id="exportBtn" onclick="exportToMailchimp()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+      Export ${sequence.length} drafts to Mailchimp
+    </button>
+    <div id="exportResult" class="rs-export__result"></div>
+  `;
+  results.appendChild(exportPanel);
+}
+
+function exportToMailchimp() {
+  if (!__lastSequence) return;
+  const btn = document.getElementById('exportBtn');
+  const out = document.getElementById('exportResult');
+  btn.disabled = true;
+  btn.textContent = 'Exporting to Mailchimp…';
+  out.className = 'rs-export__result';
+  out.innerHTML = '';
+
+  fetch('/recovery-sequences/export-mailchimp', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.content || '',
+    },
+    body: JSON.stringify({
+      sequence: __lastSequence,
+      from_name: document.getElementById('brand').value || 'Your Brand',
+    }),
+  })
+  .then(r => r.json())
+  .then(d => {
+    btn.disabled = false;
+    btn.textContent = `Export ${__lastSequence.length} drafts to Mailchimp`;
+    if (d.ok) {
+      let successLines = d.results
+        .filter(r => r.ok)
+        .map(r => `<li>Email ${r.index}: <strong>${escapeHtml(r.subject)}</strong> — ${escapeHtml(r.message)}</li>`)
+        .join('');
+      let failLines = d.results
+        .filter(r => !r.ok)
+        .map(r => `<li>Email ${r.index}: <strong>${escapeHtml(r.subject)}</strong> — <span style="color:#dc2626">${escapeHtml(r.message)}</span></li>`)
+        .join('');
+      out.className = 'rs-export__result rs-export__result--success';
+      out.innerHTML = `
+        <strong>Exported ${d.successful} of ${d.total} draft campaigns to Mailchimp.</strong>
+        Open Mailchimp to review, edit styling, and schedule each campaign.
+        <ul>${successLines}${failLines}</ul>
+      `;
+    } else {
+      out.className = 'rs-export__result rs-export__result--error';
+      out.innerHTML = `<strong>Export failed:</strong> ${escapeHtml(d.error || 'unknown error')}`;
+    }
+  })
+  .catch(e => {
+    btn.disabled = false;
+    btn.textContent = `Export ${__lastSequence.length} drafts to Mailchimp`;
+    out.className = 'rs-export__result rs-export__result--error';
+    out.innerHTML = `<strong>Network error:</strong> ${e}`;
   });
 }
 

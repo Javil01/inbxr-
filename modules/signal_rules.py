@@ -341,12 +341,28 @@ def _action_move_segment(user_id, esp_integration_id, rule, affected):
 
 
 def _action_suppress(user_id, esp_integration_id, rule, affected):
-    """Mark contacts as suppressed (LOCAL ONLY — no ESP writeback)."""
+    """Mark contacts as suppressed in InbXr's local DB AND push the
+    suppression to the connected ESP when the rule is live.
+
+    Safety rules:
+      1. Local suppression always happens (it's the source of truth
+         for the Signal Engine's future scoring).
+      2. ESP write-back only fires when rule.action_dry_run == 0 AND
+         the rule has an esp_integration_id to push to. Dry-run rules
+         never touch the ESP — they only mark local contacts.
+      3. Write-back failures do NOT abort the local suppression.
+         They are logged to esp_writeback_log for the user to review.
+    """
     reason = rule.get('action_target') or 'signal_rule'
+    is_live = not rule.get('action_dry_run', 1)
+    should_writeback = is_live and esp_integration_id is not None
+
     for c in affected:
         email = c.get('email')
         if not email:
             continue
+
+        # 1. Local suppression (always)
         existing = _find_contact_row(user_id, esp_integration_id, email)
         if existing:
             execute(
@@ -359,6 +375,27 @@ def _action_suppress(user_id, esp_integration_id, rule, affected):
                    WHERE id = ?""",
                 (reason, rule['id'], existing['id']),
             )
+
+        # 2. ESP write-back (only when live and integration-linked)
+        if should_writeback:
+            try:
+                from modules.esp_writeback import suppress_contact as _esp_suppress
+                ok, msg = _esp_suppress(
+                    user_id=user_id,
+                    esp_integration_id=esp_integration_id,
+                    email=email,
+                    reason=reason,
+                )
+                if not ok:
+                    logger.warning(
+                        "[SIGNAL_RULES] ESP write-back failed for %s (rule %s): %s",
+                        email, rule.get('id'), msg,
+                    )
+            except Exception:
+                logger.exception(
+                    "[SIGNAL_RULES] ESP write-back crashed for %s (rule %s)",
+                    email, rule.get('id'),
+                )
 
 
 # ── Rule CRUD ──────────────────────────────────────────

@@ -85,6 +85,14 @@
 </div>
 {% endif %}
 
+{% if user.tier == 'agency' %}
+<div class="account-section">
+  <h2 class="account-section__title">Signal Report White-Label</h2>
+  <p style="font-size: 0.88rem; color: var(--text-3); margin: 0 0 14px;">Upload your logo, pick a brand color, and customize the footer that appears on every Signal Report PDF you generate.</p>
+  <a href="/account/agency" class="auth-btn auth-btn--outline">Configure white-label</a>
+</div>
+{% endif %}
+
 <div class="account-section">
   <h2 class="account-section__title">Change Password</h2>
   <form id="changePassForm" class="auth-form">

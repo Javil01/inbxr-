@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{ title }}</title>
+  <meta name="description" content="{{ meta_description }}">
+  <meta property="og:title" content="{{ title }}">
+  <meta property="og:description" content="{{ meta_description }}">
+  <meta property="og:url" content="https://inbxr.us/inherited-list-first-aid">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://inbxr.us/inherited-list-first-aid">
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/style.css?v=20260408f" />
+  {% include 'sections/_head_meta.html' %}
+</head>
+<body class="email-test-page">
+
+{% include 'sections/header.html' %}
+
+<style>
+.ilfa-wrap { max-width: 920px; margin: 0 auto; padding: 60px 24px 80px; }
+.ilfa-eyebrow {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 4px 14px;
+  border-radius: 99px;
+  background: rgba(37,99,235,0.08);
+  color: var(--brand, #2563eb);
+  margin-bottom: 18px;
+}
+.ilfa-h1 {
+  font-size: 2.4rem;
+  font-weight: 900;
+  line-height: 1.15;
+  color: var(--text-1);
+  margin: 0 0 14px;
+  letter-spacing: -0.02em;
+}
+.ilfa-sub {
+  font-size: 1.1rem;
+  color: var(--text-2);
+  margin: 0 0 32px;
+  line-height: 1.55;
+  max-width: 720px;
+}
+
+.ilfa-upload {
+  background: #f8fafc;
+  border: 2px dashed var(--border-1, #cbd5e1);
+  border-radius: 16px;
+  padding: 40px 24px;
+  text-align: center;
+  margin-bottom: 24px;
+}
+.ilfa-upload.dragover { border-color: var(--brand, #2563eb); background: #f0f9ff; }
+.ilfa-upload__icon { font-size: 2rem; margin-bottom: 10px; }
+.ilfa-upload__h { font-size: 1.1rem; font-weight: 700; color: var(--text-1); margin: 0 0 8px; }
+.ilfa-upload__sub { font-size: 0.88rem; color: var(--text-3); margin: 0 0 18px; }
+.ilfa-upload__btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 12px 24px;
+  background: var(--brand, #2563eb);
+  color: #fff;
+  border: none;
+  border-radius: 999px;
+  font-size: 0.92rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+}
+.ilfa-upload__btn:hover { background: #1e40af; }
+.ilfa-upload__note { font-size: 0.74rem; color: var(--text-3); margin: 14px 0 0; }
+
+.ilfa-loading { display: none; text-align: center; padding: 30px; color: var(--text-2); }
+.ilfa-loading.visible { display: block; }
+.ilfa-loading__spinner {
+  display: inline-block; width: 32px; height: 32px;
+  border: 3px solid #e2e8f0; border-top-color: var(--brand, #2563eb);
+  border-radius: 50%; animation: ilfa-spin 0.8s linear infinite; margin-bottom: 10px;
+}
+@keyframes ilfa-spin { to { transform: rotate(360deg); } }
+
+.ilfa-err { display: none; padding: 14px; background: #fef2f2; border: 1px solid #fca5a5; color: #991b1b; border-radius: 10px; font-size: 0.9rem; margin-top: 14px; }
+.ilfa-err.visible { display: block; }
+
+.ilfa-results { display: none; margin-top: 32px; }
+.ilfa-results.visible { display: block; }
+.ilfa-overview {
+  background: #fff;
+  border: 1px solid var(--border-1, #e2e8f0);
+  border-radius: 14px;
+  padding: 22px 26px;
+  margin-bottom: 22px;
+}
+.ilfa-overview__h { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-3); margin: 0 0 8px; }
+.ilfa-overview__stats { display: flex; gap: 24px; flex-wrap: wrap; font-size: 0.92rem; color: var(--text-2); }
+.ilfa-overview__stats strong { color: var(--text-1); font-size: 1.1rem; }
+
+.ilfa-columns { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 18px; margin-bottom: 24px; }
+.ilfa-col {
+  background: #fff;
+  border: 1px solid var(--border-1, #e2e8f0);
+  border-radius: 14px;
+  padding: 20px 22px;
+  border-top-width: 4px;
+}
+.ilfa-col--remove { border-top-color: #dc2626; }
+.ilfa-col--reengage { border-top-color: #d97706; }
+.ilfa-col--keep { border-top-color: #059669; }
+.ilfa-col__head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 6px;
+}
+.ilfa-col__label {
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.ilfa-col--remove .ilfa-col__label { color: #dc2626; }
+.ilfa-col--reengage .ilfa-col__label { color: #d97706; }
+.ilfa-col--keep .ilfa-col__label { color: #059669; }
+.ilfa-col__count { font-size: 1.6rem; font-weight: 900; color: var(--text-1); }
+.ilfa-col__count small { font-size: 0.82rem; font-weight: 600; color: var(--text-3); margin-left: 6px; }
+.ilfa-col__summary { font-size: 0.86rem; color: var(--text-2); line-height: 1.5; margin: 8px 0 14px; }
+.ilfa-col__preview { font-size: 0.75rem; color: var(--text-3); max-height: 200px; overflow-y: auto; background: #f8fafc; border-radius: 8px; padding: 10px; }
+.ilfa-col__preview-row { padding: 3px 0; border-bottom: 1px solid #eef2f7; }
+.ilfa-col__preview-row:last-child { border: none; }
+.ilfa-col__preview-row b { color: var(--text-2); font-weight: 600; }
+.ilfa-col__preview-row i { color: var(--text-3); font-style: normal; font-size: 0.7rem; }
+.ilfa-col__export { margin-top: 14px; }
+.ilfa-col__export a {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--brand, #2563eb);
+  text-decoration: none;
+  padding: 8px 14px;
+  border: 1px solid #bae6fd;
+  background: #f0f9ff;
+  border-radius: 999px;
+}
+.ilfa-col__export a:hover { background: #dbeafe; }
+
+.ilfa-cta {
+  text-align: center;
+  padding: 32px 24px;
+  background: linear-gradient(135deg, #f0f9ff 0%, #fff 100%);
+  border: 1px solid #bae6fd;
+  border-radius: 16px;
+  margin-top: 32px;
+}
+.ilfa-cta__h { font-size: 1.25rem; font-weight: 800; color: var(--text-1); margin: 0 0 6px; }
+.ilfa-cta__sub { font-size: 0.92rem; color: var(--text-2); margin: 0 0 18px; line-height: 1.55; }
+.ilfa-cta__btn { display: inline-block; background: var(--brand, #2563eb); color: #fff; padding: 12px 26px; border-radius: 999px; font-weight: 700; text-decoration: none; font-size: 0.9rem; }
+.ilfa-cta__reassure { font-size: 0.72rem; color: var(--text-3); margin: 10px 0 0; }
+
+.ilfa-privacy {
+  display: flex; align-items: flex-start; gap: 10px;
+  font-size: 0.78rem;
+  color: var(--text-3);
+  background: #f8fafc;
+  border-left: 3px solid #059669;
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-top: 16px;
+}
+.ilfa-privacy strong { color: #059669; }
+
+@media (max-width: 740px) {
+  .ilfa-h1 { font-size: 1.7rem; }
+  .ilfa-columns { grid-template-columns: 1fr; }
+}
+</style>
+
+<main class="ilfa-wrap">
+
+  <span class="ilfa-eyebrow">Free flow &middot; No signup &middot; No data stored</span>
+  <h1 class="ilfa-h1">Inherited a list and don't know what's in it?</h1>
+  <p class="ilfa-sub">
+    Upload your CSV. The <strong>Signal Engine</strong> sorts every contact into
+    three buckets: <strong>Remove</strong> (kill the reputation risk),
+    <strong>Re-engage</strong> (worth saving with a sequence), and
+    <strong>Keep</strong> (your active core). Download a suppression file that
+    drops straight into any ESP.
+  </p>
+
+  <form id="ilfaForm" class="ilfa-upload" enctype="multipart/form-data">
+    <div class="ilfa-upload__icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="40" height="40" style="color: var(--brand);"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+    </div>
+    <h3 class="ilfa-upload__h">Upload your CSV</h3>
+    <p class="ilfa-upload__sub">Max 5 MB. Required column: <code>email</code>. Optional: <code>last_open</code>, <code>last_click</code>, <code>acquisition_date</code>.</p>
+    <input type="file" id="ilfaFile" name="file" accept=".csv,text/csv" style="display:none" />
+    <button type="button" id="ilfaBrowseBtn" class="ilfa-upload__btn">Choose CSV file</button>
+    <p class="ilfa-upload__note" id="ilfaFileName">No file selected</p>
+  </form>
+
+  <div id="ilfaLoading" class="ilfa-loading">
+    <div class="ilfa-loading__spinner"></div>
+    <p>Triaging your list.</p>
+  </div>
+
+  <div id="ilfaErr" class="ilfa-err"></div>
+
+  <div class="ilfa-privacy">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" style="color: #059669; flex-shrink: 0; margin-top: 1px;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+    <span><strong>Privacy:</strong> Your CSV is processed in memory only. We do not save it to disk, log it, or store the contacts. When you close this tab, the data is gone.</span>
+  </div>
+
+  <div id="ilfaResults" class="ilfa-results">
+    <div class="ilfa-overview">
+      <p class="ilfa-overview__h">Triage overview</p>
+      <div class="ilfa-overview__stats">
+        <div><strong id="ilfaTotal">0</strong> total parsed</div>
+        <div><strong id="ilfaRemovePct">0%</strong> remove</div>
+        <div><strong id="ilfaReengagePct">0%</strong> re-engage</div>
+        <div><strong id="ilfaKeepPct">0%</strong> keep</div>
+      </div>
+    </div>
+
+    <div class="ilfa-columns">
+      <div class="ilfa-col ilfa-col--remove">
+        <div class="ilfa-col__head">
+          <span class="ilfa-col__label">Remove</span>
+          <span class="ilfa-col__count" id="ilfaRemoveCount">0</span>
+        </div>
+        <p class="ilfa-col__summary" id="ilfaRemoveSummary"></p>
+        <div class="ilfa-col__preview" id="ilfaRemovePreview"></div>
+        <div class="ilfa-col__export">
+          <a href="/inherited-list-first-aid/suppression.csv" id="ilfaRemoveExport">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Download suppression CSV
+          </a>
+        </div>
+      </div>
+
+      <div class="ilfa-col ilfa-col--reengage">
+        <div class="ilfa-col__head">
+          <span class="ilfa-col__label">Re-engage</span>
+          <span class="ilfa-col__count" id="ilfaReengageCount">0</span>
+        </div>
+        <p class="ilfa-col__summary" id="ilfaReengageSummary"></p>
+        <div class="ilfa-col__preview" id="ilfaReengagePreview"></div>
+      </div>
+
+      <div class="ilfa-col ilfa-col--keep">
+        <div class="ilfa-col__head">
+          <span class="ilfa-col__label">Keep</span>
+          <span class="ilfa-col__count" id="ilfaKeepCount">0</span>
+        </div>
+        <p class="ilfa-col__summary" id="ilfaKeepSummary"></p>
+        <div class="ilfa-col__preview" id="ilfaKeepPreview"></div>
+      </div>
+    </div>
+
+    <div class="ilfa-cta">
+      <h3 class="ilfa-cta__h">Want a full 7-signal reading on this list?</h3>
+      <p class="ilfa-cta__sub">This triage looks at email syntax, role addresses, dormancy, and disposable domains. The full Signal Engine reads 7 dimensions including Authentication Standing, Domain Reputation, and Engagement Trajectory with MPP adjustment.</p>
+      <a href="/signup" class="ilfa-cta__btn">Get the full 7-signal read</a>
+      <p class="ilfa-cta__reassure">No credit card required &middot; Cancel anytime</p>
+    </div>
+  </div>
+
+</main>
+
+<script>
+(function(){
+  var form = document.getElementById('ilfaForm');
+  var fileInput = document.getElementById('ilfaFile');
+  var browseBtn = document.getElementById('ilfaBrowseBtn');
+  var fileNameEl = document.getElementById('ilfaFileName');
+  var loading = document.getElementById('ilfaLoading');
+  var results = document.getElementById('ilfaResults');
+  var errBox = document.getElementById('ilfaErr');
+
+  browseBtn.addEventListener('click', function(){ fileInput.click(); });
+  fileInput.addEventListener('change', function(){
+    if (fileInput.files && fileInput.files[0]) {
+      var f = fileInput.files[0];
+      fileNameEl.textContent = f.name + ' (' + (f.size / 1024).toFixed(1) + ' KB)';
+      runTriage(f);
+    }
+  });
+
+  // Drag and drop
+  ['dragover', 'dragenter'].forEach(function(ev){
+    form.addEventListener(ev, function(e){ e.preventDefault(); form.classList.add('dragover'); });
+  });
+  ['dragleave', 'drop'].forEach(function(ev){
+    form.addEventListener(ev, function(e){ e.preventDefault(); form.classList.remove('dragover'); });
+  });
+  form.addEventListener('drop', function(e){
+    if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]) {
+      fileInput.files = e.dataTransfer.files;
+      var f = fileInput.files[0];
+      fileNameEl.textContent = f.name + ' (' + (f.size / 1024).toFixed(1) + ' KB)';
+      runTriage(f);
+    }
+  });
+
+  function runTriage(file) {
+    errBox.classList.remove('visible');
+    results.classList.remove('visible');
+    loading.classList.add('visible');
+
+    var fd = new FormData();
+    fd.append('file', file);
+
+    fetch('/inherited-list-first-aid/run', { method: 'POST', body: fd })
+      .then(function(r){ return r.json().then(function(d){ return {status: r.status, data: d}; }); })
+      .then(function(wrap){
+        loading.classList.remove('visible');
+        var d = wrap.data;
+        if (!d.ok) {
+          errBox.textContent = d.error || d.message || 'Triage failed.';
+          errBox.classList.add('visible');
+          return;
+        }
+        renderResults(d);
+      })
+      .catch(function(){
+        loading.classList.remove('visible');
+        errBox.textContent = 'Network error. Please try again.';
+        errBox.classList.add('visible');
+      });
+  }
+
+  function renderResults(d) {
+    document.getElementById('ilfaTotal').textContent = d.total_parsed.toLocaleString();
+    document.getElementById('ilfaRemovePct').textContent = d.percentages.remove + '%';
+    document.getElementById('ilfaReengagePct').textContent = d.percentages.reengage + '%';
+    document.getElementById('ilfaKeepPct').textContent = d.percentages.keep + '%';
+
+    document.getElementById('ilfaRemoveCount').textContent = d.counts.remove.toLocaleString();
+    document.getElementById('ilfaReengageCount').textContent = d.counts.reengage.toLocaleString();
+    document.getElementById('ilfaKeepCount').textContent = d.counts.keep.toLocaleString();
+
+    document.getElementById('ilfaRemoveSummary').textContent = d.summaries.remove;
+    document.getElementById('ilfaReengageSummary').textContent = d.summaries.reengage;
+    document.getElementById('ilfaKeepSummary').textContent = d.summaries.keep;
+
+    renderPreview('ilfaRemovePreview', d.preview.remove, d.counts.remove);
+    renderPreview('ilfaReengagePreview', d.preview.reengage, d.counts.reengage);
+    renderPreview('ilfaKeepPreview', d.preview.keep, d.counts.keep);
+
+    var exportLink = document.getElementById('ilfaRemoveExport');
+    if (d.counts.remove === 0) exportLink.style.display = 'none';
+    else exportLink.style.display = 'inline-flex';
+
+    results.classList.add('visible');
+    results.scrollIntoView({behavior: 'smooth', block: 'start'});
+  }
+
+  function renderPreview(elId, list, totalCount) {
+    var el = document.getElementById(elId);
+    el.innerHTML = '';
+    if (!list || list.length === 0) {
+      el.innerHTML = '<div class="ilfa-col__preview-row" style="text-align:center;color:var(--text-3);">No contacts in this bucket</div>';
+      return;
+    }
+    list.forEach(function(c){
+      var row = document.createElement('div');
+      row.className = 'ilfa-col__preview-row';
+      row.innerHTML = '<b>' + escapeHtml(c.email) + '</b><br/><i>' + escapeHtml(c.reason_label) + '</i>';
+      el.appendChild(row);
+    });
+    if (totalCount > list.length) {
+      var more = document.createElement('div');
+      more.className = 'ilfa-col__preview-row';
+      more.style.textAlign = 'center';
+      more.style.color = 'var(--text-3)';
+      more.innerHTML = '... and ' + (totalCount - list.length).toLocaleString() + ' more';
+      el.appendChild(more);
+    }
+  }
+
+  function escapeHtml(s){
+    if (!s) return '';
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+  }
+})();
+</script>
+
+{% include 'sections/email_test_footer.html' %}
+
+</body>
+</html>

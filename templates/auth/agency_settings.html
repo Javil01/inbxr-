@@ -1,0 +1,159 @@
+{% extends "auth/base_auth.html" %}
+{% block title %}Agency White-Label &middot; InbXr{% endblock %}
+{% block content %}
+<style>
+.agency-wrap { max-width: 680px; margin: 0 auto; }
+.agency-head { margin-bottom: 28px; }
+.agency-head h1 { margin: 0 0 6px; font-size: 1.6rem; }
+.agency-head__sub { color: var(--text-3); font-size: 0.9rem; margin: 0; }
+.agency-section { background: var(--bg-1, #fff); border: 1px solid var(--border-1, #e2e8f0); border-radius: 12px; padding: 22px 24px; margin-bottom: 18px; }
+.agency-section h2 { font-size: 0.95rem; font-weight: 800; color: var(--text-1); margin: 0 0 4px; text-transform: uppercase; letter-spacing: 0.05em; }
+.agency-section p.help { font-size: 0.82rem; color: var(--text-3); margin: 0 0 14px; line-height: 1.55; }
+.field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+.field label { font-size: 0.85rem; font-weight: 600; color: var(--text-2); }
+.field input[type=text], .field input[type=color], .field textarea {
+  padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border-1, #e2e8f0);
+  font-size: 0.92rem; font-family: inherit; background: #fff;
+}
+.field textarea { min-height: 60px; resize: vertical; }
+.field input[type=color] { padding: 3px; height: 40px; width: 68px; cursor: pointer; }
+.field__inline { display: flex; align-items: center; gap: 10px; }
+.field__inline input[type=text] { flex: 1; }
+.field__check { display: flex; align-items: flex-start; gap: 10px; margin-top: 4px; }
+.field__check input { margin-top: 3px; }
+.field__check label { font-size: 0.85rem; color: var(--text-2); font-weight: 500; }
+.logo-preview { display: flex; align-items: center; gap: 14px; margin-top: 10px; padding: 14px; background: #f8fafc; border-radius: 8px; }
+.logo-preview img { max-height: 48px; max-width: 140px; }
+.logo-preview__empty { font-size: 0.85rem; color: var(--text-3); font-style: italic; }
+.agency-actions { display: flex; gap: 10px; margin-top: 16px; }
+.agency-locked { background: #fef3c7; border: 1px solid #fbbf24; border-radius: 10px; padding: 20px; text-align: center; }
+.agency-locked h3 { margin: 0 0 6px; font-size: 1.05rem; color: #92400e; }
+.agency-locked p { margin: 0 0 14px; font-size: 0.88rem; color: #78350f; }
+.save-toast { display: none; padding: 10px 14px; border-radius: 8px; background: #ecfdf5; color: #065f46; border: 1px solid #6ee7b7; font-size: 0.88rem; margin-bottom: 14px; }
+.save-toast.visible { display: block; }
+.err-msg { display: none; padding: 10px 14px; border-radius: 8px; background: #fef2f2; color: #991b1b; border: 1px solid #fca5a5; font-size: 0.88rem; margin-bottom: 14px; }
+.err-msg.visible { display: block; }
+</style>
+
+<div class="agency-wrap">
+
+  <div class="agency-head">
+    <h1>Agency white-label</h1>
+    <p class="agency-head__sub">Your brand on every Signal Report PDF. Upload a logo, pick a color, hide InbXr if you want.</p>
+  </div>
+
+  {% if locked %}
+    <div class="agency-locked">
+      <h3>Agency tier required</h3>
+      <p>White-label reports are included on the Agency plan. Your current plan is {{ user.tier | capitalize }}.</p>
+      <a href="/pricing" class="auth-btn">See Agency plan</a>
+    </div>
+  {% else %}
+
+  <div id="saveToast" class="save-toast">Saved.</div>
+  <div id="errMsg" class="err-msg"></div>
+
+  <form id="agencyForm" enctype="multipart/form-data">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+
+    <div class="agency-section">
+      <h2>Logo</h2>
+      <p class="help">PNG, JPG, SVG, or WebP. Up to 2 MB. Shown in the top corner of every PDF you generate.</p>
+      <div class="field">
+        <label for="logoInput">Upload new logo</label>
+        <input type="file" id="logoInput" name="logo" accept=".png,.jpg,.jpeg,.svg,.webp" />
+      </div>
+      <div class="logo-preview">
+        {% if agency_logo_url %}
+          <img src="{{ agency_logo_url }}" alt="Current logo" />
+          <span>Current logo</span>
+        {% else %}
+          <span class="logo-preview__empty">No logo uploaded yet</span>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="agency-section">
+      <h2>Primary color</h2>
+      <p class="help">Used for the accent strip at the top of every PDF page and the signal progress bars.</p>
+      <div class="field">
+        <label for="primaryColorPicker">Pick your brand color</label>
+        <div class="field__inline">
+          <input type="color" id="primaryColorPicker" value="{{ agency_primary_color }}" />
+          <input type="text" id="primaryColorText" name="primary_color" value="{{ agency_primary_color }}" pattern="^#[0-9a-fA-F]{6}$" maxlength="7" />
+        </div>
+      </div>
+    </div>
+
+    <div class="agency-section">
+      <h2>Custom footer text</h2>
+      <p class="help">Shown at the top of every PDF page in place of "InbXr · Signal Report". Typical use: your agency name or a tagline.</p>
+      <div class="field">
+        <label for="footerText">Footer text (up to 200 characters)</label>
+        <input type="text" id="footerText" name="footer_text" maxlength="200" value="{{ agency_footer_text or '' }}" placeholder="Acme Deliverability · Signal Report" />
+      </div>
+    </div>
+
+    <div class="agency-section">
+      <h2>Hide InbXr branding</h2>
+      <p class="help">Optional. Removes the "Generated by the Signal Engine · https://inbxr.us" footer line from every PDF. Default is to keep it.</p>
+      <div class="field__check">
+        <input type="checkbox" id="hideBrand" name="hide_inbxr_brand" {% if agency_hide_inbxr_brand %}checked{% endif %} />
+        <label for="hideBrand">Hide the InbXr attribution line on all generated PDFs</label>
+      </div>
+    </div>
+
+    <div class="agency-actions">
+      <button type="submit" class="auth-btn auth-btn--featured">Save settings</button>
+      <a href="/signal-score/pdf" class="auth-btn auth-btn--outline" target="_blank">Generate a test PDF</a>
+    </div>
+  </form>
+
+  {% endif %}
+
+</div>
+
+<script>
+(function(){
+  var form = document.getElementById('agencyForm');
+  if (!form) return;
+
+  // Keep color picker and hex text field synced
+  var picker = document.getElementById('primaryColorPicker');
+  var text = document.getElementById('primaryColorText');
+  picker.addEventListener('input', function(){ text.value = picker.value; });
+  text.addEventListener('change', function(){
+    if (/^#[0-9a-fA-F]{6}$/.test(text.value)) picker.value = text.value;
+  });
+
+  var toast = document.getElementById('saveToast');
+  var errMsg = document.getElementById('errMsg');
+
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    toast.classList.remove('visible');
+    errMsg.classList.remove('visible');
+    var fd = new FormData(form);
+    fetch('/account/agency', { method: 'POST', body: fd })
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        if (d.ok) {
+          toast.textContent = 'Saved. Download a fresh PDF to see your branding.';
+          toast.classList.add('visible');
+          setTimeout(function(){ toast.classList.remove('visible'); }, 4000);
+          // If a logo was uploaded, reload the page so the new preview renders
+          if (d.logo_url) setTimeout(function(){ location.reload(); }, 800);
+        } else {
+          errMsg.textContent = d.error || 'Save failed.';
+          errMsg.classList.add('visible');
+        }
+      })
+      .catch(function(){
+        errMsg.textContent = 'Network error. Please try again.';
+        errMsg.classList.add('visible');
+      });
+  });
+})();
+</script>
+
+{% endblock %}

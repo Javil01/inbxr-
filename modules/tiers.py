@@ -17,10 +17,13 @@ TIERS = {
             "subject_tests_per_day": 10,
             "placement_tests_per_day": 3,
             "esp_integrations": 0,
+            "signal_pdfs_per_day": 3,
         },
         "features": {
             "cloud_history": False,
-            "pdf_reports": False,
+            "pdf_reports": True,  # basic variant only, hard-branded with InbXr, 3/day cap
+            "signal_pdf_history": False,  # no history charts
+            "signal_pdf_white_label": False,  # no agency branding
             "bulk_verify": False,
             "scheduled_monitoring": False,
             "email_alerts": False,
@@ -62,10 +65,13 @@ TIERS = {
             "esp_integrations": 1,
             "signal_rules_max": 10,
             "signal_advisor_chats_per_month": 20,
+            "signal_pdfs_per_day": 20,
         },
         "features": {
             "cloud_history": True,
             "pdf_reports": True,
+            "signal_pdf_history": True,  # 14-day history charts included
+            "signal_pdf_white_label": False,  # Pro keeps InbXr branding
             "bulk_verify": True,
             "scheduled_monitoring": True,
             "email_alerts": True,
@@ -106,10 +112,13 @@ TIERS = {
             "esp_integrations": 10,
             "signal_rules_max": 999,
             "signal_advisor_chats_per_month": 999999,
+            "signal_pdfs_per_day": 9999,
         },
         "features": {
             "cloud_history": True,
             "pdf_reports": True,
+            "signal_pdf_history": True,
+            "signal_pdf_white_label": True,  # Agency white-label unlock
             "bulk_verify": True,
             "scheduled_monitoring": True,
             "email_alerts": True,

@@ -4,8 +4,8 @@
 {% block content %}
 <span class="pricing-eyebrow" style="display:inline-block;font-size:0.7rem;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;color:var(--brand);background:rgba(37,99,235,0.08);padding:4px 14px;border-radius:99px;margin-bottom:14px;">Start reading your 7 signals</span>
 <h1 class="auth-card__title pricing-title">You already know what the 5 invisible signals are. Here is what InbXr does with them.</h1>
-<p class="auth-card__sub">Reading the signals is step one. The intelligence layer is what acts on what they find. Signal Watch recalculates all 7 signals every 6 hours automatically. Early Warning fires 30 days before a deliverability event. Signal Rules execute suppression, segmentation, and tagging while you sleep. Recovery Sequences generates re-engagement copy for your at-risk contacts in 60 seconds. Send Readiness puts a green, amber, or red gate in front of every campaign before it goes out.</p>
-<p class="auth-card__sub" style="font-weight:600;color:var(--text-1);">No other tool evaluates and executes through the same 7-signal system end to end.</p>
+<p class="auth-card__sub">Reading the signals is step one. The intelligence layer is what watches what they find. Signal Watch recalculates all 7 signals every 6 hours automatically. Early Warning surfaces conditions trending toward danger. Signal Recommendations queue suppression, segmentation, and tagging suggestions while you sleep. Recovery Sequences generates re-engagement copy for your at-risk contacts in 60 seconds. Pre-send Check returns a green, amber, or red status on every campaign before it goes out.</p>
+<p class="auth-card__sub" style="font-weight:600;color:var(--text-1);">No other tool reads and watches through the same Signal Engine end to end.</p>
 
 <div class="pricing-grid">
 
@@ -34,9 +34,10 @@
       <li>In-app alerts (manual scans only)</li>
       <li>Sales &amp; Technical Support chat</li>
       <li>Signal Score via CSV upload (5 signals, normalized to 100)</li>
+      <li>Signal Report PDF (basic, 3/day)</li>
       <li>No ESP integrations</li>
       <li>No Signal Watch (automatic monitoring)</li>
-      <li>No Signal Rules / Early Warning / Recovery Sequences</li>
+      <li>No Signal Recommendations / Early Warning / Recovery Sequences</li>
     </ul>
     <div class="pricing-card__action">
       {% if user %}
@@ -47,6 +48,7 @@
         {% endif %}
       {% else %}
         <a href="{{ url_for('auth.signup') }}" class="auth-btn auth-btn--outline">Get Started Free</a>
+        <p class="pricing-card__reassure">No credit card required &middot; Cancel anytime</p>
       {% endif %}
     </div>
   </div>
@@ -60,7 +62,7 @@
       <span class="pricing-card__amount">${{ t.price_monthly }}</span>
       <span class="pricing-card__period">/month</span>
     </div>
-    <p class="pricing-card__desc">All 7 signals plus the intelligence layer that fixes what it found. At current decay rates the average at-risk email segment doubles in size every 45 days. Signal Watch catches that movement in the first 6-hour cycle. Early Warning gives you 30 days to act. Signal Rules executes the suppression while you sleep. By the time most marketers notice the problem in their open rate, Pro users have already fixed it twice.</p>
+    <p class="pricing-card__desc">All 7 signals plus the intelligence layer that watches what it found. At current decay rates the average at-risk email segment doubles in size every 45 days. Signal Watch catches that movement in the first 6-hour cycle. Early Warning surfaces the conditions trending toward danger. Signal Recommendations queue the suppressions while you sleep. By the time most marketers notice the problem in their open rate, Pro users have already seen it twice.</p>
     <ul class="pricing-card__features">
       <li><strong>{{ t.limits.checks_per_day }}</strong> checks/day</li>
       <li><strong>{{ t.limits.email_verifications_per_day }}</strong> email verifications/day</li>
@@ -71,19 +73,19 @@
       <li class="pricing-card__feature--highlight">Full 7-signal Signal Score (all signals unlocked)</li>
       <li class="pricing-card__feature--highlight">Signal Watch. Automatic recalc every 6 hours</li>
       <li class="pricing-card__feature--highlight">Early Warning alerts (8 pre-built rules)</li>
-      <li class="pricing-card__feature--highlight">Signal Rules. Up to 10 live rules (dry-run by default)</li>
+      <li class="pricing-card__feature--highlight">Signal Recommendations. Up to 10 live rules (dry-run by default)</li>
       <li class="pricing-card__feature--highlight">Recovery Sequences. AI-generated re-engagement flows</li>
-      <li class="pricing-card__feature--highlight">Send Readiness gate (green/amber/red)</li>
+      <li class="pricing-card__feature--highlight">Pre-send Check (green/amber/red)</li>
       <li class="pricing-card__feature--highlight">Signal Map. Full contact segmentation</li>
-      <li class="pricing-card__feature--highlight">Signal Advisor. 20 context-aware chats/mo</li>
       <li class="pricing-card__feature--highlight">MPP-adjusted engagement (User-Agent + timing detection)</li>
       <li class="pricing-card__feature--highlight">1 ESP integration (Mailchimp, ActiveCampaign, Mailgun, AWeber)</li>
       <li class="pricing-card__feature--highlight">All 16 copy frameworks + Custom Framework Builder</li>
       <li class="pricing-card__feature--highlight">Copy Rewriter (tone + framework-aware)</li>
       <li class="pricing-card__feature--highlight">Automated blocklist &amp; DNS auth monitoring</li>
       <li class="pricing-card__feature--highlight">Weekly Signal Report emails</li>
+      <li class="pricing-card__feature--highlight">Signal Report PDF with 14-day history charts (20/day)</li>
       <li>SPF/DKIM/DMARC change detection</li>
-      <li>Cloud test history &amp; PDF reports</li>
+      <li>Cloud test history</li>
       <li>Bulk email verification (CSV)</li>
       <li>Priority support</li>
     </ul>
@@ -92,6 +94,7 @@
         <span class="pricing-card__current-label">Current Plan</span>
       {% else %}
         <a href="#" class="auth-btn auth-btn--featured" data-tier="pro">Upgrade to Pro</a>
+        <p class="pricing-card__reassure">Cancel anytime &middot; 30-day money-back guarantee</p>
       {% endif %}
     </div>
   </div>
@@ -104,7 +107,7 @@
       <span class="pricing-card__amount">${{ t.price_monthly }}</span>
       <span class="pricing-card__period">/month</span>
     </div>
-    <p class="pricing-card__desc">Everything in Pro across every client list. Your brand on the reports. The average agency loses a client after one bad campaign. The multi-client Signal Score dashboard catches the conditions that cause bad campaigns. Across every client list simultaneously. Before the send goes out. A single red Send Readiness gate that stops one client campaign has already paid for a year of Agency.</p>
+    <p class="pricing-card__desc">Everything in Pro across every client list. Your brand on the reports. The average agency loses a client after one bad campaign. The multi-client Signal Score dashboard catches the conditions that cause bad campaigns. Across every client list simultaneously. Before the send goes out. A single red Pre-send Check that stops one client campaign has already paid for a year of Agency.</p>
     <ul class="pricing-card__features">
       <li><strong>{{ t.limits.checks_per_day }}</strong> checks/day</li>
       <li><strong>{{ t.limits.email_verifications_per_day }}</strong> email verifications/day</li>
@@ -113,8 +116,7 @@
       <li><strong>{{ t.limits.blocklist_domains }}</strong> monitored domains</li>
       <li><strong>{{ t.limits.warmup_campaigns }}</strong> warmup campaigns</li>
       <li>Everything in Pro, plus:</li>
-      <li class="pricing-card__feature--highlight">Unlimited Signal Rules (no 10-rule cap)</li>
-      <li class="pricing-card__feature--highlight">Signal Advisor. Unlimited chats</li>
+      <li class="pricing-card__feature--highlight">Unlimited Signal Recommendations (no 10-rule cap)</li>
       <li class="pricing-card__feature--highlight">Multi-client dashboard (agency view)</li>
       <li class="pricing-card__feature--highlight">10 ESP integrations</li>
       <li class="pricing-card__feature--highlight">Automated alerts for 50 domains</li>
@@ -128,6 +130,7 @@
         <span class="pricing-card__current-label">Current Plan</span>
       {% else %}
         <a href="#" class="auth-btn" data-tier="agency">Upgrade to Agency</a>
+        <p class="pricing-card__reassure">Cancel anytime &middot; 30-day money-back guarantee</p>
       {% endif %}
     </div>
   </div>
@@ -169,9 +172,9 @@
         <tr class="pricing-compare__section"><td colspan="4">Signal Intelligence Layer</td></tr>
         <tr><td>Signal Watch (auto recalc every 6 hrs)</td><td>&times;</td><td>&#10003;</td><td>&#10003;</td></tr>
         <tr><td>Early Warning alerts</td><td>&times;</td><td>&#10003;</td><td>&#10003;</td></tr>
-        <tr><td>Signal Rules (dry-run by default)</td><td>&times;</td><td>10 active</td><td>Unlimited</td></tr>
+        <tr><td>Signal Recommendations (dry-run by default)</td><td>&times;</td><td>10 active</td><td>Unlimited</td></tr>
         <tr><td>Recovery Sequences (AI-generated)</td><td>&times;</td><td>&#10003;</td><td>&#10003;</td></tr>
-        <tr><td>Send Readiness gate</td><td>&times;</td><td>&#10003;</td><td>&#10003;</td></tr>
+        <tr><td>Pre-send Check</td><td>&times;</td><td>&#10003;</td><td>&#10003;</td></tr>
         <tr><td>Signal Map (segment visualization)</td><td>&times;</td><td>&#10003;</td><td>&#10003;</td></tr>
         <tr><td>Weekly Signal Report email</td><td>&times;</td><td>&#10003;</td><td>&#10003;</td></tr>
 
@@ -194,15 +197,14 @@
         <tr><td>Apply Frameworks to AI Rewrite</td><td>&times;</td><td>&#10003;</td><td>&#10003;</td></tr>
         <tr><td>"Test This Rewrite" Loop</td><td>&times;</td><td>&#10003;</td><td>&#10003;</td></tr>
 
-        <tr class="pricing-compare__section"><td colspan="4">AI Features</td></tr>
-        <tr><td>Signal Advisor (context-aware AI)</td><td>&times;</td><td>20/month</td><td>Unlimited</td></tr>
+        <tr class="pricing-compare__section"><td colspan="4">Intelligence Features</td></tr>
         <tr><td>Copy Rewriter (tone-aware)</td><td>&times;</td><td>&#10003;</td><td>&#10003;</td></tr>
         <tr><td>Framework Rewriter</td><td>&times;</td><td>&#10003;</td><td>&#10003;</td></tr>
         <tr><td>Primary Intelligence (inbox optimizer)</td><td>&times;</td><td>&#10003;</td><td>&#10003;</td></tr>
         <tr><td>Support Chat (Sales &amp; Tech)</td><td>&#10003;</td><td>&#10003;</td><td>&#10003;</td></tr>
 
         <tr class="pricing-compare__section"><td colspan="4">ESP Integrations &amp; Monitoring</td></tr>
-        <tr><td>ESP Integrations (Mailchimp, Instantly, etc.)</td><td>&times;</td><td>1 account</td><td>10 accounts</td></tr>
+        <tr><td>ESP Integrations (Mailchimp, ActiveCampaign, Mailgun, AWeber)</td><td>&times;</td><td>1 account</td><td>10 accounts</td></tr>
         <tr><td>Deliverability Dashboard (health score)</td><td>&times;</td><td>&#10003;</td><td>&#10003;</td></tr>
         <tr><td>Bounce &amp; complaint rate tracking</td><td>&times;</td><td>&#10003;</td><td>&#10003;</td></tr>
         <tr><td>Warmup score monitoring</td><td>&times;</td><td>&#10003;</td><td>&#10003;</td></tr>
@@ -215,7 +217,9 @@
 
         <tr class="pricing-compare__section"><td colspan="4">Productivity</td></tr>
         <tr><td>Signal History (cloud)</td><td>&times;</td><td>&#10003;</td><td>&#10003;</td></tr>
-        <tr><td>Signal Reports (PDF)</td><td>&times;</td><td>&#10003;</td><td>&#10003;</td></tr>
+        <tr><td>Signal Report PDF (basic)</td><td>3/day</td><td>&#10003;</td><td>&#10003;</td></tr>
+        <tr><td>PDF with 14-day history charts</td><td>&times;</td><td>&#10003;</td><td>&#10003;</td></tr>
+        <tr><td>PDF white-label (your logo, colors, footer)</td><td>&times;</td><td>&times;</td><td>&#10003;</td></tr>
         <tr><td>List Verification (CSV)</td><td>&times;</td><td>&#10003;</td><td>&#10003;</td></tr>
 
         <tr class="pricing-compare__section"><td colspan="4">Collaboration &amp; Scale</td></tr>

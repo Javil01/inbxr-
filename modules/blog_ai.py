@@ -122,8 +122,8 @@ Return a JSON object with exactly these keys:
 
 def _call_api(system_msg: str, user_msg: str, cfg: dict,
               max_tokens: int = 8192, json_mode: bool = True,
-              temperature: float = 0.7) -> str:
-    """Call the Groq/OpenAI-compatible API."""
+              temperature: float = 0.7, _retries: int = 3) -> str:
+    """Call the Groq/OpenAI-compatible API with automatic retry on rate limits."""
     body_dict = {
         "model": cfg["model"],
         "messages": [
@@ -137,28 +137,47 @@ def _call_api(system_msg: str, user_msg: str, cfg: dict,
         body_dict["response_format"] = {"type": "json_object"}
     payload = json.dumps(body_dict)
 
-    ctx = ssl.create_default_context()
-    conn = HTTPSConnection(cfg["api_host"], 443, timeout=_TIMEOUT, context=ctx)
+    for attempt in range(_retries):
+        ctx = ssl.create_default_context()
+        conn = HTTPSConnection(cfg["api_host"], 443, timeout=_TIMEOUT, context=ctx)
 
-    try:
-        conn.request("POST", cfg["api_path"], body=payload, headers={
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {cfg['api_key']}",
-        })
-        resp = conn.getresponse()
-        body = resp.read().decode("utf-8", errors="replace")
+        try:
+            conn.request("POST", cfg["api_path"], body=payload, headers={
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {cfg['api_key']}",
+            })
+            resp = conn.getresponse()
+            body = resp.read().decode("utf-8", errors="replace")
 
-        if resp.status != 200:
-            try:
-                err_data = json.loads(body)
-                err_msg = err_data.get("error", {}).get("message", body[:200])
-            except (json.JSONDecodeError, KeyError, TypeError):
-                err_msg = body[:200]
-            raise BlogAIError(f"API returned {resp.status}: {err_msg}")
+            if resp.status == 429 and attempt < _retries - 1:
+                # Rate limited — parse retry delay or use exponential backoff
+                wait = 10 * (attempt + 1)
+                try:
+                    err_data = json.loads(body)
+                    err_msg = err_data.get("error", {}).get("message", "")
+                    import re as _re
+                    m = _re.search(r'try again in (\d+\.?\d*)s', err_msg)
+                    if m:
+                        wait = max(float(m.group(1)) + 1, wait)
+                except Exception:
+                    pass
+                logger.warning(f"Rate limited (attempt {attempt+1}/{_retries}), waiting {wait:.0f}s")
+                time.sleep(wait)
+                continue
 
-        return body
-    finally:
-        conn.close()
+            if resp.status != 200:
+                try:
+                    err_data = json.loads(body)
+                    err_msg = err_data.get("error", {}).get("message", body[:200])
+                except (json.JSONDecodeError, KeyError, TypeError):
+                    err_msg = body[:200]
+                raise BlogAIError(f"API returned {resp.status}: {err_msg}")
+
+            return body
+        finally:
+            conn.close()
+
+    raise BlogAIError("API rate limit exceeded after all retries")
 
 
 def _parse_response(raw: str) -> dict:
@@ -272,31 +291,22 @@ Return a JSON object with exactly these keys:
     time.sleep(15)
 
     # ── Pass 2: Full HTML content ──
-    content_system = f"""You are the writer behind InBoXr — an email deliverability platform.
-Write a COMPLETE blog post in HTML. Your writing voice is modeled after Ian Stanley's
-style in "Just Fucking Send It" — direct, story-driven, opinionated, and entertaining.
+    # ── Shared voice context for all content chunks ──
+    voice_system = f"""You are the writer behind InBoXr — an email deliverability platform.
+Your writing voice is modeled after Ian Stanley's style in "Just Fucking Send It" —
+direct, story-driven, opinionated, and entertaining.
 
 {KNOWLEDGE_BASE}
 
-CRITICAL VOICE RULES — violating these makes the post unusable:
-1. OPEN WITH A SPECIFIC STORY. Not "Picture this" or "Imagine" — drop us into a real
-   scene with details. A sender, a number, a moment. "A SaaS founder emailed us last
-   Tuesday after watching 6,000 subscribers go silent over a single weekend." Make the
-   reader feel the gut-punch before you teach anything.
-2. SHORT PARAGRAPHS ONLY. 1-3 sentences max. Single-sentence paragraphs for emphasis.
-   If a paragraph has more than 3 sentences, split it.
-3. NO GENERIC ADVICE. Every claim needs a specific number, example, or before/after.
-   Bad: "Personalization improves engagement." Good: "Emails with the recipient's first
-   name in the subject line see 26% higher open rates — but that's table stakes."
-4. SECTION HEADERS ARE PUNCHY, NOT ACADEMIC. "Why Nobody Reads Past Your First Email"
-   not "The Importance of Welcome Email Optimization."
-5. BE OPINIONATED. Take a stance. Challenge something the reader believes. "Most welcome
-   sequences are 5 emails of pure filler. You'd be better off sending one great email
-   than five forgettable ones."
-6. End with: "Cheers,<br/>The InBoXer Team" then a PS that callbacks to the opening story
-   or delivers one final sharp insight.
+CRITICAL VOICE RULES:
+1. SHORT PARAGRAPHS ONLY. 1-3 sentences max. Single-sentence paragraphs for emphasis.
+2. NO GENERIC ADVICE. Every claim needs a specific number, example, or before/after.
+3. SECTION HEADERS ARE PUNCHY, NOT ACADEMIC.
+4. BE OPINIONATED. Take a stance. Challenge something the reader believes.
+5. NO corporate jargon — "leverage," "optimize," "utilize," "in today's landscape" are banned.
+6. Credit Ian Stanley by name when referencing his frameworks.
 
-InbXr tools (link naturally using <a href="/path"> tags, 3-4 per post):
+InbXr tools (link naturally using <a href="/path"> tags):
 - Email Test (/) — full deliverability checkup
 - Sender Check (/sender) — SPF/DKIM/DMARC verification
 - Inbox Placement (/placement) — inbox vs spam testing
@@ -308,50 +318,119 @@ InbXr tools (link naturally using <a href="/path"> tags, 3-4 per post):
 - Warm-up Tracker (/warmup) — warm-up campaign tracking
 {internal_links_context}
 
-FORMAT REQUIREMENTS:
-- HTML only: h2, h3, p, ul, ol, li, strong, em, a tags. No h1, divs, or classes.
-- 1500-2000 words. 6+ H2 sections, each 200+ words.
-- Use the target keyword "{target_keyword}" in the intro paragraph. After that, use
-  natural variations — never repeat the exact keyword phrase more than 3-4 times total.
-- Do NOT wrap in markdown code fences. Raw HTML only."""
+FORMAT: HTML only — h2, h3, p, ul, ol, li, strong, em, a tags. No h1, divs, classes.
+Do NOT wrap in markdown code fences. Raw HTML only."""
 
-    content_user = f"""Write the full blog post for: "{meta.get('title', topic)}"
-Target keyword: {target_keyword}
+    # ── Split outline into chunks for multiple API calls ──
+    mid = len(outline) // 2
+    chunk1_sections = outline[:mid] if outline else []
+    chunk2_sections = outline[mid:] if outline else []
+    chunk1_text = "\n".join(f"- {s}" for s in chunk1_sections) if chunk1_sections else "Use 3 logical H2 sections"
+    chunk2_text = "\n".join(f"- {s}" for s in chunk2_sections) if chunk2_sections else "Use 3 logical H2 sections"
 
-Follow this outline:
-{outline_text}
+    title = meta.get('title', topic)
+    html_chunks = []
+    total_usage = {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0}
 
-REMINDERS:
-- 1500-2000 words. Open with a REAL story — not "Picture this" or "Imagine."
-- Short paragraphs (1-3 sentences). Bold key phrases with <strong>.
-- Be opinionated. Use specific numbers and examples. No generic filler.
-- Credit Ian Stanley by name when referencing his frameworks.
-- Use the target keyword naturally 3-4 times max — vary your language.
-- End with sign-off + PS that ties back to the opening story."""
-
-    try:
-        raw_content = _call_api(content_system, content_user, cfg,
-                                max_tokens=8192, json_mode=False,
-                                temperature=0.85)
-        # Extract content from non-JSON response
-        data = json.loads(raw_content)
+    def _extract_html(raw: str) -> tuple:
+        """Extract HTML content and usage from API response."""
+        data = json.loads(raw)
         choices = data.get("choices", [])
         if not choices:
-            raise BlogAIError("No choices in content response")
-        html_content = choices[0].get("message", {}).get("content", "")
-        if not html_content:
+            raise BlogAIError("No choices in response")
+        html = choices[0].get("message", {}).get("content", "")
+        if not html:
             raise BlogAIError("Empty content response")
+        html = re.sub(r'^```html?\s*', '', html.strip())
+        html = re.sub(r'\s*```$', '', html.strip())
+        return html, data.get("usage", {})
 
-        # Clean up any markdown code fences
-        html_content = re.sub(r'^```html?\s*', '', html_content.strip())
-        html_content = re.sub(r'\s*```$', '', html_content.strip())
+    # ── Chunk 1: Intro story + first half of sections ──
+    chunk1_user = f"""Write the OPENING of a blog post titled: "{title}"
+Target keyword: {target_keyword}
 
-        # Token usage from content pass
-        usage = data.get("usage", {})
+Write these parts:
+1. An intro (no heading) — 150+ words. Open with a REAL, specific story. Not "Picture this"
+   or "Imagine." Drop us into a scene: a person, a number, a gut-punch moment.
+2. Then write these sections fully (each 200-300 words with an H2 heading):
+{chunk1_text}
+
+Use the target keyword naturally in the intro. After that, vary your language.
+Bold key phrases with <strong>. Link to 1-2 InbXr tools where relevant.
+Be opinionated. Use specific numbers. Short paragraphs only (1-3 sentences).
+Do NOT write a conclusion or sign-off — this is only the first half of the post."""
+
+    try:
+        raw1 = _call_api(voice_system, chunk1_user, cfg,
+                         max_tokens=4096, json_mode=False, temperature=0.85)
+        html1, usage1 = _extract_html(raw1)
+        html_chunks.append(html1)
+        for k in total_usage:
+            total_usage[k] += usage1.get(k, 0)
     except BlogAIError:
         raise
     except Exception as e:
-        raise BlogAIError(f"Content generation failed: {str(e)[:100]}")
+        raise BlogAIError(f"Content chunk 1 failed: {str(e)[:100]}")
+
+    # Respect Groq TPM limits between chunks
+    time.sleep(15)
+
+    # ── Chunk 2: Second half of sections ──
+    chunk2_user = f"""Continue writing a blog post titled: "{title}"
+Target keyword: {target_keyword}
+
+The intro and first sections are already written. Now write these remaining sections
+(each 200-300 words with an H2 heading):
+{chunk2_text}
+
+Keep the same voice — punchy, opinionated, story-driven. Short paragraphs (1-3 sentences).
+Bold key phrases with <strong>. Link to 1-2 InbXr tools where relevant.
+Use natural language variations instead of repeating the exact target keyword.
+Do NOT repeat the intro or rewrite earlier sections. Just continue from where we left off."""
+
+    try:
+        raw2 = _call_api(voice_system, chunk2_user, cfg,
+                         max_tokens=4096, json_mode=False, temperature=0.85)
+        html2, usage2 = _extract_html(raw2)
+        html_chunks.append(html2)
+        for k in total_usage:
+            total_usage[k] += usage2.get(k, 0)
+    except BlogAIError:
+        raise
+    except Exception as e:
+        raise BlogAIError(f"Content chunk 2 failed: {str(e)[:100]}")
+
+    # Respect Groq TPM limits between chunks
+    time.sleep(15)
+
+    # ── Chunk 3: Wrap-up + sign-off ──
+    chunk3_user = f"""Write the CLOSING of a blog post titled: "{title}"
+Target keyword: {target_keyword}
+
+Write these parts:
+1. A wrap-up H2 section (150-200 words) — tie the key insights together with conviction.
+   No wishy-washy "in conclusion." Be direct and confident.
+2. Sign off with: Cheers,<br/>The InBoXer Team
+3. A PS paragraph that callbacks to the opening story with a resolution or delivers
+   one final sharp insight. Format: <p><strong>PS:</strong> [content]</p>
+
+Keep the same voice. Short paragraphs. Be opinionated. No generic filler."""
+
+    try:
+        raw3 = _call_api(voice_system, chunk3_user, cfg,
+                         max_tokens=2048, json_mode=False, temperature=0.85)
+        html3, usage3 = _extract_html(raw3)
+        html_chunks.append(html3)
+        for k in total_usage:
+            total_usage[k] += usage3.get(k, 0)
+    except BlogAIError:
+        raise
+    except Exception as e:
+        raise BlogAIError(f"Content chunk 3 (closing) failed: {str(e)[:100]}")
+
+    # ── Stitch chunks together ──
+    html_content = "\n\n".join(html_chunks)
+    usage = total_usage
 
     result = {
         "title": meta.get("title", topic),

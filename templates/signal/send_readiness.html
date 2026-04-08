@@ -1,5 +1,5 @@
 {% extends "auth/base_auth.html" %}
-{% block title %}Send Readiness{% endblock %}
+{% block title %}Pre-send Check{% endblock %}
 {% block content %}
 <style>
 .sr-header h1 { margin: 0; font-size: 1.6rem; }
@@ -35,8 +35,8 @@
 </style>
 
 <div class="sr-header">
-  <h1>Send Readiness</h1>
-  <p class="sr-header__sub">Pre-campaign gate. Green/amber/red based on your 7 Inbox Signals</p>
+  <h1>Pre-send Check</h1>
+  <p class="sr-header__sub">Pre-campaign status check. Green/amber/red based on your 7 Inbox Signals</p>
 </div>
 
 <div class="sr-gate sr-gate--{{ readiness.status }}">

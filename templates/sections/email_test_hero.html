@@ -3,10 +3,22 @@
 
     <div class="hero-split">
       <div class="hero-split__copy">
-        <span class="sender-hero__eyebrow">The 7 Inbox Signals &middot; Email Deliverability Intelligence</span>
+        <span class="sender-hero__eyebrow">The Signal Engine &middot; 7 Inbox Signals</span>
         <h1 class="sender-hero__title">Are Your Emails Dead On Arrival?</h1>
-        <p class="sender-hero__sub" style="font-size: 1.15rem; font-weight: 600; color: #fff; margin-bottom: 12px;">Your email list has a Signal Score. You've never seen yours.</p>
+        <p class="sender-hero__answer">We'll help you fix them.</p>
+        <p class="sender-hero__sub" style="font-size: 1.05rem; font-weight: 600; color: #fff; margin-bottom: 12px;">Your email list has a Signal Score. You've never seen yours.</p>
         <p class="sender-hero__sub">It's the single best predictor of your next campaign's performance. We read 7 things about your list that bounce rate and open rate can't see. Including two that no other platform measures.</p>
+
+        <div class="hero-replaces">
+          <span class="hero-replaces__label">Replaces 5 tools on your deliverability stack:</span>
+          <div class="hero-replaces__list">
+            <a href="/zerobounce-alternative" class="hero-replaces__tool">ZeroBounce</a>
+            <a href="/mail-tester-alternative" class="hero-replaces__tool">Mail-Tester</a>
+            <a href="/mxtoolbox-alternative" class="hero-replaces__tool">MXToolbox</a>
+            <a href="/glockapps-alternative" class="hero-replaces__tool">GlockApps</a>
+            <a href="/warmy-alternative" class="hero-replaces__tool">Warmy</a>
+          </div>
+        </div>
 
         <form id="heroDomainForm" class="hero-domain-form" autocomplete="off">
           <input type="text" id="heroDomainInput" name="domain" placeholder="yourcompany.com" required aria-label="Your sending domain" />
@@ -18,6 +30,7 @@
         <p class="hero-price-anchor">30 seconds &middot; No signup &middot; No CSV needed</p>
 
         <div class="hero-alt-options">
+          <a href="/why-am-i-in-spam" class="hero-alt-link">Or find out why your emails are going to spam &rarr;</a>
           <a href="#emailTestTool" class="hero-alt-link js-scroll-to-test">Or score a real campaign email &rarr;</a>
           <a href="/signal-score" class="hero-alt-link">Or upload a CSV for the full 7-signal read &rarr;</a>
         </div>
@@ -43,6 +56,44 @@
 .hero-alt-options { display: flex; flex-direction: column; gap: 6px; margin-top: 16px; }
 .hero-alt-link { font-size: 0.82rem; color: rgba(255,255,255,0.6); text-decoration: none; }
 .hero-alt-link:hover { color: #16a34a; }
+
+/* "Replaces 5 tools" strip above the domain form */
+.hero-replaces {
+  margin: 18px 0 4px;
+  padding: 14px 0 0;
+  border-top: 1px solid rgba(255,255,255,0.12);
+}
+.hero-replaces__label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(255,255,255,0.5);
+  margin-bottom: 8px;
+}
+.hero-replaces__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.hero-replaces__tool {
+  display: inline-block;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: rgba(255,255,255,0.9);
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.15);
+  padding: 5px 12px;
+  border-radius: 999px;
+  text-decoration: none;
+  transition: background 0.15s, border-color 0.15s;
+}
+.hero-replaces__tool:hover {
+  background: rgba(22,163,74,0.15);
+  border-color: rgba(22,163,74,0.5);
+  color: #fff;
+}
 
 /* Inline result card rendered on the homepage after a domain check */
 #heroResultPanel {

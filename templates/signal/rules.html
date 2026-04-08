@@ -1,5 +1,5 @@
 {% extends "auth/base_auth.html" %}
-{% block title %}Signal Rules{% endblock %}
+{% block title %}Signal Recommendations{% endblock %}
 {% block content %}
 <style>
 .sr-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
@@ -40,10 +40,10 @@
 
 <div class="sr-header">
   <div>
-    <h1>Signal Rules</h1>
-    <p class="sr-header__sub">Automation rules fired after every Signal Score calculation</p>
+    <h1>Signal Recommendations</h1>
+    <p class="sr-header__sub">Automated rules fired after every Signal Score calculation. Live rules push suppressions to your connected ESP.</p>
   </div>
-  <div class="sr-header__count">{{ rules|length }} of {{ rules_max }} rules</div>
+  <div class="sr-header__count">{{ rules|length }} of {{ rules_max }} recommendations</div>
 </div>
 
 <div class="sr-warning">
@@ -51,11 +51,11 @@
   Use the Preview button to see what a rule would do. Flip to Live only after you're confident in the preview.
 </div>
 
-<div class="sr-section-title">Your Rules</div>
+<div class="sr-section-title">Your Recommendations</div>
 
 {% if not rules %}
   <div class="sr-empty">
-    <p>No rules yet. Add one from the templates below.</p>
+    <p>No recommendations yet. Add one from the templates below.</p>
   </div>
 {% else %}
   {% for rule in rules %}
