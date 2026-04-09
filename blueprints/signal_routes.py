@@ -115,27 +115,15 @@ def signal_score_dashboard():
     """
     user = get_current_user()
 
-    # Anonymous visitor: render the empty/educational state.
+    # Anonymous visitor: render the dedicated low-friction landing page.
+    # Primary action: type a domain and get a Signal Score in 30 seconds
+    # (calls /signal-score/from-domain). Secondary action: upload a CSV
+    # for the full 7-signal read. No narrow auth-card wrapper, no wall
+    # of educational copy before the first action.
     if not user:
         return render_template(
-            "signal/dashboard.html",
+            "signal/anonymous.html",
             active_page="signal_score",
-            latest=None,
-            history=[],
-            weakest=None,
-            weakest_name=None,
-            weakest_action=None,
-            alerts=[],
-            unread_alert_count=0,
-            signal_dimensions=SIGNAL_DIMENSION_COPY,
-            grade_copy=SIGNAL_GRADE_COPY,
-            segment_labels=SEGMENT_LABELS,
-            mpp_labels=MPP_ACCURACY_LABELS,
-            trajectory_labels=TRAJECTORY_DIRECTION_LABELS,
-            trajectory_messages=TRAJECTORY_DIRECTION_MESSAGES,
-            free_tier_locked=list(FREE_TIER_LOCKED_SIGNALS),
-            tier="anon",
-            is_anonymous=True,
             allow_index=True,
             title="Free Signal Score — The 7 Inbox Signals",
         )

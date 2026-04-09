@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Free Signal Score &middot; The 7 Inbox Signals &middot; InbXr</title>
+  <meta name="description" content="Get your free Signal Score in 30 seconds. Type your sending domain and see 2 of 7 inbox signals instantly. No signup. No CSV needed.">
+  <meta property="og:title" content="Free Signal Score &middot; InbXr">
+  <meta property="og:description" content="Get your free Signal Score in 30 seconds. Type your sending domain and see 2 of 7 inbox signals instantly.">
+  <meta property="og:url" content="https://inbxr.us/signal-score">
+  <meta property="og:type" content="website">
+  <link rel="canonical" href="https://inbxr.us/signal-score">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/style.css?v=20260409a" />
+  {% include 'sections/_head_meta.html' %}
+</head>
+<body class="email-test-page">
+
+{% include 'sections/header.html' %}
+
+<style>
+.sig-anon-wrap { max-width: 820px; margin: 0 auto; padding: 60px 24px 80px; }
+
+/* Hero */
+.sig-anon-eyebrow {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 5px 14px;
+  border-radius: 99px;
+  background: rgba(37,99,235,0.08);
+  color: var(--brand, #2563eb);
+  margin-bottom: 18px;
+}
+.sig-anon-h1 {
+  font-size: 2.6rem;
+  font-weight: 900;
+  line-height: 1.1;
+  color: var(--text-1);
+  margin: 0 0 14px;
+  letter-spacing: -0.025em;
+}
+.sig-anon-sub {
+  font-size: 1.12rem;
+  color: var(--text-2);
+  margin: 0 0 32px;
+  line-height: 1.55;
+  max-width: 640px;
+}
+
+/* Primary action: domain form */
+.sig-anon-form-wrap {
+  background: linear-gradient(135deg, #0c1a3a 0%, #1e293b 100%);
+  border-radius: 16px;
+  padding: 36px 32px;
+  margin-bottom: 24px;
+  color: #fff;
+}
+.sig-anon-form-label {
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #bfdbfe;
+  margin: 0 0 12px;
+}
+.sig-anon-form { display: flex; gap: 10px; flex-wrap: wrap; }
+.sig-anon-form input {
+  flex: 1;
+  min-width: 240px;
+  padding: 16px 20px;
+  font-size: 1rem;
+  border-radius: 999px;
+  border: 1.5px solid rgba(255,255,255,0.2);
+  background: rgba(255,255,255,0.05);
+  color: #fff;
+  font-family: inherit;
+}
+.sig-anon-form input::placeholder { color: rgba(255,255,255,0.5); }
+.sig-anon-form input:focus { outline: none; border-color: #16a34a; background: rgba(255,255,255,0.1); }
+.sig-anon-form button {
+  padding: 16px 28px;
+  border-radius: 999px;
+  border: none;
+  background: #16a34a;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  font-family: inherit;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+.sig-anon-form button:hover { background: #15803d; }
+.sig-anon-form button[disabled] { opacity: 0.65; cursor: not-allowed; }
+.sig-anon-form-note {
+  font-size: 0.82rem;
+  color: rgba(255,255,255,0.6);
+  margin: 14px 0 0;
+}
+
+/* Secondary action: CSV upload */
+.sig-anon-csv {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 22px;
+  background: #f8fafc;
+  border: 1px dashed var(--border-1, #cbd5e1);
+  border-radius: 12px;
+  margin-bottom: 28px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.sig-anon-csv:hover { border-color: var(--brand, #2563eb); background: #f0f9ff; }
+.sig-anon-csv__icon { flex-shrink: 0; color: var(--text-3); }
+.sig-anon-csv__text { flex: 1; }
+.sig-anon-csv__title { font-size: 0.92rem; font-weight: 700; color: var(--text-1); margin: 0 0 2px; }
+.sig-anon-csv__sub { font-size: 0.78rem; color: var(--text-3); margin: 0; }
+.sig-anon-csv__arrow { color: var(--text-3); }
+
+/* Result panel */
+#anonResultPanel {
+  display: none;
+  background: #fff;
+  color: #0c1a3a;
+  border-radius: 16px;
+  padding: 32px;
+  margin: 24px 0;
+  border: 2px solid var(--brand, #2563eb);
+}
+#anonResultPanel.is-visible { display: block; }
+
+.res-hero { display: flex; align-items: center; gap: 24px; margin-bottom: 24px; flex-wrap: wrap; }
+.res-num { font-size: 3.2rem; font-weight: 900; line-height: 1; }
+.res-num--A { color: #059669; }
+.res-num--B { color: #0891b2; }
+.res-num--C { color: #d97706; }
+.res-num--D { color: #dc2626; }
+.res-num--F { color: #991b1b; }
+.res-grade { font-size: 0.82rem; font-weight: 800; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 4px; }
+.res-summary { flex: 1; min-width: 200px; }
+.res-summary h3 { margin: 0 0 6px; font-size: 1.1rem; color: var(--text-1); }
+.res-summary p { margin: 0; color: var(--text-2); font-size: 0.92rem; line-height: 1.55; }
+
+.res-signals { display: grid; grid-template-columns: 1fr; gap: 8px; margin-bottom: 14px; }
+.res-sig { display: flex; justify-content: space-between; padding: 10px 14px; background: #f8fafc; border-radius: 8px; font-size: 0.88rem; }
+.res-sig-name { color: var(--text-2); font-weight: 600; }
+.res-sig-val { font-weight: 800; }
+.res-sig-val.is-good { color: #059669; }
+.res-sig-val.is-warn { color: #d97706; }
+.res-sig-val.is-bad { color: #dc2626; }
+.res-sig.is-locked { opacity: 0.55; }
+.res-sig-val.is-locked { font-size: 0.75rem; font-style: italic; font-weight: 500; color: var(--text-3); }
+
+.res-cta {
+  text-align: center;
+  margin-top: 24px;
+  padding: 24px;
+  background: linear-gradient(135deg, #f0f9ff 0%, #fff 100%);
+  border: 1px solid #bae6fd;
+  border-radius: 12px;
+}
+.res-cta h4 { margin: 0 0 8px; font-size: 1.1rem; color: var(--text-1); }
+.res-cta p { margin: 0 0 16px; font-size: 0.9rem; color: var(--text-2); line-height: 1.5; }
+.res-cta-btn { display: inline-block; background: var(--brand, #2563eb); color: #fff; padding: 12px 28px; border-radius: 999px; font-weight: 700; text-decoration: none; font-size: 0.92rem; }
+
+.res-error { padding: 18px; background: #fef2f2; border: 1px solid #fca5a5; color: #991b1b; border-radius: 10px; font-size: 0.9rem; }
+
+/* Education below the fold (collapsible) */
+.sig-edu-toggle {
+  display: block;
+  text-align: center;
+  margin: 40px auto 20px;
+  background: none;
+  border: none;
+  color: var(--brand, #2563eb);
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+}
+.sig-edu-toggle:hover { text-decoration: underline; }
+
+.sig-edu-content { display: none; }
+.sig-edu-content.visible { display: block; }
+.sig-edu-header { text-align: center; margin-bottom: 24px; }
+.sig-edu-header h2 { font-size: 1.4rem; font-weight: 800; color: var(--text-1); margin: 0 0 6px; }
+.sig-edu-header p { font-size: 0.9rem; color: var(--text-3); margin: 0; }
+.sig-edu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+.sig-edu-card { background: #fff; border: 1px solid var(--border-1, #e2e8f0); border-radius: 12px; padding: 18px 20px; }
+.sig-edu-card__num { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-3); font-weight: 800; }
+.sig-edu-card__name { font-size: 0.98rem; font-weight: 800; color: var(--text-1); margin: 4px 0 6px; }
+.sig-edu-card__weight { font-size: 0.72rem; color: var(--text-3); margin: 0 0 10px; font-weight: 600; }
+.sig-edu-card__desc { font-size: 0.82rem; color: var(--text-2); line-height: 1.55; margin: 0; }
+
+@media (max-width: 680px) {
+  .sig-anon-h1 { font-size: 1.9rem; }
+  .sig-anon-sub { font-size: 0.98rem; }
+  .sig-anon-form-wrap { padding: 24px 20px; }
+}
+</style>
+
+<main class="sig-anon-wrap">
+
+  <span class="sig-anon-eyebrow">Free Signal Score &middot; 30 seconds &middot; No signup</span>
+  <h1 class="sig-anon-h1">Check your email deliverability in 30 seconds.</h1>
+  <p class="sig-anon-sub">
+    Type your sending domain and the <strong>Signal Engine</strong> reads 2 of the 7 Inbox
+    Signals instantly from public DNS and blacklist data. Want the other 5? Sign up free
+    and upload a CSV or connect your ESP.
+  </p>
+
+  {# ── PRIMARY ACTION: domain form ── #}
+  <div class="sig-anon-form-wrap">
+    <p class="sig-anon-form-label">Step 1 &middot; Enter your sending domain</p>
+    <form id="anonDomainForm" class="sig-anon-form" autocomplete="off">
+      <input type="text" id="anonDomainInput" name="domain" placeholder="yourcompany.com" required aria-label="Your sending domain" />
+      <button type="submit" id="anonDomainBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+        Get my Signal Score
+      </button>
+    </form>
+    <p class="sig-anon-form-note">30 seconds &middot; No signup &middot; No credit card &middot; Reads Authentication Standing + Domain Reputation</p>
+  </div>
+
+  {# ── SECONDARY ACTION: CSV upload for the full 7-signal read ── #}
+  <label for="csvUploadInput" class="sig-anon-csv">
+    <div class="sig-anon-csv__icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="28" height="28"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+    </div>
+    <div class="sig-anon-csv__text">
+      <p class="sig-anon-csv__title">Or upload a CSV for the full 7-signal read</p>
+      <p class="sig-anon-csv__sub">Works with any list. One column required: email. Nothing saved without your permission.</p>
+    </div>
+    <div class="sig-anon-csv__arrow">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><polyline points="9 18 15 12 9 6"/></svg>
+    </div>
+  </label>
+  <input type="file" id="csvUploadInput" accept=".csv" style="display:none" />
+
+  {# ── Result panel. Populated by JS after a domain form submit ── #}
+  <div id="anonResultPanel" aria-live="polite"></div>
+
+  {# ── Educational 7-signal breakdown. Collapsible. Hidden by default. ── #}
+  <button type="button" class="sig-edu-toggle" id="eduToggle" aria-expanded="false">
+    What are the 7 Inbox Signals? &darr;
+  </button>
+  <div class="sig-edu-content" id="eduContent">
+    <div class="sig-edu-header">
+      <h2>The 7 Inbox Signals, explained</h2>
+      <p>Every signal the engine reads, the weight we give it, and what it measures.</p>
+    </div>
+    <div class="sig-edu-grid">
+      {% set edu_signals = [
+        {'key':'bounce_exposure','name':'01 · Bounce Exposure','weight':'25 pts','desc':'Historical bounce rate + predictive risk from role, disposable, and catch-all flags.'},
+        {'key':'engagement_trajectory','name':'02 · Engagement Trajectory','weight':'25 pts','desc':'Real human engagement over 30 days, MPP-adjusted per ESP.'},
+        {'key':'acquisition_quality','name':'03 · Acquisition Quality','weight':'15 pts','desc':'Day-1 engagement per acquisition cohort. Which channel is dragging your list down.'},
+        {'key':'domain_reputation','name':'04 · Domain Reputation','weight':'15 pts','desc':'Sender-domain blocklist status + recipient provider concentration.'},
+        {'key':'dormancy_risk','name':'05 · Spam Trap Exposure','weight':'10 pts','desc':'Probabilistic trap risk from dormancy depth, list age, acquisition pattern.'},
+        {'key':'authentication_standing','name':'06 · Authentication Standing','weight':'5 pts','desc':'SPF + DKIM + DMARC + List-Unsubscribe vs 2024-2025 ISP mandates.'},
+        {'key':'decay_velocity','name':'07 · Decay Velocity','weight':'5 pts','desc':'Rate of change in your composite Signal Score. Trend language, no fake day counts.'}
+      ] %}
+      {% for s in edu_signals %}
+      <div class="sig-edu-card">
+        <span class="sig-edu-card__num">Signal</span>
+        <h3 class="sig-edu-card__name">{{ s.name }}</h3>
+        <p class="sig-edu-card__weight">{{ s.weight }} of 100</p>
+        <p class="sig-edu-card__desc">{{ s.desc }}</p>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+</main>
+
+{% include 'sections/email_test_footer.html' %}
+
+<script>
+(function(){
+  var form = document.getElementById('anonDomainForm');
+  var input = document.getElementById('anonDomainInput');
+  var btn = document.getElementById('anonDomainBtn');
+  var panel = document.getElementById('anonResultPanel');
+
+  function classFor(score) {
+    if (score >= 75) return 'is-good';
+    if (score >= 50) return 'is-warn';
+    return 'is-bad';
+  }
+
+  function renderResult(d) {
+    var grade = d.grade || 'F';
+    var score = Math.round(d.score || 0);
+    var auth = d.scores && d.scores.authentication_standing != null
+      ? Math.round(d.scores.authentication_standing * 100 / 5) : 0;
+    var rep = d.scores && d.scores.domain_reputation != null
+      ? Math.round(d.scores.domain_reputation * 100 / 15) : 0;
+
+    var summary;
+    if (grade === 'A' || grade === 'B') {
+      summary = "Your domain side is in solid shape. The 5 locked signals below are where most senders find their real problems.";
+    } else if (grade === 'C') {
+      summary = "Your domain has at least one issue. The 5 locked signals likely have more.";
+    } else {
+      summary = "Your domain has significant issues. Your 5 list-side signals almost certainly have more.";
+    }
+
+    var lockedSignals = [
+      ['01 Bounce Exposure', 'List required'],
+      ['02 Engagement Trajectory', 'List required'],
+      ['03 Acquisition Quality', 'List required'],
+      ['05 Spam Trap Exposure', 'List required'],
+      ['07 Decay Velocity', 'List required']
+    ];
+    var lockedHtml = lockedSignals.map(function(s){
+      return '<div class="res-sig is-locked"><span class="res-sig-name">' + s[0] + '</span><span class="res-sig-val is-locked">' + s[1] + '</span></div>';
+    }).join('');
+
+    panel.innerHTML =
+      '<div class="res-hero">' +
+        '<div>' +
+          '<div class="res-num res-num--' + grade + '">' + score + '</div>' +
+          '<div class="res-grade">Grade ' + grade + '</div>' +
+        '</div>' +
+        '<div class="res-summary">' +
+          '<h3>' + escapeHtml(d.domain) + ' &middot; Partial Signal Score</h3>' +
+          '<p>' + summary + '</p>' +
+        '</div>' +
+      '</div>' +
+      '<div class="res-signals">' +
+        '<div class="res-sig"><span class="res-sig-name">06 Authentication Standing</span><span class="res-sig-val ' + classFor(auth) + '">' + auth + '/100</span></div>' +
+        '<div class="res-sig"><span class="res-sig-name">04 Domain Reputation</span><span class="res-sig-val ' + classFor(rep) + '">' + rep + '/100</span></div>' +
+      '</div>' +
+      '<div class="res-signals">' + lockedHtml + '</div>' +
+      '<div class="res-cta">' +
+        '<h4>You just saw 2 of 7 signals.</h4>' +
+        '<p>Sign up free to unlock the other 5 (Bounce Exposure, Engagement Trajectory, Acquisition Quality, Spam Trap Exposure, Decay Velocity) by uploading a CSV or connecting your ESP.</p>' +
+        '<a href="/signup?from=signal-score&domain=' + encodeURIComponent(d.domain) + '" class="res-cta-btn">Sign up free to see all 7 &rarr;</a>' +
+      '</div>';
+    panel.classList.add('is-visible');
+    setTimeout(function(){ panel.scrollIntoView({behavior: 'smooth', block: 'center'}); }, 100);
+  }
+
+  function renderError(msg) {
+    panel.innerHTML = '<div class="res-error">' + escapeHtml(msg) + '</div>';
+    panel.classList.add('is-visible');
+  }
+
+  function escapeHtml(s) {
+    if (!s) return '';
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    var domain = input.value.trim().toLowerCase().replace(/^https?:\/\//,'').replace(/\/.*$/,'');
+    if (!domain || domain.indexOf('.') === -1) {
+      renderError('Please enter a valid sending domain (e.g. yourcompany.com).');
+      return;
+    }
+    btn.disabled = true;
+    btn.innerHTML = 'Reading signals...';
+    panel.classList.remove('is-visible');
+
+    var csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
+    fetch('/signal-score/from-domain', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': csrf,
+      },
+      body: JSON.stringify({ domain: domain }),
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      btn.disabled = false;
+      btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg> Get my Signal Score';
+      if (d.ok) {
+        renderResult(d);
+      } else {
+        renderError(d.error || 'Could not read this domain.');
+      }
+    })
+    .catch(function(){
+      btn.disabled = false;
+      btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg> Get my Signal Score';
+      renderError('Network error. Please try again.');
+    });
+  });
+
+  // CSV upload secondary path
+  var csvInput = document.getElementById('csvUploadInput');
+  csvInput.addEventListener('change', function(){
+    if (!csvInput.files || !csvInput.files[0]) return;
+    var file = csvInput.files[0];
+    var fd = new FormData();
+    fd.append('file', file);
+    panel.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text-3);">Triaging your list...</div>';
+    panel.classList.add('is-visible');
+
+    var csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
+    fetch('/signal-score/from-csv', {
+      method: 'POST',
+      headers: { 'X-CSRFToken': csrf },
+      body: fd,
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if (d.ok) {
+        renderResult(d);
+      } else {
+        renderError(d.error || d.message || 'CSV upload failed.');
+      }
+    })
+    .catch(function(){
+      renderError('Network error. Please try again.');
+    });
+  });
+
+  // Education toggle
+  var eduToggle = document.getElementById('eduToggle');
+  var eduContent = document.getElementById('eduContent');
+  eduToggle.addEventListener('click', function(){
+    var open = eduContent.classList.toggle('visible');
+    eduToggle.setAttribute('aria-expanded', String(open));
+    eduToggle.textContent = open ? 'Hide the 7 signals breakdown \u2191' : 'What are the 7 Inbox Signals? \u2193';
+  });
+
+  // Auto-populate domain from query string (?domain=foo.com)
+  var params = new URLSearchParams(window.location.search);
+  var preDomain = params.get('domain');
+  if (preDomain) {
+    input.value = preDomain;
+    // Auto-submit on page load if a domain was pre-filled
+    setTimeout(function(){ form.dispatchEvent(new Event('submit', {cancelable:true})); }, 300);
+  } else {
+    setTimeout(function(){ input.focus(); }, 50);
+  }
+})();
+</script>
+
+</body>
+</html>
