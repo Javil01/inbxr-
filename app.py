@@ -289,84 +289,171 @@ def inject_user_context():
 # importable for manual/admin testing.
 
 
-# ── Email verification enforcement ────────────────────
-# Logged-in users who haven't verified their email get redirected to a
-# verification-required page.  Anonymous/guest users are NOT affected.
-# Admin routes, auth flow routes, static files and health check are exempt.
+# ── Email verification: soft gate with 24h grace period ──
+#
+# Previous model: allowlist of exempt routes, everything else blocked.
+# That forced a brand-new user to verify their email before touching any
+# tool, which turned the signup peak-intent moment into a dead-end if
+# the verification email didn't land immediately.
+#
+# New model: denylist of sensitive routes, everything else allowed.
+# Unverified users can use free-tier tools freely. A dismissible banner
+# reminds them to verify (injected via the context processor below).
+# Only truly sensitive operations require verification:
+#   - ESP integrations (they'll get alerts)
+#   - Billing / paid upgrades (we need a verified email for receipts)
+#   - API key generation (security-sensitive)
+#   - Live Signal Recommendations (they fire write-backs)
+#   - Agency / team operations (multi-user)
+#
+# After 24 hours of unverified account age, the grace period ends and
+# verification is enforced across a wider set of routes. This gives
+# the user one full day to play with the product before we get strict.
 
-_VERIFICATION_EXEMPT_PREFIXES = (
-    "/static/",
-    "/admin",
-    "/webhook",
-    "/blog",
+# Routes that ALWAYS require email verification (even within grace period).
+# Anything not in this list is allowed for unverified users.
+_VERIFICATION_REQUIRED_PREFIXES = (
+    "/account/integrations",   # ESP connections fire webhooks + alerts
+    "/account/agency",         # Agency white-label + billing
+    "/account/ltd",            # LTD status page requires verified account
+    "/billing",                # Stripe checkout flows
+    "/signal-rules",           # Live Signal Recommendations touch ESPs
+    "/signal-rules/",
+    "/recovery-sequences",     # Mailchimp draft export
+    "/webhooks",               # Should never be hit by logged-in users anyway
+    "/api/v1/",                # Agency public API
 )
 
-_VERIFICATION_EXEMPT_PATHS = {
-    "/",
-    "/login",
-    "/signup",
-    "/logout",
-    "/resend-verification",
-    "/forgot-password",
-    "/health",
-    "/pricing",
-    "/support",
-    "/verification-required",
-    "/account",
-    "/account/change-password",
-    "/account/api-key",
-    "/create-checkout-session",
-    "/customer-portal",
-    "/success",
-}
+# Routes that become protected AFTER the 24h grace period expires.
+_VERIFICATION_POST_GRACE_PREFIXES = (
+    "/dashboard",
+    "/signal-score/pdf",
+    "/signal-map",
+    "/send-readiness",
+    "/monitors",
+    "/bulk-triage",
+    "/clients",
+    "/team",
+)
+
+_GRACE_PERIOD_SECONDS = 24 * 3600
+
+
+def _verification_required_for_path(path, grace_active):
+    """Determine whether an unverified user should be blocked from
+    reaching this path. Returns True if the path is in the sensitive
+    denylist, or in the post-grace-period list once grace has expired."""
+    if any(path.startswith(p) for p in _VERIFICATION_REQUIRED_PREFIXES):
+        return True
+    if not grace_active:
+        if any(path.startswith(p) for p in _VERIFICATION_POST_GRACE_PREFIXES):
+            return True
+    return False
+
 
 @app.before_request
 def enforce_email_verification():
-    """Redirect logged-in but unverified users away from protected routes."""
-    # Only applies to logged-in users
+    """Soft verification gate. Blocks sensitive routes for unverified
+    users; everything else stays accessible during a 24-hour grace
+    period after signup."""
     user_id = session.get("user_id")
     if not user_id:
         return None
 
-    # Skip exempt prefixes (static, admin, webhooks)
+    # Static, admin, webhooks, blog, and public health endpoints always allowed
     path = request.path
-    if any(path.startswith(p) for p in _VERIFICATION_EXEMPT_PREFIXES):
+    if (
+        path.startswith("/static/")
+        or path.startswith("/admin")
+        or path.startswith("/webhook")
+        or path.startswith("/blog")
+        or path == "/health"
+        or path == "/api/v1/health"
+    ):
         return None
 
-    # Skip exempt exact paths
-    if path in _VERIFICATION_EXEMPT_PATHS:
-        return None
-
-    # Skip verify-email token links (dynamic path)
-    if path.startswith("/verify-email/"):
-        return None
-
-    # Skip reset-password links (dynamic path)
-    if path.startswith("/reset-password/"):
-        return None
-
-    # Skip team invite links so they can still accept after verifying
-    if path.startswith("/team/invite/"):
-        return None
-
-    # Check verification status
     from modules.auth import get_current_user as _get_current_user
     user = _get_current_user()
-    if not user:
+    if not user or user.get("email_verified"):
         return None
 
-    if user.get("email_verified"):
+    # Compute grace period status from created_at
+    grace_active = False
+    try:
+        created_at = user.get("created_at")
+        if created_at:
+            import datetime as _dt
+            if isinstance(created_at, str):
+                created = _dt.datetime.fromisoformat(created_at.replace("Z", "+00:00")).replace(tzinfo=None)
+            else:
+                created = created_at
+            age = (_dt.datetime.utcnow() - created).total_seconds()
+            grace_active = age < _GRACE_PERIOD_SECONDS
+    except Exception:
+        grace_active = False
+
+    if not _verification_required_for_path(path, grace_active):
+        # Allowed — user sees a banner reminder via the context processor
         return None
 
-    # Unverified — block with appropriate response
+    # Blocked. JSON APIs get a structured error, HTML gets redirected.
     if request.is_json or request.path.startswith("/api/"):
         return jsonify({
-            "error": "Please verify your email address before using this feature.",
+            "error": "Please verify your email address to use this feature.",
             "verification_required": True,
             "resend_url": "/resend-verification",
         }), 403
 
     return redirect("/verification-required")
+
+
+# Context processor: surface verification status for the banner.
+@app.context_processor
+def inject_verification_status():
+    user_id = session.get("user_id")
+    if not user_id:
+        return {"needs_verification_banner": False}
+    try:
+        from modules.auth import get_current_user as _get_current_user
+        user = _get_current_user()
+        if not user or user.get("email_verified"):
+            return {"needs_verification_banner": False}
+        return {
+            "needs_verification_banner": True,
+            "unverified_email": user.get("email"),
+        }
+    except Exception:
+        return {"needs_verification_banner": False}
+
+
+# Context processor: expose lightweight leaderboard stats for trust signals
+# on the homepage hero. Reads from the domain_leaderboard cache so it's
+# a single indexed query. Falls back gracefully if the table is empty.
+_trust_stats_cache = {"data": None, "ts": 0}
+def _get_trust_stats():
+    """Cache leaderboard stats for 5 minutes so the homepage doesn't
+    run a fresh SQL query on every request. Expose total domains +
+    total scans for the above-the-fold trust signal."""
+    now = time.monotonic()
+    if _trust_stats_cache["data"] and (now - _trust_stats_cache["ts"] < 300):
+        return _trust_stats_cache["data"]
+    try:
+        from modules.leaderboard import get_leaderboard_stats
+        stats = get_leaderboard_stats()
+        result = {
+            "total_domains": stats.get("total_domains", 0),
+            "total_scans": stats.get("total_scans", 0),
+        }
+    except Exception:
+        result = {"total_domains": 0, "total_scans": 0}
+    _trust_stats_cache["data"] = result
+    _trust_stats_cache["ts"] = now
+    return result
+
+
+@app.context_processor
+def inject_trust_stats():
+    return {"trust_stats": _get_trust_stats()}
 
 
 @app.route("/verification-required")

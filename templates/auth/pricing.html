@@ -2,10 +2,9 @@
 {% set allow_index = True %}
 {% block title %}Pricing{% endblock %}
 {% block content %}
-<span class="pricing-eyebrow" style="display:inline-block;font-size:0.7rem;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;color:var(--brand);background:rgba(37,99,235,0.08);padding:4px 14px;border-radius:99px;margin-bottom:14px;">Start reading your 7 signals</span>
-<h1 class="auth-card__title pricing-title">You already know what the 5 invisible signals are. Here is what InbXr does with them.</h1>
-<p class="auth-card__sub">Reading the signals is step one. The intelligence layer is what watches what they find. Signal Watch recalculates all 7 signals every 6 hours automatically. Early Warning surfaces conditions trending toward danger. Signal Recommendations queue suppression, segmentation, and tagging suggestions while you sleep. Recovery Sequences generates re-engagement copy for your at-risk contacts in 60 seconds. Pre-send Check returns a green, amber, or red status on every campaign before it goes out.</p>
-<p class="auth-card__sub" style="font-weight:600;color:var(--text-1);">No other tool reads and watches through the same Signal Engine end to end.</p>
+<span class="pricing-eyebrow" style="display:inline-block;font-size:0.7rem;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;color:var(--brand);background:rgba(37,99,235,0.08);padding:4px 14px;border-radius:99px;margin-bottom:14px;">Pricing</span>
+<h1 class="auth-card__title pricing-title">Simple pricing. Pay for what you watch.</h1>
+<p class="auth-card__sub">Start free with the 5-signal CSV reading. Upgrade when you want the full 7 signals, continuous monitoring, ESP sync, and weekly reports. Cancel anytime.</p>
 
 <div class="pricing-grid">
 
@@ -17,27 +16,21 @@
       <span class="pricing-card__amount">$0</span>
       <span class="pricing-card__period">forever</span>
     </div>
-    <p class="pricing-card__desc">Start reading. No decision required. Connect your list or upload a CSV. Get a 5-signal composite reading with a score out of 100 and a letter grade in 60 seconds. Most users find a problem they did not know existed before they reach the end of their first reading. The reading is yours regardless of what you decide next.</p>
+    <p class="pricing-card__desc">Start reading. Upload a CSV or type a sending domain and get a 5-signal composite reading with a letter grade in 60 seconds. Most users find a problem they didn't know existed in their first scan.</p>
     <ul class="pricing-card__features">
-      <li>{{ t.limits.checks_per_day }} checks/day across all tools</li>
+      <li class="pricing-card__feature--highlight">5-signal Signal Score via CSV upload</li>
+      <li class="pricing-card__feature--highlight">Domain Signal Score (auth + reputation)</li>
+      <li class="pricing-card__feature--highlight">Signal Report PDF (basic, 3/day)</li>
+      <li class="pricing-card__feature--highlight">Full Inboxer Send Test with auth analysis</li>
+      <li class="pricing-card__feature--highlight">Inboxer Sender Check (SPF, DKIM, DMARC)</li>
+      <li class="pricing-card__feature--highlight">Copy Intelligence + 100-point Scorer</li>
+      <li>{{ t.limits.checks_per_day }} checks/day across all Toolkit tools</li>
       <li>{{ t.limits.email_verifications_per_day }} email verifications/day</li>
       <li>{{ t.limits.placement_tests_per_day }} inbox placement tests/day</li>
       <li>{{ t.limits.subject_tests_per_day }} subject line tests/day</li>
-      <li>{{ t.limits.blocklist_domains }} monitored domains</li>
-      <li>{{ t.limits.warmup_campaigns }} warmup campaign</li>
-      <li>Full Inboxer Send Test with auth analysis</li>
-      <li>Inboxer Sender Check (SPF, DKIM, DMARC)</li>
-      <li>Header Analyzer &amp; BIMI Checker</li>
-      <li>100-point Copy Effectiveness Scorer</li>
-      <li>Framework Lab (browse 16 frameworks)</li>
-      <li>3 frameworks unlocked (AIDA, PAS, C3PO)</li>
-      <li>In-app alerts (manual scans only)</li>
+      <li>Header Analyzer, BIMI Checker, 16 frameworks</li>
       <li>Sales &amp; Technical Support chat</li>
-      <li>Signal Score via CSV upload (5 signals, normalized to 100)</li>
-      <li>Signal Report PDF (basic, 3/day)</li>
-      <li>No ESP integrations</li>
-      <li>No Signal Watch (automatic monitoring)</li>
-      <li>No Signal Recommendations / Early Warning / Recovery Sequences</li>
+      <li style="font-weight:700;color:var(--text-1);margin-top:8px;padding-top:8px;border-top:1px solid var(--border-1,#e2e8f0);">Everything above is free forever.</li>
     </ul>
     <div class="pricing-card__action">
       {% if user %}

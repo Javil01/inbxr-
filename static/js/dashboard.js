@@ -192,19 +192,44 @@ function buildCreditsBar(c) {
 }
 
 function buildQuickActions() {
-  return '<div class="dash-actions">' +
-    '<h3 class="dash-actions__title">What would you like to do?</h3>' +
-    '<div class="dash-actions__grid">' +
-      quickActionBtn('/', 'M22 12h-4l-3 9L9 3l-3 9H2', 'Run Email Test', 'Test authentication, spam risk, and deliverability') +
-      quickActionBtn('/sender', 'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z', 'Check Sender Auth', 'Verify SPF, DKIM, DMARC for any domain') +
-      quickActionBtn('/placement', 'M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z||M22 6l-10 7L2 6', 'Inbox Placement Test', 'See where emails land across providers') +
-      quickActionBtn('/subject-scorer', 'M17 10H3||M21 6H3||M21 14H3||M17 18H3', 'Score Subject Lines', 'A/B test and rank subject lines') +
-      quickActionBtn('/blacklist-monitor', 'M12 2a10 10 0 100 20 10 10 0 000-20z||M4.93 4.93l14.14 14.14', 'Scan Blocklists', 'Check 110+ blocklists for your domain') +
-      quickActionBtn('/email-verifier', 'M22 11.08V12a10 10 0 11-5.93-9.14||M22 4L12 14.01 9 11.01', 'Verify Emails', 'Validate email addresses before sending') +
-      quickActionBtn('/header-analyzer', 'M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z||M14 2v6h6', 'Analyze Headers', 'Paste raw headers for deep analysis') +
-      quickActionBtn('/warmup', 'M13 2L3 14h9l-1 8 10-12h-9l1-8z', 'Warmup Tracker', 'Track your domain warmup progress') +
+  // Three-step start card instead of the old 8-tile grid.
+  // First action is ranked — the user sees exactly which path to take
+  // first, then the next two as alternates. Everything else lives in
+  // the sidebar Toolkit menu.
+  return '<div class="dash-start">' +
+    '<div class="dash-start__header">' +
+      '<span class="dash-start__eyebrow">Start here</span>' +
+      '<h2 class="dash-start__title">Three ways to read your Signal Score</h2>' +
+      '<p class="dash-start__sub">Pick whichever matches what you have in front of you right now.</p>' +
+    '</div>' +
+    '<div class="dash-start__grid">' +
+      startStep(1, '/signal-score', 'M22 12h-4l-3 9L9 3l-3 9H2',
+        'Get your first Signal Score',
+        'Connect an ESP or upload a CSV for the full 7-signal reading. Most users find a problem they didn\'t know existed in their first scan.',
+        'Read signals') +
+      startStep(2, '/', 'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z',
+        'Score a sending domain',
+        'Type any sending domain. The Signal Engine reads 2 of 7 signals instantly from public DNS + blacklist data.',
+        'Quick domain check') +
+      startStep(3, '/why-am-i-in-spam', 'M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7||M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z',
+        'Diagnose an email that went to spam',
+        'Paste a subject and body. Get the top 3 reasons it\'s landing in spam, ranked and ready to fix.',
+        'Run diagnostic') +
     '</div>' +
   '</div>';
+}
+
+function startStep(num, href, paths, title, desc, cta) {
+  var svgPaths = paths.split('||').map(function(p) {
+    return '<path d="' + p + '"/>';
+  }).join('');
+  return '<a href="' + href + '" class="dash-start-step' + (num === 1 ? ' dash-start-step--primary' : '') + '">' +
+    '<div class="dash-start-step__num">' + num + '</div>' +
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24" class="dash-start-step__icon">' + svgPaths + '</svg>' +
+    '<strong class="dash-start-step__title">' + esc(title) + '</strong>' +
+    '<span class="dash-start-step__desc">' + esc(desc) + '</span>' +
+    '<span class="dash-start-step__cta">' + esc(cta) + ' \u2192</span>' +
+  '</a>';
 }
 
 function quickActionBtn(href, paths, title, desc) {

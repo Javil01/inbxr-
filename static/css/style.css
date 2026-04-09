@@ -358,6 +358,17 @@ img { display: block; max-width: 100%; }
 }
 .nav-dropdown__link:hover { color: var(--text-1); background: var(--bg-2); }
 .nav-dropdown__link--active { color: var(--brand-dark); background: var(--brand-muted); font-weight: 600; }
+.nav-dropdown__menu--grouped { min-width: 240px; padding: 8px 6px; }
+.nav-dropdown__group-label {
+  font-size: 0.66rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-3);
+  padding: 10px 14px 4px;
+  margin-top: 2px;
+}
+.nav-dropdown__menu--grouped .nav-dropdown__group-label:first-child { margin-top: 0; padding-top: 4px; }
 
 /* ── Mobile nav toggle ── */
 .nav-toggle {
@@ -596,10 +607,50 @@ img { display: block; max-width: 100%; }
   animation: none;
 }
 .hero-cta-btn svg { flex-shrink: 0; }
+.hero-assurance {
+  margin: 10px 0 4px;
+  font-size: 0.88rem;
+  color: #86efac;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.hero-assurance::before {
+  content: "\2713";
+  font-weight: 900;
+  color: #22c55e;
+}
+.et-homepage-hero .hero-assurance { text-align: left; }
+.hero-trust-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 16px 0 0;
+  padding: 10px 14px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 10px;
+  font-size: 0.8rem;
+  color: rgba(255,255,255,0.75);
+  max-width: 480px;
+}
+.hero-trust-bar > svg { color: rgba(255,255,255,0.55); }
+.hero-trust-bar > span { flex: 1; }
+.hero-trust-bar strong { color: #fff; font-weight: 800; }
+.hero-trust-bar a {
+  color: #86efac;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  font-size: 0.76rem;
+}
+.hero-trust-bar a:hover { color: #bbf7d0; }
+.et-homepage-hero .hero-trust-bar { text-align: left; }
 .hero-price-anchor {
-  margin: 12px auto 0;
-  font-size: 0.82rem;
-  color: rgba(255,255,255,0.8);
+  margin: 6px auto 0;
+  font-size: 0.78rem;
+  color: rgba(255,255,255,0.55);
   text-align: center;
 }
 .hero-price-anchor strong {
@@ -6942,6 +6993,100 @@ select {
   .dash-actions__grid { grid-template-columns: 1fr 1fr; gap: 8px; }
   .dash-action-card { padding: 12px 8px; }
   .dash-action-card span { display: none; }
+}
+
+/* ── New 3-step start card (replaces old 8-tile quick actions) ── */
+.dash-start {
+  background: linear-gradient(135deg, #f0f9ff 0%, #fff 100%);
+  border: 1px solid #bae6fd;
+  border-radius: 14px;
+  padding: 24px 26px;
+  margin-bottom: 24px;
+}
+.dash-start__header { margin-bottom: 18px; }
+.dash-start__eyebrow {
+  display: inline-block;
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #0284c7;
+  margin-bottom: 6px;
+}
+.dash-start__title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--text-1);
+  margin: 0 0 4px;
+}
+.dash-start__sub { font-size: 0.86rem; color: var(--text-2); margin: 0; }
+.dash-start__grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.dash-start-step {
+  position: relative;
+  background: #fff;
+  border: 1px solid var(--border-1, #e2e8f0);
+  border-radius: 12px;
+  padding: 20px 20px 18px;
+  text-decoration: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: all 0.15s;
+}
+.dash-start-step:hover {
+  border-color: var(--brand, #2563eb);
+  box-shadow: 0 4px 14px rgba(37,99,235,0.08);
+  transform: translateY(-2px);
+}
+.dash-start-step--primary {
+  border-color: var(--brand, #2563eb);
+  border-width: 2px;
+  background: linear-gradient(180deg, #f0f9ff 0%, #fff 40%);
+}
+.dash-start-step--primary::before {
+  content: "Start here";
+  position: absolute;
+  top: -10px;
+  left: 16px;
+  background: var(--brand, #2563eb);
+  color: #fff;
+  font-size: 0.64rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 3px 10px;
+  border-radius: 99px;
+}
+.dash-start-step__num {
+  position: absolute;
+  top: 16px;
+  right: 18px;
+  font-size: 1.6rem;
+  font-weight: 900;
+  color: rgba(37,99,235,0.15);
+  line-height: 1;
+}
+.dash-start-step__icon { color: var(--brand, #2563eb); margin-bottom: 4px; }
+.dash-start-step__title {
+  font-size: 0.96rem;
+  font-weight: 800;
+  color: var(--text-1);
+  line-height: 1.3;
+}
+.dash-start-step__desc {
+  font-size: 0.78rem;
+  color: var(--text-2);
+  line-height: 1.5;
+  flex: 1;
+}
+.dash-start-step__cta {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--brand, #2563eb);
+  margin-top: 4px;
+}
+@media (max-width: 860px) {
+  .dash-start__grid { grid-template-columns: 1fr; }
 }
 
 /* ── Assistant Teaser (free users) ─────────────────── */

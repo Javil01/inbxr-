@@ -8,26 +8,43 @@
 <div class="auth-alert auth-alert--error">{{ error }}</div>
 {% endif %}
 
-<form method="post" class="auth-form">
+<form method="post" class="auth-form" id="signupForm">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
   <label class="auth-label">
     <span>Email</span>
     <input type="email" name="email" required autocomplete="email" placeholder="you@company.com" />
   </label>
   <label class="auth-label">
+    <span>Password</span>
+    <div class="auth-pwd-wrap" style="position:relative;">
+      <input type="password" id="signupPassword" name="password" required minlength="8" autocomplete="new-password" placeholder="At least 8 characters" style="padding-right:56px;" />
+      <button type="button" id="signupPwdToggle" aria-label="Show password" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:rgba(255,255,255,0.55);font-size:0.72rem;font-weight:700;cursor:pointer;text-transform:uppercase;letter-spacing:0.05em;">Show</button>
+    </div>
+  </label>
+  <label class="auth-label">
     <span>Name <small>(optional)</small></span>
     <input type="text" name="display_name" autocomplete="name" placeholder="Your name" />
   </label>
-  <label class="auth-label">
-    <span>Password</span>
-    <input type="password" name="password" required minlength="8" autocomplete="new-password" placeholder="At least 8 characters" />
-  </label>
-  <label class="auth-label">
-    <span>Confirm Password</span>
-    <input type="password" name="confirm_password" required minlength="8" autocomplete="new-password" placeholder="Repeat password" />
-  </label>
+  {# Server-side signup() still reads confirm_password; mirror password into it
+     so the validation passes without forcing the user to type twice. #}
+  <input type="hidden" name="confirm_password" id="signupConfirm" value="" />
   <button type="submit" class="auth-btn">Create Account</button>
 </form>
+<script>
+(function(){
+  var form = document.getElementById('signupForm');
+  var pwd = document.getElementById('signupPassword');
+  var confirm = document.getElementById('signupConfirm');
+  var toggle = document.getElementById('signupPwdToggle');
+  if (!form || !pwd || !confirm || !toggle) return;
+  form.addEventListener('submit', function(){ confirm.value = pwd.value; });
+  toggle.addEventListener('click', function(){
+    var showing = pwd.type === 'text';
+    pwd.type = showing ? 'password' : 'text';
+    toggle.textContent = showing ? 'Show' : 'Hide';
+  });
+})();
+</script>
 
 <p class="auth-card__footer">Already have an account? <a href="{{ url_for('auth.login') }}">Log in</a></p>
 {% endblock %}

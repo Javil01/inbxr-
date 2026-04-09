@@ -16,6 +16,32 @@ window.showToast=function(msg,type,duration){
   t.querySelector('.toast__close').addEventListener('click',function(){clearTimeout(timer);dismiss();});
 };
 </script>
+{# Soft verification reminder banner. Shown to logged-in users who haven't
+   verified their email yet. Dismissible per-session. Non-blocking — the
+   user can still use free-tier tools during a 24h grace period. #}
+{% if needs_verification_banner %}
+<div id="verifyBanner" class="verify-banner">
+  <div class="verify-banner__inner">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18" style="flex-shrink:0;"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22 6 12 13 2 6"/></svg>
+    <span><strong>Verify your email</strong> to enable weekly reports, alerts, and ESP integrations. We sent a link to <strong>{{ unverified_email }}</strong>.</span>
+    <a href="/resend-verification" class="verify-banner__resend" onclick="event.preventDefault(); fetch('/resend-verification', {method:'POST', headers:{'X-CSRFToken':document.querySelector('meta[name=csrf-token]')?.content||''}}).then(function(){ this.textContent='Sent!'; }.bind(this));">Resend</a>
+    <button type="button" class="verify-banner__close" aria-label="Dismiss" onclick="document.getElementById('verifyBanner').style.display='none';sessionStorage.setItem('inbxr_verify_dismissed','1');">&times;</button>
+  </div>
+</div>
+<script>if(sessionStorage.getItem('inbxr_verify_dismissed')==='1'){document.getElementById('verifyBanner').style.display='none';}</script>
+<style>
+.verify-banner { background: linear-gradient(90deg, #f59e0b 0%, #d97706 100%); color: #fff; font-size: 0.85rem; padding: 10px 20px; position: relative; z-index: 100; }
+.verify-banner__inner { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; gap: 14px; }
+.verify-banner__inner > span { flex: 1; line-height: 1.5; }
+.verify-banner__inner strong { font-weight: 800; }
+.verify-banner__resend { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: #fff; padding: 5px 14px; border-radius: 999px; font-size: 0.76rem; font-weight: 700; text-decoration: none; cursor: pointer; white-space: nowrap; }
+.verify-banner__resend:hover { background: rgba(255,255,255,0.25); }
+.verify-banner__close { background: none; border: none; color: rgba(255,255,255,0.8); font-size: 1.3rem; cursor: pointer; line-height: 1; padding: 0 4px; flex-shrink: 0; }
+.verify-banner__close:hover { color: #fff; }
+@media (max-width: 640px) { .verify-banner { font-size: 0.78rem; } .verify-banner__inner > span { font-size: 0.78rem; } }
+</style>
+{% endif %}
+
 <header class="site-header">
   <div class="header-inner">
     <a href="/" class="logo">
@@ -64,21 +90,29 @@ window.showToast=function(msg,type,duration){
         <a href="/" class="nav-link nav-link--featured{% if active_page == 'index' %} nav-link--active{% endif %}">Home</a>
         <a href="/seven-signals" class="nav-link{% if active_page == 'seven_signals' %} nav-link--active{% endif %}">The 7 Signals</a>
         <div class="nav-dropdown">
-          <button class="nav-link nav-link--dropdown{% if active_page in ['sender','blacklist_monitor','placement','analyzer','email_verifier','subject_scorer','header_analyzer','bimi','bulk_domain_check','frameworks'] %} nav-link--active{% endif %}">
+          <button class="nav-link nav-link--dropdown{% if active_page in ['sender','blacklist_monitor','placement','analyzer','email_verifier','subject_scorer','header_analyzer','bimi','bulk_domain_check','frameworks','why_am_i_in_spam','inherited_list_first_aid','email_test'] %} nav-link--active{% endif %}">
             Toolkit
             <svg width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </button>
-          <div class="nav-dropdown__menu">
-            <a href="/sender"          class="nav-dropdown__link{% if active_page == 'sender' %} nav-dropdown__link--active{% endif %}">Inboxer Sender Check</a>
-            <a href="/blacklist-monitor" class="nav-dropdown__link{% if active_page == 'blacklist_monitor' %} nav-dropdown__link--active{% endif %}">Reputation Watch</a>
-            <a href="/placement"       class="nav-dropdown__link{% if active_page == 'placement' %} nav-dropdown__link--active{% endif %}">Inboxer Placement Test</a>
+          <div class="nav-dropdown__menu nav-dropdown__menu--grouped">
+            <div class="nav-dropdown__group-label">Quick answers</div>
+            <a href="/why-am-i-in-spam" class="nav-dropdown__link{% if active_page == 'why_am_i_in_spam' %} nav-dropdown__link--active{% endif %}">Why Am I in Spam?</a>
+            <a href="/sender"           class="nav-dropdown__link{% if active_page == 'sender' %} nav-dropdown__link--active{% endif %}">Inboxer Sender Check</a>
+            <a href="/inherited-list-first-aid" class="nav-dropdown__link{% if active_page == 'inherited_list_first_aid' %} nav-dropdown__link--active{% endif %}">Inherited List First Aid</a>
+
+            <div class="nav-dropdown__group-label">Copy &amp; content</div>
             <a href="/analyzer"        class="nav-dropdown__link{% if active_page == 'analyzer' %} nav-dropdown__link--active{% endif %}">Copy Intelligence</a>
             <a href="/subject-scorer"  class="nav-dropdown__link{% if active_page == 'subject_scorer' %} nav-dropdown__link--active{% endif %}">Subject Intelligence</a>
+            <a href="/frameworks"      class="nav-dropdown__link{% if active_page == 'frameworks' %} nav-dropdown__link--active{% endif %}">Framework Lab</a>
+
+            <div class="nav-dropdown__group-label">Deep diagnostics</div>
+            <a href="/email-test"      class="nav-dropdown__link{% if active_page == 'email_test' %} nav-dropdown__link--active{% endif %}">Inboxer Send Test</a>
+            <a href="/placement"       class="nav-dropdown__link{% if active_page == 'placement' %} nav-dropdown__link--active{% endif %}">Inboxer Placement Test</a>
+            <a href="/header-analyzer" class="nav-dropdown__link{% if active_page == 'header_analyzer' %} nav-dropdown__link--active{% endif %}">Header Analyzer</a>
+            <a href="/blacklist-monitor" class="nav-dropdown__link{% if active_page == 'blacklist_monitor' %} nav-dropdown__link--active{% endif %}">Reputation Watch</a>
             <a href="/email-verifier"  class="nav-dropdown__link{% if active_page == 'email_verifier' %} nav-dropdown__link--active{% endif %}">Signal Verifier</a>
             <a href="/bulk-domain-check" class="nav-dropdown__link{% if active_page == 'bulk_domain_check' %} nav-dropdown__link--active{% endif %}">Domain Signal Check</a>
-            <a href="/header-analyzer" class="nav-dropdown__link{% if active_page == 'header_analyzer' %} nav-dropdown__link--active{% endif %}">Header Analyzer</a>
             <a href="/bimi"            class="nav-dropdown__link{% if active_page == 'bimi' %} nav-dropdown__link--active{% endif %}">BIMI Checker</a>
-            <a href="/frameworks"      class="nav-dropdown__link{% if active_page == 'frameworks' %} nav-dropdown__link--active{% endif %}">Framework Lab</a>
           </div>
         </div>
         <a href="/pricing" class="nav-link{% if active_page == 'pricing' %} nav-link--active{% endif %}">Pricing</a>

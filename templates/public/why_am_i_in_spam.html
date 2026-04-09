@@ -12,7 +12,7 @@
   <link rel="canonical" href="https://inbxr.us/why-am-i-in-spam">
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/static/css/style.css?v=20260409a" />
+  <link rel="stylesheet" href="/static/css/style.css?v=20260409b" />
   {% include 'sections/_head_meta.html' %}
 </head>
 <body class="email-test-page">
@@ -341,8 +341,12 @@
   </div>
 
   <form id="waisForm" class="wais-form">
+    <p style="font-size: 0.86rem; color: var(--text-3); margin: 0 0 14px; line-height: 1.5;">
+      <strong style="color:var(--text-2);">Just enter your sending domain for a quick check.</strong>
+      Or add a subject and body below for a full diagnostic that also scans your copy for spam triggers.
+    </p>
     <div class="wais-field">
-      <label for="waisDomain">Your sending domain (required)</label>
+      <label for="waisDomain">Your sending domain</label>
       <input type="text" id="waisDomain" name="domain" placeholder="yourcompany.com" autocomplete="off" required />
     </div>
 

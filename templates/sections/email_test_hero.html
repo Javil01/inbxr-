@@ -27,7 +27,16 @@
             Get my Signal Score
           </button>
         </form>
-        <p class="hero-price-anchor">30 seconds &middot; No signup &middot; No CSV needed</p>
+        <p class="hero-assurance">Your score appears right here in 30 seconds. No email required.</p>
+        <p class="hero-price-anchor">Free &middot; No signup &middot; No CSV needed</p>
+
+        {% if trust_stats and trust_stats.total_domains > 0 %}
+        <p class="hero-trust-bar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12" style="flex-shrink:0;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <span><strong>{{ '{:,}'.format(trust_stats.total_domains) }}</strong> domains scored by the Signal Engine &middot; updated live</span>
+          <a href="/leaderboard">See leaderboard &rarr;</a>
+        </p>
+        {% endif %}
 
       </div>
 
