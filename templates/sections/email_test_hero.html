@@ -148,6 +148,145 @@
 }
 #heroResultPanel .res-cta-btn:hover { background: #15803d; }
 #heroResultPanel .res-error { color: #dc2626; font-size: 0.85rem; padding: 12px; background: #fef2f2; border-radius: 8px; }
+
+/* ── Unified result cards (domain + send test + delivery) ── */
+#heroResultPanel .res-card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 22px 24px;
+  margin-bottom: 16px;
+  position: relative;
+}
+#heroResultPanel .res-card:last-of-type { margin-bottom: 16px; }
+#heroResultPanel .res-card--domain { border-left: 4px solid #2563eb; }
+#heroResultPanel .res-card--sendtest {
+  border-left: 4px solid #f59e0b;
+  background: linear-gradient(135deg, #fffbeb 0%, #ffffff 40%);
+}
+#heroResultPanel .res-card--delivery {
+  border-left: 4px solid #16a34a;
+  background: linear-gradient(135deg, #ecfdf5 0%, #ffffff 40%);
+}
+
+#heroResultPanel .res-card__label {
+  display: inline-block;
+  font-size: 0.66rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #64748b;
+  margin-bottom: 10px;
+}
+#heroResultPanel .res-card__label--live { color: #b45309; }
+#heroResultPanel .res-card__label--success { color: #047857; }
+#heroResultPanel .res-card__h {
+  font-size: 1.02rem;
+  font-weight: 800;
+  color: #0c1a3a;
+  margin: 0 0 6px;
+  line-height: 1.3;
+}
+#heroResultPanel .res-card__p {
+  font-size: 0.82rem;
+  color: #475569;
+  margin: 0 0 14px;
+  line-height: 1.55;
+}
+
+/* Send test instructions inside the amber card */
+#heroResultPanel .res-sendtest__box {
+  background: #ffffff;
+  border: 1px solid #fcd34d;
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin: 10px 0 12px;
+}
+#heroResultPanel .res-sendtest__field { margin-bottom: 10px; }
+#heroResultPanel .res-sendtest__field:last-child { margin-bottom: 0; }
+#heroResultPanel .res-sendtest__field label {
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #92400e;
+  margin-bottom: 5px;
+}
+#heroResultPanel .res-sendtest__copy-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+#heroResultPanel .res-sendtest__copy-row code {
+  flex: 1;
+  font-family: "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.84rem;
+  color: #0c1a3a;
+  background: #f8fafc;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+#heroResultPanel .res-sendtest__copy-btn {
+  background: #d97706;
+  color: #ffffff;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+}
+#heroResultPanel .res-sendtest__copy-btn:hover { background: #b45309; }
+
+#heroResultPanel .res-sendtest__status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: #fef3c7;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  color: #78350f;
+  margin: 8px 0 6px;
+}
+#heroResultPanel .res-sendtest__spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid #fcd34d;
+  border-top-color: #d97706;
+  border-radius: 50%;
+  animation: sendTestSpin 0.9s linear infinite;
+  flex-shrink: 0;
+}
+@keyframes sendTestSpin { to { transform: rotate(360deg); } }
+#heroResultPanel .res-sendtest__note {
+  font-size: 0.72rem;
+  color: #94a3b8;
+  margin: 6px 0 0;
+  line-height: 1.5;
+}
+
+/* Delivery proof card */
+#heroResultPanel .res-delivery-placement {
+  font-size: 0.88rem;
+  color: #0c1a3a;
+  padding: 10px 14px;
+  background: #ecfdf5;
+  border-radius: 8px;
+  margin-top: 8px;
+}
+#heroResultPanel .res-delivery-placement strong { color: #047857; }
+
+@media (max-width: 640px) {
+  #heroResultPanel .res-card { padding: 16px 18px; }
+  #heroResultPanel .res-sendtest__copy-row { flex-direction: column; align-items: stretch; }
+  #heroResultPanel .res-sendtest__copy-row code { white-space: normal; word-break: break-all; }
+}
 </style>
 
       <div class="hero-split__visual">
@@ -403,80 +542,265 @@
   var panel = document.getElementById('heroResultPanel');
   if (!form || !input || !panel) return;
 
+  // State for the combined domain + live delivery flow
+  var state = {
+    domain: '',
+    domainResult: null,
+    sendTestToken: null,
+    pollingInterval: null,
+    pollingStartedAt: null,
+    deliveryResult: null,
+  };
+  var POLL_INTERVAL_MS = 5000;
+  var POLL_TIMEOUT_MS = 3 * 60 * 1000; // 3 minutes
+
   function classFor(score) {
     if (score >= 75) return 'is-good';
     if (score >= 50) return 'is-warn';
     return 'is-bad';
   }
 
-  function renderResult(d) {
+  function esc(s) {
+    if (s == null) return '';
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // ── Renderers ──────────────────────────────────────
+
+  function renderDomainCard(d) {
     var grade = d.grade || 'F';
     var score = Math.round(d.score || 0);
     var auth = d.scores && d.scores.authentication_standing != null
       ? Math.round(d.scores.authentication_standing * 100 / 5) : 0;
     var rep = d.scores && d.scores.domain_reputation != null
       ? Math.round(d.scores.domain_reputation * 100 / 15) : 0;
-    var dmarc = (d.metadata && d.metadata.authentication_standing && d.metadata.authentication_standing.dmarc_policy) || 'unknown';
-    var listed = d.metadata && d.metadata.domain_reputation && d.metadata.domain_reputation.listed_count;
 
     var summary;
     if (grade === 'A' || grade === 'B') {
-      summary = "Your domain side is in solid shape. The 5 locked signals below are where most senders find their real problems.";
+      summary = "Your domain side is in solid shape. Most senders find their real problems in the 5 list-side signals below.";
     } else if (grade === 'C') {
-      summary = "Your domain has at least one issue. The 5 locked signals likely have more.";
+      summary = "Your domain has at least one issue. Your 5 list-side signals likely have more.";
     } else {
       summary = "Your domain has significant issues. Your 5 list-side signals almost certainly have more.";
     }
 
-    var lockedSignals = [
-      ['01 Bounce Exposure', 'List required'],
-      ['02 Engagement Trajectory', 'List required'],
-      ['03 Acquisition Quality', 'List required'],
-      ['05 Spam Trap Exposure', 'List required'],
-      ['07 Decay Velocity', 'List required']
-    ];
-    var lockedHtml = lockedSignals.map(function(s){
-      return '<div class="res-sig is-locked"><span class="res-sig-name">' + s[0] + '</span><span class="res-sig-val is-locked">' + s[1] + '</span></div>';
-    }).join('');
-
-    panel.innerHTML =
-      '<div class="res-hero">' +
-        '<div>' +
-          '<div class="res-num res-num--' + grade + '">' + score + '</div>' +
-          '<div class="res-grade">Grade ' + grade + '</div>' +
+    return '' +
+      '<div class="res-card res-card--domain">' +
+        '<span class="res-card__label">Phase 1 of 2 &middot; Domain analysis</span>' +
+        '<div class="res-hero">' +
+          '<div>' +
+            '<div class="res-num res-num--' + grade + '">' + score + '</div>' +
+            '<div class="res-grade">Grade ' + grade + '</div>' +
+          '</div>' +
+          '<div class="res-summary">' +
+            '<h3>' + esc(d.domain) + ' &middot; Partial Signal Score</h3>' +
+            '<p>' + summary + '</p>' +
+          '</div>' +
         '</div>' +
-        '<div class="res-summary">' +
-          '<h3>' + d.domain + ' &middot; Partial Signal Score</h3>' +
-          '<p>' + summary + '</p>' +
+        '<div class="res-signals">' +
+          '<div class="res-sig"><span class="res-sig-name">06 Authentication Standing</span><span class="res-sig-val ' + classFor(auth) + '">' + auth + '/100</span></div>' +
+          '<div class="res-sig"><span class="res-sig-name">04 Domain Reputation</span><span class="res-sig-val ' + classFor(rep) + '">' + rep + '/100</span></div>' +
         '</div>' +
-      '</div>' +
-      '<div class="res-signals">' +
-        '<div class="res-sig"><span class="res-sig-name">06 Authentication Standing</span><span class="res-sig-val ' + classFor(auth) + '">' + auth + '/100</span></div>' +
-        '<div class="res-sig"><span class="res-sig-name">04 Domain Reputation</span><span class="res-sig-val ' + classFor(rep) + '">' + rep + '/100</span></div>' +
-      '</div>' +
-      '<div class="res-signals">' + lockedHtml + '</div>' +
-      '<div class="res-cta">' +
-        '<h4>You just saw 2 of 7 signals.</h4>' +
-        '<p>Sign up free to unlock the other 5 (Bounce Exposure, Engagement Trajectory, Acquisition Quality, Spam Trap Exposure, Decay Velocity) by uploading a CSV or connecting your ESP.</p>' +
-        '<a href="/signup?from=signal-score&domain=' + encodeURIComponent(d.domain) + '" class="res-cta-btn">Sign up free to see all 7 &rarr;</a>' +
       '</div>';
+  }
+
+  function renderSendTestPromptCard(seedEmail, token) {
+    // The "want more proof?" upgrade card that appears right after
+    // the domain scan. Shows the seed address and waits for the user
+    // to send a test email. Polls for results in the background.
+    return '' +
+      '<div class="res-card res-card--sendtest" id="sendTestCard">' +
+        '<span class="res-card__label res-card__label--live">Phase 2 of 2 &middot; Real delivery proof</span>' +
+        '<h3 class="res-card__h">Send a test email now for real server verdicts</h3>' +
+        '<p class="res-card__p">The domain scan above tells you what your DNS looks like. A real test email tells you what <strong>actually happens when you send</strong>. We will read the live headers, score your content, and check authentication from the receiving server.</p>' +
+        '<div class="res-sendtest__box">' +
+          '<div class="res-sendtest__field">' +
+            '<label>Send to this address</label>' +
+            '<div class="res-sendtest__copy-row">' +
+              '<code id="sendTestEmail">' + esc(seedEmail) + '</code>' +
+              '<button type="button" class="res-sendtest__copy-btn" onclick="navigator.clipboard&&navigator.clipboard.writeText(\'' + esc(seedEmail) + '\');this.textContent=\'Copied\';setTimeout(function(b){b.textContent=\'Copy\'}.bind(null,this),1200);">Copy</button>' +
+            '</div>' +
+          '</div>' +
+          '<div class="res-sendtest__field">' +
+            '<label>With this token anywhere in the subject line</label>' +
+            '<div class="res-sendtest__copy-row">' +
+              '<code id="sendTestToken">' + esc(token) + '</code>' +
+              '<button type="button" class="res-sendtest__copy-btn" onclick="navigator.clipboard&&navigator.clipboard.writeText(\'' + esc(token) + '\');this.textContent=\'Copied\';setTimeout(function(b){b.textContent=\'Copy\'}.bind(null,this),1200);">Copy</button>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="res-sendtest__status" id="sendTestStatus">' +
+          '<div class="res-sendtest__spinner"></div>' +
+          '<span>Waiting for your email. This panel will update automatically when it arrives.</span>' +
+        '</div>' +
+        '<p class="res-sendtest__note">Average arrival time is 5 to 20 seconds. You can skip this step if you prefer — your domain score above is yours to keep.</p>' +
+      '</div>';
+  }
+
+  function renderDeliveryCard(d) {
+    // d is the full analysis from /email-test/check
+    // We extract the parts that prove "this actually worked" to a skeptic.
+    var auth = d.auth || {};
+    var content = d.content || {};
+    var placement = d.placement || {};
+    var authStatus = function(v) {
+      if (!v) return 'unknown';
+      if (v === 'pass' || v === 'aligned') return 'pass';
+      if (v === 'fail' || v === 'hardfail') return 'fail';
+      return v;
+    };
+
+    var spf = authStatus(auth.spf && auth.spf.result);
+    var dkim = authStatus(auth.dkim && auth.dkim.result);
+    var dmarc = authStatus(auth.dmarc && auth.dmarc.result);
+    var contentScore = content.total_score != null ? content.total_score : (content.score || null);
+    var placementLabel = placement.label || (placement.inbox ? 'Inbox' : 'Unknown');
+
+    function authPill(label, status) {
+      var cls = 'is-warn';
+      var mark = '?';
+      if (status === 'pass') { cls = 'is-good'; mark = '\u2713'; }
+      else if (status === 'fail') { cls = 'is-bad'; mark = '\u2717'; }
+      return '<div class="res-sig"><span class="res-sig-name">' + label + '</span><span class="res-sig-val ' + cls + '"><strong>' + mark + '</strong> ' + esc(status) + '</span></div>';
+    }
+
+    return '' +
+      '<div class="res-card res-card--delivery">' +
+        '<span class="res-card__label res-card__label--success">\u2713 Email received &middot; Live delivery analysis</span>' +
+        '<h3 class="res-card__h">What actually happened when you hit send</h3>' +
+        '<p class="res-card__p">We received your test email and analysed it from the receiving server. Here are the real verdicts, not just what your DNS looks like.</p>' +
+        '<div class="res-signals">' +
+          authPill('SPF (real verdict)', spf) +
+          authPill('DKIM (real verdict)', dkim) +
+          authPill('DMARC (real verdict)', dmarc) +
+        '</div>' +
+        (contentScore != null
+          ? '<div class="res-signals"><div class="res-sig"><span class="res-sig-name">Content score</span><span class="res-sig-val ' + classFor(contentScore) + '">' + contentScore + '/100</span></div></div>'
+          : '') +
+        '<div class="res-delivery-placement">Landed in: <strong>' + esc(placementLabel) + '</strong></div>' +
+      '</div>';
+  }
+
+  function renderFinalCta(domain) {
+    return '' +
+      '<div class="res-cta">' +
+        '<h4>You just saw the domain side AND the live delivery side.</h4>' +
+        '<p>That is 2 independent data sources: DNS-side signals (auth, reputation) and real-world delivery proof (server verdicts, content, placement). The other 5 signals (Bounce Exposure, Engagement Trajectory, Acquisition Quality, Spam Trap Exposure, Decay Velocity) need your list. Sign up free to unlock them.</p>' +
+        '<a href="/signup?from=signal-score&domain=' + encodeURIComponent(domain) + '" class="res-cta-btn">Sign up free to see all 7 signals &rarr;</a>' +
+      '</div>';
+  }
+
+  function repaintPanel() {
+    var html = '';
+    if (state.domainResult) {
+      html += renderDomainCard(state.domainResult);
+    }
+    if (state.sendTestToken && !state.deliveryResult) {
+      html += renderSendTestPromptCard(state.sendTestSeed, state.sendTestToken);
+    }
+    if (state.deliveryResult) {
+      html += renderDeliveryCard(state.deliveryResult);
+    }
+    if (state.domainResult) {
+      html += renderFinalCta(state.domain);
+    }
+    panel.innerHTML = html;
     panel.classList.add('is-visible');
-    setTimeout(function(){ panel.scrollIntoView({behavior: 'smooth', block: 'center'}); }, 100);
   }
 
   function renderError(msg) {
-    panel.innerHTML = '<div class="res-error">' + msg + '</div>';
+    panel.innerHTML = '<div class="res-error">' + esc(msg) + '</div>';
     panel.classList.add('is-visible');
   }
+
+  // ── Send test flow ─────────────────────────────────
+
+  function startSendTest() {
+    fetch('/email-test/start', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: '{}'
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if (d.error || !d.token || !d.seed_email) {
+        // Silently fail — the domain score is already visible and that is
+        // enough for the user. No error message for this optional upgrade.
+        return;
+      }
+      state.sendTestToken = d.token;
+      state.sendTestSeed = d.seed_email;
+      state.pollingStartedAt = Date.now();
+      repaintPanel();
+      beginPolling();
+    })
+    .catch(function(){
+      // Again, silent fail — domain score still visible
+    });
+  }
+
+  function beginPolling() {
+    if (state.pollingInterval) clearInterval(state.pollingInterval);
+    state.pollingInterval = setInterval(function(){
+      if (Date.now() - state.pollingStartedAt > POLL_TIMEOUT_MS) {
+        clearInterval(state.pollingInterval);
+        state.pollingInterval = null;
+        var statusEl = document.getElementById('sendTestStatus');
+        if (statusEl) {
+          statusEl.innerHTML = '<span style="color:var(--text-3);font-size:0.85rem;">No email received in 3 minutes. You can try again by refreshing, or your domain score above is already complete.</span>';
+        }
+        return;
+      }
+      checkForEmail();
+    }, POLL_INTERVAL_MS);
+    // Also check immediately (first fire after 5s)
+  }
+
+  function checkForEmail() {
+    if (!state.sendTestToken) return;
+    fetch('/email-test/check', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({token: state.sendTestToken})
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if (!d) return;
+      if (d.status === 'not_found') return; // keep polling
+      if (d.error) return;
+      // Any other response shape is our full analysis result
+      state.deliveryResult = d;
+      if (state.pollingInterval) {
+        clearInterval(state.pollingInterval);
+        state.pollingInterval = null;
+      }
+      repaintPanel();
+      setTimeout(function(){
+        var card = panel.querySelector('.res-card--delivery');
+        if (card) card.scrollIntoView({behavior: 'smooth', block: 'center'});
+      }, 150);
+    })
+    .catch(function(){});
+  }
+
+  // ── Submit handler (domain + optional send test) ───
 
   form.addEventListener('submit', function(e){
     e.preventDefault();
     var domain = input.value.trim();
     if (!domain) return;
     var btn = form.querySelector('button');
-    var origText = btn.textContent;
     btn.disabled = true;
     btn.textContent = 'Reading signals...';
+
+    // Reset state for a fresh submission
+    if (state.pollingInterval) clearInterval(state.pollingInterval);
+    state.domain = domain;
+    state.domainResult = null;
+    state.sendTestToken = null;
+    state.sendTestSeed = null;
+    state.deliveryResult = null;
+    state.pollingInterval = null;
 
     fetch('/signal-score/from-domain', {
       method: 'POST',
@@ -487,8 +811,17 @@
     .then(function(d){
       btn.disabled = false;
       btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg> Get my Signal Score';
-      if (d.ok) renderResult(d);
-      else renderError(d.error || 'Could not analyze that domain.');
+      if (!d.ok) {
+        renderError(d.error || 'Could not analyze that domain.');
+        return;
+      }
+      state.domainResult = d;
+      repaintPanel();
+      setTimeout(function(){ panel.scrollIntoView({behavior: 'smooth', block: 'center'}); }, 100);
+      // Kick off the send test path in parallel — this is the new
+      // compound experience that fuses the old email tester UX with
+      // the new Domain Signal Score flow.
+      startSendTest();
     })
     .catch(function(){
       btn.disabled = false;

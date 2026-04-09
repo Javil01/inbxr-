@@ -2624,9 +2624,11 @@ def score_subjects():
     return jsonify(result)
 
 
-@app.route("/email-test")
-def email_test():
-    return redirect("/", code=302)
+# NOTE: the /email-test GET route is defined earlier in this file at the
+# inbox_send_test() function. That route serves the standalone send-test
+# page (moved off the homepage in the layer refactor). The old legacy
+# redirect was removed because Flask raises an AssertionError on
+# duplicate endpoint registration.
 
 
 @app.route("/email-test/start", methods=["POST"])
