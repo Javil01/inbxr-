@@ -243,6 +243,16 @@
 }
 #heroResultPanel .res-sendtest__copy-btn:hover { background: #b45309; }
 
+#heroResultPanel .res-sendtest__steps {
+  margin: 10px 0 14px;
+  padding: 0 0 0 22px;
+  font-size: 0.82rem;
+  line-height: 1.65;
+  color: #475569;
+}
+#heroResultPanel .res-sendtest__steps li { margin-bottom: 2px; }
+#heroResultPanel .res-sendtest__steps em { color: #b45309; font-style: normal; font-weight: 700; }
+
 #heroResultPanel .res-sendtest__status {
   display: flex;
   align-items: center;
@@ -252,23 +262,98 @@
   border-radius: 8px;
   font-size: 0.82rem;
   color: #78350f;
-  margin: 8px 0 6px;
+  margin: 10px 0 12px;
 }
-#heroResultPanel .res-sendtest__spinner {
+#heroResultPanel .res-sendtest__status svg { color: #d97706; flex-shrink: 0; }
+#heroResultPanel .res-sendtest__status--waiting { background: #fef3c7; }
+
+#heroResultPanel .res-sendtest__check-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 22px;
+  background: #d97706;
+  color: #ffffff;
+  border: none;
+  border-radius: 999px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  margin-top: 4px;
+}
+#heroResultPanel .res-sendtest__check-btn:hover { background: #b45309; }
+#heroResultPanel .res-sendtest__check-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  background: #92400e;
+}
+#heroResultPanel .res-sendtest__btn-spinner {
+  display: inline-block;
   width: 14px;
   height: 14px;
-  border: 2px solid #fcd34d;
-  border-top-color: #d97706;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: #ffffff;
   border-radius: 50%;
-  animation: sendTestSpin 0.9s linear infinite;
-  flex-shrink: 0;
+  animation: sendTestSpin 0.8s linear infinite;
 }
 @keyframes sendTestSpin { to { transform: rotate(360deg); } }
+
 #heroResultPanel .res-sendtest__note {
   font-size: 0.72rem;
   color: #94a3b8;
-  margin: 6px 0 0;
+  margin: 10px 0 0;
   line-height: 1.5;
+}
+
+/* Fallback card after 3 failed check attempts */
+#heroResultPanel .res-card--fallback {
+  border-left: 4px solid #dc2626;
+  background: linear-gradient(135deg, #fef2f2 0%, #ffffff 40%);
+}
+#heroResultPanel .res-card__label--warn { color: #991b1b; }
+#heroResultPanel .res-fallback__options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 14px 0 10px;
+}
+#heroResultPanel .res-fallback__option {
+  display: block;
+  background: #ffffff;
+  border: 1px solid #fca5a5;
+  border-radius: 10px;
+  padding: 16px 18px;
+  text-decoration: none;
+  transition: all 0.15s;
+}
+#heroResultPanel .res-fallback__option:hover {
+  border-color: #dc2626;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(220,38,38,0.08);
+}
+#heroResultPanel .res-fallback__option-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+#heroResultPanel .res-fallback__option-head svg { color: #dc2626; flex-shrink: 0; }
+#heroResultPanel .res-fallback__option-head strong { font-size: 0.92rem; color: #0c1a3a; }
+#heroResultPanel .res-fallback__option p {
+  font-size: 0.78rem;
+  color: #64748b;
+  line-height: 1.5;
+  margin: 0 0 8px;
+}
+#heroResultPanel .res-fallback__cta {
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: #dc2626;
+}
+
+@media (max-width: 640px) {
+  #heroResultPanel .res-fallback__options { grid-template-columns: 1fr; }
 }
 
 /* Delivery proof card */
@@ -547,12 +632,14 @@
     domain: '',
     domainResult: null,
     sendTestToken: null,
-    pollingInterval: null,
-    pollingStartedAt: null,
+    sendTestSeed: null,
     deliveryResult: null,
+    checkAttempts: 0,
+    lastCheckAt: 0,
+    showFallback: false,
   };
-  var POLL_INTERVAL_MS = 5000;
-  var POLL_TIMEOUT_MS = 3 * 60 * 1000; // 3 minutes
+  var MAX_CHECK_ATTEMPTS = 3;
+  var CHECK_COOLDOWN_MS = 3000;
 
   function classFor(score) {
     if (score >= 75) return 'is-good';
@@ -606,34 +693,86 @@
 
   function renderSendTestPromptCard(seedEmail, token) {
     // The "want more proof?" upgrade card that appears right after
-    // the domain scan. Shows the seed address and waits for the user
-    // to send a test email. Polls for results in the background.
+    // the domain scan. Shows the seed address + token and a manual
+    // "check now" button that the user clicks AFTER they've sent
+    // the email from their own client. User-initiated instead of
+    // auto-polling so they know what's happening.
+    var statusLine = '';
+    var btnLabel = 'I\u2019ve sent the email &mdash; check now';
+    if (state.checkAttempts > 0 && !state.deliveryResult) {
+      statusLine =
+        '<div class="res-sendtest__status res-sendtest__status--waiting">' +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>' +
+          '<span>Checked ' + state.checkAttempts + ' of ' + MAX_CHECK_ATTEMPTS + '. Your email has not arrived yet. Give Gmail another few seconds and try again.</span>' +
+        '</div>';
+      btnLabel = 'Check again (attempt ' + (state.checkAttempts + 1) + ' of ' + MAX_CHECK_ATTEMPTS + ')';
+    }
     return '' +
       '<div class="res-card res-card--sendtest" id="sendTestCard">' +
-        '<span class="res-card__label res-card__label--live">Phase 2 of 2 &middot; Real delivery proof</span>' +
-        '<h3 class="res-card__h">Send a test email now for real server verdicts</h3>' +
-        '<p class="res-card__p">The domain scan above tells you what your DNS looks like. A real test email tells you what <strong>actually happens when you send</strong>. We will read the live headers, score your content, and check authentication from the receiving server.</p>' +
+        '<span class="res-card__label res-card__label--live">Phase 2 of 2 &middot; Real delivery proof (optional)</span>' +
+        '<h3 class="res-card__h">Send a test email for real server verdicts</h3>' +
+        '<p class="res-card__p">The domain scan above reads your DNS. A real test email tells you what <strong>actually happens when you hit send</strong>. We read the live headers, the real SPF/DKIM/DMARC verdicts, content score, and inbox placement.</p>' +
+        '<ol class="res-sendtest__steps">' +
+          '<li>Compose an email from the address you want to test.</li>' +
+          '<li>Put the token anywhere in the subject line.</li>' +
+          '<li>Send it to the address below.</li>' +
+          '<li>Come back here and click <em>Check now</em>.</li>' +
+        '</ol>' +
         '<div class="res-sendtest__box">' +
           '<div class="res-sendtest__field">' +
             '<label>Send to this address</label>' +
             '<div class="res-sendtest__copy-row">' +
               '<code id="sendTestEmail">' + esc(seedEmail) + '</code>' +
-              '<button type="button" class="res-sendtest__copy-btn" onclick="navigator.clipboard&&navigator.clipboard.writeText(\'' + esc(seedEmail) + '\');this.textContent=\'Copied\';setTimeout(function(b){b.textContent=\'Copy\'}.bind(null,this),1200);">Copy</button>' +
+              '<button type="button" class="res-sendtest__copy-btn" data-copy="' + esc(seedEmail) + '">Copy</button>' +
             '</div>' +
           '</div>' +
           '<div class="res-sendtest__field">' +
-            '<label>With this token anywhere in the subject line</label>' +
+            '<label>Put this token anywhere in the subject line</label>' +
             '<div class="res-sendtest__copy-row">' +
               '<code id="sendTestToken">' + esc(token) + '</code>' +
-              '<button type="button" class="res-sendtest__copy-btn" onclick="navigator.clipboard&&navigator.clipboard.writeText(\'' + esc(token) + '\');this.textContent=\'Copied\';setTimeout(function(b){b.textContent=\'Copy\'}.bind(null,this),1200);">Copy</button>' +
+              '<button type="button" class="res-sendtest__copy-btn" data-copy="' + esc(token) + '">Copy</button>' +
             '</div>' +
           '</div>' +
         '</div>' +
-        '<div class="res-sendtest__status" id="sendTestStatus">' +
-          '<div class="res-sendtest__spinner"></div>' +
-          '<span>Waiting for your email. This panel will update automatically when it arrives.</span>' +
+        statusLine +
+        '<button type="button" id="checkNowBtn" class="res-sendtest__check-btn">' +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg>' +
+          btnLabel +
+        '</button>' +
+        '<p class="res-sendtest__note">Average arrival time is 5 to 20 seconds. Your domain score above is complete and yours to keep either way.</p>' +
+      '</div>';
+  }
+
+  function renderFallbackCard() {
+    // Shown after MAX_CHECK_ATTEMPTS failed checks. Reframes the
+    // "email didn't arrive" moment as itself being a signal, and
+    // offers two next-step diagnostics: the multi-provider Inbox
+    // Placement Test (different method, doesn't rely on our single
+    // seed inbox) and the Why Am I in Spam? unified diagnostic.
+    return '' +
+      '<div class="res-card res-card--fallback">' +
+        '<span class="res-card__label res-card__label--warn">Phase 2 &middot; Your email did not arrive</span>' +
+        '<h3 class="res-card__h">That itself is a signal.</h3>' +
+        '<p class="res-card__p">After ' + MAX_CHECK_ATTEMPTS + ' checks your test email has not reached our seed inbox. In our experience that means one of three things: it was filtered before delivery, your sending server delayed it, or the subject line token was dropped by your client. Here is what to try next.</p>' +
+        '<div class="res-fallback__options">' +
+          '<a href="/placement" class="res-fallback__option">' +
+            '<div class="res-fallback__option-head">' +
+              '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 7l-10 7L2 7"/></svg>' +
+              '<strong>Inbox Placement Test</strong>' +
+            '</div>' +
+            '<p>A different method that seeds across 6 providers at once. Tests Gmail, Yahoo, Outlook, iCloud, AOL, and Zoho simultaneously so you see where you land everywhere, not just one inbox.</p>' +
+            '<span class="res-fallback__cta">Run placement test \u2192</span>' +
+          '</a>' +
+          '<a href="/why-am-i-in-spam" class="res-fallback__option">' +
+            '<div class="res-fallback__option-head">' +
+              '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>' +
+              '<strong>Why Am I in Spam?</strong>' +
+            '</div>' +
+            '<p>Paste a subject and body from a recent campaign. Get the top 3 reasons your emails are landing in spam, ranked by severity with specific fixes.</p>' +
+            '<span class="res-fallback__cta">Run diagnostic \u2192</span>' +
+          '</a>' +
         '</div>' +
-        '<p class="res-sendtest__note">Average arrival time is 5 to 20 seconds. You can skip this step if you prefer — your domain score above is yours to keep.</p>' +
+        '<p class="res-sendtest__note">Or <a href="#" id="resetSendTestLink" style="color:var(--brand);font-weight:600;">try sending the email again</a> if you think it was just slow.</p>' +
       '</div>';
   }
 
@@ -695,17 +834,60 @@
     if (state.domainResult) {
       html += renderDomainCard(state.domainResult);
     }
-    if (state.sendTestToken && !state.deliveryResult) {
+    if (state.sendTestToken && !state.deliveryResult && !state.showFallback) {
       html += renderSendTestPromptCard(state.sendTestSeed, state.sendTestToken);
     }
     if (state.deliveryResult) {
       html += renderDeliveryCard(state.deliveryResult);
+    }
+    if (state.showFallback && !state.deliveryResult) {
+      html += renderFallbackCard();
     }
     if (state.domainResult) {
       html += renderFinalCta(state.domain);
     }
     panel.innerHTML = html;
     panel.classList.add('is-visible');
+    attachCardHandlers();
+  }
+
+  // Delegated handlers for card elements that get re-rendered on repaint.
+  function attachCardHandlers() {
+    // Copy buttons
+    var copyBtns = panel.querySelectorAll('.res-sendtest__copy-btn[data-copy]');
+    copyBtns.forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var val = btn.getAttribute('data-copy') || '';
+        if (navigator.clipboard) {
+          navigator.clipboard.writeText(val);
+        }
+        var orig = btn.textContent;
+        btn.textContent = 'Copied';
+        setTimeout(function(){ btn.textContent = orig; }, 1200);
+      });
+    });
+    // Check Now button
+    var checkBtn = document.getElementById('checkNowBtn');
+    if (checkBtn) {
+      checkBtn.addEventListener('click', function(){
+        manualCheckForEmail();
+      });
+    }
+    // Fallback "try again" reset link
+    var resetLink = document.getElementById('resetSendTestLink');
+    if (resetLink) {
+      resetLink.addEventListener('click', function(e){
+        e.preventDefault();
+        state.checkAttempts = 0;
+        state.showFallback = false;
+        state.lastCheckAt = 0;
+        repaintPanel();
+        setTimeout(function(){
+          var card = panel.querySelector('.res-card--sendtest');
+          if (card) card.scrollIntoView({behavior: 'smooth', block: 'center'});
+        }, 100);
+      });
+    }
   }
 
   function renderError(msg) {
@@ -713,9 +895,13 @@
     panel.classList.add('is-visible');
   }
 
-  // ── Send test flow ─────────────────────────────────
+  // ── Send test flow (manual click-to-check) ────────
 
   function startSendTest() {
+    // Generate a token + seed address and render the Phase 2 prompt.
+    // We do NOT auto-poll. The user sends their email from their own
+    // client, then clicks "Check now" in the rendered card. That manual
+    // action is the trigger for manualCheckForEmail().
     fetch('/email-test/start', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
@@ -724,40 +910,50 @@
     .then(function(r){ return r.json(); })
     .then(function(d){
       if (d.error || !d.token || !d.seed_email) {
-        // Silently fail — the domain score is already visible and that is
-        // enough for the user. No error message for this optional upgrade.
+        // Silently fail — the domain score is already visible and that
+        // is enough for the user. No error message for this optional
+        // upgrade flow.
         return;
       }
       state.sendTestToken = d.token;
       state.sendTestSeed = d.seed_email;
-      state.pollingStartedAt = Date.now();
+      state.checkAttempts = 0;
+      state.lastCheckAt = 0;
+      state.showFallback = false;
       repaintPanel();
-      beginPolling();
     })
-    .catch(function(){
-      // Again, silent fail — domain score still visible
-    });
+    .catch(function(){});
   }
 
-  function beginPolling() {
-    if (state.pollingInterval) clearInterval(state.pollingInterval);
-    state.pollingInterval = setInterval(function(){
-      if (Date.now() - state.pollingStartedAt > POLL_TIMEOUT_MS) {
-        clearInterval(state.pollingInterval);
-        state.pollingInterval = null;
-        var statusEl = document.getElementById('sendTestStatus');
-        if (statusEl) {
-          statusEl.innerHTML = '<span style="color:var(--text-3);font-size:0.85rem;">No email received in 3 minutes. You can try again by refreshing, or your domain score above is already complete.</span>';
-        }
-        return;
-      }
-      checkForEmail();
-    }, POLL_INTERVAL_MS);
-    // Also check immediately (first fire after 5s)
-  }
-
-  function checkForEmail() {
+  function manualCheckForEmail() {
     if (!state.sendTestToken) return;
+
+    // Enforce a cooldown between clicks so impatient users don't
+    // hammer the endpoint (and don't burn through their 3 attempts
+    // in the first second).
+    var now = Date.now();
+    if (state.lastCheckAt && (now - state.lastCheckAt) < CHECK_COOLDOWN_MS) {
+      var remaining = Math.ceil((CHECK_COOLDOWN_MS - (now - state.lastCheckAt)) / 1000);
+      var btn = document.getElementById('checkNowBtn');
+      if (btn) {
+        var origText = btn.innerHTML;
+        btn.disabled = true;
+        btn.textContent = 'Wait ' + remaining + 's before checking again\u2026';
+        setTimeout(function(){
+          btn.disabled = false;
+          btn.innerHTML = origText;
+        }, CHECK_COOLDOWN_MS - (now - state.lastCheckAt));
+      }
+      return;
+    }
+    state.lastCheckAt = now;
+
+    var checkBtn = document.getElementById('checkNowBtn');
+    if (checkBtn) {
+      checkBtn.disabled = true;
+      checkBtn.innerHTML = '<span class="res-sendtest__btn-spinner"></span> Checking\u2026';
+    }
+
     fetch('/email-test/check', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
@@ -765,22 +961,47 @@
     })
     .then(function(r){ return r.json(); })
     .then(function(d){
-      if (!d) return;
-      if (d.status === 'not_found') return; // keep polling
-      if (d.error) return;
-      // Any other response shape is our full analysis result
-      state.deliveryResult = d;
-      if (state.pollingInterval) {
-        clearInterval(state.pollingInterval);
-        state.pollingInterval = null;
+      state.checkAttempts += 1;
+
+      if (!d || d.error) {
+        handleCheckNotFound();
+        return;
       }
+
+      if (d.status === 'not_found') {
+        handleCheckNotFound();
+        return;
+      }
+
+      // Any other response shape is the full analysis result
+      state.deliveryResult = d;
       repaintPanel();
       setTimeout(function(){
         var card = panel.querySelector('.res-card--delivery');
         if (card) card.scrollIntoView({behavior: 'smooth', block: 'center'});
       }, 150);
     })
-    .catch(function(){});
+    .catch(function(){
+      handleCheckNotFound();
+    });
+  }
+
+  function handleCheckNotFound() {
+    // After 3 failed checks, swap the send-test card for the fallback
+    // card that recommends the Inbox Placement Test and the Why Am I in
+    // Spam diagnostic. Before that, repaint the send-test card with an
+    // incremented attempt counter and a "try again" button state.
+    if (state.checkAttempts >= MAX_CHECK_ATTEMPTS) {
+      state.showFallback = true;
+    }
+    repaintPanel();
+    // On fallback, scroll to it; otherwise scroll to the status line
+    setTimeout(function(){
+      var target = state.showFallback
+        ? panel.querySelector('.res-card--fallback')
+        : panel.querySelector('.res-sendtest__status');
+      if (target) target.scrollIntoView({behavior: 'smooth', block: 'center'});
+    }, 120);
   }
 
   // ── Submit handler (domain + optional send test) ───
@@ -794,13 +1015,14 @@
     btn.textContent = 'Reading signals...';
 
     // Reset state for a fresh submission
-    if (state.pollingInterval) clearInterval(state.pollingInterval);
     state.domain = domain;
     state.domainResult = null;
     state.sendTestToken = null;
     state.sendTestSeed = null;
     state.deliveryResult = null;
-    state.pollingInterval = null;
+    state.checkAttempts = 0;
+    state.lastCheckAt = 0;
+    state.showFallback = false;
 
     fetch('/signal-score/from-domain', {
       method: 'POST',
