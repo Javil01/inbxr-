@@ -11,7 +11,7 @@
   <meta property="og:type" content="website">
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/static/css/style.css?v=20260408f" />
+  <link rel="stylesheet" href="/static/css/style.css?v=20260409a" />
   {% include 'sections/_head_meta.html' %}
   <!-- Schema.org Organization -->
   <script type="application/ld+json">
@@ -36,20 +36,21 @@
 </head>
 <body class="email-test-page">
 
+{#
+  Homepage sections (single-path, Domain Signal Score focused)
+  ─────────────────────────────────────────────────────────────
+  The Inboxer Send Test, value strip, how-it-works, safe approach,
+  and competitor comparison have been moved off the homepage to
+  protect the single conversion path: type a domain in the hero,
+  get a Signal Score. Those sections are preserved at /email-test
+  and on the dedicated comparison pages.
+#}
 {% include 'sections/header.html' %}
 {% include 'sections/email_test_hero.html' %}
 {% include 'sections/signal_mechanism.html' %}
 {% include 'sections/index_marketing.html' %}
-{% include 'sections/et_value_strip.html' %}
-{% include 'sections/et_how_it_works.html' %}
-{% include 'sections/email_test_tool.html' %}
-{% include 'sections/et_safe_approach.html' %}
-{% include 'sections/et_comparison.html' %}
 {% include 'sections/et_other_tools.html' %}
 {% include 'sections/et_final_cta.html' %}
 {% include 'sections/email_test_footer.html' %}
-
-<script src="/static/js/email_test.js?v={{ range(1000,9999) | random }}"></script>
-<script>if(window.__showFirstUseHint)__showFirstUseHint('email_test','.et-send-form','Tip: Copy the token, paste it at the end of your subject line, then send your email to the test address. Results appear here in seconds.');</script>
 </body>
 </html>

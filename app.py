@@ -506,6 +506,7 @@ def sitemap_xml():
         ('/support', '0.5', 'monthly'),
         ('/seven-signals', '0.8', 'weekly'),
         ('/bulk-domain-check', '0.7', 'monthly'),
+        ('/email-test', '0.8', 'weekly'),
         ('/why-am-i-in-spam', '0.9', 'weekly'),
         ('/inherited-list-first-aid', '0.9', 'weekly'),
         ('/leaderboard', '0.8', 'daily'),
@@ -2279,6 +2280,19 @@ def index():
                            page_title="InbXr · The 7 Inbox Signals · Email Deliverability Intelligence",
                            page_description="The only tool that scores your email list across all 7 inbox signals before you hit send. Including 2 dimensions no other platform measures. Get your free Signal Score in 30 seconds.",
                            canonical_url="https://inbxr.us/")
+
+
+@app.route("/email-test")
+def inbox_send_test():
+    """Standalone Inboxer Send Test page. Moved off the homepage to
+    preserve single-path clarity on '/' (which is layer-focused
+    around the Domain Signal Score)."""
+    return render_template("inbox_send_test.html",
+                           is_admin=_is_admin(),
+                           active_page="email_test",
+                           page_title="Inboxer Send Test · Free Email Deliverability Analyzer · InbXr",
+                           page_description="Send a real email to our test address and get the full deliverability report. SPF, DKIM, DMARC verdicts from the receiving server. Free. No signup.",
+                           canonical_url="https://inbxr.us/email-test")
 
 
 @app.route("/analyzer")

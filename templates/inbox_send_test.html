@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Inboxer Send Test &middot; Free Email Deliverability Analyzer &middot; InbXr</title>
+  <meta name="description" content="Send a real email to our test address and get a full deliverability report. SPF, DKIM, DMARC verdicts from the actual receiving server, content scoring, and a prioritized fix plan. Free. No signup.">
+  <meta property="og:title" content="Inboxer Send Test &middot; InbXr">
+  <meta property="og:description" content="Send a real email and get the full deliverability report. SPF, DKIM, DMARC from the actual receiving server. Free.">
+  <meta property="og:url" content="https://inbxr.us/email-test">
+  <meta property="og:type" content="website">
+  <link rel="canonical" href="https://inbxr.us/email-test">
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/style.css?v=20260409a" />
+  {% include 'sections/_head_meta.html' %}
+</head>
+<body class="email-test-page">
+
+{% include 'sections/header.html' %}
+
+<section style="padding: 60px 24px 32px; background: linear-gradient(180deg, #0c1a3a 0%, #1e293b 100%); color: #fff;">
+  <div style="max-width: 820px; margin: 0 auto; text-align: center;">
+    <span style="display: inline-block; font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; padding: 5px 14px; border-radius: 99px; background: rgba(37,99,235,0.2); color: #bfdbfe; margin-bottom: 18px;">Free &middot; No signup &middot; Real server verdicts</span>
+    <h1 style="font-size: 2.4rem; font-weight: 900; line-height: 1.15; margin: 0 0 14px; letter-spacing: -0.02em;">Inboxer Send Test</h1>
+    <p style="font-size: 1.1rem; color: rgba(255,255,255,0.8); margin: 0 0 20px; line-height: 1.55;">
+      Send a real email to our test address and get the full deliverability report.
+      SPF, DKIM, and DMARC verdicts from the actual receiving server. Content scoring.
+      Blocklist checks. Prioritized fix plan.
+    </p>
+    <p style="font-size: 0.85rem; color: rgba(255,255,255,0.55); margin: 0;">
+      Want a faster read on just your sending domain? <a href="/" style="color: #60a5fa; font-weight: 700; text-decoration: none;">Try the Domain Signal Score &rarr;</a>
+    </p>
+  </div>
+</section>
+
+{% include 'sections/email_test_tool.html' %}
+
+{% include 'sections/et_final_cta.html' %}
+
+{% include 'sections/email_test_footer.html' %}
+
+<script src="/static/js/email_test.js?v={{ range(1000,9999) | random }}"></script>
+<script>if(window.__showFirstUseHint)__showFirstUseHint('email_test','.et-send-form','Tip: Copy the token, paste it at the end of your subject line, then send your email to the test address. Results appear here in seconds.');</script>
+</body>
+</html>
