@@ -291,6 +291,99 @@ def _user_from_ac_token(token):
     return None
 
 
+# AC webhook open events expose hardware / os / browser fields directly
+# (unlike Mailchimp, which requires a secondary /email-activity call).
+# Apple Mail Privacy Protection opens come from Apple infrastructure with
+# a recognizable User-Agent signature. These patterns are the same ones
+# used by the Mailgun high-accuracy path.
+_APPLE_UA_PATTERNS = (
+    "applemail",
+    "mac os",
+    "macos",
+    "iphone",
+    "ipad",
+    "ios",
+)
+
+
+def _looks_apple_mpp(hardware, os_name, browser, user_agent):
+    """Check if an AC open event signature matches Apple Mail Privacy
+    Protection. Returns True if any of the fields contain Apple patterns."""
+    blob = " ".join([
+        (hardware or "").lower(),
+        (os_name or "").lower(),
+        (browser or "").lower(),
+        (user_agent or "").lower(),
+    ])
+    if not blob.strip():
+        return False
+    return any(p in blob for p in _APPLE_UA_PATTERNS)
+
+
+def _handle_ac_open(user_id, integration_id, email, hardware, os_name, browser, user_agent):
+    """Handle an ActiveCampaign open event. Updates last_open_date AND
+    sets likely_mpp_opener when the User-Agent signature matches Apple.
+    This is the high-accuracy path for AC — same confidence level as
+    the Mailgun User-Agent + IP path.
+
+    AC is the only ESP besides Mailgun that exposes UA data on webhook
+    open events. Mailchimp hides it, AWeber doesn't ship it. So AC users
+    who wire up webhooks get high-accuracy MPP detection as the contact
+    opens accumulate over time.
+    """
+    if not email:
+        return
+
+    is_mpp = _looks_apple_mpp(hardware, os_name, browser, user_agent)
+
+    existing = fetchone(
+        "SELECT id, likely_mpp_opener, mpp_detection_method "
+        "FROM contact_segments "
+        "WHERE user_id = ? AND esp_integration_id = ? AND email = ?",
+        (user_id, integration_id, email),
+    )
+
+    if existing:
+        # Once a contact has ever been flagged via UA detection, keep the
+        # flag sticky so a subsequent non-Apple open from the same contact
+        # doesn't undo the classification.
+        new_mpp = 1 if (is_mpp or existing.get("likely_mpp_opener")) else 0
+        execute(
+            """UPDATE contact_segments SET
+                last_open_date = datetime('now'),
+                likely_mpp_opener = ?,
+                mpp_detection_method = CASE
+                    WHEN ? = 1 THEN 'ua_webhook'
+                    ELSE mpp_detection_method
+                END,
+                updated_at = datetime('now')
+               WHERE id = ?""",
+            (new_mpp, 1 if is_mpp else 0, existing["id"]),
+        )
+        if is_mpp and not existing.get("likely_mpp_opener"):
+            logger.info(
+                "[WEBHOOK] AC open flagged as MPP (UA): %s (hw=%s os=%s)",
+                email, hardware, os_name,
+            )
+    else:
+        # First sighting via webhook — create the contact row with the
+        # MPP flag set if UA matches.
+        execute(
+            """INSERT INTO contact_segments
+                (user_id, esp_integration_id, email, last_open_date,
+                 likely_mpp_opener, mpp_detection_method,
+                 created_at, updated_at)
+               VALUES (?, ?, ?, datetime('now'), ?, ?, datetime('now'), datetime('now'))""",
+            (
+                user_id,
+                integration_id,
+                email,
+                1 if is_mpp else 0,
+                "ua_webhook" if is_mpp else None,
+            ),
+        )
+
+
 @webhook_bp.route("/activecampaign/<token>", methods=["GET", "POST"])
 def activecampaign_webhook(token):
     """Handle ActiveCampaign webhook events."""
@@ -326,6 +419,19 @@ def activecampaign_webhook(token):
             _handle_unsubscribe(user_id, integration_id, email)
         elif event_type in ("bounce", "hard_bounce"):
             _handle_cleaned(user_id, integration_id, email)
+        elif event_type == "open":
+            # AC open events carry hardware/os/browser for the client that
+            # rendered the email. This is the high-accuracy MPP detection
+            # path — promotes AC from medium to high confidence when these
+            # fields are present on the event.
+            hardware = request.form.get("hardware", "")
+            os_name = request.form.get("os", "")
+            browser = request.form.get("browser", "")
+            user_agent = request.form.get("user_agent", "")
+            _handle_ac_open(
+                user_id, integration_id, email,
+                hardware, os_name, browser, user_agent,
+            )
         elif event_type == "update":
             _handle_profile_update(user_id, integration_id, email)
         else:

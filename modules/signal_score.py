@@ -116,20 +116,29 @@ def detect_mpp_open(contact, event=None, esp_type=None):
     Detect whether an open event was likely an Apple MPP machine open.
 
     Returns (is_mpp_likely: bool, confidence: str) where confidence is:
-    - "high": Mailgun User-Agent + IP detection
+    - "high": Mailgun User-Agent + IP detection OR AC webhook UA detection
     - "medium": timing heuristic OR iCloud domain fallback
     - "low": iCloud domain only
     - "none": no detection possible
 
-    Per Phase 1 locked decision: hybrid per-ESP.
-    Mailgun gets high-accuracy detection if event data available.
-    Other ESPs fall back to timing + domain heuristic.
+    Hybrid per-ESP model:
+        Mailgun        High via events API (UA + IP)
+        ActiveCampaign High via webhook open events (hardware/os/browser).
+                       Baseline medium via timing heuristic on sync.
+        Mailchimp      Medium via timing heuristic (no UA exposed)
+        AWeber         Medium via timing heuristic
     """
     email = (contact.get('email') or '').lower()
     email_domain = email.split('@')[-1] if '@' in email else ''
     is_apple_domain = email_domain in APPLE_DOMAIN_HEURISTIC
 
-    # Mailgun high-accuracy path
+    # Sticky high-confidence: contact already flagged via webhook UA detection
+    # (set by blueprints/webhook_routes.py _handle_ac_open). Once promoted,
+    # the contact stays high-confidence regardless of esp_type.
+    if contact.get('mpp_detection_method') == 'ua_webhook':
+        return bool(contact.get('likely_mpp_opener')), 'high'
+
+    # Mailgun high-accuracy path (User-Agent + IP on events API)
     if esp_type == 'mailgun' and event:
         user_agent = (event.get('client-info', {}).get('user-agent', '') or '').lower()
         client_ip = event.get('ip', '') or ''
@@ -147,7 +156,25 @@ def detect_mpp_open(contact, event=None, esp_type=None):
             return True, 'low'
         return False, 'high'  # Confident it's NOT MPP
 
-    # Timing heuristic (for Mailchimp/ActiveCampaign/AWeber)
+    # ActiveCampaign webhook open events carry hardware/os/browser fields
+    if esp_type == 'activecampaign' and event:
+        blob = " ".join([
+            (event.get('hardware') or '').lower(),
+            (event.get('os') or '').lower(),
+            (event.get('browser') or '').lower(),
+            (event.get('user_agent') or '').lower(),
+        ])
+        if blob.strip():
+            # Apple patterns
+            apple_patterns = ('applemail', 'mac os', 'macos', 'iphone', 'ipad', 'ios')
+            if any(p in blob for p in apple_patterns):
+                return True, 'high'
+            # UA data was present but didn't match Apple — confident non-MPP
+            if is_apple_domain:
+                return True, 'low'
+            return False, 'high'
+
+    # Timing heuristic (for Mailchimp/ActiveCampaign/AWeber without UA data)
     if event and event.get('send_time') and event.get('open_time'):
         send_dt = _parse_date(event['send_time'])
         open_dt = _parse_date(event['open_time'])

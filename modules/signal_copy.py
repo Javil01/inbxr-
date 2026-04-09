@@ -264,6 +264,15 @@ MPP_ACCURACY_LABELS = {
         'description': 'Full User-Agent + IP range detection. ~90% of real MPP opens detected.',
         'badge_color': 'green',
     },
+    'high_hybrid': {
+        'label': 'High accuracy (webhook-boosted)',
+        'description': (
+            'Baseline timing heuristic plus User-Agent detection via webhook '
+            'open events. Per-contact accuracy reaches ~90% once the contact '
+            'has received a webhook-tracked open.'
+        ),
+        'badge_color': 'green',
+    },
     'medium': {
         'label': 'Medium accuracy',
         'description': 'Timing heuristic + iCloud domain fallback. ~40–60% of real MPP opens detected.',
@@ -281,15 +290,23 @@ MPP_ACCURACY_LABELS = {
     },
 }
 
-# Which ESP gets which accuracy level
+# Which ESP gets which accuracy level.
+#
+# ActiveCampaign is classified as high_hybrid because it starts at medium
+# (timing heuristic on the nightly sync) and upgrades to high per-contact
+# when a webhook open event arrives carrying hardware/os/browser fields.
+# The /webhooks/activecampaign/<token> listener parses those fields and
+# promotes matching contacts to likely_mpp_opener with detection method
+# 'ua_webhook'. Users who wire up the AC webhook get near-Mailgun accuracy
+# without the Mailgun switch.
 ESP_MPP_ACCURACY = {
-    'mailgun': 'high',          # User-Agent + IP available on events API
-    'mailchimp': 'medium',      # Timing heuristic only
-    'activecampaign': 'medium', # Timing heuristic only
-    'aweber': 'medium',         # Timing heuristic only
-    'instantly': 'none',        # No per-contact engagement data
-    'smartlead': 'none',        # No per-contact engagement data
-    'gohighlevel': 'none',      # Limited per-contact data
+    'mailgun': 'high',              # User-Agent + IP via events API
+    'activecampaign': 'high_hybrid',# Timing baseline + webhook UA upgrade
+    'mailchimp': 'medium',          # Timing heuristic only
+    'aweber': 'medium',             # Timing heuristic only
+    'instantly': 'none',            # No per-contact engagement data
+    'smartlead': 'none',            # No per-contact engagement data
+    'gohighlevel': 'none',          # Limited per-contact data
 }
 
 
