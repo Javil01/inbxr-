@@ -457,7 +457,7 @@
     if (!csvInput.files || !csvInput.files[0]) return;
     var file = csvInput.files[0];
     var fd = new FormData();
-    fd.append('file', file);
+    fd.append('csv_file', file);
     panel.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text-3);">Triaging your list...</div>';
     panel.classList.add('is-visible');
 
