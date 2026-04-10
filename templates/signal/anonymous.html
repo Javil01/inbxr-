@@ -306,48 +306,137 @@
     var total = d.total_contacts || d.rows_parsed || 0;
     var skipped = d.rows_skipped || 0;
     var segs = d.segments || {};
+    var meta = d.metadata || {};
+    var scores = d.scores || {};
 
-    var summary;
-    if (grade === 'A' || grade === 'B') {
-      summary = 'Your list is in strong shape across all 7 signals.';
+    // ── Top-level verdict (plain English) ──
+    var verdict;
+    if (grade === 'A') {
+      verdict = 'Your list is healthy. Keep doing what you\u2019re doing and monitor for drift.';
+    } else if (grade === 'B') {
+      verdict = 'Your list is in good shape with minor issues. The fixes below will push you to an A.';
     } else if (grade === 'C') {
-      summary = 'Your list has issues on at least one signal. See the breakdown below.';
+      verdict = 'Your list has real problems that are likely hurting your deliverability right now. Fix the red signals below before your next send.';
     } else {
-      summary = 'Your list has significant problems. Address the red signals before your next send.';
+      verdict = 'Your list is in critical condition. Sending to it as-is risks serious domain reputation damage. Address the issues below immediately.';
     }
 
-    // Build 7-signal bars
-    var signalDefs = [
-      {key: 'bounce_exposure',       label: '01 Bounce Exposure',       max: 25},
-      {key: 'engagement_trajectory', label: '02 Engagement Trajectory', max: 25},
-      {key: 'acquisition_quality',   label: '03 Acquisition Quality',   max: 15},
-      {key: 'domain_reputation',     label: '04 Domain Reputation',     max: 15},
-      {key: 'dormancy_risk',         label: '05 Spam Trap Exposure',    max: 10},
-      {key: 'authentication_standing', label: '06 Authentication Standing', max: 5},
-      {key: 'decay_velocity',        label: '07 Decay Velocity',        max: 5},
-    ];
-    var signalsHtml = signalDefs.map(function(s) {
-      var raw = d.scores && d.scores[s.key] != null ? d.scores[s.key] : null;
-      if (raw === null) return '';
-      var pct = Math.round(raw * 100 / s.max);
-      return '<div class="res-sig"><span class="res-sig-name">' + s.label + '</span><span class="res-sig-val ' + classFor(pct) + '">' + pct + '/100</span></div>';
-    }).join('');
+    // ── Build signal cards with explanations ──
+    function sigCard(label, key, max, explainFn) {
+      var raw = scores[key] != null ? scores[key] : null;
+      var m = meta[key] || {};
+      var isLocked = m.locked === true;
+      var pct = raw !== null ? Math.round(raw * 100 / max) : 0;
 
-    // Segments summary
+      if (isLocked) {
+        return '<div style="padding:16px 18px;background:#f8fafc;border:1px dashed #cbd5e1;border-radius:10px;margin-bottom:10px;opacity:0.7;">' +
+          '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">' +
+            '<strong style="font-size:0.88rem;color:#0c1a3a;">' + label + '</strong>' +
+            '<span style="font-size:0.72rem;font-weight:700;color:#8b5cf6;background:rgba(139,92,246,0.1);padding:2px 8px;border-radius:4px;">PRO</span>' +
+          '</div>' +
+          '<p style="font-size:0.78rem;color:#64748b;margin:0;line-height:1.5;">' +
+            (key === 'engagement_trajectory' ? 'Ghost Opens removed \u2014 see your real engagement rate. Available on Pro.' :
+             key === 'acquisition_quality' ? 'Day-1 cohort analysis \u2014 which acquisition channels are dragging your list down. Available on Pro.' :
+             'Available on Pro.') +
+          '</p></div>';
+      }
+
+      var status = pct >= 75 ? 'good' : pct >= 50 ? 'warn' : 'bad';
+      var statusColor = status === 'good' ? '#16a34a' : status === 'warn' ? '#d97706' : '#dc2626';
+      var statusBg = status === 'good' ? 'rgba(22,163,74,0.06)' : status === 'warn' ? 'rgba(217,119,6,0.06)' : 'rgba(220,38,38,0.06)';
+      var borderColor = status === 'good' ? '#bbf7d0' : status === 'warn' ? '#fde68a' : '#fca5a5';
+      var explanation = explainFn(pct, m, segs);
+
+      return '<div style="padding:16px 18px;background:' + statusBg + ';border:1px solid ' + borderColor + ';border-radius:10px;margin-bottom:10px;">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">' +
+          '<strong style="font-size:0.88rem;color:#0c1a3a;">' + label + '</strong>' +
+          '<span style="font-size:0.88rem;font-weight:800;color:' + statusColor + ';">' + pct + '/100</span>' +
+        '</div>' +
+        '<p style="font-size:0.82rem;color:#334155;margin:0;line-height:1.55;">' + explanation + '</p>' +
+      '</div>';
+    }
+
+    // ── Per-signal explanation functions ──
+    function explainBounce(pct, m) {
+      if (pct >= 90) return 'Low bounce risk. Your list is clean of role addresses, disposable domains, and catch-all traps.';
+      var parts = [];
+      if (m.bounce_rate > 1) parts.push(Math.round(m.bounce_rate) + '% historical bounce rate');
+      if (m.disposable_rate > 0.5) parts.push(Math.round(m.disposable_rate) + '% disposable email addresses');
+      if (m.role_rate > 1) parts.push(Math.round(m.role_rate) + '% role addresses (info@, support@, etc.)');
+      if (m.catch_all_rate > 5) parts.push(Math.round(m.catch_all_rate) + '% catch-all domains (accept everything, bounce later)');
+      if (!parts.length) return 'Some predictive bounce risk detected. Consider running the list through email verification before sending.';
+      return parts.join('. ') + '. <strong>Fix:</strong> Remove these contacts or verify them individually before your next send.';
+    }
+
+    function explainDomainRep(pct, m) {
+      if (pct >= 90) return 'Your sending domain has a clean reputation. No blocklist hits detected.';
+      if (m.blacklisted) return 'Your domain is listed on ' + (m.blacklists_count || 'one or more') + ' blocklist(s). This is actively hurting your inbox placement. <strong>Fix:</strong> Run Sender Check to see which lists and how to delist.';
+      var parts = [];
+      if (m.yahoo_aol_risk === 'high') parts.push('High concentration of Yahoo/AOL recipients \u2014 these providers are strict on reputation');
+      if (m.free_email_rate > 50) parts.push(Math.round(m.free_email_rate) + '% free email addresses (Gmail, Yahoo, etc.) \u2014 higher spam filter scrutiny');
+      if (!parts.length) return 'Some reputation signals are below ideal. Run Sender Check for a detailed breakdown.';
+      return parts.join('. ') + '.';
+    }
+
+    function explainDormancy(pct, m) {
+      if (pct >= 80) return 'Low dormancy risk. Most of your list has recent engagement signals.';
+      var parts = [];
+      if (m.very_old_inactive_count > 0) parts.push(m.very_old_inactive_count.toLocaleString() + ' contacts haven\u2019t engaged in over a year');
+      if (m.old_inactive_count > 0) parts.push(m.old_inactive_count.toLocaleString() + ' contacts haven\u2019t engaged in 6\u201312 months');
+      if (m.risk_level === 'high') parts.push('High risk of spam trap hits from long-dormant addresses');
+      if (!parts.length) return 'Significant dormancy detected. Sending to inactive contacts degrades your sender reputation over time.';
+      return parts.join('. ') + '. <strong>Fix:</strong> Run a re-engagement campaign to the dormant segment. Remove anyone who doesn\u2019t respond within 30 days.';
+    }
+
+    function explainAuth(pct, m) {
+      if (pct >= 90) return 'SPF, DKIM, and DMARC are all passing. Your authentication is solid.';
+      if (!m || m.locked) return 'Authentication data not available for this scan. Run Sender Check for a full auth audit.';
+      var parts = [];
+      if (m.spf && m.spf !== 'pass' && m.spf !== 'valid') parts.push('SPF is ' + m.spf);
+      if (m.dkim && m.dkim !== 'pass' && m.dkim !== 'valid') parts.push('DKIM is ' + m.dkim);
+      if (m.dmarc && m.dmarc !== 'pass' && m.dmarc !== 'valid') parts.push('DMARC is ' + m.dmarc);
+      else if (m.dmarc_policy === 'none') parts.push('DMARC policy is set to p=none (monitoring only \u2014 not enforcing)');
+      if (!parts.length) return 'Authentication is mostly passing but has room for improvement. Run Sender Check for specifics.';
+      return parts.join('. ') + '. <strong>Fix:</strong> Run <a href="/sender" style="color:#2563eb;font-weight:600;">Sender Check</a> for exact DNS records to copy-paste.';
+    }
+
+    function explainDecay(pct, m) {
+      if (pct >= 80) return 'Your list health is stable or improving. No concerning trends.';
+      var dir = d.trajectory_direction || 'unknown';
+      if (dir === 'declining') return 'Your list health is trending downward. Signals are degrading week over week. <strong>Fix:</strong> Identify what changed \u2014 new acquisition source, sending frequency, or content shift.';
+      if (dir === 'unknown') return 'Not enough historical data to calculate a trend. Sign up to track this over time.';
+      return 'Some signal movement detected. Sign up to monitor the trend direction over weeks.';
+    }
+
+    var signalsHtml =
+      sigCard('01 Bounce Exposure', 'bounce_exposure', 25, explainBounce) +
+      sigCard('02 Engagement Trajectory', 'engagement_trajectory', 25, function(){return '';}) +
+      sigCard('03 Acquisition Quality', 'acquisition_quality', 15, function(){return '';}) +
+      sigCard('04 Domain Reputation', 'domain_reputation', 15, explainDomainRep) +
+      sigCard('05 Spam Trap Exposure', 'dormancy_risk', 10, explainDormancy) +
+      sigCard('06 Authentication Standing', 'authentication_standing', 5, explainAuth) +
+      sigCard('07 Decay Velocity', 'decay_velocity', 5, explainDecay);
+
+    // ── Segments bar ──
     var segHtml = '';
     if (segs.total > 0) {
-      segHtml = '<div style="display:flex;flex-wrap:wrap;gap:8px;margin:14px 0;">';
-      if (segs.active) segHtml += '<span style="font-size:0.78rem;font-weight:700;padding:4px 12px;border-radius:999px;background:rgba(22,163,74,0.1);color:#16a34a;">' + segs.active + ' Active</span>';
-      if (segs.warm) segHtml += '<span style="font-size:0.78rem;font-weight:700;padding:4px 12px;border-radius:999px;background:rgba(37,99,235,0.1);color:#2563eb;">' + segs.warm + ' Warm</span>';
-      if (segs.at_risk) segHtml += '<span style="font-size:0.78rem;font-weight:700;padding:4px 12px;border-radius:999px;background:rgba(217,119,6,0.1);color:#d97706;">' + segs.at_risk + ' At Risk</span>';
-      if (segs.dormant) segHtml += '<span style="font-size:0.78rem;font-weight:700;padding:4px 12px;border-radius:999px;background:rgba(220,38,38,0.1);color:#dc2626;">' + segs.dormant + ' Dormant</span>';
-      segHtml += '</div>';
-    }
-
-    // MPP note
-    var mppNote = '';
-    if (d.mpp_accuracy && d.mpp_accuracy !== 'none') {
-      mppNote = '<div style="font-size:0.78rem;color:#7c3aed;background:rgba(139,92,246,0.08);padding:8px 14px;border-radius:8px;margin:10px 0;">Ghost Opens detection active \u00b7 Confidence: ' + escapeHtml(d.mpp_accuracy) + '</div>';
+      var segPill = function(count, label, color, bg) {
+        if (!count) return '';
+        var pct = Math.round(count / segs.total * 100);
+        return '<span style="font-size:0.78rem;font-weight:700;padding:4px 12px;border-radius:999px;background:' + bg + ';color:' + color + ';">' + count.toLocaleString() + ' ' + label + ' (' + pct + '%)</span>';
+      };
+      segHtml = '<div style="display:flex;flex-wrap:wrap;gap:8px;margin:16px 0 8px;">' +
+        segPill(segs.active, 'Active', '#16a34a', 'rgba(22,163,74,0.1)') +
+        segPill(segs.warm, 'Warm', '#2563eb', 'rgba(37,99,235,0.1)') +
+        segPill(segs.at_risk, 'At Risk', '#d97706', 'rgba(217,119,6,0.1)') +
+        segPill(segs.dormant, 'Dormant', '#dc2626', 'rgba(220,38,38,0.1)') +
+      '</div>';
+      // If all dormant, add a big callout
+      if (segs.dormant === segs.total) {
+        segHtml += '<div style="background:#fef2f2;border:1px solid #fca5a5;border-radius:10px;padding:14px 18px;margin:10px 0;font-size:0.85rem;color:#991b1b;line-height:1.55;">' +
+          '<strong>100% of your list is classified as dormant.</strong> This usually means the CSV doesn\u2019t include engagement date columns (last_open_date, last_click_date). Without that data, every contact defaults to dormant. To get an accurate reading, export your list from your ESP with engagement dates included, or connect your ESP directly.' +
+        '</div>';
+      }
     }
 
     panel.innerHTML =
@@ -357,18 +446,17 @@
           '<div class="res-grade">Grade ' + grade + '</div>' +
         '</div>' +
         '<div class="res-summary">' +
-          '<h3>Full 7-Signal Score</h3>' +
-          '<p>' + summary + '</p>' +
-          '<span style="font-size:0.75rem;color:var(--text-3);">' + total + ' contacts parsed' + (skipped > 0 ? ' \u00b7 ' + skipped + ' skipped' : '') + '</span>' +
+          '<h3>Your Signal Score</h3>' +
+          '<p>' + verdict + '</p>' +
+          '<span style="font-size:0.75rem;color:var(--text-3);">' + total.toLocaleString() + ' contacts analyzed' + (skipped > 0 ? ' \u00b7 ' + skipped.toLocaleString() + ' skipped' : '') + '</span>' +
         '</div>' +
       '</div>' +
       segHtml +
-      mppNote +
-      '<div class="res-signals">' + signalsHtml + '</div>' +
+      '<div style="margin-top:16px;">' + signalsHtml + '</div>' +
       '<div class="res-cta">' +
-        '<h4>This is a one-time read. Want continuous monitoring?</h4>' +
-        '<p>Sign up to save this score, track changes over time, get alerts when signals degrade, and connect your ESP for automatic recalculation every 6 hours.</p>' +
-        '<a href="/signup?from=csv-signal-score" class="res-cta-btn">Sign up free to monitor all 7 signals \u2192</a>' +
+        '<h4>This is a one-time snapshot. Your list changes every day.</h4>' +
+        '<p>Sign up to save this score, get alerted when signals degrade, and connect your ESP for automatic recalculation every 6 hours. Free accounts see 5 of 7 signals continuously. Pro unlocks all 7 including Ghost Opens.</p>' +
+        '<a href="/signup?from=csv-signal-score" class="res-cta-btn">Sign up free to start monitoring \u2192</a>' +
       '</div>';
     panel.classList.add('is-visible');
     setTimeout(function(){ panel.scrollIntoView({behavior: 'smooth', block: 'start'}); }, 100);
