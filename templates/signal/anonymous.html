@@ -236,7 +236,7 @@
   </div>
 
   {# ── SECONDARY ACTION: CSV upload for the full 7-signal read ── #}
-  <label for="csvUploadInput" class="sig-anon-csv">
+  <label for="csvUploadInput" class="sig-anon-csv" id="csvUploadArea">
     <div class="sig-anon-csv__icon">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="28" height="28"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
     </div>
@@ -370,7 +370,7 @@
         '<span style="display:inline-block;font-size:0.66rem;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;color:#7c3aed;margin-bottom:10px;">MPP Engagement Analysis</span>' +
         '<h4 style="font-size:1.02rem;font-weight:800;color:#0c1a3a;margin:0 0 6px;line-height:1.3;">Your ESP says 45% open rate. The real number might be 28%.</h4>' +
         '<p style="font-size:0.82rem;color:#475569;margin:0 0 14px;line-height:1.55;">The difference? <strong>Ghost Opens.</strong> Apple Mail Privacy Protection creates fake "opens" that your ESP counts as real engagement. Over 55% of US email users have it enabled. Upload your list and our MPP Engagement Analysis strips them out.</p>' +
-        '<a href="/signal-score" style="background:#8b5cf6;color:#fff;padding:10px 20px;border-radius:999px;font-size:0.82rem;font-weight:700;text-decoration:none;display:inline-block;">What\u2019s your real open rate? \u2192</a>' +
+        '<a href="#csvUploadArea" onclick="document.getElementById(\'csvUploadArea\').scrollIntoView({behavior:\'smooth\',block:\'center\'});document.getElementById(\'csvUploadArea\').style.borderColor=\'#8b5cf6\';setTimeout(function(){document.getElementById(\'csvUploadArea\').style.borderColor=\'\';},2000);return false;" style="background:#8b5cf6;color:#fff;padding:10px 20px;border-radius:999px;font-size:0.82rem;font-weight:700;text-decoration:none;display:inline-block;cursor:pointer;">Upload your list to find out \u2192</a>' +
       '</div>';
 
     panel.innerHTML =
@@ -496,6 +496,16 @@
     input.value = preDomain;
     // Auto-submit on page load if a domain was pre-filled
     setTimeout(function(){ form.dispatchEvent(new Event('submit', {cancelable:true})); }, 300);
+  } else if (window.location.hash === '#csvUploadArea') {
+    // Scroll to CSV upload if linked from Ghost Opens CTA
+    setTimeout(function(){
+      var el = document.getElementById('csvUploadArea');
+      if (el) {
+        el.scrollIntoView({behavior: 'smooth', block: 'center'});
+        el.style.borderColor = '#8b5cf6';
+        setTimeout(function(){ el.style.borderColor = ''; }, 2000);
+      }
+    }, 300);
   } else {
     setTimeout(function(){ input.focus(); }, 50);
   }
