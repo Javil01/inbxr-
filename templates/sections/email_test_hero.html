@@ -87,17 +87,22 @@
 }
 
 /* Inline result card rendered on the homepage after a domain check */
-#heroResultPanel {
+/* Result wrap sits below the hero on white background */
+.hero-result-wrap {
   display: none;
-  background: #fff;
-  color: #0c1a3a;
-  border-radius: 16px;
-  padding: 28px;
-  margin-top: 24px;
-  max-width: 560px;
-  box-shadow: 0 8px 30px rgba(0,0,0,0.18);
+  background: var(--bg-1, #fff);
+  padding: 0 24px 40px;
 }
-#heroResultPanel.is-visible { display: block; animation: fadeInUp 0.4s ease; }
+.hero-result-wrap.is-visible { display: block; }
+.hero-result-wrap__inner {
+  max-width: 680px;
+  margin: 0 auto;
+  padding-top: 40px;
+}
+#heroResultPanel {
+  color: #0c1a3a;
+}
+#heroResultPanel.is-visible { animation: fadeInUp 0.4s ease; }
 @keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 #heroResultPanel .res-hero { display: flex; gap: 18px; align-items: center; margin-bottom: 18px; padding-bottom: 14px; border-bottom: 1px solid #e5e7eb; }
 #heroResultPanel .res-num { font-size: 3.2rem; font-weight: 900; line-height: 1; }
@@ -634,9 +639,13 @@
       </div>
     </div>
 
-    {# Inline result panel. Appears below the hero copy after a domain check #}
-    <div id="heroResultPanel" aria-live="polite"></div>
+  </div>
+</div>
 
+{# Result panel — sits BELOW the hero on white background #}
+<div id="heroResultWrap" class="hero-result-wrap">
+  <div class="hero-result-wrap__inner">
+    <div id="heroResultPanel" aria-live="polite"></div>
   </div>
 </div>
 
@@ -945,6 +954,11 @@
     }
     panel.innerHTML = html;
     panel.classList.add('is-visible');
+    var wrap = document.getElementById('heroResultWrap');
+    if (wrap) {
+      wrap.classList.add('is-visible');
+      setTimeout(function(){ wrap.scrollIntoView({behavior: 'smooth', block: 'start'}); }, 100);
+    }
     attachCardHandlers();
   }
 
@@ -1003,6 +1017,11 @@
   function renderError(msg) {
     panel.innerHTML = '<div class="res-error">' + esc(msg) + '</div>';
     panel.classList.add('is-visible');
+    var wrap = document.getElementById('heroResultWrap');
+    if (wrap) {
+      wrap.classList.add('is-visible');
+      setTimeout(function(){ wrap.scrollIntoView({behavior: 'smooth', block: 'start'}); }, 100);
+    }
   }
 
   // ── Send test flow (manual click-to-check) ────────
