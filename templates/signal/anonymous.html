@@ -300,6 +300,44 @@
     return 'is-bad';
   }
 
+  function renderAuthPills(meta) {
+    if (!meta || !meta.authentication_standing) return '';
+    var a = meta.authentication_standing;
+    function pill(label, status) {
+      var pass = status === 'pass' || status === 'valid';
+      var icon = pass ? '\u2713' : '\u2717';
+      var cls = pass ? 'good' : 'bad';
+      return '<span style="display:inline-flex;align-items:center;gap:4px;font-size:0.72rem;font-weight:700;padding:3px 10px;border-radius:999px;white-space:nowrap;' +
+        (cls === 'good' ? 'background:rgba(22,163,74,0.1);color:#16a34a;' : 'background:rgba(220,38,38,0.1);color:#dc2626;') +
+        '">' + icon + ' ' + label + '</span>';
+    }
+    var dmarcExtra = '';
+    if ((a.dmarc === 'pass' || a.dmarc === 'valid') && a.dmarc_policy === 'none') {
+      dmarcExtra = ' <span style="display:inline-flex;align-items:center;gap:4px;font-size:0.72rem;font-weight:700;padding:3px 10px;border-radius:999px;background:rgba(217,119,6,0.1);color:#d97706;" title="DMARC policy is monitoring only">\u26A0 p=none</span>';
+    }
+    return '<div style="display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 4px;">' + pill('SPF', a.spf) + pill('DKIM', a.dkim) + pill('DMARC', a.dmarc) + dmarcExtra + '</div>';
+  }
+
+  function renderQuickWins(d) {
+    var recs = d.recommendations;
+    if (!recs || !recs.length) return '';
+    var severityOrder = {critical: 0, high: 1, medium: 2, low: 3};
+    recs = recs.slice().sort(function(a, b) {
+      return (severityOrder[a.severity] || 3) - (severityOrder[b.severity] || 3);
+    }).slice(0, 3);
+    var items = recs.map(function(r) {
+      var urgent = r.severity === 'critical' || r.severity === 'high';
+      var sevLabel = urgent ? 'Fix now' : r.severity === 'medium' ? 'Improve' : 'Optional';
+      return '<div style="display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border-radius:8px;border:1px solid ' + (urgent ? '#fca5a5' : '#fde68a') + ';background:' + (urgent ? '#fef2f2' : '#fffbeb') + ';">' +
+        '<span style="flex-shrink:0;font-size:0.65rem;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;padding:2px 8px;border-radius:4px;white-space:nowrap;margin-top:2px;background:' + (urgent ? '#dc2626' : '#d97706') + ';color:#fff;">' + sevLabel + '</span>' +
+        '<div><strong style="display:block;font-size:0.82rem;color:#0c1a3a;margin-bottom:4px;">' + escapeHtml(r.item) + '</strong>' +
+        '<p style="font-size:0.78rem;color:#475569;margin:0;line-height:1.5;">' + escapeHtml(r.recommendation) + '</p></div></div>';
+    }).join('');
+    return '<div style="border-left:4px solid #f59e0b;background:linear-gradient(135deg,#fffbeb 0%,#fff 40%);border-radius:12px;padding:22px 24px;margin:16px 0;">' +
+      '<span style="display:inline-block;font-size:0.66rem;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;color:#d97706;margin-bottom:10px;">Quick wins \u00b7 Fix these before your next send</span>' +
+      '<div style="display:flex;flex-direction:column;gap:10px;">' + items + '</div></div>';
+  }
+
   function renderResult(d) {
     var grade = d.grade || 'F';
     var score = Math.round(d.score || 0);
@@ -307,6 +345,9 @@
       ? Math.round(d.scores.authentication_standing * 100 / 5) : 0;
     var rep = d.scores && d.scores.domain_reputation != null
       ? Math.round(d.scores.domain_reputation * 100 / 15) : 0;
+
+    var authPillsHtml = renderAuthPills(d.metadata);
+    var quickWinsHtml = renderQuickWins(d);
 
     var summary;
     if (grade === 'A' || grade === 'B') {
@@ -347,6 +388,8 @@
         '<div class="res-sig"><span class="res-sig-name">06 Authentication Standing</span><span class="res-sig-val ' + classFor(auth) + '">' + auth + '/100</span></div>' +
         '<div class="res-sig"><span class="res-sig-name">04 Domain Reputation</span><span class="res-sig-val ' + classFor(rep) + '">' + rep + '/100</span></div>' +
       '</div>' +
+      authPillsHtml +
+      quickWinsHtml +
       ghostOpensCard +
       '<div class="res-signals">' + lockedHtml + '</div>' +
       '<div class="res-cta">' +

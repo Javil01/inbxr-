@@ -183,6 +183,8 @@ function renderResults(data) {
   }
 
   $('#senderResults').classList.remove('hidden');
+  var crossLinks = document.getElementById('senderCrossLinks');
+  if (crossLinks) crossLinks.style.display = '';
   $('#senderResults').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 

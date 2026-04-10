@@ -119,6 +119,24 @@
   <section class="sender-section hidden" id="senderIntegrationNudge"></section>
   <section class="sender-section" id="senderSafetyWarning" style="display:none"></section>
 
+  <section class="sender-section" id="senderCrossLinks" style="display:none;">
+    <h2 class="sender-section__title">What to do next</h2>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;">
+      <a href="/signal-score" style="display:block;padding:16px;background:var(--bg-2,#f8fafc);border:1px solid var(--border-1,#e2e8f0);border-radius:10px;text-decoration:none;">
+        <strong style="display:block;font-size:0.88rem;color:var(--text-1);margin-bottom:4px;">Get your full Signal Score</strong>
+        <span style="font-size:0.78rem;color:var(--text-3);line-height:1.5;">Authentication is 1 of 7 signals. Upload a list to see all 7 — including Ghost Opens and bounce exposure.</span>
+      </a>
+      <a href="/" style="display:block;padding:16px;background:var(--bg-2,#f8fafc);border:1px solid var(--border-1,#e2e8f0);border-radius:10px;text-decoration:none;">
+        <strong style="display:block;font-size:0.88rem;color:var(--text-1);margin-bottom:4px;">Send a real test email</strong>
+        <span style="font-size:0.78rem;color:var(--text-3);line-height:1.5;">DNS looks correct? Prove it with a live delivery test. See real server verdicts, not just what your records say.</span>
+      </a>
+      <a href="/why-am-i-in-spam" style="display:block;padding:16px;background:var(--bg-2,#f8fafc);border:1px solid var(--border-1,#e2e8f0);border-radius:10px;text-decoration:none;">
+        <strong style="display:block;font-size:0.88rem;color:var(--text-1);margin-bottom:4px;">Why am I in spam?</strong>
+        <span style="font-size:0.78rem;color:var(--text-3);line-height:1.5;">One diagnostic. Top 3 reasons your emails are landing in spam, ranked and ready to fix.</span>
+      </a>
+    </div>
+  </section>
+
   <div style="text-align:center;padding:12px 0 24px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
     <button type="button" class="run-again-btn" id="recheckBtn" style="display:none">I made changes. Re-check now</button>
     <button type="button" class="run-again-btn" id="runAgainBtn">&#8592; Check another domain</button>
