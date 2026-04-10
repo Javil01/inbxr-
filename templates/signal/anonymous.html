@@ -5,15 +5,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Free Signal Score &middot; The 7 Inbox Signals &middot; InbXr</title>
   <meta name="description" content="Get your free Signal Score in 30 seconds. Type your sending domain and see 2 of 7 inbox signals instantly. No signup. No CSV needed.">
+  {% if og_data and og_data.domain %}
+  <meta property="og:title" content="{{ og_data.domain }} &middot; Grade {{ og_data.grade }} &middot; Signal Score {{ og_data.score }}/100">
+  <meta property="og:description" content="Scored by the InbXr Signal Engine across 7 inbox signals. Check yours free in 30 seconds.">
+  {% else %}
   <meta property="og:title" content="Free Signal Score &middot; InbXr">
   <meta property="og:description" content="Get your free Signal Score in 30 seconds. Type your sending domain and see 2 of 7 inbox signals instantly.">
+  {% endif %}
   <meta property="og:url" content="https://inbxr.us/signal-score">
   <meta property="og:type" content="website">
   <link rel="canonical" href="https://inbxr.us/signal-score">
   <meta name="csrf-token" content="{{ csrf_token() }}">
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/static/css/style.css?v=20260409d" />
+  <link rel="stylesheet" href="/static/css/style.css?v=20260410a" />
   {% include 'sections/_head_meta.html' %}
 </head>
 <body class="email-test-page">
@@ -312,16 +317,20 @@
       summary = "Your domain has significant issues. Your 5 list-side signals almost certainly have more.";
     }
 
-    var lockedSignals = [
-      ['01 Bounce Exposure', 'List required'],
-      ['02 Engagement Trajectory', 'List required'],
-      ['03 Acquisition Quality', 'List required'],
-      ['05 Spam Trap Exposure', 'List required'],
-      ['07 Decay Velocity', 'List required']
-    ];
-    var lockedHtml = lockedSignals.map(function(s){
-      return '<div class="res-sig is-locked"><span class="res-sig-name">' + s[0] + '</span><span class="res-sig-val is-locked">' + s[1] + '</span></div>';
-    }).join('');
+    var lockedHtml =
+      '<div class="res-sig is-locked"><span class="res-sig-name">01 Bounce Exposure</span><span class="res-sig-val is-locked">Predictive bounce risk</span></div>' +
+      '<div class="res-sig is-locked" style="border-left:3px solid #8b5cf6;"><span class="res-sig-name">02 Engagement Trajectory</span><span class="res-sig-val is-locked">Ghost Opens removed</span></div>' +
+      '<div class="res-sig is-locked"><span class="res-sig-name">03 Acquisition Quality</span><span class="res-sig-val is-locked">Not read by any other tool</span></div>' +
+      '<div class="res-sig is-locked"><span class="res-sig-name">05 Spam Trap Exposure</span><span class="res-sig-val is-locked">Probabilistic trap risk</span></div>' +
+      '<div class="res-sig is-locked"><span class="res-sig-name">07 Decay Velocity</span><span class="res-sig-val is-locked">Score trend direction</span></div>';
+
+    var ghostOpensCard =
+      '<div style="border-left:4px solid #8b5cf6;background:linear-gradient(135deg,#faf5ff 0%,#fff 40%);border-radius:12px;padding:22px 24px;margin:16px 0;">' +
+        '<span style="display:inline-block;font-size:0.66rem;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;color:#7c3aed;margin-bottom:10px;">MPP Engagement Analysis</span>' +
+        '<h4 style="font-size:1.02rem;font-weight:800;color:#0c1a3a;margin:0 0 6px;line-height:1.3;">Your ESP says 45% open rate. The real number might be 28%.</h4>' +
+        '<p style="font-size:0.82rem;color:#475569;margin:0 0 14px;line-height:1.55;">The difference? <strong>Ghost Opens.</strong> Apple Mail Privacy Protection creates fake "opens" that your ESP counts as real engagement. Over 55% of US email users have it enabled. Upload your list and our MPP Engagement Analysis strips them out.</p>' +
+        '<a href="/signal-score" style="background:#8b5cf6;color:#fff;padding:10px 20px;border-radius:999px;font-size:0.82rem;font-weight:700;text-decoration:none;display:inline-block;">What\u2019s your real open rate? \u2192</a>' +
+      '</div>';
 
     panel.innerHTML =
       '<div class="res-hero">' +
@@ -338,11 +347,15 @@
         '<div class="res-sig"><span class="res-sig-name">06 Authentication Standing</span><span class="res-sig-val ' + classFor(auth) + '">' + auth + '/100</span></div>' +
         '<div class="res-sig"><span class="res-sig-name">04 Domain Reputation</span><span class="res-sig-val ' + classFor(rep) + '">' + rep + '/100</span></div>' +
       '</div>' +
+      ghostOpensCard +
       '<div class="res-signals">' + lockedHtml + '</div>' +
       '<div class="res-cta">' +
-        '<h4>You just saw 2 of 7 signals.</h4>' +
-        '<p>Sign up free to unlock the other 5 (Bounce Exposure, Engagement Trajectory, Acquisition Quality, Spam Trap Exposure, Decay Velocity) by uploading a CSV or connecting your ESP.</p>' +
+        '<h4>5 more signals are waiting in your list.</h4>' +
+        '<p>Upload a CSV or connect your ESP to unlock all 7 signals \u2014 including Ghost Opens removal, day-1 cohort analysis, and predictive bounce risk.</p>' +
         '<a href="/signup?from=signal-score&domain=' + encodeURIComponent(d.domain) + '" class="res-cta-btn">Sign up free to see all 7 &rarr;</a>' +
+      '</div>' +
+      '<div style="text-align:center;margin-top:16px;">' +
+        '<button type="button" onclick="(function(){var u=\'https://inbxr.us/signal-score?domain=' + encodeURIComponent(d.domain) + '\';navigator.clipboard.writeText(u).then(function(){var s=document.getElementById(\'shareConfirm\');if(s){s.textContent=\'Copied!\';setTimeout(function(){s.textContent=\'Share your Signal Score\';},2000);}});})();" id="shareConfirm" style="background:none;border:1px solid var(--border-1,#cbd5e1);color:var(--text-2,#64748b);padding:8px 18px;border-radius:999px;font-size:0.82rem;font-weight:600;cursor:pointer;font-family:inherit;">Share your Signal Score</button>' +
       '</div>';
     panel.classList.add('is-visible');
     setTimeout(function(){ panel.scrollIntoView({behavior: 'smooth', block: 'center'}); }, 100);

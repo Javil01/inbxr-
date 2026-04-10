@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>All Tools &middot; InbXr Email Deliverability Toolkit</title>
+  <meta name="description" content="Free email deliverability tools. Signal Score, spam diagnostics, copy intelligence, sender authentication, list rescue, inbox placement testing, and more.">
+  <meta property="og:title" content="All Tools &middot; InbXr Email Deliverability Toolkit">
+  <meta property="og:description" content="Free email deliverability tools. Signal Score, spam diagnostics, copy intelligence, sender authentication, list rescue, and more.">
+  <meta property="og:url" content="https://inbxr.us/toolkit">
+  <meta property="og:type" content="website">
+  <link rel="canonical" href="https://inbxr.us/toolkit">
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/style.css?v=20260410a" />
+  {% include 'sections/_head_meta.html' %}
+</head>
+<body class="email-test-page">
+
+{% include 'sections/header.html' %}
+
+<style>
+.tk-wrap { max-width: 1080px; margin: 0 auto; padding: 60px 24px 80px; }
+.tk-eyebrow {
+  display: inline-block; font-size: 0.72rem; font-weight: 800;
+  text-transform: uppercase; letter-spacing: 0.1em;
+  padding: 5px 14px; border-radius: 99px;
+  background: rgba(37,99,235,0.08); color: var(--brand, #2563eb);
+  margin-bottom: 18px;
+}
+.tk-h1 {
+  font-size: 2.2rem; font-weight: 900; line-height: 1.15;
+  color: var(--text-1); margin: 0 0 14px; letter-spacing: -0.025em;
+}
+.tk-sub {
+  font-size: 1.05rem; color: var(--text-2); margin: 0 0 40px;
+  line-height: 1.55; max-width: 640px;
+}
+.tk-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+}
+.tk-card {
+  display: block; background: #fff; border: 1px solid var(--border-1, #e2e8f0);
+  border-radius: 12px; padding: 24px; text-decoration: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.tk-card:hover {
+  border-color: var(--brand, #2563eb);
+  box-shadow: 0 4px 16px rgba(37,99,235,0.1);
+}
+.tk-card__icon {
+  width: 36px; height: 36px; border-radius: 10px;
+  background: rgba(37,99,235,0.08); display: flex;
+  align-items: center; justify-content: center; margin-bottom: 14px;
+  color: var(--brand, #2563eb);
+}
+.tk-card__title {
+  font-size: 1rem; font-weight: 700; color: var(--text-1);
+  margin: 0 0 6px;
+}
+.tk-card__desc {
+  font-size: 0.85rem; color: var(--text-2); line-height: 1.55; margin: 0;
+}
+.tk-card__tag {
+  display: inline-block; font-size: 0.68rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.06em;
+  padding: 2px 8px; border-radius: 4px; margin-top: 10px;
+}
+.tk-card__tag--free { background: rgba(22,163,74,0.1); color: #16a34a; }
+.tk-card__tag--flagship { background: rgba(37,99,235,0.1); color: #2563eb; }
+@media (max-width: 680px) {
+  .tk-h1 { font-size: 1.6rem; }
+  .tk-grid { grid-template-columns: 1fr; }
+}
+</style>
+
+<main class="tk-wrap">
+  <span class="tk-eyebrow">InbXr Toolkit</span>
+  <h1 class="tk-h1">Every tool in one place.</h1>
+  <p class="tk-sub">All tools are free to use. No signup required for your first checks. Pro and Agency tiers unlock higher limits, automation, and ESP integrations.</p>
+
+  <div class="tk-grid">
+
+    <a href="/signal-score" class="tk-card">
+      <div class="tk-card__icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="20" height="20"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+      </div>
+      <h3 class="tk-card__title">Signal Score</h3>
+      <p class="tk-card__desc">All 7 inbox signals scored, tracked, and acted on. The single best predictor of your next campaign's performance.</p>
+      <span class="tk-card__tag tk-card__tag--flagship">Flagship</span>
+    </a>
+
+    <a href="/why-am-i-in-spam" class="tk-card">
+      <div class="tk-card__icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="20" height="20"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      </div>
+      <h3 class="tk-card__title">Why Am I in Spam?</h3>
+      <p class="tk-card__desc">One diagnostic. Top 3 reasons your emails are landing in spam, ranked and ready to fix.</p>
+      <span class="tk-card__tag tk-card__tag--free">Free</span>
+    </a>
+
+    <a href="/analyzer" class="tk-card">
+      <div class="tk-card__icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="20" height="20"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+      </div>
+      <h3 class="tk-card__title">Copy Intelligence</h3>
+      <p class="tk-card__desc">100-point copy score, spam risk, readability, framework detection, and AI rewrites. No sending required.</p>
+      <span class="tk-card__tag tk-card__tag--free">Free</span>
+    </a>
+
+    <a href="/inherited-list-first-aid" class="tk-card">
+      <div class="tk-card__icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="20" height="20"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      </div>
+      <h3 class="tk-card__title">List Rescue</h3>
+      <p class="tk-card__desc">Upload any list. We triage it: Remove, Re-engage, or Keep, with reason codes for every contact.</p>
+      <span class="tk-card__tag tk-card__tag--free">Free</span>
+    </a>
+
+    <a href="/sender" class="tk-card">
+      <div class="tk-card__icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="20" height="20"><path d="M9 12l2 2 4-4"/><path d="M12 2a10 10 0 100 20 10 10 0 000-20z"/></svg>
+      </div>
+      <h3 class="tk-card__title">Sender Check</h3>
+      <p class="tk-card__desc">6 auth protocols, 110 blocklists, A-F grade, and copy-paste DNS fix records.</p>
+      <span class="tk-card__tag tk-card__tag--free">Free</span>
+    </a>
+
+    <a href="/email-test" class="tk-card">
+      <div class="tk-card__icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="20" height="20"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+      </div>
+      <h3 class="tk-card__title">Inboxer Send Test</h3>
+      <p class="tk-card__desc">Send a real email to our test address and get a full deliverability report with header analysis.</p>
+      <span class="tk-card__tag tk-card__tag--free">Free</span>
+    </a>
+
+    <a href="/placement" class="tk-card">
+      <div class="tk-card__icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="20" height="20"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+      </div>
+      <h3 class="tk-card__title">Placement Test</h3>
+      <p class="tk-card__desc">Predict whether your email will land in Inbox, Promotions, or Spam across major providers.</p>
+      <span class="tk-card__tag tk-card__tag--free">Free</span>
+    </a>
+
+    <a href="/subject-scorer" class="tk-card">
+      <div class="tk-card__icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="20" height="20"><path d="M4 7V4h16v3"/><path d="M9 20h6"/><path d="M12 4v16"/></svg>
+      </div>
+      <h3 class="tk-card__title">Subject Intelligence</h3>
+      <p class="tk-card__desc">Score your subject line for open rate potential, spam triggers, and emotional resonance.</p>
+      <span class="tk-card__tag tk-card__tag--free">Free</span>
+    </a>
+
+    <a href="/email-verifier" class="tk-card">
+      <div class="tk-card__icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="20" height="20"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22 6 12 13 2 6"/></svg>
+      </div>
+      <h3 class="tk-card__title">Signal Verifier</h3>
+      <p class="tk-card__desc">Validate individual email addresses with MX check, disposable detection, and deliverability prediction.</p>
+      <span class="tk-card__tag tk-card__tag--free">Free</span>
+    </a>
+
+    <a href="/blacklist-monitor" class="tk-card">
+      <div class="tk-card__icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="20" height="20"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      </div>
+      <h3 class="tk-card__title">Reputation Watch</h3>
+      <p class="tk-card__desc">Monitor your domain and IP across 110+ blocklists. Get alerted before your reputation drops.</p>
+      <span class="tk-card__tag tk-card__tag--free">Free</span>
+    </a>
+
+    <a href="/header-analyzer" class="tk-card">
+      <div class="tk-card__icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="20" height="20"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      </div>
+      <h3 class="tk-card__title">Header Analyzer</h3>
+      <p class="tk-card__desc">Paste raw email headers and get a human-readable breakdown of routing, authentication, and delays.</p>
+      <span class="tk-card__tag tk-card__tag--free">Free</span>
+    </a>
+
+    <a href="/frameworks" class="tk-card">
+      <div class="tk-card__icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="20" height="20"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      </div>
+      <h3 class="tk-card__title">Framework Lab</h3>
+      <p class="tk-card__desc">16 proven copywriting frameworks with examples. Detect which framework an email uses, or rewrite into a new one.</p>
+      <span class="tk-card__tag tk-card__tag--free">Free</span>
+    </a>
+
+    <a href="/bimi" class="tk-card">
+      <div class="tk-card__icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="20" height="20"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="12" cy="12" r="4"/></svg>
+      </div>
+      <h3 class="tk-card__title">BIMI Checker</h3>
+      <p class="tk-card__desc">Check if your domain has a BIMI record and preview how your logo appears in supporting inboxes.</p>
+      <span class="tk-card__tag tk-card__tag--free">Free</span>
+    </a>
+
+    <a href="/bulk-domain-check" class="tk-card">
+      <div class="tk-card__icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="20" height="20"><path d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9"/></svg>
+      </div>
+      <h3 class="tk-card__title">Domain Signal Check</h3>
+      <p class="tk-card__desc">Batch-check multiple domains at once. Get auth standing and reputation scores for your entire portfolio.</p>
+      <span class="tk-card__tag tk-card__tag--free">Free</span>
+    </a>
+
+  </div>
+</main>
+
+{% include 'sections/email_test_footer.html' %}
+</body>
+</html>

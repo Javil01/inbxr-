@@ -596,7 +596,8 @@ def sitemap_xml():
         ('/email-test', '0.8', 'weekly'),
         ('/why-am-i-in-spam', '0.9', 'weekly'),
         ('/inherited-list-first-aid', '0.9', 'weekly'),
-        ('/leaderboard', '0.8', 'daily'),
+        # ('/leaderboard', '0.8', 'daily'),  # hidden while domain count is low
+        ('/toolkit', '0.8', 'weekly'),
         ('/badge', '0.7', 'monthly'),
         ('/appsumo', '0.9', 'weekly'),
         ('/insights/annual-report', '0.8', 'weekly'),

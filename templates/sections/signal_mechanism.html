@@ -35,8 +35,8 @@
       <div class="signal-pill signal-pill--new">
         <span class="signal-pill__num">02</span>
         <span class="signal-pill__name">Engagement Trajectory</span>
-        <span class="signal-pill__note">MPP-adjusted per ESP</span>
-        <span class="signal-pill__badge">Detection accuracy varies</span>
+        <span class="signal-pill__note">Ghost Opens removed &middot; Real engagement only</span>
+        <span class="signal-pill__badge">4-tier detection: UA, Apple IP, timing, domain fallback</span>
       </div>
       <div class="signal-pill signal-pill--new">
         <span class="signal-pill__num">03</span>
@@ -66,7 +66,25 @@
       </div>
     </div>
 
-    {# Run-yours link below the widget/pills #}
+    {# Ghost Opens mini-explainer — the jaw-drop visual #}
+    <div class="ghost-opens-card">
+      <span class="ghost-opens-card__eyebrow">Protect Your Campaign From Ghost Opens</span>
+      <div class="ghost-opens-card__compare">
+        <div class="ghost-opens-card__row">
+          <span class="ghost-opens-card__label">Your ESP says:</span>
+          <span class="ghost-opens-card__val ghost-opens-card__val--esp">45% open rate</span>
+        </div>
+        <div class="ghost-opens-card__row">
+          <span class="ghost-opens-card__label">Reality:</span>
+          <span class="ghost-opens-card__val">28% real opens</span>
+          <span class="ghost-opens-card__val ghost-opens-card__val--ghost">+ 17% Ghost Opens</span>
+        </div>
+      </div>
+      <p class="ghost-opens-card__p">Ghost Opens are fake reads created by Apple Mail Privacy Protection. Over 55% of US email users have it enabled. Your ESP counts them. We don't.</p>
+      <a href="/signal-score" class="ghost-opens-card__cta">What's your real open rate? &rarr;</a>
+    </div>
+
+    {# Run-yours link below #}
     <p style="text-align:center;margin-top:20px;font-size:0.95rem;">
       <a href="/signal-score" style="color:var(--brand);font-weight:700;text-decoration:none;">Run yours in 60 seconds &rarr;</a>
     </p>
@@ -228,8 +246,77 @@
   color: var(--text-2);
 }
 
+/* ── Ghost Opens explainer card ── */
+.ghost-opens-card {
+  max-width: 600px;
+  margin: 40px auto 0;
+  background: linear-gradient(135deg, #0c1a3a 0%, #1e293b 100%);
+  border-radius: 16px;
+  padding: 32px;
+  text-align: left;
+  color: #fff;
+}
+.ghost-opens-card__eyebrow {
+  display: inline-block;
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #c4b5fd;
+  margin-bottom: 20px;
+}
+.ghost-opens-card__compare {
+  margin-bottom: 20px;
+}
+.ghost-opens-card__row {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+.ghost-opens-card__label {
+  font-size: 0.85rem;
+  color: rgba(255,255,255,0.6);
+  min-width: 100px;
+}
+.ghost-opens-card__val {
+  font-size: 1.3rem;
+  font-weight: 900;
+  color: #fff;
+}
+.ghost-opens-card__val--esp {
+  color: #4ade80;
+  text-decoration: line-through;
+  text-decoration-color: rgba(255,255,255,0.3);
+}
+.ghost-opens-card__val--ghost {
+  font-size: 1.1rem;
+  color: #c084fc;
+  font-weight: 700;
+}
+.ghost-opens-card__p {
+  font-size: 0.88rem;
+  color: rgba(255,255,255,0.7);
+  line-height: 1.6;
+  margin: 0 0 20px;
+}
+.ghost-opens-card__cta {
+  display: inline-block;
+  background: #8b5cf6;
+  color: #fff;
+  padding: 12px 24px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.92rem;
+  text-decoration: none;
+}
+.ghost-opens-card__cta:hover { background: #7c3aed; }
+
 @media (max-width: 720px) {
   .signal-mech__h2 { font-size: 1.6rem; }
   .signal-vs__h2 { font-size: 1.3rem; }
+  .ghost-opens-card { padding: 24px 20px; }
+  .ghost-opens-card__val { font-size: 1.1rem; }
 }
 </style>

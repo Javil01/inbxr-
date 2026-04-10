@@ -18,7 +18,7 @@ All routes are indexable and designed to rank for positioning keywords.
 
 import logging
 
-from flask import Blueprint, render_template, jsonify, request
+from flask import Blueprint, render_template, jsonify, request, redirect
 
 from modules.database import fetchone, fetchall
 
@@ -696,7 +696,7 @@ def inherited_list_first_aid_page():
     return render_template(
         "public/inherited_list_first_aid.html",
         allow_index=True,
-        title="Inherited List First Aid · Free CSV Triage · InbXr",
+        title="List Rescue · Free CSV Triage · InbXr",
         meta_description=(
             "Inherited a list and don't know what's in it? Upload your CSV and "
             "InbXr classifies every contact into Remove, Re-engage, or Keep "
@@ -948,38 +948,23 @@ def annual_report_page():
 
 @public_signal_bp.route("/leaderboard")
 def leaderboard_page():
-    """Render the public leaderboard. Supports ?grade=A|B|C|D|F for
-    filtering and ?focus=<domain> to highlight a specific row the
-    visitor came from (e.g. after running their own scan)."""
-    from modules.leaderboard import get_top_domains, get_leaderboard_stats, get_domain_rank
+    """Leaderboard hidden while domain count is low. Redirect to homepage.
+    Backend data collection continues in modules/leaderboard.py."""
+    return redirect("/", code=302)
 
-    grade_filter = (request.args.get("grade") or "").strip().upper()
-    if grade_filter not in ("A", "B", "C", "D", "F"):
-        grade_filter = None
 
-    focus_domain = (request.args.get("focus") or "").strip().lower()
+# ── Full toolkit page ─────────────────────────────────────
+#
+# All 13+ tools on one page. The nav dropdown shows the top 5;
+# this page is linked as "All Tools →" from the dropdown.
 
-    top = get_top_domains(limit=50, grade_filter=grade_filter)
-    stats = get_leaderboard_stats()
-
-    focus_rank = None
-    if focus_domain:
-        focus_rank = get_domain_rank(focus_domain)
-
+@public_signal_bp.route("/toolkit")
+def toolkit_page():
+    """Render the full toolkit grid — all tools in one place."""
     return render_template(
-        "public/leaderboard.html",
+        "public/toolkit.html",
         allow_index=True,
-        title="Email Deliverability Leaderboard · Top Scored Domains · InbXr",
-        meta_description=(
-            "See the top-scoring domains on InbXr's Signal Engine, ranked by "
-            "authentication, reputation, and DNS health. Updated in real time "
-            "from live scans. Add your own domain in 30 seconds."
-        ),
-        top_domains=top,
-        stats=stats,
-        grade_filter=grade_filter,
-        focus_domain=focus_domain,
-        focus_rank=focus_rank,
+        active_page="toolkit",
     )
 
 

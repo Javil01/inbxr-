@@ -9,16 +9,8 @@
         <p class="sender-hero__sub" style="font-size: 1.05rem; font-weight: 600; color: #fff; margin-bottom: 12px;">Your email list has a Signal Score. You've never seen yours.</p>
         <p class="sender-hero__sub">It's the single best predictor of your next campaign's performance. We cover the 7 hidden factors about your list that bounce rate and open rate can't see. Including two that no other platform measures.</p>
 
-        <div class="hero-replaces">
-          <span class="hero-replaces__label">Replaces 5 tools on your deliverability stack:</span>
-          <div class="hero-replaces__list">
-            <a href="/zerobounce-alternative" class="hero-replaces__tool">ZeroBounce</a>
-            <a href="/mail-tester-alternative" class="hero-replaces__tool">Mail-Tester</a>
-            <a href="/mxtoolbox-alternative" class="hero-replaces__tool">MXToolbox</a>
-            <a href="/glockapps-alternative" class="hero-replaces__tool">GlockApps</a>
-            <a href="/warmy-alternative" class="hero-replaces__tool">Warmy</a>
-          </div>
-        </div>
+        {# "Replaces 5 tools" strip removed from hero — comparison pages
+           still exist at their URLs for SEO, just not front-and-center. #}
 
         <form id="heroDomainForm" class="hero-domain-form" autocomplete="off">
           <input type="text" id="heroDomainInput" name="domain" placeholder="yourcompany.com" required aria-label="Your sending domain" />
@@ -30,13 +22,8 @@
         <p class="hero-assurance">Your score appears right here in 30 seconds. No email required.</p>
         <p class="hero-price-anchor">Free &middot; No signup &middot; No CSV needed</p>
 
-        {% if trust_stats and trust_stats.total_domains > 0 %}
-        <p class="hero-trust-bar">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12" style="flex-shrink:0;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-          <span><strong>{{ '{:,}'.format(trust_stats.total_domains) }}</strong> domains scored by the Signal Engine &middot; updated live</span>
-          <a href="/leaderboard">See leaderboard &rarr;</a>
-        </p>
-        {% endif %}
+        {# Leaderboard trust bar removed — low domain count was damaging credibility.
+           Backend data collection continues; will restore when numbers are meaningful. #}
 
       </div>
 
@@ -823,9 +810,28 @@
   function renderFinalCta(domain) {
     return '' +
       '<div class="res-cta">' +
-        '<h4>You just saw the domain side AND the live delivery side.</h4>' +
-        '<p>That is 2 independent data sources: DNS-side signals (auth, reputation) and real-world delivery proof (server verdicts, content, placement). The other 5 signals (Bounce Exposure, Engagement Trajectory, Acquisition Quality, Spam Trap Exposure, Decay Velocity) need your list. Sign up free to unlock them.</p>' +
+        '<h4>5 more signals are waiting in your list.</h4>' +
+        '<div class="res-signals" style="text-align:left;margin:14px 0;">' +
+          '<div class="res-sig is-locked"><span class="res-sig-name">01 Bounce Exposure</span><span class="res-sig-val is-locked">Predictive bounce risk</span></div>' +
+          '<div class="res-sig is-locked" style="border-left:3px solid #8b5cf6;"><span class="res-sig-name">02 Engagement Trajectory</span><span class="res-sig-val is-locked">Ghost Opens removed</span></div>' +
+          '<div class="res-sig is-locked"><span class="res-sig-name">03 Acquisition Quality</span><span class="res-sig-val is-locked">Not read by any other tool</span></div>' +
+          '<div class="res-sig is-locked"><span class="res-sig-name">05 Spam Trap Exposure</span><span class="res-sig-val is-locked">Probabilistic trap risk</span></div>' +
+          '<div class="res-sig is-locked"><span class="res-sig-name">07 Decay Velocity</span><span class="res-sig-val is-locked">Score trend direction</span></div>' +
+        '</div>' +
         '<a href="/signup?from=signal-score&domain=' + encodeURIComponent(domain) + '" class="res-cta-btn">Sign up free to see all 7 signals &rarr;</a>' +
+      '</div>' +
+      '<div style="text-align:center;margin-top:12px;">' +
+        '<button type="button" class="hero-share-btn" id="heroShareBtn" style="background:none;border:1px solid rgba(255,255,255,0.2);color:rgba(255,255,255,0.7);padding:8px 18px;border-radius:999px;font-size:0.82rem;font-weight:600;cursor:pointer;font-family:inherit;">Share your Signal Score</button>' +
+      '</div>';
+  }
+
+  function renderGhostOpensCard() {
+    return '' +
+      '<div class="res-card" style="border-left:4px solid #8b5cf6;background:linear-gradient(135deg,#faf5ff 0%,#fff 40%);">' +
+        '<span class="res-card__label" style="color:#7c3aed;">MPP Engagement Analysis</span>' +
+        '<h3 class="res-card__h">Your ESP says 45% open rate. The real number might be 28%.</h3>' +
+        '<p class="res-card__p">The difference? <strong>Ghost Opens.</strong> Apple Mail Privacy Protection creates fake "opens" that your ESP counts as real engagement. Over 55% of US email users have it enabled. Upload your list and our MPP Engagement Analysis strips them out \u2014 so you see the number that actually matters.</p>' +
+        '<a href="/signal-score" class="res-cta-btn" style="background:#8b5cf6;font-size:0.82rem;padding:10px 20px;display:inline-block;margin-top:10px;text-decoration:none;color:#fff;border-radius:999px;font-weight:700;">What\u2019s your real open rate? \u2192</a>' +
       '</div>';
   }
 
@@ -833,6 +839,7 @@
     var html = '';
     if (state.domainResult) {
       html += renderDomainCard(state.domainResult);
+      html += renderGhostOpensCard();
     }
     if (state.sendTestToken && !state.deliveryResult && !state.showFallback) {
       html += renderSendTestPromptCard(state.sendTestSeed, state.sendTestToken);
@@ -871,6 +878,19 @@
     if (checkBtn) {
       checkBtn.addEventListener('click', function(){
         manualCheckForEmail();
+      });
+    }
+    // Share button
+    var shareBtn = document.getElementById('heroShareBtn');
+    if (shareBtn && state.domain) {
+      shareBtn.addEventListener('click', function(){
+        var url = 'https://inbxr.us/signal-score?domain=' + encodeURIComponent(state.domain);
+        if (navigator.clipboard) {
+          navigator.clipboard.writeText(url).then(function(){
+            shareBtn.textContent = 'Copied!';
+            setTimeout(function(){ shareBtn.textContent = 'Share your Signal Score'; }, 2000);
+          });
+        }
       });
     }
     // Fallback "try again" reset link

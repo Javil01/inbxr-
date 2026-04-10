@@ -121,11 +121,26 @@ def signal_score_dashboard():
     # for the full 7-signal read. No narrow auth-card wrapper, no wall
     # of educational copy before the first action.
     if not user:
+        # If ?domain= is present, look up cached score for OG meta tags
+        domain_hint = (request.args.get("domain") or "").strip().lower()
+        og_data = {}
+        if domain_hint:
+            cached = fetchone(
+                "SELECT total_score, grade FROM domain_leaderboard WHERE domain = ?",
+                (domain_hint,),
+            )
+            if cached:
+                og_data = {
+                    "domain": domain_hint,
+                    "score": cached["total_score"],
+                    "grade": cached["grade"],
+                }
         return render_template(
             "signal/anonymous.html",
             active_page="signal_score",
             allow_index=True,
             title="Free Signal Score — The 7 Inbox Signals",
+            og_data=og_data,
         )
 
     user_id = user["id"]

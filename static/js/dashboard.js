@@ -1016,34 +1016,34 @@ function showWelcomeModal() {
       '<button class="onboard-close" id="obWelcomeClose">&times;</button>' +
       '<div class="onboard-header">' +
         '<svg viewBox="0 0 24 24" fill="none" stroke="#15c182" stroke-width="2" width="44" height="44"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>' +
-        '<h2>Welcome to InbXr!</h2>' +
-        '<p>Your email deliverability command center. Here\'s how to get the most out of it:</p>' +
+        '<h2>Welcome. Let\u2019s get your Signal Score.</h2>' +
+        '<p>You saw 2 of 7 signals on your domain. Upload a CSV or connect your ESP to unlock all 7 \u2014 including Ghost Opens removal.</p>' +
       '</div>' +
       '<div class="onboard-steps">' +
         '<div class="onboard-step onboard-step--active">' +
           '<span class="onboard-step__num">1</span>' +
           '<div class="onboard-step__body">' +
-            '<h3>Run an Email Test</h3>' +
-            '<p>Send a real email and get instant SPF, DKIM, DMARC, spam risk, and content analysis.</p>' +
+            '<h3>Get Your Full Signal Score</h3>' +
+            '<p>Upload a CSV or connect your ESP. See all 7 signals \u2014 including your real engagement rate with Ghost Opens removed.</p>' +
           '</div>' +
         '</div>' +
         '<div class="onboard-step">' +
           '<span class="onboard-step__num">2</span>' +
           '<div class="onboard-step__body">' +
-            '<h3>Check Your Domain</h3>' +
-            '<p>Verify your authentication setup and get an A-F sender health grade with fix instructions.</p>' +
+            '<h3>Fix What\u2019s Red</h3>' +
+            '<p>Each signal comes with specific, actionable recommendations. Fix the failures before your next send.</p>' +
           '</div>' +
         '</div>' +
         '<div class="onboard-step">' +
           '<span class="onboard-step__num">3</span>' +
           '<div class="onboard-step__body">' +
-            '<h3>Set Up Monitoring</h3>' +
-            '<p>Get automated alerts when you land on a blocklist or your DNS auth records change.</p>' +
+            '<h3>Monitor Continuously</h3>' +
+            '<p>Set up alerts so you know the moment a signal degrades \u2014 before it affects your campaigns.</p>' +
           '</div>' +
         '</div>' +
       '</div>' +
       '<div class="onboard-footer">' +
-        '<a href="/" class="ob-welcome__cta" id="obWelcomeStart">Start Email Test &rarr;</a>' +
+        '<a href="/signal-score" class="ob-welcome__cta" id="obWelcomeStart">Get My Signal Score &rarr;</a>' +
         '<button class="onboard-skip" id="obWelcomeSkip">I\'ll explore on my own</button>' +
       '</div>' +
     '</div>';

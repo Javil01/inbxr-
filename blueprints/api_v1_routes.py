@@ -201,35 +201,8 @@ def api_my_signal_score():
 @api_v1_bp.route("/leaderboard")
 @api_key_required
 def api_leaderboard():
-    """Return the top 100 public leaderboard domains. Anonymized
-    aggregate data. Useful for external dashboards showing 'how
-    does my domain compare'."""
-    from modules.leaderboard import get_top_domains, get_leaderboard_stats
-
-    limit = min(int(request.args.get("limit", 100)), 500)
-    grade = (request.args.get("grade") or "").strip().upper() or None
-
-    top = get_top_domains(limit=limit, grade_filter=grade)
-    stats = get_leaderboard_stats()
-
-    return jsonify({
-        "ok": True,
-        "count": len(top),
-        "stats": stats,
-        "leaderboard": [
-            {
-                "rank": i + 1,
-                "domain": r["domain"],
-                "total_score": r["total_score"],
-                "grade": r["grade"],
-                "auth_score": r["auth_score"],
-                "rep_score": r["rep_score"],
-                "scan_count": r["scan_count"],
-                "last_scanned_at": r["last_scanned_at"],
-            }
-            for i, r in enumerate(top)
-        ],
-    })
+    """Leaderboard API hidden while domain count is low."""
+    return jsonify({"ok": False, "error": "Leaderboard temporarily unavailable."}), 503
 
 
 # ── CSV triage ──────────────────────────────────────────
