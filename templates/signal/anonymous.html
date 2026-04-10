@@ -300,6 +300,80 @@
     return 'is-bad';
   }
 
+  function renderCsvResult(d) {
+    var grade = d.grade || 'F';
+    var score = Math.round(d.score || 0);
+    var total = d.total_contacts || d.rows_parsed || 0;
+    var skipped = d.rows_skipped || 0;
+    var segs = d.segments || {};
+
+    var summary;
+    if (grade === 'A' || grade === 'B') {
+      summary = 'Your list is in strong shape across all 7 signals.';
+    } else if (grade === 'C') {
+      summary = 'Your list has issues on at least one signal. See the breakdown below.';
+    } else {
+      summary = 'Your list has significant problems. Address the red signals before your next send.';
+    }
+
+    // Build 7-signal bars
+    var signalDefs = [
+      {key: 'bounce_exposure',       label: '01 Bounce Exposure',       max: 25},
+      {key: 'engagement_trajectory', label: '02 Engagement Trajectory', max: 25},
+      {key: 'acquisition_quality',   label: '03 Acquisition Quality',   max: 15},
+      {key: 'domain_reputation',     label: '04 Domain Reputation',     max: 15},
+      {key: 'dormancy_risk',         label: '05 Spam Trap Exposure',    max: 10},
+      {key: 'authentication_standing', label: '06 Authentication Standing', max: 5},
+      {key: 'decay_velocity',        label: '07 Decay Velocity',        max: 5},
+    ];
+    var signalsHtml = signalDefs.map(function(s) {
+      var raw = d.scores && d.scores[s.key] != null ? d.scores[s.key] : null;
+      if (raw === null) return '';
+      var pct = Math.round(raw * 100 / s.max);
+      return '<div class="res-sig"><span class="res-sig-name">' + s.label + '</span><span class="res-sig-val ' + classFor(pct) + '">' + pct + '/100</span></div>';
+    }).join('');
+
+    // Segments summary
+    var segHtml = '';
+    if (segs.total > 0) {
+      segHtml = '<div style="display:flex;flex-wrap:wrap;gap:8px;margin:14px 0;">';
+      if (segs.active) segHtml += '<span style="font-size:0.78rem;font-weight:700;padding:4px 12px;border-radius:999px;background:rgba(22,163,74,0.1);color:#16a34a;">' + segs.active + ' Active</span>';
+      if (segs.warm) segHtml += '<span style="font-size:0.78rem;font-weight:700;padding:4px 12px;border-radius:999px;background:rgba(37,99,235,0.1);color:#2563eb;">' + segs.warm + ' Warm</span>';
+      if (segs.at_risk) segHtml += '<span style="font-size:0.78rem;font-weight:700;padding:4px 12px;border-radius:999px;background:rgba(217,119,6,0.1);color:#d97706;">' + segs.at_risk + ' At Risk</span>';
+      if (segs.dormant) segHtml += '<span style="font-size:0.78rem;font-weight:700;padding:4px 12px;border-radius:999px;background:rgba(220,38,38,0.1);color:#dc2626;">' + segs.dormant + ' Dormant</span>';
+      segHtml += '</div>';
+    }
+
+    // MPP note
+    var mppNote = '';
+    if (d.mpp_accuracy && d.mpp_accuracy !== 'none') {
+      mppNote = '<div style="font-size:0.78rem;color:#7c3aed;background:rgba(139,92,246,0.08);padding:8px 14px;border-radius:8px;margin:10px 0;">Ghost Opens detection active \u00b7 Confidence: ' + escapeHtml(d.mpp_accuracy) + '</div>';
+    }
+
+    panel.innerHTML =
+      '<div class="res-hero">' +
+        '<div>' +
+          '<div class="res-num res-num--' + grade + '">' + score + '</div>' +
+          '<div class="res-grade">Grade ' + grade + '</div>' +
+        '</div>' +
+        '<div class="res-summary">' +
+          '<h3>Full 7-Signal Score</h3>' +
+          '<p>' + summary + '</p>' +
+          '<span style="font-size:0.75rem;color:var(--text-3);">' + total + ' contacts parsed' + (skipped > 0 ? ' \u00b7 ' + skipped + ' skipped' : '') + '</span>' +
+        '</div>' +
+      '</div>' +
+      segHtml +
+      mppNote +
+      '<div class="res-signals">' + signalsHtml + '</div>' +
+      '<div class="res-cta">' +
+        '<h4>This is a one-time read. Want continuous monitoring?</h4>' +
+        '<p>Sign up to save this score, track changes over time, get alerts when signals degrade, and connect your ESP for automatic recalculation every 6 hours.</p>' +
+        '<a href="/signup?from=csv-signal-score" class="res-cta-btn">Sign up free to monitor all 7 signals \u2192</a>' +
+      '</div>';
+    panel.classList.add('is-visible');
+    setTimeout(function(){ panel.scrollIntoView({behavior: 'smooth', block: 'start'}); }, 100);
+  }
+
   function renderAuthPills(meta) {
     if (!meta || !meta.authentication_standing) return '';
     var a = meta.authentication_standing;
@@ -470,7 +544,7 @@
     .then(function(r){ return r.json(); })
     .then(function(d){
       if (d.ok) {
-        renderResult(d);
+        renderCsvResult(d);
       } else {
         renderError(d.error || d.message || 'CSV upload failed.');
       }
