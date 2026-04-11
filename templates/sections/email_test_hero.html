@@ -402,62 +402,40 @@
       <div class="hero-split__visual">
         <div class="hero-cinema" id="heroCinema">
 
-          <!-- ACT 1: Email in Spam -->
+          <!-- ACT 1: Your ESP says everything is fine -->
           <div class="hero-act hero-act--active" data-act="0">
-            <div class="hero-mock hero-mock--gmail hero-mock--spam-glow">
+            <div class="hero-mock hero-mock--green-glow">
               <div class="hero-mock__header">
                 <span class="hero-mock__dot hero-mock__dot--red"></span>
                 <span class="hero-mock__dot hero-mock__dot--yellow"></span>
                 <span class="hero-mock__dot hero-mock__dot--green"></span>
-                <span class="hero-mock__tab">Gmail</span>
+                <span class="hero-mock__tab">Your ESP Dashboard</span>
               </div>
-              <div class="gmail-tabs">
-                <span class="gmail-tab">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 4L12 13 2 4"/></svg>
-                  Primary
-                </span>
-                <span class="gmail-tab">Promotions</span>
-                <span class="gmail-tab gmail-tab--spam gmail-tab--active">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
-                  Spam
-                </span>
-              </div>
-              <div class="gmail-inbox">
-                <div class="gmail-row gmail-row--spam-landing">
-                  <span class="gmail-avatar gmail-avatar--red">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" width="14" height="14"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-                  </span>
-                  <div class="gmail-row__content">
-                    <span class="gmail-row__sender gmail-row__sender--spam">Your Campaign</span>
-                    <span class="gmail-row__subject gmail-row__subject--spam">Exclusive: 3 ways to boost your Q4 pipeline</span>
-                  </div>
-                  <span class="gmail-row__badge-spam">Marked as Spam</span>
+              <div class="hero-mock__body">
+                <div class="hero-mock__row">
+                  <span class="hero-mock__label">Open Rate</span>
+                  <span class="hero-mock__val hero-mock__val--green" style="font-size:1.4rem;font-weight:900;">45%</span>
                 </div>
-                <div class="gmail-row gmail-row--existing gmail-row--spam-other">
-                  <span class="gmail-avatar gmail-avatar--red-dim">!</span>
-                  <div class="gmail-row__content">
-                    <span class="gmail-row__sender">noreply@deals...</span>
-                    <span class="gmail-row__subject">ACT NOW!! Limited time...</span>
-                  </div>
-                  <span class="gmail-row__time">2d ago</span>
+                <div class="hero-mock__row">
+                  <span class="hero-mock__label">Click Rate</span>
+                  <span class="hero-mock__val">3.2%</span>
                 </div>
-                <div class="gmail-row gmail-row--existing gmail-row--spam-other">
-                  <span class="gmail-avatar gmail-avatar--red-dim">!</span>
-                  <div class="gmail-row__content">
-                    <span class="gmail-row__sender">winners@prize...</span>
-                    <span class="gmail-row__subject">You've been selected...</span>
-                  </div>
-                  <span class="gmail-row__time">3d ago</span>
+                <div class="hero-mock__row">
+                  <span class="hero-mock__label">Bounce Rate</span>
+                  <span class="hero-mock__val hero-mock__val--green">0.4%</span>
+                </div>
+                <div class="hero-mock__divider"></div>
+                <div class="hero-mock__row hero-mock__row--ai">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2" width="14" height="14"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                  <span>Everything looks great!</span>
                 </div>
               </div>
             </div>
-            <p class="hero-act__caption hero-act__caption--red">Where your emails are landing now</p>
-
-            <!-- "Run Report" transition button -->
+            <p class="hero-act__caption">What your ESP shows you</p>
             <div class="hero-act__transition" id="act1Transition">
               <div class="hero-act__trans-btn">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-                What's wrong? Run InbXr Report
+                But is it true? Run Signal Score
               </div>
               <div class="hero-act__trans-cursor">
                 <svg viewBox="0 0 24 24" width="16" height="16" fill="#fff"><path d="M4 0l16 12-7 2 4 8-3 1-4-8-6 5z"/></svg>
@@ -465,57 +443,52 @@
             </div>
           </div>
 
-          <!-- ACT 2: Bad InbXr Report -->
+          <!-- ACT 2: InbXr reveals Ghost Opens + failing signals -->
           <div class="hero-act" data-act="1">
             <div class="hero-mock hero-mock--red-glow">
               <div class="hero-mock__header">
                 <span class="hero-mock__dot hero-mock__dot--red"></span>
                 <span class="hero-mock__dot hero-mock__dot--yellow"></span>
                 <span class="hero-mock__dot hero-mock__dot--green"></span>
-                <span class="hero-mock__tab">InbXr Report</span>
+                <span class="hero-mock__tab">InbXr Signal Score</span>
               </div>
               <div class="hero-mock__body">
                 <div class="hero-mock__row">
-                  <span class="hero-mock__label">Overall Grade</span>
+                  <span class="hero-mock__label">Signal Score</span>
                   <span class="hero-mock__grade hero-mock__grade--d">D</span>
                 </div>
-                <div class="hero-mock__row">
-                  <span class="hero-mock__label">Copy Score</span>
-                  <div class="hero-mock__bar"><div class="hero-mock__bar-fill hero-mock__bar-fill--red" style="width:31%"></div></div>
-                  <span class="hero-mock__val hero-mock__val--red">31<small>/100</small></span>
+                <div class="hero-mock__divider"></div>
+                <div class="hero-mock__row" style="margin-bottom:2px;">
+                  <span class="hero-mock__label" style="color:#c084fc;">Ghost Opens Detected</span>
                 </div>
                 <div class="hero-mock__row">
-                  <span class="hero-mock__label">Spam Risk</span>
-                  <div class="hero-mock__bar hero-mock__bar--red"><div class="hero-mock__bar-fill hero-mock__bar-fill--red" style="width:78%"></div></div>
-                  <span class="hero-mock__val hero-mock__val--red">High</span>
+                  <span class="hero-mock__label">ESP says</span>
+                  <span class="hero-mock__val" style="text-decoration:line-through;opacity:0.5;">45%</span>
+                </div>
+                <div class="hero-mock__row">
+                  <span class="hero-mock__label">Real rate</span>
+                  <span class="hero-mock__val hero-mock__val--red" style="font-size:1.1rem;font-weight:900;">28%</span>
                 </div>
                 <div class="hero-mock__divider"></div>
                 <div class="hero-mock__row">
-                  <span class="hero-mock__label">Framework</span>
-                  <span class="hero-mock__badge hero-mock__badge--none">None Detected</span>
-                </div>
-                <div class="hero-mock__row">
-                  <span class="hero-mock__label">Auth</span>
+                  <span class="hero-mock__label">Failing</span>
                   <span class="hero-mock__checks">
-                    <span class="hero-mock__check hero-mock__check--pass">SPF</span>
-                    <span class="hero-mock__check hero-mock__check--fail">DKIM</span>
+                    <span class="hero-mock__check hero-mock__check--fail">Engagement</span>
+                    <span class="hero-mock__check hero-mock__check--fail">Dormancy</span>
                     <span class="hero-mock__check hero-mock__check--fail">DMARC</span>
                   </span>
                 </div>
-                <div class="hero-mock__divider"></div>
                 <div class="hero-mock__row hero-mock__row--issues">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
-                  <span>5 spam triggers &middot; Missing DMARC &middot; No framework</span>
+                  <span>3 of 7 signals failing &middot; 17% Ghost Opens</span>
                 </div>
               </div>
             </div>
-            <p class="hero-act__caption hero-act__caption--red">InbXr found 7 issues in 60 seconds</p>
-
-            <!-- "Fix" transition button -->
+            <p class="hero-act__caption hero-act__caption--red">What InbXr actually sees</p>
             <div class="hero-act__transition" id="act2Transition">
               <div class="hero-act__trans-btn hero-act__trans-btn--green">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
-                Fix with InbXr
+                Fix all 3 signals
               </div>
               <div class="hero-act__trans-cursor">
                 <svg viewBox="0 0 24 24" width="16" height="16" fill="#fff"><path d="M4 0l16 12-7 2 4 8-3 1-4-8-6 5z"/></svg>
@@ -523,51 +496,52 @@
             </div>
           </div>
 
-          <!-- ACT 3: Good InbXr Report -->
+          <!-- ACT 3: All 7 signals green -->
           <div class="hero-act" data-act="2">
             <div class="hero-mock hero-mock--green-glow">
               <div class="hero-mock__header">
                 <span class="hero-mock__dot hero-mock__dot--red"></span>
                 <span class="hero-mock__dot hero-mock__dot--yellow"></span>
                 <span class="hero-mock__dot hero-mock__dot--green"></span>
-                <span class="hero-mock__tab">InbXr Report</span>
+                <span class="hero-mock__tab">InbXr Signal Score</span>
               </div>
               <div class="hero-mock__body">
                 <div class="hero-mock__row">
-                  <span class="hero-mock__label">Overall Grade</span>
+                  <span class="hero-mock__label">Signal Score</span>
                   <span class="hero-mock__grade hero-mock__grade--a">A</span>
-                </div>
-                <div class="hero-mock__row">
-                  <span class="hero-mock__label">Copy Score</span>
-                  <div class="hero-mock__bar"><div class="hero-mock__bar-fill" style="width:87%"></div></div>
-                  <span class="hero-mock__val">87<small>/100</small></span>
-                </div>
-                <div class="hero-mock__row">
-                  <span class="hero-mock__label">Spam Risk</span>
-                  <div class="hero-mock__bar hero-mock__bar--green"><div class="hero-mock__bar-fill hero-mock__bar-fill--green" style="width:12%"></div></div>
-                  <span class="hero-mock__val hero-mock__val--green">Low</span>
                 </div>
                 <div class="hero-mock__divider"></div>
                 <div class="hero-mock__row">
-                  <span class="hero-mock__label">Framework</span>
-                  <span class="hero-mock__badge">PAS Applied</span>
+                  <span class="hero-mock__label">Bounce Exposure</span>
+                  <span class="hero-mock__check hero-mock__check--pass">92</span>
+                </div>
+                <div class="hero-mock__row">
+                  <span class="hero-mock__label">Engagement</span>
+                  <span class="hero-mock__check hero-mock__check--pass">88</span>
+                </div>
+                <div class="hero-mock__row">
+                  <span class="hero-mock__label">Acquisition</span>
+                  <span class="hero-mock__check hero-mock__check--pass">85</span>
+                </div>
+                <div class="hero-mock__row">
+                  <span class="hero-mock__label">Reputation</span>
+                  <span class="hero-mock__check hero-mock__check--pass">96</span>
+                </div>
+                <div class="hero-mock__row">
+                  <span class="hero-mock__label">Dormancy</span>
+                  <span class="hero-mock__check hero-mock__check--pass">90</span>
                 </div>
                 <div class="hero-mock__row">
                   <span class="hero-mock__label">Auth</span>
-                  <span class="hero-mock__checks">
-                    <span class="hero-mock__check hero-mock__check--pass">SPF</span>
-                    <span class="hero-mock__check hero-mock__check--pass">DKIM</span>
-                    <span class="hero-mock__check hero-mock__check--pass">DMARC</span>
-                  </span>
+                  <span class="hero-mock__check hero-mock__check--pass">100</span>
                 </div>
-                <div class="hero-mock__divider"></div>
-                <div class="hero-mock__row hero-mock__row--ai">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-                  <span>Every issue fixed. Copy rewritten.</span>
+                <div class="hero-mock__row">
+                  <span class="hero-mock__label">Decay</span>
+                  <span class="hero-mock__check hero-mock__check--pass">94</span>
                 </div>
               </div>
             </div>
-            <p class="hero-act__caption hero-act__caption--green">Every issue fixed. Copy rewritten.</p>
+            <p class="hero-act__caption hero-act__caption--green">All 7 signals passing</p>
           </div>
 
           <!-- ACT 4: Email in Primary -->
@@ -625,14 +599,14 @@
                 </div>
               </div>
             </div>
-            <p class="hero-act__caption hero-act__caption--green">Where your emails land with InbXr</p>
+            <p class="hero-act__caption hero-act__caption--green">Where your emails land with all 7 signals green</p>
           </div>
 
           <!-- Act indicators -->
           <div class="hero-cinema__dots">
-            <button class="hero-cinema__dot hero-cinema__dot--active" data-act="0" aria-label="Spam"></button>
-            <button class="hero-cinema__dot" data-act="1" aria-label="Diagnose"></button>
-            <button class="hero-cinema__dot" data-act="2" aria-label="Fix"></button>
+            <button class="hero-cinema__dot hero-cinema__dot--active" data-act="0" aria-label="ESP Dashboard"></button>
+            <button class="hero-cinema__dot" data-act="1" aria-label="Ghost Opens"></button>
+            <button class="hero-cinema__dot" data-act="2" aria-label="All Green"></button>
             <button class="hero-cinema__dot" data-act="3" aria-label="Primary"></button>
           </div>
         </div>
