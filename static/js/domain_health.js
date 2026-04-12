@@ -414,8 +414,3 @@ function showError(msg) {
   setTimeout(() => el.remove(), 8000);
 }
 
-function escHtml(str) {
-  return String(str ?? '')
-    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-}

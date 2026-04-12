@@ -13746,3 +13746,107 @@ a.et-next-step:hover {
     text-align: center;
   }
 }
+
+/* ══════════════════════════════════════════════════════
+   SHARED SIGNAL RESULT COMPONENTS (signal-results.js)
+   Used by homepage hero + /signal-score anonymous page.
+   ══════════════════════════════════════════════════════ */
+
+/* ── Signal cards ── */
+.sig-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 22px 24px; margin-bottom: 16px; position: relative; }
+.sig-card--domain { border-left: 4px solid #2563eb; }
+.sig-card--quickwins { border-left: 4px solid #f59e0b; background: linear-gradient(135deg, #fffbeb 0%, #fff 40%); }
+.sig-card--ghost { border-left: 4px solid #8b5cf6; background: linear-gradient(135deg, #faf5ff 0%, #fff 40%); }
+.sig-card__label { display: inline-block; font-size: 0.66rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; color: #64748b; margin-bottom: 10px; }
+.sig-card__label--amber { color: #d97706; }
+.sig-card__label--purple { color: #7c3aed; }
+.sig-card__h { font-size: 1.02rem; font-weight: 800; color: #0c1a3a; margin: 0 0 6px; line-height: 1.3; }
+.sig-card__p { font-size: 0.82rem; color: #475569; margin: 0 0 14px; line-height: 1.55; }
+.sig-card__cta { display: inline-block; padding: 10px 20px; border-radius: 999px; font-size: 0.82rem; font-weight: 700; text-decoration: none; color: #fff; margin-top: 10px; }
+.sig-card__cta--purple { background: #8b5cf6; }
+.sig-card__cta--purple:hover { background: #7c3aed; }
+
+/* ── Signal hero (score + grade) ── */
+.sig-hero { display: flex; gap: 18px; align-items: center; margin-bottom: 18px; padding-bottom: 14px; border-bottom: 1px solid #e5e7eb; flex-wrap: wrap; }
+.sig-hero__num { font-size: 3.2rem; font-weight: 900; line-height: 1; }
+.sig-hero__num--A, .sig-hero__num--B { color: #16a34a; }
+.sig-hero__num--C { color: #d97706; }
+.sig-hero__num--D, .sig-hero__num--F { color: #dc2626; }
+.sig-hero__grade { font-size: 0.85rem; font-weight: 700; margin-top: 6px; }
+.sig-hero__summary { flex: 1; min-width: 200px; }
+.sig-hero__summary h3 { font-size: 1.1rem; font-weight: 800; margin: 0 0 4px; color: #0c1a3a; }
+.sig-hero__summary p { font-size: 0.82rem; color: #475569; margin: 0; line-height: 1.45; }
+.sig-hero__meta { font-size: 0.75rem; color: #94a3b8; }
+
+/* ── Signal rows (visible + locked) ── */
+.sig-signals { display: grid; grid-template-columns: 1fr; gap: 8px; margin-bottom: 14px; }
+.sig-row { display: flex; justify-content: space-between; padding: 10px 14px; background: #f8fafc; border-radius: 8px; font-size: 0.88rem; }
+.sig-row--locked { opacity: 0.55; }
+.sig-row--purple { border-left: 3px solid #8b5cf6; }
+.sig-row__name { color: #0c1a3a; font-weight: 600; }
+.sig-row__val { font-weight: 800; }
+.sig-row__val.is-good { color: #16a34a; }
+.sig-row__val.is-warn { color: #d97706; }
+.sig-row__val.is-bad { color: #dc2626; }
+.sig-row__val--locked { font-size: 0.75rem; font-style: italic; font-weight: 500; color: #94a3b8; text-transform: uppercase; }
+
+/* ── Auth pills ── */
+.sig-auth-pills { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0 4px; }
+.sig-auth-pill { display: inline-flex; align-items: center; gap: 4px; font-size: 0.72rem; font-weight: 700; padding: 3px 10px; border-radius: 999px; white-space: nowrap; }
+.sig-pill-pass { background: rgba(22,163,74,0.1); color: #16a34a; }
+.sig-pill-fail { background: rgba(220,38,38,0.1); color: #dc2626; }
+.sig-pill-warn { background: rgba(217,119,6,0.1); color: #d97706; }
+
+/* ── Quick wins ── */
+.qw-list { display: flex; flex-direction: column; gap: 10px; }
+.qw-item { display: flex; gap: 12px; align-items: flex-start; padding: 12px 14px; border-radius: 8px; background: #fff; }
+.qw-item--urgent { border: 1px solid #fca5a5; background: #fef2f2; }
+.qw-item--info { border: 1px solid #fde68a; background: #fffbeb; }
+.qw-item__sev { flex-shrink: 0; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; padding: 2px 8px; border-radius: 4px; white-space: nowrap; margin-top: 2px; }
+.qw-item--urgent .qw-item__sev { background: #dc2626; color: #fff; }
+.qw-item--info .qw-item__sev { background: #d97706; color: #fff; }
+.qw-item__body strong { display: block; font-size: 0.82rem; color: #0c1a3a; margin-bottom: 4px; }
+.qw-item__body p { font-size: 0.78rem; color: #475569; margin: 0; line-height: 1.5; }
+
+/* ── Final CTA ── */
+.sig-final-cta { background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border-radius: 10px; padding: 24px; text-align: center; margin-top: 16px; }
+.sig-final-cta h4 { font-size: 0.92rem; font-weight: 800; margin: 0 0 10px; color: #0c1a3a; }
+.sig-final-cta p { font-size: 0.78rem; color: #475569; margin: 0 0 14px; line-height: 1.45; }
+.sig-final-cta__btn { display: inline-block; background: #16a34a; color: #fff; padding: 12px 24px; border-radius: 999px; font-size: 0.88rem; font-weight: 700; text-decoration: none; }
+.sig-final-cta__btn:hover { background: #15803d; }
+
+/* ── Share button ── */
+.sig-share { text-align: center; margin-top: 12px; }
+.sig-share__btn { background: none; border: 1px solid #cbd5e1; color: #64748b; padding: 8px 18px; border-radius: 999px; font-size: 0.82rem; font-weight: 600; cursor: pointer; font-family: inherit; }
+.sig-share__btn:hover { border-color: #94a3b8; color: #334155; }
+
+/* ── CSV result signal cards ── */
+.csv-signals { margin-top: 16px; }
+.csv-sig { padding: 16px 18px; border-radius: 10px; margin-bottom: 10px; border: 1px solid; }
+.csv-sig--good { background: rgba(22,163,74,0.06); border-color: #bbf7d0; }
+.csv-sig--warn { background: rgba(217,119,6,0.06); border-color: #fde68a; }
+.csv-sig--bad { background: rgba(220,38,38,0.06); border-color: #fca5a5; }
+.csv-sig--locked { background: #f8fafc; border: 1px dashed #cbd5e1; opacity: 0.7; }
+.csv-sig__head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.csv-sig__head strong { font-size: 0.88rem; color: #0c1a3a; }
+.csv-sig__score { font-size: 0.88rem; font-weight: 800; }
+.csv-sig__score--good { color: #16a34a; }
+.csv-sig__score--warn { color: #d97706; }
+.csv-sig__score--bad { color: #dc2626; }
+.csv-sig__pro { font-size: 0.72rem; font-weight: 700; color: #8b5cf6; background: rgba(139,92,246,0.1); padding: 2px 8px; border-radius: 4px; }
+.csv-sig__explain { font-size: 0.82rem; color: #334155; margin: 0; line-height: 1.55; }
+.csv-sig__explain a { color: #2563eb; font-weight: 600; }
+
+/* ── Segment pills ── */
+.seg-pills { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0 8px; }
+.seg-pill { font-size: 0.78rem; font-weight: 700; padding: 4px 12px; border-radius: 999px; }
+.seg-pill--green { background: rgba(22,163,74,0.1); color: #16a34a; }
+.seg-pill--blue { background: rgba(37,99,235,0.1); color: #2563eb; }
+.seg-pill--amber { background: rgba(217,119,6,0.1); color: #d97706; }
+.seg-pill--red { background: rgba(220,38,38,0.1); color: #dc2626; }
+.seg-warning { background: #fef2f2; border: 1px solid #fca5a5; border-radius: 10px; padding: 14px 18px; margin: 10px 0; font-size: 0.85rem; color: #991b1b; line-height: 1.55; }
+
+@media (max-width: 680px) {
+  .sig-hero__num { font-size: 2.4rem; }
+  .sig-hero { gap: 12px; }
+}

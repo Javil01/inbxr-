@@ -1509,17 +1509,6 @@ function showStepError(step, msg) {
   setTimeout(() => el.remove(), 8000);
 }
 
-// ══════════════════════════════════════════════════════
-//  SANITIZATION
-// ══════════════════════════════════════════════════════
-function escHtml(str) {
-  return String(str ?? '')
-    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
-}
-function escAttr(str) {
-  return String(str ?? '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
 
 // ══════════════════════════════════════════════════════
 //  FULL AUDIT CTA — One-click from Email Test results

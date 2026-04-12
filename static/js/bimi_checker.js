@@ -271,13 +271,3 @@ $('#bimiRunAgainBtn').addEventListener('click', () => {
   $('#bimiFormCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
 });
 
-// ── Helpers ──────────────────────────────────────────
-function escHtml(s) {
-  const d = document.createElement('div');
-  d.textContent = s;
-  return d.innerHTML;
-}
-
-function escAttr(s) {
-  return s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-}

@@ -2606,15 +2606,6 @@ function showError(msg) {
   $('#resultsContent').classList.add('hidden');
 }
 
-// ── Sanitization ─────────────────────────────────────
-function escHtml(str) {
-  return String(str ?? '')
-    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
-}
-function escAttr(str) {
-  return String(str ?? '').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
-}
 
 // ══════════════════════════════════════════════════════
 //  HISTORY — Auto-save to localStorage
@@ -3007,7 +2998,6 @@ function exportReport(data, payload) {
   setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 100);
 }
 
-function esc(s) { return escHtml(s); }
 
 /* ── Typewriter effect for hero headings ── */
 (function() {

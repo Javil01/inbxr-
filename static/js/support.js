@@ -124,11 +124,6 @@ function removeLoading(el) {
   if (el && el.parentNode) el.parentNode.removeChild(el);
 }
 
-function esc(str) {
-  return String(str || '')
-    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-}
 
 // ── FAQ Accordion ──
 document.querySelectorAll('.faq-item__q').forEach(function(btn) {

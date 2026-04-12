@@ -614,15 +614,6 @@ function showError(msg) {
   setTimeout(() => el.remove(), 8000);
 }
 
-// ── Sanitization ──────────────────────────────────────
-function escHtml(str) {
-  return String(str ?? '')
-    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
-}
-function escAttr(str) {
-  return String(str ?? '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
 
 // ══════════════════════════════════════════════════════
 //  DOMAIN HEALTH: Grade, ESP Badge, Fix Records

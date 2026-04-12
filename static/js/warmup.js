@@ -430,14 +430,6 @@ function backToList() {
   loadCampaigns();
 }
 
-// ══════════════════════════════════════════════════════
-//  HELPERS
-// ══════════════════════════════════════════════════════
-function escH(s) {
-  const d = document.createElement('div');
-  d.textContent = s || '';
-  return d.innerHTML;
-}
 
 function formatDate(dateStr) {
   if (!dateStr) return 'N/A';

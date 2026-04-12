@@ -313,12 +313,6 @@
       }).join("") + '</div>';
   }
 
-  // ── Helpers ───────────────────────────────────────────
-  function esc(s) {
-    const d = document.createElement("div");
-    d.textContent = s || "";
-    return d.innerHTML;
-  }
 
   // ── Auto-run from URL params ──────────────────────────
   const params = new URLSearchParams(window.location.search);

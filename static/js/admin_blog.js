@@ -5,10 +5,6 @@
 (function() {
   'use strict';
 
-  // ── Helpers ──
-  function esc(s) {
-    return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  }
 
   function shortDate(d) {
     if (!d) return '';

@@ -688,14 +688,3 @@ function renderPlacementUpgradeNudge(data) {
     </div>`);
 }
 
-// ══════════════════════════════════════════════════════
-//  SANITIZATION
-// ══════════════════════════════════════════════════════
-function escHtml(str) {
-  return String(str ?? '')
-    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
-}
-function escAttr(str) {
-  return String(str ?? '').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
-}

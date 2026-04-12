@@ -211,11 +211,6 @@ function renderResults(data) {
   $('#dnsResults').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-function escHtml(s) {
-  const d = document.createElement('div');
-  d.textContent = s;
-  return d.innerHTML;
-}
 
 // ── Run Again ────────────────────────────────────────
 $('#dnsRunAgainBtn').addEventListener('click', () => {
