@@ -910,12 +910,15 @@
   }
 
   function renderGhostOpensCard() {
+    var href = '/signal-score';
+    if (state.domain) href += '?domain=' + encodeURIComponent(state.domain);
+    href += '#csvUploadArea';
     return '' +
       '<div class="res-card" style="border-left:4px solid #8b5cf6;background:linear-gradient(135deg,#faf5ff 0%,#fff 40%);">' +
         '<span class="res-card__label" style="color:#7c3aed;">MPP Engagement Analysis</span>' +
         '<h3 class="res-card__h">Your ESP says 45% open rate. The real number might be 28%.</h3>' +
         '<p class="res-card__p">The difference? <strong>Ghost Opens.</strong> Apple Mail Privacy Protection creates fake "opens" that your ESP counts as real engagement. Over 55% of US email users have it enabled. Upload your list and our MPP Engagement Analysis strips them out \u2014 so you see the number that actually matters.</p>' +
-        '<a href="/signal-score#csvUploadArea" class="res-cta-btn" style="background:#8b5cf6;font-size:0.82rem;padding:10px 20px;display:inline-block;margin-top:10px;text-decoration:none;color:#fff;border-radius:999px;font-weight:700;">Upload your list to find out \u2192</a>' +
+        '<a href="' + href + '" class="res-cta-btn" style="background:#8b5cf6;font-size:0.82rem;padding:10px 20px;display:inline-block;margin-top:10px;text-decoration:none;color:#fff;border-radius:999px;font-weight:700;">Upload your list to find out \u2192</a>' +
       '</div>';
   }
 

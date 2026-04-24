@@ -18,7 +18,7 @@
   <meta name="csrf-token" content="{{ csrf_token() }}">
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/static/css/style.css?v=20260412a" />
+  <link rel="stylesheet" href="/static/css/style.css?v=20260424a" />
   {% include 'sections/_head_meta.html' %}
 </head>
 <body class="email-test-page">
@@ -108,6 +108,61 @@
   font-size: 0.82rem;
   color: rgba(255,255,255,0.6);
   margin: 14px 0 0;
+}
+
+/* Prefilled strip — shown when arriving from homepage with ?domain= */
+.sig-anon-prefilled {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 14px 18px;
+  margin-bottom: 20px;
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  border-radius: 10px;
+  font-size: 0.88rem;
+  color: var(--text-1);
+  flex-wrap: wrap;
+}
+.sig-anon-prefilled__label {
+  font-weight: 600;
+  color: var(--text-2);
+}
+.sig-anon-prefilled__domain {
+  font-weight: 800;
+  color: var(--text-1);
+}
+.sig-anon-prefilled__change {
+  margin-left: auto;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--brand, #2563eb);
+  text-decoration: none;
+  cursor: pointer;
+  background: none;
+  border: none;
+  font-family: inherit;
+  padding: 0;
+}
+.sig-anon-prefilled__change:hover { text-decoration: underline; }
+
+/* Prefilled mode: hide "Step 1" form block and adjust eyebrow/h1 */
+body.prefilled-mode .sig-anon-form-wrap { display: none; }
+body.prefilled-mode .sig-anon-prefilled { display: flex; }
+body.prefilled-mode .sig-anon-eyebrow-default { display: none; }
+body.prefilled-mode .sig-anon-eyebrow-prefilled { display: inline-block; }
+body.prefilled-mode .sig-anon-h1-default { display: none; }
+body.prefilled-mode .sig-anon-h1-prefilled { display: block; }
+body.prefilled-mode .sig-anon-sub-default { display: none; }
+body.prefilled-mode .sig-anon-sub-prefilled { display: block; }
+.sig-anon-eyebrow-prefilled,
+.sig-anon-h1-prefilled,
+.sig-anon-sub-prefilled { display: none; }
+body.prefilled-mode .sig-anon-csv {
+  background: linear-gradient(135deg, #f0f9ff 0%, #fff 100%);
+  border-color: var(--brand, #2563eb);
+  border-style: solid;
 }
 
 /* Secondary action: CSV upload */
@@ -214,13 +269,27 @@
 
 <main class="sig-anon-wrap">
 
-  <span class="sig-anon-eyebrow">Free Signal Score &middot; 30 seconds &middot; No signup</span>
-  <h1 class="sig-anon-h1">Check your email deliverability in 30 seconds.</h1>
-  <p class="sig-anon-sub">
+  <span class="sig-anon-eyebrow sig-anon-eyebrow-default">Free Signal Score &middot; 30 seconds &middot; No signup</span>
+  <span class="sig-anon-eyebrow sig-anon-eyebrow-prefilled">Upload your list &middot; Full 7-signal reading</span>
+  <h1 class="sig-anon-h1 sig-anon-h1-default">Check your email deliverability in 30 seconds.</h1>
+  <h1 class="sig-anon-h1 sig-anon-h1-prefilled">See the other 5 signals your ESP can't read.</h1>
+  <p class="sig-anon-sub sig-anon-sub-default">
     Type your sending domain and the <strong>Signal Engine</strong> reads 2 of the 7 Inbox
     Signals instantly from public DNS and blacklist data. Want the other 5? Sign up free
     and upload a CSV or connect your ESP.
   </p>
+  <p class="sig-anon-sub sig-anon-sub-prefilled">
+    You already got your domain reading. Upload a list (just an email column) and we'll read the
+    other 5 Inbox Signals including MPP-adjusted engagement, acquisition quality, and dormancy risk.
+    Nothing saved without your permission.
+  </p>
+
+  {# ── Prefilled strip — shown when user arrives with ?domain= or #csvUploadArea ── #}
+  <div class="sig-anon-prefilled" id="anonPrefilledStrip">
+    <span class="sig-anon-prefilled__label">Scoring</span>
+    <span class="sig-anon-prefilled__domain" id="anonPrefilledDomain">&nbsp;</span>
+    <button type="button" class="sig-anon-prefilled__change" id="anonChangeDomainBtn">Change domain</button>
+  </div>
 
   {# ── PRIMARY ACTION: domain form ── #}
   <div class="sig-anon-form-wrap">
@@ -287,7 +356,7 @@
 
 {% include 'sections/email_test_footer.html' %}
 
-<script src="/static/js/signal-results.js?v=20260412a"></script>
+<script src="/static/js/signal-results.js?v=20260424a"></script>
 <script>
 (function(){
   var form = document.getElementById('anonDomainForm');
@@ -309,7 +378,7 @@
   function renderResult(d) {
     var domainCard = SR.renderDomainCard(d);
     var quickWins = SR.renderQuickWins(d);
-    var ghostCard = SR.renderGhostOpensCard();
+    var ghostCard = SR.renderGhostOpensCard(d.domain);
     var finalCta = SR.renderFinalCta(d.domain);
 
     panel.innerHTML = domainCard + quickWins + ghostCard +
@@ -412,15 +481,54 @@
     eduToggle.textContent = open ? 'Hide the 7 signals breakdown \u2191' : 'What are the 7 Inbox Signals? \u2193';
   });
 
-  // Auto-populate domain from query string (?domain=foo.com)
+  // ── Prefilled-mode detection ──
+  // User is in prefilled-mode when they arrive with ?domain= in the query
+  // OR with #csvUploadArea in the hash (both signals that they already
+  // entered their domain on the homepage). We hide the "Step 1" form and
+  // promote the CSV upload as the primary action.
   var params = new URLSearchParams(window.location.search);
-  var preDomain = params.get('domain');
+  var preDomain = (params.get('domain') || '').trim().toLowerCase();
+  var isCsvHash = window.location.hash === '#csvUploadArea';
+  var prefilledStrip = document.getElementById('anonPrefilledStrip');
+  var prefilledDomainEl = document.getElementById('anonPrefilledDomain');
+  var changeBtn = document.getElementById('anonChangeDomainBtn');
+
+  function enterPrefilledMode(domain) {
+    document.body.classList.add('prefilled-mode');
+    if (domain && prefilledDomainEl) {
+      prefilledDomainEl.textContent = domain;
+    } else if (prefilledDomainEl) {
+      // No domain known — still hide Step 1 (from #csvUploadArea) but
+      // drop the "Scoring X" label into a neutral CSV-only prompt.
+      prefilledStrip.style.display = 'none';
+    }
+    if (domain) input.value = domain;
+  }
+
+  function exitPrefilledMode() {
+    document.body.classList.remove('prefilled-mode');
+    // Clear ?domain= from URL so refresh doesn't re-enter prefilled mode
+    if (window.history && window.history.replaceState) {
+      var cleanUrl = window.location.pathname;
+      window.history.replaceState({}, '', cleanUrl);
+    }
+    setTimeout(function(){ input.focus(); }, 50);
+  }
+
+  if (changeBtn) {
+    changeBtn.addEventListener('click', exitPrefilledMode);
+  }
+
   if (preDomain) {
-    input.value = preDomain;
-    // Auto-submit on page load if a domain was pre-filled
+    // Arrived from homepage with a domain — enter prefilled mode and
+    // auto-run the 2-signal domain reading so they see their score
+    // alongside the CSV upload.
+    enterPrefilledMode(preDomain);
     setTimeout(function(){ form.dispatchEvent(new Event('submit', {cancelable:true})); }, 300);
-  } else if (window.location.hash === '#csvUploadArea') {
-    // Scroll to CSV upload if linked from Ghost Opens CTA
+  } else if (isCsvHash) {
+    // Arrived via Ghost Opens "upload your list" link without a domain
+    // param — still suppress Step 1 and scroll to the CSV upload.
+    enterPrefilledMode('');
     setTimeout(function(){
       var el = document.getElementById('csvUploadArea');
       if (el) {
