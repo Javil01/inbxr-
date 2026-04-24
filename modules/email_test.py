@@ -664,6 +664,16 @@ def run_full_analysis(raw_bytes: bytes, placement: str, folder: str,
     except Exception:
         logger.exception("Non-fatal: copy analysis failed in email test")
 
+    try:
+        from modules.swipe_risk_detector import SwipeRiskDetector
+        swipe = SwipeRiskDetector(
+            subject=clean_subject, body=body,
+            is_cold_email=False, is_plain_text=is_plain_text,
+        )
+        result["swipe_risk"] = swipe.analyze()
+    except Exception:
+        logger.exception("Non-fatal: swipe risk analysis failed in email test")
+
     # Readability
     try:
         from modules.readability import analyze_readability

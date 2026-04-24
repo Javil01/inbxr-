@@ -406,6 +406,7 @@ function renderHeroSummary(data) {
   const p = data.placement;
   const spam = data.spam;
   const copy = data.copy;
+  const swipe = data.swipe_risk;
   const grades = data.header_grades || [];
 
   // Determine placement status
@@ -458,6 +459,12 @@ function renderHeroSummary(data) {
     const cc = copy.score;
     const cColor = cc >= 70 ? 'var(--color-green)' : cc >= 50 ? 'var(--color-yellow)' : 'var(--color-red)';
     pills.push(`<div class="hero-pill"><span class="hero-pill__label">Copy Score</span><span class="hero-pill__value" style="color:${cColor}">${cc}/100</span></div>`);
+  }
+  if (swipe && typeof swipe.score === 'number') {
+    const sw = swipe.score;
+    // Lower is better for swipe risk (0 = original, 100 = copied)
+    const swColor = sw <= 25 ? 'var(--color-green)' : sw <= 50 ? 'var(--color-yellow)' : 'var(--color-red)';
+    pills.push(`<div class="hero-pill"><span class="hero-pill__label">Swipe Risk</span><span class="hero-pill__value" style="color:${swColor}">${sw}/100</span></div>`);
   }
   // Auth summary pill
   const authTotal = grades.length;
@@ -570,6 +577,9 @@ function renderFullReport(data) {
   // ── Readability ──
   renderReadability(data.readability);
 
+  // ── Swipe File Risk ──
+  renderSwipeRisk(data.swipe_risk);
+
   // ── Reputation ──
   renderReputation(data.reputation);
 
@@ -593,7 +603,7 @@ function renderFullReport(data) {
   setupEmailReport();
 
   // Show all sections with staggered reveal
-  const revealSections = ['#etHeroSummary', '#etEmailReport', '#espDiagnostic', '#etAssessment', '#etHeaderGrades', '#etTransport', '#etIdentity', '#etScores', '#etReadability', '#etReputation', '#etAudit', '#etFullAuditCta', '#etMoveToPrimary', '#etPrimaryOptimizer', '#etSafetyWarning', '#etNextSteps', '#etUpgradeNudge', '#etEmailPreview', '#etRawHeaders'];
+  const revealSections = ['#etHeroSummary', '#etEmailReport', '#espDiagnostic', '#etAssessment', '#etHeaderGrades', '#etTransport', '#etIdentity', '#etScores', '#etReadability', '#etSwipeRisk', '#etReputation', '#etAudit', '#etFullAuditCta', '#etMoveToPrimary', '#etPrimaryOptimizer', '#etSafetyWarning', '#etNextSteps', '#etUpgradeNudge', '#etEmailPreview', '#etRawHeaders'];
   revealSections.forEach((s, i) => {
     const el = $(s);
     if (el && el.style.display !== 'none') {
@@ -618,9 +628,9 @@ function renderGatedView(data) {
   // Hide all full report sections
   ['#etEmailReport', '#espDiagnostic', '#etPlacementSummary', '#etAssessment',
    '#etHeaderGrades', '#etTransport', '#etIdentity', '#etScores', '#etReadability',
-   '#etReputation', '#etAudit', '#etRawHeaders', '#etFullAuditCta', '#etMoveToPrimary',
-   '#etPrimaryOptimizer', '#etSafetyWarning', '#etNextSteps', '#etUpgradeNudge',
-   '#etEmailPreview'].forEach(s => {
+   '#etSwipeRisk', '#etReputation', '#etAudit', '#etRawHeaders', '#etFullAuditCta',
+   '#etMoveToPrimary', '#etPrimaryOptimizer', '#etSafetyWarning', '#etNextSteps',
+   '#etUpgradeNudge', '#etEmailPreview'].forEach(s => {
     const el = $(s);
     if (el) el.style.display = 'none';
   });
@@ -1326,6 +1336,100 @@ function renderReadability(data) {
   requestAnimationFrame(() => {
     const scoreEl = el.querySelector('[data-counting="true"]');
     if (scoreEl) animateCountUp(scoreEl, sc);
+  });
+}
+
+// ── Swipe File Risk ─────────────────────────────────
+function renderSwipeRisk(data) {
+  if (!data) return;
+  const el = $('#etSwipeRiskContent');
+  const section = $('#etSwipeRisk');
+  if (!el || !section) return;
+  section.style.display = '';
+
+  const sc = Number(data.score || 0);
+  // Lower is better here (inverse of copy score): 0 = original, 100 = swipe
+  const clr = sc <= 25 ? 'var(--color-green)' : sc <= 50 ? 'var(--color-yellow)' : 'var(--color-red)';
+  const label = escHtml(data.label || '');
+
+  const flags = (data.flags || []).map(f =>
+    `<li class="srep-bl-item"><span class="srep-bl-reason">${escHtml(f)}</span></li>`
+  ).join('');
+
+  const matches = (data.matched_snippets || []).slice(0, 3).map(m => `
+    <div class="srep-bl-item">
+      <span class="srep-bl-name">${escHtml(m.source || 'Template')}</span>
+      <span class="srep-bl-zone">Similarity ${Math.round((m.similarity || 0) * 100)}%</span>
+      <span class="srep-bl-reason">${escHtml(m.snippet || '')}</span>
+    </div>
+  `).join('');
+
+  const cliches = (data.cliche_hits || []).slice(0, 8).map(c => `
+    <span class="hero-pill" style="margin:2px 4px 2px 0;">
+      <span class="hero-pill__label">${escHtml(c.category || '')}</span>
+      <span class="hero-pill__value">"${escHtml(c.phrase || '')}"</span>
+    </span>
+  `).join('');
+
+  const originality = data.originality_rating;
+  let originalityBlock = '';
+  if (originality && typeof originality.freshness === 'number') {
+    const fresh = originality.freshness;
+    const freshClr = fresh >= 70 ? 'var(--color-green)' : fresh >= 40 ? 'var(--color-yellow)' : 'var(--color-red)';
+    const templLines = (originality.template_lines || []).slice(0, 3).map(t =>
+      `<li class="srep-bl-item"><span class="srep-bl-reason">"${escHtml(t)}"</span></li>`
+    ).join('');
+    originalityBlock = `
+      <div class="et-score-card et-score-card--reveal" style="border-top-color:${freshClr}">
+        <span class="et-score-card__title">AI Originality</span>
+        <span class="et-score-card__score" style="color:${freshClr}" data-target="${fresh}" data-counting="true">0<small>/100</small></span>
+        <span class="et-score-card__label">${escHtml(originality.reasoning || '')}</span>
+      </div>
+      ${templLines ? `<div class="srep-bl-listed" style="margin-top:8px;"><strong style="font-size:12px;color:var(--color-muted);">Lines flagged as templated:</strong>${templLines}</div>` : ''}
+    `;
+  }
+
+  const recs = (data.recommendations || []).map(r =>
+    `<li class="srep-bl-item"><span class="srep-bl-reason">${escHtml(r)}</span></li>`
+  ).join('');
+
+  el.innerHTML = `
+    <div class="et-readability-overview">
+      <div class="et-score-card et-score-card--reveal" style="border-top-color:${clr}">
+        <span class="et-score-card__title">Swipe Risk</span>
+        <span class="et-score-card__score" style="color:${clr}" data-target="${sc}" data-counting="true">0<small>/100</small></span>
+        <span class="et-score-card__label">${label}</span>
+      </div>
+      <div class="et-readability-summary">
+        <p style="margin:0 0 8px 0;font-size:14px;color:var(--color-muted);">
+          ESPs and spam networks (SpamAssassin Razor/Pyzor, Gmail, Outlook) fingerprint bulk-duplicated copy across senders. Reused swipe-file templates accumulate content-reputation independent of your domain — especially risky for cold outreach.
+        </p>
+        ${flags ? `<ul class="srep-bl-listed" style="list-style:none;padding:0;margin:0;">${flags}</ul>` : ''}
+      </div>
+    </div>
+    ${originalityBlock ? `<div style="margin-top:12px;">${originalityBlock}</div>` : ''}
+    ${matches ? `
+      <div style="margin-top:12px;">
+        <strong style="font-size:13px;color:var(--color-muted);">Matches against known swipe templates:</strong>
+        <div class="srep-bl-listed">${matches}</div>
+      </div>` : ''}
+    ${cliches ? `
+      <div style="margin-top:12px;">
+        <strong style="font-size:13px;color:var(--color-muted);">Cliché phrases detected:</strong>
+        <div style="margin-top:6px;">${cliches}</div>
+      </div>` : ''}
+    ${recs ? `
+      <div style="margin-top:12px;">
+        <strong style="font-size:13px;color:var(--color-muted);">Recommendations:</strong>
+        <ul class="srep-bl-listed" style="list-style:none;padding:0;margin:6px 0 0 0;">${recs}</ul>
+      </div>` : ''}
+  `;
+
+  requestAnimationFrame(() => {
+    el.querySelectorAll('[data-counting="true"]').forEach(scoreEl => {
+      const target = parseInt(scoreEl.getAttribute('data-target') || '0', 10);
+      animateCountUp(scoreEl, target);
+    });
   });
 }
 

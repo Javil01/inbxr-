@@ -854,6 +854,7 @@
     var dmarc = authStatus(auth.dmarc && auth.dmarc.result);
     var contentScore = content.total_score != null ? content.total_score : (content.score || null);
     var placementLabel = placement.label || (placement.inbox ? 'Inbox' : 'Unknown');
+    var swipe = d.swipe_risk || null;
 
     function authPill(label, status) {
       var cls = 'is-warn';
@@ -875,6 +876,16 @@
         '</div>' +
         (contentScore != null
           ? '<div class="res-signals"><div class="res-sig"><span class="res-sig-name">Content score</span><span class="res-sig-val ' + classFor(contentScore) + '">' + contentScore + '/100</span></div></div>'
+          : '') +
+        (swipe && typeof swipe.score === 'number'
+          ? '<div class="res-signals">' +
+              '<div class="res-sig">' +
+                '<span class="res-sig-name">Originality (swipe risk)</span>' +
+                '<span class="res-sig-val ' + (swipe.score <= 25 ? 'is-good' : swipe.score <= 50 ? 'is-warn' : 'is-bad') + '">' +
+                  esc(swipe.label || (swipe.score + '/100')) +
+                '</span>' +
+              '</div>' +
+            '</div>'
           : '') +
         '<div class="res-delivery-placement">Landed in: <strong>' + esc(placementLabel) + '</strong></div>' +
       '</div>';

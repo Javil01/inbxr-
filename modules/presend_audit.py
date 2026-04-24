@@ -23,6 +23,7 @@ def generate_audit(analysis_data: dict) -> dict:
     link_image = analysis_data.get("link_image", {})
     reputation = analysis_data.get("reputation", {})
     bimi = analysis_data.get("bimi", {})
+    swipe = analysis_data.get("swipe_risk", {})
     meta = analysis_data.get("meta", {})
 
     # ══════════════════════════════════════════════════
@@ -66,6 +67,25 @@ def generate_audit(analysis_data: dict) -> dict:
         content_checks.append(_check("warn", "Body Length", f"{word_count} words — long email, consider trimming for engagement", "content"))
     else:
         content_checks.append(_check("pass", "Body Length", f"{word_count} words — good length", "content"))
+
+    # Swipe-file / originality risk
+    if swipe:
+        swipe_score = swipe.get("score")
+        if swipe_score is not None:
+            cliche_count = len(swipe.get("cliche_hits", []))
+            snippet_count = len(swipe.get("matched_snippets", []))
+            extra = []
+            if snippet_count:
+                extra.append(f"{snippet_count} template match{'es' if snippet_count != 1 else ''}")
+            if cliche_count:
+                extra.append(f"{cliche_count} cliché{'s' if cliche_count != 1 else ''}")
+            detail_suffix = f" — {', '.join(extra)}" if extra else ""
+            if swipe_score <= 25:
+                content_checks.append(_check("pass", "Originality", f"Score {swipe_score}/100 — copy reads as original", "swipe"))
+            elif swipe_score <= 50:
+                content_checks.append(_check("warn", "Originality", f"Swipe risk {swipe_score}/100{detail_suffix}", "swipe"))
+            else:
+                content_checks.append(_check("fail", "Originality", f"Swipe risk {swipe_score}/100{detail_suffix} — ESPs fingerprint reused copy", "swipe"))
 
     categories.append({
         "name": "Content & Deliverability",
