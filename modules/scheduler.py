@@ -1,9 +1,18 @@
 """
 InbXr — Background Scheduler
 Uses APScheduler to run periodic tasks: blocklist scans, log cleanup.
+
+Single-worker guard: gunicorn runs N workers in production. Without a guard,
+each worker would spin up its own BackgroundScheduler and every job would
+fire N times — duplicate digest emails, duplicate hourly DB backups, duplicate
+DNS scans. The guard below uses an OS-level file lock on a shared path so
+exactly one worker (the first to start) holds the scheduler.
 """
 
 import logging
+import os
+import sys
+import atexit
 from datetime import datetime, timezone
 
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -13,6 +22,7 @@ from apscheduler.triggers.interval import IntervalTrigger
 logger = logging.getLogger(__name__)
 
 _scheduler = None
+_scheduler_lock_fd = None  # held for the lifetime of the process when we own the lock
 
 
 # ── Job functions (must be defined before init_scheduler) ──
@@ -443,12 +453,93 @@ def _scheduled_alert_cleanup():
 # ── Scheduler init ─────────────────────────────────────
 
 
+def _acquire_scheduler_lock():
+    """Try to take an exclusive OS-level lock on a shared file. Returns True if
+    this process (worker) owns the scheduler and should start it.
+
+    Uses fcntl on POSIX (Railway, Linux) and msvcrt on Windows. The lock is
+    held for the lifetime of the process via _scheduler_lock_fd; releasing the
+    fd (process exit) automatically releases the lock so another worker can
+    take over if the leader dies.
+    """
+    global _scheduler_lock_fd
+
+    # Allow opting out (useful for one-off management commands / tests).
+    if os.environ.get("INBXR_DISABLE_SCHEDULER", "").lower() in ("1", "true", "yes"):
+        logger.info("[SCHEDULER] Disabled via INBXR_DISABLE_SCHEDULER env var")
+        return False
+
+    lock_dir = os.environ.get("INBXR_DATA_DIR") or os.path.join(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data"
+    )
+    try:
+        os.makedirs(lock_dir, exist_ok=True)
+    except Exception:
+        logger.exception("[SCHEDULER] Could not create lock dir, skipping leader election")
+        # Fail-open is dangerous (would re-introduce duplicate jobs); fail-closed
+        # so that *no* worker runs the scheduler if we can't coordinate.
+        return False
+    lock_path = os.path.join(lock_dir, ".scheduler.lock")
+
+    try:
+        fd = os.open(lock_path, os.O_RDWR | os.O_CREAT, 0o644)
+    except Exception:
+        logger.exception("[SCHEDULER] Could not open lock file at %s", lock_path)
+        return False
+
+    try:
+        if sys.platform.startswith("win"):
+            import msvcrt
+            try:
+                msvcrt.locking(fd, msvcrt.LK_NBLCK, 1)
+            except OSError:
+                os.close(fd)
+                logger.info("[SCHEDULER] Another worker holds the scheduler lock; staying idle")
+                return False
+        else:
+            import fcntl
+            try:
+                fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            except (BlockingIOError, OSError):
+                os.close(fd)
+                logger.info("[SCHEDULER] Another worker holds the scheduler lock; staying idle")
+                return False
+    except Exception:
+        logger.exception("[SCHEDULER] Lock acquisition raised; staying idle")
+        try:
+            os.close(fd)
+        except Exception:
+            pass
+        return False
+
+    _scheduler_lock_fd = fd
+    # Best-effort write of pid for ops debugging.
+    try:
+        os.write(fd, f"{os.getpid()}\n".encode())
+    except Exception:
+        pass
+    logger.info("[SCHEDULER] Acquired scheduler lock (pid=%s, path=%s)", os.getpid(), lock_path)
+    return True
+
+
 def init_scheduler(app):
-    """Initialize and start the background scheduler."""
+    """Initialize and start the background scheduler.
+
+    Only the first gunicorn worker that acquires the cross-process lock will
+    actually start the scheduler. Other workers no-op so jobs fire exactly
+    once per interval globally.
+    """
     global _scheduler
 
     if _scheduler is not None:
         return
+
+    if not _acquire_scheduler_lock():
+        return
+
+    # Make sure we release the lock cleanly on shutdown (best-effort; OS
+    # releases it on process exit anyway).
+    atexit.register(_release_scheduler_lock)
 
     _scheduler = BackgroundScheduler(daemon=True)
 
@@ -603,3 +694,30 @@ def get_scheduler_status():
         "running": _scheduler.running,
         "jobs": jobs,
     }
+
+
+def _release_scheduler_lock():
+    """Release the cross-process scheduler lock. Called on process exit."""
+    global _scheduler_lock_fd
+    fd = _scheduler_lock_fd
+    if fd is None:
+        return
+    try:
+        if sys.platform.startswith("win"):
+            try:
+                import msvcrt
+                msvcrt.locking(fd, msvcrt.LK_UNLCK, 1)
+            except Exception:
+                pass
+        else:
+            try:
+                import fcntl
+                fcntl.flock(fd, fcntl.LOCK_UN)
+            except Exception:
+                pass
+    finally:
+        try:
+            os.close(fd)
+        except Exception:
+            pass
+        _scheduler_lock_fd = None
