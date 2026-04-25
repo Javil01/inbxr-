@@ -48,11 +48,22 @@ def signup():
     if not user:
         return render_template("auth/signup.html", error="An account with that email already exists.", active_page="signup")
 
-    # Send verification email
+    # Send verification email. If sending fails (Brevo down, network blip),
+    # surface that to the user so they don't sit on /verification-required
+    # forever waiting for an email that's never coming.
     from modules.mailer import send_verification_email, is_configured
+    email_send_failed = False
     if is_configured() and user.get("verification_token"):
-        result = send_verification_email(email, user["verification_token"])
-        logger.info("Verification email sent to %s: %s", email, result)
+        try:
+            sent = send_verification_email(email, user["verification_token"])
+            if sent:
+                logger.info("Verification email sent to %s", email)
+            else:
+                email_send_failed = True
+                logger.error("send_verification_email returned falsy for %s", email)
+        except Exception:
+            email_send_failed = True
+            logger.exception("send_verification_email raised for %s", email)
     elif not is_configured():
         logger.warning("SMTP not configured — verification email NOT sent for %s", email)
 
@@ -60,6 +71,8 @@ def signup():
     if is_configured() and user.get("verification_token"):
         session["pending_user_id"] = user["id"]
         session["is_new_signup"] = True
+        if email_send_failed:
+            session["verification_send_failed"] = True
         return redirect("/verification-required")
     else:
         # No email configured — allow login (dev mode / email disabled)

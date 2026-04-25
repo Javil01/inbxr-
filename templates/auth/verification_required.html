@@ -8,8 +8,16 @@
   Please also check your <strong>spam/junk folder</strong> if you don't see it within a few minutes.
 </p>
 
-{% if request.args.get('resent') %}
+{% if resent or request.args.get('resent') %}
 <div class="auth-alert auth-alert--success">Verification email resent. Check your inbox and spam/junk folder.</div>
+{% endif %}
+
+{% if send_failed %}
+<div class="auth-alert auth-alert--error" style="background:#fef2f2;border:1px solid #fca5a5;color:#991b1b;padding:12px 14px;border-radius:8px;margin-bottom:16px;">
+  <strong>We couldn't send your verification email.</strong>
+  Click <em>Resend Verification Email</em> below to try again.
+  If that fails too, please <a href="/support" style="color:inherit;text-decoration:underline;">contact support</a> and we'll verify your account manually.
+</div>
 {% endif %}
 
 <form method="POST" action="/resend-verification" style="margin-bottom:16px;">

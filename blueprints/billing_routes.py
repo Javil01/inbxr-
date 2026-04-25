@@ -250,7 +250,7 @@ def _handle_checkout_completed(session_obj):
                 cust = stripe.Customer.retrieve(customer_id)
                 customer_email = cust.get("email", "")
             except Exception:
-                pass
+                logger.exception("Failed to retrieve Stripe customer %s for email lookup", customer_id)
 
         if not customer_email:
             logger.error("Checkout completed but no email found. customer=%s", customer_id)

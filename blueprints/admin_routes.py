@@ -59,6 +59,25 @@ ADMIN_USER = os.environ.get("ADMIN_USER")
 _ADMIN_PASS_HASH = os.environ.get("ADMIN_PASS_HASH", "")
 _ADMIN_PASS_PLAIN = os.environ.get("ADMIN_PASS", "")  # fallback for backwards compat
 
+# If only plaintext ADMIN_PASS is set (no ADMIN_PASS_HASH), auto-hash it in
+# memory so the plaintext is never compared in the request hot path. The env
+# var still holds the cleartext until the operator updates Railway, but the
+# verification path goes through the same _verify_password used for users.
+if _ADMIN_PASS_PLAIN and not _ADMIN_PASS_HASH:
+    try:
+        from modules.auth import _hash_password
+        _ADMIN_PASS_HASH = _hash_password(_ADMIN_PASS_PLAIN)
+        _ADMIN_PASS_PLAIN = ""  # zero out so the plaintext compare branch is never taken
+        import logging as _logging
+        _logging.getLogger(__name__).warning(
+            "ADMIN_PASS is plaintext. Auto-hashed in memory; for production, set "
+            "ADMIN_PASS_HASH instead and unset ADMIN_PASS."
+        )
+    except Exception:
+        # If hashing fails (unlikely), leave plaintext in place so admin can
+        # still log in. The compare_digest path is timing-safe.
+        pass
+
 # ── Admin login rate limiting ─────────────────────────
 _ADMIN_RATE_LIMIT_WINDOW = 15 * 60   # 15 minutes
 _ADMIN_RATE_LIMIT_MAX = 5            # max failures before block

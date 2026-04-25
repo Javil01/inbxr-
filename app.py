@@ -476,16 +476,31 @@ def inject_trust_stats():
 
 @app.route("/verification-required")
 def verification_required_page():
-    """Show the email verification required page."""
-    # If not logged in, send to login
-    if not session.get("user_id"):
+    """Show the email verification required page.
+
+    Honors either session['user_id'] (already-logged-in unverified user) or
+    session['pending_user_id'] (just-signed-up user not yet logged in).
+    """
+    uid = session.get("user_id") or session.get("pending_user_id")
+    if not uid:
         return redirect(url_for("auth.login"))
+
     # If already verified, send to dashboard
     from modules.auth import get_current_user as _get_current_user
     user = _get_current_user()
     if user and user.get("email_verified"):
         return redirect("/dashboard")
-    return render_template("auth/verification_required.html", active_page="")
+
+    # Surface a verification-email send failure so the user knows to retry
+    # instead of waiting forever for an email that never came.
+    send_failed = bool(session.pop("verification_send_failed", False))
+    resent = request.args.get("resent") == "1"
+    return render_template(
+        "auth/verification_required.html",
+        active_page="",
+        send_failed=send_failed,
+        resent=resent,
+    )
 
 
 # ── Page view tracking ────────────────────────────────
@@ -549,7 +564,32 @@ def server_error(e):
 # ── Health check ────────────────────────────────────
 @app.route('/health')
 def health_check():
+    """Liveness check — always returns 200 unless the process itself is dead."""
     return jsonify({'status': 'ok'}), 200
+
+
+@app.route('/ready')
+def readiness_check():
+    """Readiness check — verifies DB is reachable and seeded.
+
+    Railway should point its healthcheck path at /ready (or /health) so
+    traffic isn't routed to a worker that hasn't finished booting yet.
+    """
+    try:
+        from modules.database import fetchone
+        row = fetchone("SELECT COUNT(*) AS cnt FROM users")
+        return jsonify({
+            'status': 'ready',
+            'db': 'ok',
+            'users': int(row['cnt']) if row else 0,
+        }), 200
+    except Exception as e:
+        logger.exception("Readiness check failed")
+        return jsonify({
+            'status': 'not_ready',
+            'db': 'fail',
+            'error': str(e)[:200],
+        }), 503
 
 
 @app.route('/blog-images/<path:filename>')

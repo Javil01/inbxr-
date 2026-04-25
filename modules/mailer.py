@@ -70,7 +70,7 @@ def _send_via_api(to_email, subject, html_body, text_body=None):
                 return True
             elif resp.status >= 500 and attempt < 2:
                 logger.warning("Brevo API server error %s (attempt %d), retrying", resp.status, attempt + 1)
-                time.sleep(1 * (attempt + 1))
+                time.sleep(2 ** attempt)  # exponential backoff: 1s, 2s, 4s
                 continue
             else:
                 logger.error("Brevo API error %s sending to %s: %s", resp.status, to_email, body)
@@ -78,7 +78,7 @@ def _send_via_api(to_email, subject, html_body, text_body=None):
         except Exception as e:
             if attempt < 2:
                 logger.warning("Brevo API network error (attempt %d): %s, retrying", attempt + 1, e)
-                time.sleep(1 * (attempt + 1))
+                time.sleep(2 ** attempt)  # exponential backoff: 1s, 2s, 4s
                 continue
             logger.error("Brevo API network error sending to %s: %s", to_email, e)
             return False

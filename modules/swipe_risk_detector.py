@@ -27,7 +27,7 @@ logger = logging.getLogger("inbxr.swipe_risk")
 
 _SHINGLE_N = 7
 _MAX_BODY_CHARS_FOR_LLM = 3000
-_LLM_TIMEOUT = 20
+_LLM_TIMEOUT = 8  # was 20s — too long; analysis runs inline in the request path
 
 
 def _strip_html(raw: str) -> str:
