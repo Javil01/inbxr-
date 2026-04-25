@@ -1030,7 +1030,10 @@ def get_signal_history(user_id, esp_integration_id=None, limit=90):
 
 # ── CSV Upload Path ────────────────────────────────────
 
-def parse_csv_contacts(csv_content):
+CSV_MAX_ROWS = 50000  # hard cap to prevent OOM / slow scoring on huge lists
+
+
+def parse_csv_contacts(csv_content, max_rows=CSV_MAX_ROWS):
     """
     Parse a CSV string into a list of contact dicts for the signal engine.
 
@@ -1040,7 +1043,9 @@ def parse_csv_contacts(csv_content):
     - last_click / Last Click / last_clicked
     - acquisition_date / date_added / signup_date / joined
 
-    Returns list of dicts in the signal engine contact format.
+    Returns (contacts, skipped_no_email, truncated_at) where truncated_at is
+    the row index where parsing stopped due to max_rows, or None if all
+    rows were consumed.
     """
     import csv
     import io
@@ -1050,8 +1055,12 @@ def parse_csv_contacts(csv_content):
     reader = csv.DictReader(io.StringIO(csv_content))
     contacts = []
     skipped_no_email = 0
+    truncated_at = None
 
-    for row in reader:
+    for row_idx, row in enumerate(reader, start=1):
+        if len(contacts) >= max_rows:
+            truncated_at = row_idx
+            break
         email = find_csv_column(row, 'email')
         if not email or '@' not in str(email):
             skipped_no_email += 1
@@ -1071,7 +1080,7 @@ def parse_csv_contacts(csv_content):
         }
         contacts.append(contact)
 
-    return contacts, skipped_no_email
+    return contacts, skipped_no_email, truncated_at
 
 
 def calculate_signal_score_from_csv(
@@ -1088,7 +1097,7 @@ def calculate_signal_score_from_csv(
     Returns the same result dict format as calculate_signal_score(),
     plus CSV-specific metadata (rows_parsed, rows_skipped).
     """
-    contacts, skipped = parse_csv_contacts(csv_content)
+    contacts, skipped, truncated_at = parse_csv_contacts(csv_content)
 
     if not contacts:
         return {
@@ -1110,6 +1119,7 @@ def calculate_signal_score_from_csv(
 
     result['rows_parsed'] = len(contacts)
     result['rows_skipped'] = skipped
+    result['truncated_at'] = truncated_at
     return result
 
 

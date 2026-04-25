@@ -338,13 +338,33 @@ def calculate_signal_score_csv():
     if "csv_file" not in request.files:
         return jsonify({"ok": False, "error": "No file uploaded"}), 400
 
+    # Hard size cap before reading. Anonymous tier sees a smaller cap to keep
+    # the public endpoint cheap; signed-in users get more headroom. The 10MB
+    # MAX_CONTENT_LENGTH on the Flask app is a backstop, not the primary cap.
+    MAX_CSV_BYTES_ANON = 2 * 1024 * 1024   # 2MB
+    MAX_CSV_BYTES_AUTH = 10 * 1024 * 1024  # 10MB
+    max_bytes = MAX_CSV_BYTES_ANON if is_anonymous else MAX_CSV_BYTES_AUTH
+    content_length = request.content_length or 0
+    if content_length and content_length > max_bytes:
+        return jsonify({
+            "ok": False,
+            "error": f"CSV too large ({content_length // 1024}KB). Max {max_bytes // (1024 * 1024)}MB. "
+                     "For larger lists, sign up and connect your ESP.",
+        }), 413
+
     f = request.files["csv_file"]
+    # Defensive read with hard byte cap in case content_length was missing or wrong.
+    raw = f.read(max_bytes + 1)
+    if len(raw) > max_bytes:
+        return jsonify({
+            "ok": False,
+            "error": f"CSV too large. Max {max_bytes // (1024 * 1024)}MB.",
+        }), 413
     try:
-        csv_content = f.read().decode("utf-8")
+        csv_content = raw.decode("utf-8")
     except UnicodeDecodeError:
         try:
-            f.seek(0)
-            csv_content = f.read().decode("latin-1")
+            csv_content = raw.decode("latin-1")
         except Exception:
             return jsonify({"ok": False, "error": "Could not decode CSV file. Use UTF-8."}), 400
 
@@ -370,7 +390,7 @@ def calculate_signal_score_csv():
 
     # Full payload so the dashboard can render inline for both anon + auth.
     # Includes per-signal scores and metadata for the 7-signal cards.
-    return jsonify({
+    payload = {
         "ok": True,
         "is_anonymous": is_anonymous,
         "score": result["total_signal_score"],
@@ -383,7 +403,14 @@ def calculate_signal_score_csv():
         "segments": result.get("segments", {}),
         "trajectory_direction": result.get("trajectory_direction"),
         "mpp_accuracy": result.get("mpp_accuracy"),
-    })
+    }
+    if result.get("truncated_at"):
+        payload["truncated_at"] = result["truncated_at"]
+        payload["truncated_warning"] = (
+            f"List truncated at row {result['truncated_at']}. "
+            "Sign up and connect your ESP for unlimited contact analysis."
+        )
+    return jsonify(payload)
 
 
 # ── Public share URL ──────────────────────────────────
