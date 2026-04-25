@@ -101,9 +101,24 @@ app.config["MAX_CONTENT_LENGTH"] = 10 * 1024 * 1024
 app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(days=7)
 
 # ── Session cookie security ─────────────────────────────
-app.config['SESSION_COOKIE_SECURE'] = os.environ.get('FLASK_ENV') == 'production'
+# Use _is_production (defined above) so we honor either FLASK_ENV or
+# INBXR_ENV. Without this, cookies could be sent over HTTP if Railway
+# only sets INBXR_ENV.
+app.config['SESSION_COOKIE_SECURE'] = _is_production
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+
+# HSTS in production only (don't break local http://localhost dev).
+if _is_production:
+    @app.after_request
+    def _add_security_headers(response):
+        response.headers.setdefault(
+            'Strict-Transport-Security',
+            'max-age=31536000; includeSubDomains'
+        )
+        response.headers.setdefault('X-Content-Type-Options', 'nosniff')
+        response.headers.setdefault('Referrer-Policy', 'strict-origin-when-cross-origin')
+        return response
 
 # ── Initialize database and register blueprints ─────────
 from modules.database import init_db
