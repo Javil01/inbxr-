@@ -539,7 +539,7 @@ function checkSeedHealth() {
       btn.disabled = false;
       btn.textContent = 'Run Health Check';
       if (data.error) {
-        result.innerHTML = '<span style="color:#ef4444">' + data.error + '</span>';
+        result.replaceChildren(Object.assign(document.createElement('span'), { style: 'color:#ef4444', textContent: String(data.error || 'Error') }));
         return;
       }
       var seeds = data.seeds || [];
@@ -576,7 +576,7 @@ function cleanupSeeds() {
       btn.disabled = false;
       btn.textContent = 'Cleanup Old Emails';
       if (data.error) {
-        result.innerHTML = '<span style="color:#ef4444">' + data.error + '</span>';
+        result.replaceChildren(Object.assign(document.createElement('span'), { style: 'color:#ef4444', textContent: String(data.error || 'Error') }));
       } else {
         result.innerHTML = '<span style="color:#22c55e">Cleaned up ' + (data.deleted || 0) + ' old emails.</span>';
       }

@@ -36,6 +36,23 @@ from flask import Flask, render_template, request, jsonify, session, redirect, u
 
 app = Flask(__name__)
 
+# ── Sentry error tracking (no-op if SENTRY_DSN unset) ────
+_sentry_dsn = os.environ.get("SENTRY_DSN", "").strip()
+if _sentry_dsn:
+    try:
+        import sentry_sdk
+        from sentry_sdk.integrations.flask import FlaskIntegration
+        sentry_sdk.init(
+            dsn=_sentry_dsn,
+            integrations=[FlaskIntegration()],
+            traces_sample_rate=float(os.environ.get("SENTRY_TRACES_SAMPLE_RATE", "0.0") or 0.0),
+            environment=os.environ.get("INBXR_ENV") or os.environ.get("FLASK_ENV") or "development",
+            send_default_pii=False,
+        )
+        logger.info("Sentry initialized (env=%s)", os.environ.get("INBXR_ENV") or "?")
+    except Exception:
+        logger.exception("Sentry init failed (continuing without it)")
+
 from flask_wtf.csrf import CSRFProtect, validate_csrf
 from wtforms import ValidationError as WTFValidationError
 
