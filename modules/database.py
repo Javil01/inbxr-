@@ -1272,6 +1272,19 @@ Opportunity: Start your free InbXr audit today and see where you actually stand.
         );
         CREATE INDEX IF NOT EXISTS idx_agency_clients_user ON agency_clients(agency_user_id);
     """),
+
+    ("034_stripe_webhook_events", """
+        -- Idempotency log for Stripe webhook events. Stripe retries on
+        -- network blips and we MUST NOT process the same event twice
+        -- (would double-grant tiers, send duplicate emails, etc.). Insert
+        -- with INSERT OR IGNORE before processing; if the row already
+        -- exists the handler short-circuits.
+        CREATE TABLE IF NOT EXISTS stripe_webhook_events (
+            event_id TEXT PRIMARY KEY,
+            event_type TEXT NOT NULL,
+            received_at TEXT DEFAULT (datetime('now'))
+        );
+    """),
 ]
 
 

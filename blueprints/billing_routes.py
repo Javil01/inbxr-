@@ -151,8 +151,31 @@ def webhook():
     except (ValueError, stripe.error.SignatureVerificationError):
         return jsonify({"error": "Invalid signature"}), 400
 
+    event_id = event.get("id")
     event_type = event["type"]
     data_obj = event["data"]["object"]
+
+    # Idempotency guard: Stripe retries on network blips. We MUST NOT process
+    # the same event twice (would double-grant tiers, etc.). Reserve the event
+    # id in stripe_webhook_events; if already present, ack and skip.
+    if event_id:
+        from modules.database import execute, fetchone
+        try:
+            existing = fetchone(
+                "SELECT 1 FROM stripe_webhook_events WHERE event_id = ?",
+                (event_id,),
+            )
+            if existing:
+                logger.info("Stripe webhook %s (%s) already processed; skipping", event_id, event_type)
+                return jsonify({"status": "ok", "duplicate": True}), 200
+            execute(
+                "INSERT OR IGNORE INTO stripe_webhook_events (event_id, event_type) VALUES (?, ?)",
+                (event_id, event_type),
+            )
+        except Exception:
+            # Don't fail the webhook over a logging table issue. Stripe will
+            # retry if we 500, which is worse than a possible double-process.
+            logger.exception("stripe_webhook_events table failure (non-fatal)")
 
     if event_type == "checkout.session.completed":
         _handle_checkout_completed(data_obj)
