@@ -1207,6 +1207,14 @@ def score_subjects():
 @app.route("/email-test/start", methods=["POST"])
 def email_test_start():
     from modules.inbox_placement import generate_token, get_seed_info
+    from modules.rate_limiter import burst_allow
+
+    # Burst guard: 10 token issuances per worker per minute per IP. Tokens
+    # are cheap to generate but each one becomes a poll target on the seed
+    # mailbox; without a cap an attacker can mint thousands and pollute it.
+    ip = request.remote_addr or "unknown"
+    if not burst_allow(f"et_start:{ip}", limit=10, window_seconds=60):
+        return jsonify({"error": "Too many requests. Wait a minute."}), 429
 
     seeds = get_seed_info()
     if not seeds:
@@ -1222,6 +1230,14 @@ def email_test_start():
 def email_test_check():
     from modules.inbox_placement import check_rate_limit as imap_rate_limit
     from modules.email_test import EmailTestFetcher, run_full_analysis
+    from modules.rate_limiter import burst_allow
+
+    # Per-IP burst guard layered on top of the existing global IMAP cap.
+    # The hero auto-polls every few seconds; allow generous burst for
+    # legit flow but still bound a hostile spammer.
+    ip = request.remote_addr or "unknown"
+    if not burst_allow(f"et_check:{ip}", limit=20, window_seconds=60):
+        return jsonify({"error": "Too many requests. Wait a minute."}), 429
 
     if not imap_rate_limit():
         return jsonify({"error": "Rate limit exceeded. Please wait a minute."}), 429

@@ -24,46 +24,13 @@ All routes use raw SQLite + session auth (not SQLAlchemy + Flask-Login).
 
 import json
 import logging
-import time
-from collections import defaultdict, deque
-from threading import Lock
 
 from flask import Blueprint, render_template, request, jsonify, Response
 
 from modules.auth import login_required, tier_required, get_current_user
 from modules.database import execute, fetchone, fetchall
-from modules.rate_limiter import check_rate_limit, log_usage
+from modules.rate_limiter import burst_allow, check_rate_limit, log_usage
 from modules.tiers import has_feature, get_tier_limit
-
-
-# ── In-memory burst rate limiter ────────────────────────────
-# Used for the public /signal-score/from-domain endpoint, which is the
-# homepage hero CTA and gets hit on every submit. Daily-bucket rate
-# limiting (usage_log) is too coarse here — we want to allow demo
-# behavior (trying a few domains) but block scripted abuse. State is
-# per-process, so total throughput cap = workers × limit, which is
-# acceptable. Memory is bounded by max IPs * window seconds.
-
-_BURST_BUCKETS = defaultdict(deque)
-_BURST_LOCK = Lock()
-
-
-def _burst_allow(key, limit, window_seconds):
-    """Return True if the caller (key) is under `limit` events in the last
-    `window_seconds`. Records the event on success."""
-    now = time.monotonic()
-    cutoff = now - window_seconds
-    with _BURST_LOCK:
-        bucket = _BURST_BUCKETS[key]
-        while bucket and bucket[0] < cutoff:
-            bucket.popleft()
-        if len(bucket) >= limit:
-            return False
-        bucket.append(now)
-        # Cap memory: don't keep more than `limit` entries per key
-        while len(bucket) > limit:
-            bucket.popleft()
-    return True
 from modules.signal_copy import (
     SIGNAL_DIMENSION_COPY,
     SIGNAL_GRADE_COPY,
@@ -310,10 +277,11 @@ def calculate_signal_score_from_domain():
       - 2 visible signal scores filled in
       - 5 locked signal scores set to None
     """
-    # Burst rate limit: 30 domain checks per minute per IP. Allows legitimate
-    # demo flow (try a few domains) but blocks scripted abuse.
+    # Burst rate limit: 15 per worker => effective ~30/min/IP on a 2-worker
+    # deploy. Per-process state, so the cluster-wide limit scales with worker
+    # count; that's an acceptable approximation without adding Redis.
     ip = request.remote_addr or "unknown"
-    if not _burst_allow(f"domain:{ip}", limit=30, window_seconds=60):
+    if not burst_allow(f"domain:{ip}", limit=15, window_seconds=60):
         return jsonify({
             "ok": False,
             "error": "Too many requests. Wait a minute and try again.",
@@ -380,7 +348,7 @@ def calculate_signal_score_csv():
 
     # Burst guard: at most 5 CSV uploads per minute per IP (CPU-heavy).
     ip = request.remote_addr or "unknown"
-    if not _burst_allow(f"csv:{ip}", limit=5, window_seconds=60):
+    if not burst_allow(f"csv:{ip}", limit=5, window_seconds=60):
         return jsonify({
             "ok": False,
             "error": "Too many uploads in a short window. Try again in a minute.",

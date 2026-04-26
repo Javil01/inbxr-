@@ -4,7 +4,10 @@ Uses the usage_log table for persistent, tier-aware rate limiting.
 Anonymous users: 3 checks/day across all tools.
 """
 
+import time
+from collections import defaultdict, deque
 from datetime import datetime, timedelta, timezone
+from threading import Lock
 
 from flask import request, session
 
@@ -13,6 +16,34 @@ from modules.tiers import get_tier_limit
 
 # Anonymous users get 3 uses per tool per day
 ANON_DAILY_LIMIT = 3
+
+
+# ── In-process burst limiter ───────────────────────────────
+# Lightweight per-IP burst guard for public POST endpoints. State is
+# per-worker so the cluster-wide cap = workers × limit. Sized accordingly
+# at each call site. Use this for cheap-but-spammy endpoints (homepage CTA,
+# email-test token issuance) where the daily DB rate-limit is too coarse
+# but full Redis is overkill for v1.
+
+_BURST_BUCKETS = defaultdict(deque)
+_BURST_LOCK = Lock()
+
+
+def burst_allow(key, limit, window_seconds):
+    """Return True if the caller (key) is under `limit` events in the last
+    `window_seconds`. Records the event on success."""
+    now = time.monotonic()
+    cutoff = now - window_seconds
+    with _BURST_LOCK:
+        bucket = _BURST_BUCKETS[key]
+        while bucket and bucket[0] < cutoff:
+            bucket.popleft()
+        if len(bucket) >= limit:
+            return False
+        bucket.append(now)
+        while len(bucket) > limit:
+            bucket.popleft()
+    return True
 
 
 def _get_identifier():
