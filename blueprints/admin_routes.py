@@ -1326,8 +1326,10 @@ def admin_api_media_upload():
     f = request.files.get("file")
     if not f:
         return jsonify({"ok": False, "error": "No file"}), 400
-    # Save uploaded image
-    ALLOWED_EXT = {".png", ".jpg", ".jpeg", ".gif", ".svg", ".webp"}
+    # Save uploaded image — SVG dropped because it can carry <script> and the
+    # uploads dir is served same-origin. Even an admin upload is a stored-XSS
+    # risk if the admin session ever gets hijacked or roles diversify later.
+    ALLOWED_EXT = {".png", ".jpg", ".jpeg", ".gif", ".webp"}
     upload_dir = _os.path.join(current_app.root_path, "static", "uploads")
     _os.makedirs(upload_dir, exist_ok=True)
     fname = f.filename or "upload"

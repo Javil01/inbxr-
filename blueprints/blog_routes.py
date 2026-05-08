@@ -70,8 +70,10 @@ def _fix_legacy_links(content):
 # ── Admin auth helper ────────────────────────────────────
 
 def _is_admin():
-    # Allow API key auth for automated scripts (e.g. daily blog generator)
-    api_key = request.headers.get("X-Blog-Api-Key") or request.args.get("api_key")
+    # Allow API key auth for automated scripts (e.g. daily blog generator).
+    # Header-only — query strings get logged by Railway, CDNs, and browser
+    # history, which would leak the key.
+    api_key = request.headers.get("X-Blog-Api-Key")
     expected = os.environ.get("BLOG_API_KEY")
     if api_key and expected and api_key == expected:
         return True

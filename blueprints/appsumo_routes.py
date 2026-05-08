@@ -60,9 +60,11 @@ def appsumo_redeem_form():
     """Redeem form. Requires login so we can tie the code to an account."""
     user = get_current_user()
     if not user:
-        # Stash the intent in session and bounce to signup
+        # Stash the intent in session AND on the signup URL so the
+        # post-verification redirect picks it up (signup reads ?next=
+        # and stores _post_verify_redirect to honor after email verify).
         session["_post_signup_redirect"] = "/appsumo/redeem"
-        return redirect(url_for("auth.signup") + "?from=appsumo")
+        return redirect(url_for("auth.signup") + "?next=/appsumo/redeem&from=appsumo")
 
     codes = get_user_codes(user["id"])
     code_count = len(codes)

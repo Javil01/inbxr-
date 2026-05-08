@@ -126,15 +126,23 @@ def update_user_tier(user_id, tier, stripe_customer_id=None, stripe_subscription
 
 
 def verify_email_token(token):
-    """Verify a user's email by token. Returns True if successful."""
-    user = fetchone("SELECT id FROM users WHERE verification_token = ?", (token,))
-    if not user:
-        return False
+    """Verify a user's email by token. Returns the verified user dict on
+    success (so callers can auto-login them), or None on failure.
+
+    For backwards compatibility with existing callers that treat the return
+    as a truthy/falsy success flag, the dict is naturally truthy.
+    """
+    row = fetchone(
+        "SELECT id, email, tier, display_name FROM users WHERE verification_token = ?",
+        (token,),
+    )
+    if not row:
+        return None
     execute(
         "UPDATE users SET email_verified = 1, verification_token = NULL, updated_at = datetime('now') WHERE id = ?",
-        (user["id"],),
+        (row["id"],),
     )
-    return True
+    return row
 
 
 def create_reset_token(email):
@@ -173,7 +181,21 @@ def reset_password_with_token(token, new_password):
 # ── Session Management ───────────────────────────────────
 
 def login_user(user):
-    """Set session for logged-in user."""
+    """Set session for logged-in user.
+
+    Clears any pre-existing session keys first to prevent session fixation —
+    an attacker who has set their own cookie on the victim's browser pre-login
+    cannot ride that fixed session id to authenticated state because we wipe it.
+    """
+    # Preserve only values that should survive a privilege change.
+    _next = session.get("_post_signup_redirect")
+    _csrf = session.get("csrf_token")
+    session.clear()
+    if _next:
+        session["_post_signup_redirect"] = _next
+    if _csrf:
+        session["csrf_token"] = _csrf
+
     session["user_id"] = user["id"]
     session["user_email"] = user["email"]
     session["user_tier"] = user["tier"]

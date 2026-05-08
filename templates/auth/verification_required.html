@@ -4,7 +4,7 @@
 <h1 class="auth-card__title">Verify Your Email</h1>
 <p style="margin-bottom:16px;color:var(--text-muted, #888);">
   To use InbXr tools, please verify your email address.
-  We sent a verification link to <strong>{{ current_user_email }}</strong>.
+  We sent a verification link to <strong>{{ pending_email or current_user_email or "your email" }}</strong>.
   Please also check your <strong>spam/junk folder</strong> if you don't see it within a few minutes.
 </p>
 

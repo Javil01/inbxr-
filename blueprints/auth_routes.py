@@ -16,11 +16,21 @@ from modules.auth import (
     verify_email_token, create_reset_token, reset_password_with_token,
 )
 from modules.tiers import get_all_tiers, get_tier
-from modules.rate_limiter import get_usage_summary
+from modules.rate_limiter import get_usage_summary, burst_allow
 
 auth_bp = Blueprint("auth", __name__)
 
 _EMAIL_RE = re.compile(r'^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$')
+
+
+def _client_ip():
+    """Real client IP — assumes ProxyFix is wired so request.remote_addr is correct."""
+    return request.remote_addr or "unknown"
+
+
+def _auth_throttle(scope, key, limit, window_seconds):
+    """Burst limiter for sensitive auth endpoints. Returns True if allowed."""
+    return burst_allow(f"{scope}:{key}", limit, window_seconds)
 
 
 @auth_bp.route("/signup", methods=["GET", "POST"])
@@ -30,6 +40,15 @@ def signup():
 
     if request.method == "GET":
         return render_template("auth/signup.html", error=None, active_page="signup")
+
+    # Throttle: 5 signups/hr per IP. Stops automated account creation
+    # without inconveniencing humans (you only sign up once).
+    if not _auth_throttle("signup_ip", _client_ip(), limit=5, window_seconds=3600):
+        return render_template(
+            "auth/signup.html",
+            error="Too many signup attempts from this network. Please try again in an hour.",
+            active_page="signup",
+        ), 429
 
     email = (request.form.get("email") or "").strip()
     password = request.form.get("password") or ""
@@ -46,7 +65,27 @@ def signup():
 
     user = create_user(email, password, display_name=name)
     if not user:
-        return render_template("auth/signup.html", error="An account with that email already exists.", active_page="signup")
+        # Generic error to avoid signaling whether the email is already
+        # registered. If it IS registered, send a helpful "you may already
+        # have an account" email out-of-band so the legitimate owner can
+        # log in or reset, while attackers learn nothing.
+        try:
+            from modules.mailer import send_admin_email, is_configured as _mailer_configured
+            if _mailer_configured():
+                send_admin_email(
+                    email,
+                    "Did you try to sign up for InbXr?",
+                    """<p>Someone (maybe you) tried to create an InbXr account with this email address.</p>
+                    <p>You already have an account here. If this was you, just <a href="https://inbxr.us/login">log in</a> or <a href="https://inbxr.us/forgot-password">reset your password</a>.</p>
+                    <p>If it wasn't you, ignore this email.</p>""",
+                )
+        except Exception:
+            logger.exception("anti-enumeration email failed for %s", email)
+        return render_template(
+            "auth/signup.html",
+            error="We couldn't create that account. If you already have one, try logging in or resetting your password.",
+            active_page="signup",
+        )
 
     # Send verification email. If sending fails (Brevo down, network blip),
     # surface that to the user so they don't sit on /verification-required
@@ -70,7 +109,16 @@ def signup():
     # Don't fully log in until email is verified — redirect to verification page
     if is_configured() and user.get("verification_token"):
         session["pending_user_id"] = user["id"]
+        session["pending_user_email"] = email
         session["is_new_signup"] = True
+        # Stash the destination so we can honor it after verification (e.g.
+        # AppSumo redeem flow, deep-linked CTAs). Production-path /verify-email
+        # reads `_post_verify_redirect` once and clears it.
+        next_param = request.args.get("next") or request.form.get("next")
+        if next_param:
+            safe = _safe_next(next_param)
+            if safe and safe != "/dashboard":
+                session["_post_verify_redirect"] = safe
         if email_send_failed:
             session["verification_send_failed"] = True
         return redirect("/verification-required")
@@ -78,7 +126,7 @@ def signup():
         # No email configured — allow login (dev mode / email disabled)
         login_user(user)
         session["is_new_signup"] = True
-        next_url = _safe_next(request.args.get("next", "/dashboard"))
+        next_url = _safe_next(request.args.get("next") or request.form.get("next") or "/dashboard")
         return redirect(next_url)
 
 
@@ -97,8 +145,25 @@ def login():
     if request.method == "GET":
         return render_template("auth/login.html", error=None, active_page="login")
 
-    email = (request.form.get("email") or "").strip()
+    email = (request.form.get("email") or "").strip().lower()
     password = request.form.get("password") or ""
+
+    # Two-axis throttle: per-IP and per-email. Either trips → 429.
+    # Per-IP catches credential stuffing across many accounts.
+    # Per-email catches password brute-force on a known target.
+    ip = _client_ip()
+    if not _auth_throttle("login_ip", ip, limit=20, window_seconds=900):
+        return render_template(
+            "auth/login.html",
+            error="Too many login attempts from this network. Please try again in 15 minutes.",
+            active_page="login",
+        ), 429
+    if email and not _auth_throttle("login_email", email, limit=10, window_seconds=900):
+        return render_template(
+            "auth/login.html",
+            error="Too many login attempts for this account. Please try again in 15 minutes.",
+            active_page="login",
+        ), 429
 
     user = authenticate(email, password)
     if not user:
@@ -140,6 +205,11 @@ def change_password():
     user = get_current_user()
     if not user:
         return jsonify({"error": "Not authenticated."}), 401
+
+    # Throttle current-password attempts per user. An attacker with a hijacked
+    # session can't brute-force the current password to chain into other tools.
+    if not _auth_throttle("change_pw_user", str(user["id"]), limit=5, window_seconds=900):
+        return jsonify({"error": "Too many attempts. Please try again in 15 minutes."}), 429
 
     data = request.get_json(force=True, silent=True) or {}
     current = data.get("current_password", "")
@@ -219,7 +289,10 @@ def regenerate_api_key():
 # are read by modules/signal_report_pdf.py when rendering the agency
 # variant of the Signal Report PDF. GET renders the form, POST saves.
 
-_ALLOWED_LOGO_EXT = {"png", "jpg", "jpeg", "svg", "webp"}
+# SVG omitted on purpose — SVG can carry inline <script> and is served from the
+# same origin as user sessions, which would let a malicious agency upload a
+# stored XSS. PNG / JPG / WEBP are bitmap formats and cannot execute.
+_ALLOWED_LOGO_EXT = {"png", "jpg", "jpeg", "webp"}
 _MAX_LOGO_BYTES = 2 * 1024 * 1024  # 2 MB
 _HEX_COLOR_RE = re.compile(r"^#[0-9a-fA-F]{6}$")
 
@@ -361,16 +434,25 @@ def resend_verification():
 
 @auth_bp.route("/verify-email/<token>")
 def verify_email(token):
-    success = verify_email_token(token)
-    if success:
-        # Send welcome email
-        from modules.mailer import send_welcome_email, is_configured
-        if is_configured():
-            user = get_current_user()
-            if user:
-                send_welcome_email(user["email"], user.get("display_name"))
-        return render_template("auth/email_verified.html", active_page="")
-    return render_template("auth/email_verified.html", error="Invalid or expired link.", active_page="")
+    verified_user = verify_email_token(token)
+    if not verified_user:
+        return render_template("auth/email_verified.html", error="Invalid or expired link.", active_page="")
+
+    # Auto-login the freshly-verified user (clears pending_* keys via
+    # session.clear inside login_user) and honor any deep-link destination
+    # they were headed to before verification interrupted them.
+    login_user(verified_user)
+
+    from modules.mailer import send_welcome_email, is_configured
+    if is_configured():
+        send_welcome_email(verified_user["email"], verified_user.get("display_name"))
+
+    next_url = session.pop("_post_verify_redirect", None) or session.pop("_post_signup_redirect", None)
+    return render_template(
+        "auth/email_verified.html",
+        active_page="",
+        next_url=next_url or "/dashboard",
+    )
 
 
 @auth_bp.route("/forgot-password", methods=["GET", "POST"])
@@ -378,8 +460,18 @@ def forgot_password():
     if request.method == "GET":
         return render_template("auth/forgot_password.html", error=None, success=False, active_page="")
 
-    email = (request.form.get("email") or "").strip()
+    email = (request.form.get("email") or "").strip().lower()
     logger.info("Password reset requested for: %s", email)
+
+    # Throttle by IP and by email. Stops mail-bombing a target inbox and
+    # rate-limits enumeration probing.
+    ip = _client_ip()
+    if not _auth_throttle("forgot_ip", ip, limit=10, window_seconds=3600):
+        # Still render success to avoid telling the attacker we're throttling
+        return render_template("auth/forgot_password.html", error=None, success=True, active_page="")
+    if email and not _auth_throttle("forgot_email", email, limit=3, window_seconds=3600):
+        return render_template("auth/forgot_password.html", error=None, success=True, active_page="")
+
     # Always show success to prevent email enumeration
     token = create_reset_token(email)
     if token:

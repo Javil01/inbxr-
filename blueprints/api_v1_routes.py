@@ -42,10 +42,25 @@ from flask import Blueprint, request, jsonify, g
 
 from modules.auth import api_key_required
 from modules.database import fetchone
+from modules.rate_limiter import check_rate_limit, log_usage
 
 logger = logging.getLogger("inbxr.api_v1")
 
 api_v1_bp = Blueprint("api_v1", __name__, url_prefix="/api/v1")
+
+
+def _enforce_api_rate_limit():
+    """Apply hourly + daily caps to authenticated API calls. The api_key_required
+    decorator places the user in g._api_user and stamps session for rate_limiter."""
+    allowed, info = check_rate_limit("api_v1_call", limit_key="api_calls_per_hour")
+    if not allowed:
+        return jsonify({
+            "ok": False,
+            "error": "API rate limit exceeded. Upgrade your tier for higher limits.",
+            "code": "rate_limited",
+            "limit_info": info,
+        }), 429
+    return None
 
 
 # ── CORS helper ─────────────────────────────────────────
@@ -88,6 +103,10 @@ def api_signal_score_domain(domain):
     """
     from modules.signal_score import calculate_domain_signal_score
 
+    rate_block = _enforce_api_rate_limit()
+    if rate_block:
+        return rate_block
+
     clean = (domain or "").strip().lower()
     if not clean or "." not in clean:
         return jsonify({
@@ -112,6 +131,8 @@ def api_signal_score_domain(domain):
             "error": result.get("message", "Scoring failed."),
             "code": result.get("error"),
         }), 400
+
+    log_usage("api_v1_call")
 
     # Slim payload: return the user-facing fields only, not internal state
     return jsonify({
@@ -140,6 +161,10 @@ def api_my_signal_score():
     connected ESP. Full 7-signal reading with list data (bounce
     exposure, engagement trajectory, etc). Only populated if the
     user has an active ESP integration and Signal Watch has run."""
+    rate_block = _enforce_api_rate_limit()
+    if rate_block:
+        return rate_block
+
     user = g._api_user
     user_id = user["id"]
 
@@ -165,6 +190,8 @@ def api_my_signal_score():
             "error": "No Signal Score on record yet. Connect an ESP or upload a CSV first.",
             "code": "no_score",
         }), 404
+
+    log_usage("api_v1_call")
 
     return jsonify({
         "ok": True,
@@ -217,6 +244,10 @@ def api_csv_triage():
     workflows that want to auto-triage lists before sends."""
     from modules.list_triage import triage_list
 
+    rate_block = _enforce_api_rate_limit()
+    if rate_block:
+        return rate_block
+
     csv_content = None
 
     if request.is_json:
@@ -254,6 +285,8 @@ def api_csv_triage():
 
     if not result.get("ok"):
         return jsonify(result), 400
+
+    log_usage("api_v1_call")
 
     # Strip internal buckets from the response
     result.pop("_full_buckets", None)

@@ -18,6 +18,7 @@ TIERS = {
             "placement_tests_per_day": 3,
             "esp_integrations": 0,
             "signal_pdfs_per_day": 3,
+            "api_calls_per_hour": 0,  # Free has no API access
         },
         "features": {
             "cloud_history": False,
@@ -66,6 +67,7 @@ TIERS = {
             "signal_rules_max": 10,
             "signal_advisor_chats_per_month": 20,
             "signal_pdfs_per_day": 20,
+            "api_calls_per_hour": 0,  # Pro doesn't include API; upgrade to Agency
         },
         "features": {
             "cloud_history": True,
@@ -113,6 +115,7 @@ TIERS = {
             "signal_rules_max": 999,
             "signal_advisor_chats_per_month": 999999,
             "signal_pdfs_per_day": 9999,
+            "api_calls_per_hour": 200,
         },
         "features": {
             "cloud_history": True,
@@ -161,6 +164,7 @@ TIERS = {
             "esp_integrations": 10,
             "signal_rules_max": 999,
             "signal_advisor_chats_per_month": 999999,
+            "api_calls_per_hour": 500,
         },
         "features": {
             "cloud_history": True,
