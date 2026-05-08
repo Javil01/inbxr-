@@ -1285,6 +1285,42 @@ Opportunity: Start your free InbXr audit today and see where you actually stand.
             received_at TEXT DEFAULT (datetime('now'))
         );
     """),
+
+    ("036_unsubscribed_emails", """
+        -- Records of recipients who unsubscribed via the List-Unsubscribe
+        -- header (Gmail Feb 2024 + Microsoft May 2025 mandates). The Brevo
+        -- and SMTP paths both stamp <https://inbxr.us/unsubscribe> as the
+        -- HTTP unsubscribe target and POST One-Click hits this table.
+        CREATE TABLE IF NOT EXISTS unsubscribed_emails (
+            email TEXT PRIMARY KEY COLLATE NOCASE,
+            source TEXT DEFAULT 'one_click',
+            unsubscribed_at TEXT DEFAULT (datetime('now'))
+        );
+    """),
+
+    ("035_email_gate_cache", """
+        -- Email-gate analysis cache. Replaces a per-process dict that
+        -- silently dropped ~75% of unlock requests across 4 gunicorn
+        -- workers. analysis_json is the full JSON returned to the user
+        -- once they unlock the report. ip_count is a per-token counter
+        -- used by /api/email-report to enforce 3/hr per IP without an
+        -- in-memory fallback.
+        CREATE TABLE IF NOT EXISTS email_gate_analysis (
+            token TEXT PRIMARY KEY,
+            analysis_json TEXT NOT NULL,
+            created_at TEXT DEFAULT (datetime('now'))
+        );
+        CREATE INDEX IF NOT EXISTS idx_email_gate_analysis_created
+            ON email_gate_analysis(created_at);
+
+        CREATE TABLE IF NOT EXISTS email_report_rate (
+            ip_address TEXT NOT NULL,
+            sent_at TEXT NOT NULL,
+            PRIMARY KEY (ip_address, sent_at)
+        );
+        CREATE INDEX IF NOT EXISTS idx_email_report_rate_ip_sent
+            ON email_report_rate(ip_address, sent_at);
+    """),
 ]
 
 

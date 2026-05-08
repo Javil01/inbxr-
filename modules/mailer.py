@@ -32,6 +32,7 @@ def is_configured():
 
 def _send_via_api(to_email, subject, html_body, text_body=None):
     """Send email via Brevo HTTP API (works on Railway where SMTP is blocked)."""
+    unsub_http = f"{BASE_URL}/unsubscribe"
     payload = {
         "sender": {"email": SMTP_FROM, "name": "InbXr"},
         "to": [{"email": to_email}],
@@ -39,7 +40,10 @@ def _send_via_api(to_email, subject, html_body, text_body=None):
         "htmlContent": html_body,
         "headers": {
             "X-Mailer": "InbXr Transactional",
-            "List-Unsubscribe": f"<mailto:{SMTP_FROM}?subject=unsubscribe>",
+            # Both mailto and HTTPS endpoints — required by Gmail bulk-sender rules
+            "List-Unsubscribe": f"<mailto:{SMTP_FROM}?subject=unsubscribe>, <{unsub_http}>",
+            # Required for Gmail/Yahoo Feb 2024 + Microsoft May 2025 enforcement
+            "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
         },
         "tags": ["transactional"],
     }
@@ -91,6 +95,13 @@ def _send_via_smtp(to_email, subject, html_body, text_body=None):
     msg["From"] = SMTP_FROM
     msg["To"] = to_email
     msg["Subject"] = subject
+    # Bulk-sender requirements (Gmail Feb 2024, Microsoft May 2025) — apply
+    # to the SMTP path too so transactional mail meets the same bar the
+    # tool itself flags missing on user campaigns.
+    unsub_http = f"{BASE_URL}/unsubscribe"
+    msg["List-Unsubscribe"] = f"<mailto:{SMTP_FROM}?subject=unsubscribe>, <{unsub_http}>"
+    msg["List-Unsubscribe-Post"] = "List-Unsubscribe=One-Click"
+    msg["X-Mailer"] = "InbXr Transactional"
 
     if text_body:
         msg.attach(MIMEText(text_body, "plain", "utf-8"))
@@ -119,10 +130,29 @@ def _send_via_smtp(to_email, subject, html_body, text_body=None):
         return False
 
 
+def _is_unsubscribed(email):
+    """Suppress sends to addresses that hit the one-click unsubscribe endpoint.
+    Best-effort — if the table doesn't exist yet (fresh DB) or the query fails,
+    we err on the side of letting the message through."""
+    try:
+        from modules.database import fetchone
+        row = fetchone(
+            "SELECT 1 FROM unsubscribed_emails WHERE email = ? LIMIT 1",
+            (email,),
+        )
+        return bool(row)
+    except Exception:
+        return False
+
+
 def _send(to_email, subject, html_body, text_body=None):
     """Send an email. Uses Brevo API if available, falls back to SMTP."""
     if not is_configured():
         logger.info("Email not configured. Would send to %s: %s", to_email, subject)
+        return False
+
+    if to_email and _is_unsubscribed(to_email.strip().lower()):
+        logger.info("Suppressing send to unsubscribed address: %s", to_email)
         return False
 
     # Prefer Brevo HTTP API (works on Railway)

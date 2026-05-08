@@ -1,4 +1,4 @@
-{% if tracking_tags and tracking_tags.head %}{{ tracking_tags.head | safe }}{% endif %}
+{% if cookie_consent == 'accepted' and tracking_tags and tracking_tags.head %}{{ tracking_tags.head | safe }}{% endif %}
 <meta name="csrf-token" content="{{ csrf_token() }}">
 <script src="/static/js/utils.js?v=20260412a"></script>
 <script>if(new URLSearchParams(location.search).get('embed')==='1'){document.documentElement.classList.add('embedded');}</script>
@@ -71,10 +71,12 @@ window.showToast=function(msg,type,duration){
         {% endif %}
         <a href="/support" class="nav-link{% if active_page == 'support' %} nav-link--active{% endif %}">Help</a>
         <span class="nav-spacer"></span>
+        {% if current_user_tier in ('pro', 'agency', 'api') %}
         <a href="/monitors" class="nav-link alert-bell" id="alertBell" title="Alerts">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
           <span class="alert-bell__badge" id="alertBadge" style="display:none;">0</span>
         </a>
+        {% endif %}
         {% if current_user_tier == 'free' or not current_user_tier %}
         <a href="/pricing" class="nav-link nav-link--upgrade" style="color:#f59e0b;font-weight:600;">Upgrade</a>
         {% endif %}
@@ -259,23 +261,33 @@ window.__showFirstUseHint=function(k,sel,msg){
 };
 </script>
 {% endif %}
-{% if tracking_tags and tracking_tags.body %}{{ tracking_tags.body | safe }}{% endif %}
+{% if cookie_consent == 'accepted' and tracking_tags and tracking_tags.body %}{{ tracking_tags.body | safe }}{% endif %}
 
-<!-- Cookie Consent Banner -->
-<div id="cookieConsent" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:9998;background:#0f172a;border-top:1px solid rgba(255,255,255,0.08);padding:14px 24px;font-size:0.88rem;color:rgba(255,255,255,0.7);align-items:center;justify-content:center;gap:16px;">
-  <span>We use cookies to improve your experience. <a href="/privacy" style="color:#22c55e;text-decoration:underline;">Learn more</a></span>
+<!-- Cookie Consent Banner — GDPR / UK PECR compliant: Accept + Reject -->
+{% if not cookie_consent %}
+<div id="cookieConsent" style="position:fixed;bottom:0;left:0;right:0;z-index:9998;background:#0f172a;border-top:1px solid rgba(255,255,255,0.08);padding:14px 24px;font-size:0.88rem;color:rgba(255,255,255,0.78);display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap;">
+  <span style="flex:1;min-width:240px;">We use cookies for analytics and to improve your experience. <a href="/privacy" style="color:#22c55e;text-decoration:underline;">Learn more</a>.</span>
+  <button id="cookieRejectBtn" style="background:transparent;color:rgba(255,255,255,0.85);border:1px solid rgba(255,255,255,0.25);padding:8px 18px;border-radius:999px;font-size:0.85rem;font-weight:600;cursor:pointer;white-space:nowrap;">Reject</button>
   <button id="cookieAcceptBtn" style="background:#22c55e;color:#fff;border:none;padding:8px 20px;border-radius:999px;font-size:0.85rem;font-weight:600;cursor:pointer;white-space:nowrap;">Accept</button>
 </div>
 <script>
 (function(){
-  if(!localStorage.getItem('cookie_consent')){
-    var b=document.getElementById('cookieConsent');
-    if(b) b.style.display='flex';
+  function setConsent(value){
+    // 1-year cookie. Server reads this to decide whether to emit tracking pixels.
+    var maxAge = 60*60*24*365;
+    document.cookie = 'cookie_consent=' + value + ';path=/;max-age=' + maxAge + ';SameSite=Lax';
+    // Reload to apply server-side gating of tracking_tags. Skip reload on reject
+    // to avoid jarring UX since pixels were never loaded yet on first visit.
+    var b = document.getElementById('cookieConsent');
+    if (b) b.style.display = 'none';
+    if (value === 'accepted') {
+      window.location.reload();
+    }
   }
-  var btn=document.getElementById('cookieAcceptBtn');
-  if(btn) btn.addEventListener('click',function(){
-    localStorage.setItem('cookie_consent','1');
-    document.getElementById('cookieConsent').style.display='none';
-  });
+  var aBtn = document.getElementById('cookieAcceptBtn');
+  var rBtn = document.getElementById('cookieRejectBtn');
+  if (aBtn) aBtn.addEventListener('click', function(){ setConsent('accepted'); });
+  if (rBtn) rBtn.addEventListener('click', function(){ setConsent('rejected'); });
 })();
 </script>
+{% endif %}

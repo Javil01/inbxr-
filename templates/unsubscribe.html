@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>InbXr &middot; Unsubscribed</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/style.css?v=20260423a" />
+  {% include 'sections/_head_meta.html' %}
+  <style>
+    .unsub-page { min-height: 60vh; display: flex; align-items: center; justify-content: center; padding: 60px 24px; }
+    .unsub-card { max-width: 480px; text-align: center; padding: 40px 32px; background: #fff; border: 1px solid var(--border-1); border-radius: 12px; }
+    .unsub-card h1 { font-size: 1.5rem; font-weight: 800; margin: 0 0 12px; color: var(--text-1); }
+    .unsub-card p { font-size: 0.95rem; color: var(--text-2); line-height: 1.6; margin: 0 0 16px; }
+    .unsub-card .home-link { display: inline-block; margin-top: 16px; padding: 10px 24px; background: var(--brand); color: #fff; border-radius: 999px; text-decoration: none; font-weight: 600; font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+  {% include 'sections/header.html' %}
+  <main class="unsub-page">
+    <div class="unsub-card">
+      {% if email %}
+        <h1>You're unsubscribed.</h1>
+        <p><strong>{{ email }}</strong> has been removed from our mailing list.</p>
+        <p>You may still receive transactional emails (password resets, billing receipts) since those aren't part of the marketing list.</p>
+      {% else %}
+        <h1>Unsubscribe</h1>
+        <p>To unsubscribe, click the unsubscribe link in any email we've sent you, or email us at <a href="mailto:inboxermedia@gmail.com">inboxermedia@gmail.com</a>.</p>
+      {% endif %}
+      <a href="/" class="home-link">Back to home</a>
+    </div>
+  </main>
+  {% include 'sections/index_footer.html' %}
+</body>
+</html>

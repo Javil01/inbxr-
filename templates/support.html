@@ -147,8 +147,71 @@
       </div>
     </div>
 
+    <!-- ════════════════════════════════════════════════ -->
+    <!--  HUMAN CONTACT (billing disputes, refunds, edge cases) -->
+    <!-- ════════════════════════════════════════════════ -->
+
+    <div class="support-contact" style="margin-top:48px;padding:28px 24px;background:var(--bg-2,#f7f9fb);border:1px solid var(--border-1,#e5e7eb);border-radius:14px;">
+      <h2 style="font-size:1.15rem;font-weight:700;margin:0 0 6px;color:var(--text-1);">Need a human?</h2>
+      <p style="margin:0 0 16px;color:var(--text-2);font-size:0.92rem;line-height:1.6;">
+        For billing disputes, refund requests, or anything the AI can't handle, send us a message. We reply within one business day.
+      </p>
+
+      <form id="contactForm" method="POST" action="/api/contact" style="display:grid;gap:12px;max-width:520px;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <input type="text" name="name" placeholder="Your name" required maxlength="100"
+                 style="padding:10px 14px;border:1px solid var(--border-1);border-radius:8px;font-size:0.92rem;font-family:inherit;">
+          <input type="email" name="email" placeholder="Your email" required maxlength="200"
+                 style="padding:10px 14px;border:1px solid var(--border-1);border-radius:8px;font-size:0.92rem;font-family:inherit;">
+        </div>
+        <input type="text" name="subject" placeholder="Subject" required maxlength="200"
+               style="padding:10px 14px;border:1px solid var(--border-1);border-radius:8px;font-size:0.92rem;font-family:inherit;">
+        <textarea name="message" placeholder="What can we help with? Include order ID or domain if relevant." required minlength="10" maxlength="5000" rows="5"
+                  style="padding:10px 14px;border:1px solid var(--border-1);border-radius:8px;font-size:0.92rem;font-family:inherit;resize:vertical;"></textarea>
+        <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+          <button type="submit" style="background:var(--brand,#22c55e);color:#fff;border:none;padding:10px 22px;border-radius:999px;font-size:0.9rem;font-weight:600;cursor:pointer;">Send message</button>
+          <span style="font-size:0.82rem;color:var(--text-3);">or email <a href="mailto:inboxermedia@gmail.com" style="color:var(--brand);">inboxermedia@gmail.com</a></span>
+        </div>
+        <div id="contactFormResult" style="font-size:0.88rem;margin-top:4px;"></div>
+      </form>
+    </div>
+
   </div>
 </div>
+
+<script>
+(function(){
+  var form = document.getElementById('contactForm');
+  if (!form) return;
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    var result = document.getElementById('contactFormResult');
+    var data = new FormData(form);
+    var btn = form.querySelector('button[type="submit"]');
+    btn.disabled = true; btn.textContent = 'Sending…';
+    fetch('/api/contact', {
+      method: 'POST',
+      headers: { 'X-CSRFToken': data.get('csrf_token') },
+      body: data,
+    }).then(function(r){ return r.json(); }).then(function(d){
+      if (d.ok) {
+        result.style.color = '#16a34a';
+        result.textContent = 'Got it — we\'ll reply within one business day.';
+        form.reset();
+      } else {
+        result.style.color = '#b91c1c';
+        result.textContent = d.error || 'Something went wrong. Please email us directly.';
+      }
+    }).catch(function(){
+      result.style.color = '#b91c1c';
+      result.textContent = 'Network error. Please email inboxermedia@gmail.com directly.';
+    }).finally(function(){
+      btn.disabled = false; btn.textContent = 'Send message';
+    });
+  });
+})();
+</script>
 
 <!-- ════════════════════════════════════════════════ -->
 <!--  CHAT PANEL (hidden until activated)           -->

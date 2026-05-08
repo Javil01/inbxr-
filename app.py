@@ -36,6 +36,13 @@ from flask import Flask, render_template, request, jsonify, session, redirect, u
 
 app = Flask(__name__)
 
+# ── ProxyFix: trust Railway/Cloudflare/etc. proxy headers ──
+# Without this, request.remote_addr is the proxy's IP (private 10.x range)
+# which collapses every IP-based rate limit to a single bucket per worker.
+# Railway terminates TLS at one hop, so x_for=1, x_proto=1, x_host=1.
+from werkzeug.middleware.proxy_fix import ProxyFix
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
+
 # ── Sentry error tracking (no-op if SENTRY_DSN unset) ────
 _sentry_dsn = os.environ.get("SENTRY_DSN", "").strip()
 if _sentry_dsn:
@@ -69,6 +76,7 @@ _CSRF_PROTECTED_PATHS = {
     "/forgot-password",
     "/account/change-password",
     "/resend-verification",
+    "/api/contact",
 }
 
 @app.before_request
@@ -491,6 +499,12 @@ def inject_trust_stats():
     return {"trust_stats": _get_trust_stats()}
 
 
+@app.context_processor
+def inject_cookie_consent():
+    """Expose consent state to templates so tracking pixels can be gated."""
+    return {"cookie_consent": request.cookies.get("cookie_consent", "")}
+
+
 @app.route("/verification-required")
 def verification_required_page():
     """Show the email verification required page.
@@ -512,11 +526,22 @@ def verification_required_page():
     # instead of waiting forever for an email that never came.
     send_failed = bool(session.pop("verification_send_failed", False))
     resent = request.args.get("resent") == "1"
+
+    # Resolve the email to display. The context processor reads `user_email`
+    # which is only set by login_user(); pre-login pending users would render
+    # blank without this lookup.
+    pending_email = session.get("pending_user_email")
+    if not pending_email and uid:
+        from modules.database import fetchone as _fetchone
+        row = _fetchone("SELECT email FROM users WHERE id = ?", (uid,))
+        pending_email = row["email"] if row else None
+
     return render_template(
         "auth/verification_required.html",
         active_page="",
         send_failed=send_failed,
         resent=resent,
+        pending_email=pending_email,
     )
 
 
@@ -627,6 +652,94 @@ def serve_blog_image(filename):
     app.logger.warning("[BLOG_IMAGE] 404 for %s — searched: %s", filename,
                        [d for d in search_dirs if _os.path.isdir(d)])
     abort(404)
+
+
+@app.route('/api/contact', methods=['POST'])
+def api_contact():
+    """Forward a contact form submission to the support inbox.
+
+    Burst-limited per IP so it can't be used to relay spam. Validates
+    minimum content length and email format. CSRF protection is enforced
+    via _CSRF_PROTECTED_PATHS below.
+    """
+    from modules.rate_limiter import burst_allow
+    from modules.mailer import send_admin_email, is_configured
+
+    ip = request.remote_addr or "unknown"
+    if not burst_allow(f"contact_ip:{ip}", limit=5, window_seconds=3600):
+        return jsonify({"ok": False, "error": "Too many messages from this network. Try again in an hour."}), 429
+
+    name = (request.form.get("name") or "").strip()[:100]
+    email = (request.form.get("email") or "").strip().lower()[:200]
+    subject = (request.form.get("subject") or "").strip()[:200]
+    message = (request.form.get("message") or "").strip()[:5000]
+
+    if not (name and email and subject and len(message) >= 10):
+        return jsonify({"ok": False, "error": "Please fill in all fields (message at least 10 characters)."}), 400
+    if not re.match(r'^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$', email):
+        return jsonify({"ok": False, "error": "Please enter a valid email address."}), 400
+
+    import html as _html
+    e = _html.escape
+    body_html = (
+        f"<h2>Contact form submission</h2>"
+        f"<p><strong>From:</strong> {e(name)} &lt;{e(email)}&gt;</p>"
+        f"<p><strong>Subject:</strong> {e(subject)}</p>"
+        f"<p><strong>IP:</strong> {e(ip)}</p>"
+        f"<hr><pre style=\"white-space:pre-wrap;font-family:inherit;\">{e(message)}</pre>"
+    )
+
+    target = os.environ.get("CONTACT_EMAIL", "inboxermedia@gmail.com")
+    if not is_configured():
+        # Log it so the operator can pick it up out-of-band
+        logger.warning("Contact form (no mailer): from=%s subject=%s | %s", email, subject, message[:200])
+        return jsonify({"ok": True, "queued": True})
+
+    try:
+        ok = send_admin_email(target, f"[InbXr Contact] {subject}", body_html)
+        if not ok:
+            logger.error("Contact form: send_admin_email returned False from=%s", email)
+            return jsonify({"ok": False, "error": "Failed to send. Please email us at inboxermedia@gmail.com."}), 500
+    except Exception:
+        logger.exception("Contact form failed for %s", email)
+        return jsonify({"ok": False, "error": "Failed to send. Please email us at inboxermedia@gmail.com."}), 500
+
+    return jsonify({"ok": True})
+
+
+@app.route('/unsubscribe', methods=['GET', 'POST'])
+def unsubscribe():
+    """One-click unsubscribe endpoint required by Gmail Feb 2024 + Microsoft
+    May 2025 bulk-sender mandates. Accepts either an email query param (GET
+    from a recipient clicking the link) or List-Unsubscribe-Post (POST from
+    the inbox provider's one-click handler)."""
+    from modules import database as _db
+
+    email = (request.values.get('email') or request.form.get('email') or '').strip().lower()
+
+    # If POSTed via one-click, honor it silently — providers expect a 2xx.
+    # If a recipient followed the mailto/HTTP link manually, show a confirmation.
+    if request.method == 'POST':
+        if email:
+            try:
+                _db.execute(
+                    "INSERT OR IGNORE INTO unsubscribed_emails (email, source) VALUES (?, ?)",
+                    (email, 'one_click'),
+                )
+            except Exception:
+                logger.exception("unsubscribe write failed for %s", email)
+        return '', 204
+
+    # GET — confirmation page
+    if email:
+        try:
+            _db.execute(
+                "INSERT OR IGNORE INTO unsubscribed_emails (email, source) VALUES (?, ?)",
+                (email, 'manual'),
+            )
+        except Exception:
+            logger.exception("unsubscribe write failed for %s", email)
+    return render_template('unsubscribe.html', email=email or None), 200
 
 
 @app.route('/robots.txt')
@@ -1356,14 +1469,21 @@ def email_test_check():
     gated = not is_logged_in and not lead_cookie
 
     if gated:
-        # Cache full analysis so we can send it when they provide email
-        import time as _cache_t
-        _analysis_cache[token] = {"data": analysis, "timestamp": _cache_t.time()}
-        # Clean old cache entries
-        now = _cache_t.time()
-        stale = [k for k, v in _analysis_cache.items() if now - v["timestamp"] > _CACHE_TTL]
-        for k in stale:
-            del _analysis_cache[k]
+        # Persist gated analysis to the DB so the unlock endpoint can find it
+        # regardless of which gunicorn worker handles the unlock POST.
+        import json as _gate_json
+        from modules import database as _gate_db
+        try:
+            _gate_db.execute(
+                "INSERT OR REPLACE INTO email_gate_analysis (token, analysis_json) VALUES (?, ?)",
+                (token, _gate_json.dumps(analysis)),
+            )
+            # Opportunistic cleanup of stale rows (older than 24h)
+            _gate_db.execute(
+                "DELETE FROM email_gate_analysis WHERE created_at < datetime('now', '-1 day')"
+            )
+        except Exception:
+            logger.exception("email_gate_analysis insert failed for token=%s", token)
 
     analysis["gated"] = gated
     analysis["_token"] = token
@@ -1372,33 +1492,29 @@ def email_test_check():
     return resp
 
 
-# ── Email Gate: cached analysis by token ────────────
-_analysis_cache = {}  # {token: {data, timestamp}}
-_CACHE_TTL = 3600  # 1 hour
-
-
 # ── Email Report Sending ────────────────────────────
-_email_report_rate = {}  # {ip: [timestamp, ...]}
+# Email-gate analysis lives in the email_gate_analysis table (migration 035)
+# Email-report rate-limit lives in email_report_rate (same migration), so all
+# gunicorn workers share the same view.
 
 @app.route("/api/email-report", methods=["POST"])
 def api_email_report():
     """Send the email test report to a user's email address."""
-    import time as _t
     from modules.mailer import _send, is_configured
+    from modules import database as _db
 
     if not is_configured():
         return jsonify({"error": "Email sending is not configured."}), 503
 
-    # Rate limit: 3 per hour per IP
+    # Rate limit: 3 per hour per IP, DB-backed so it works across workers
     ip = request.remote_addr or "unknown"
-    now = _t.time()
-    cutoff = now - 3600
-    hits = _email_report_rate.get(ip, [])
-    hits = [t for t in hits if t > cutoff]
-    if len(hits) >= 3:
+    row = _db.fetchone(
+        "SELECT COUNT(*) AS cnt FROM email_report_rate "
+        "WHERE ip_address = ? AND sent_at > datetime('now', '-1 hour')",
+        (ip,),
+    )
+    if row and row["cnt"] >= 3:
         return jsonify({"error": "Too many requests. You can send up to 3 report emails per hour."}), 429
-    hits.append(now)
-    _email_report_rate[ip] = hits
 
     data = request.get_json(force=True, silent=True)
     if not data:
@@ -1418,6 +1534,14 @@ def api_email_report():
     subject = "Your InbXr Email Test Report"
     ok = _send(email, subject, report_html)
     if ok:
+        # Record send for rate limiting + opportunistically sweep old rows
+        _db.execute(
+            "INSERT INTO email_report_rate (ip_address, sent_at) VALUES (?, datetime('now'))",
+            (ip,),
+        )
+        _db.execute(
+            "DELETE FROM email_report_rate WHERE sent_at < datetime('now', '-2 hours')"
+        )
         logger.info("Email report sent to %s from IP %s", email, ip)
         return jsonify({"ok": True})
     else:
@@ -1476,9 +1600,18 @@ def api_unlock_report():
         db.execute("UPDATE lead_emails SET verified = 1, test_token = ? WHERE id = ?", (token, existing["id"]))
     logger.info("Lead captured: %s from IP %s", email, request.remote_addr)
 
-    # Get cached analysis
-    cached = _analysis_cache.get(token)
-    full_data = cached["data"] if cached else None
+    # Get cached analysis from DB (worker-shared)
+    full_data = None
+    cached_row = db.fetchone(
+        "SELECT analysis_json FROM email_gate_analysis WHERE token = ?",
+        (token,),
+    )
+    if cached_row:
+        try:
+            import json as _gj
+            full_data = _gj.loads(cached_row["analysis_json"])
+        except Exception:
+            logger.exception("email_gate_analysis JSON decode failed for token=%s", token)
 
     # Send full report email in background
     if is_configured() and full_data:
@@ -1847,7 +1980,17 @@ def placement_check():
     from modules.inbox_placement import (
         InboxPlacementTester, generate_recommendations, check_rate_limit,
     )
+    from modules.rate_limiter import check_rate_limit as tier_rate_limit, log_usage
 
+    # Tier-aware daily/hourly cap (advertised on /pricing). Without this,
+    # placement tests bypassed the tier limits entirely.
+    allowed, info = tier_rate_limit("placement_test")
+    if not allowed:
+        msg = "Daily placement-test limit reached for your tier." if info.get("blocked_by") == "daily" \
+            else "Hourly placement-test limit reached. Please wait."
+        return jsonify({"error": msg, "rate_limit_info": info}), 429
+
+    # Cluster-wide minute-level burst cap (10/min) on top of tier cap
     if not check_rate_limit():
         return jsonify({"error": "Rate limit exceeded. Please wait a minute before checking again."}), 429
 
@@ -1885,6 +2028,9 @@ def placement_check():
         "summary": summary,
         "recommendations": generate_recommendations(results, summary),
     }
+
+    # Record usage for tier rate limiting
+    log_usage("placement_test")
 
     # Save to history
     if session.get("user_id"):
@@ -3697,6 +3843,39 @@ def generate_dns():
     return jsonify({"domain": domain, "records": results})
 
 
+def _is_public_domain(domain):
+    """Resolve `mta-sts.<domain>` (and the bare domain) and return False if any
+    answer points to a private/loopback/link-local/metadata IP. Defends the
+    standalone DNS-fetching endpoints from being used to probe internal
+    services hosted on whatever IP `mta-sts.attacker-controlled.com` resolves
+    to (SSRF-light). Returns True on resolution failure to avoid breaking the
+    legitimate lookup flow — the underlying HTTPS request will simply fail."""
+    try:
+        import dns.resolver as _r
+        candidates = []
+        for sub in (f"mta-sts.{domain}", domain):
+            try:
+                for ans in _r.resolve(sub, "A", lifetime=5):
+                    candidates.append(str(ans.address))
+            except Exception:
+                continue
+            try:
+                for ans in _r.resolve(sub, "AAAA", lifetime=5):
+                    candidates.append(str(ans.address))
+            except Exception:
+                continue
+        for addr in candidates:
+            try:
+                ip = ipaddress.ip_address(addr)
+            except ValueError:
+                continue
+            if ip.is_private or ip.is_loopback or ip.is_link_local or ip.is_reserved or ip.is_multicast:
+                return False
+        return True
+    except Exception:
+        return True
+
+
 @app.route("/lookup-mta-sts", methods=["POST"])
 def lookup_mta_sts():
     """Standalone MTA-STS lookup for a domain."""
@@ -3709,6 +3888,8 @@ def lookup_mta_sts():
         return jsonify({"error": "Domain is required."}), 400
     if not re.match(r'^[a-z0-9][a-z0-9.\-]{0,251}[a-z0-9]$', domain):
         return jsonify({"error": "Invalid domain format."}), 400
+    if not _is_public_domain(domain):
+        return jsonify({"error": "Domain resolves to a non-public address."}), 400
 
     from modules.reputation_checker import ReputationChecker
     checker = ReputationChecker(domain=domain)
@@ -3733,6 +3914,8 @@ def lookup_tls_rpt():
         return jsonify({"error": "Domain is required."}), 400
     if not re.match(r'^[a-z0-9][a-z0-9.\-]{0,251}[a-z0-9]$', domain):
         return jsonify({"error": "Invalid domain format."}), 400
+    if not _is_public_domain(domain):
+        return jsonify({"error": "Domain resolves to a non-public address."}), 400
 
     from modules.reputation_checker import ReputationChecker
     checker = ReputationChecker(domain=domain)
