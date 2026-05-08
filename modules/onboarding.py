@@ -25,7 +25,7 @@ STEPS = [
         "key": "email_verified",
         "title": "Verify your email",
         "desc": "Confirm your email so the Signal Engine can send your weekly report and alerts.",
-        "href": "/account",
+        "href": "/verification-required",
         "cta": "Verify email",
         "icon": "mail",
     },

@@ -1308,22 +1308,34 @@ def _share_secret():
 
 
 def make_share_token(row_id):
-    """Generate a tamper-proof share token for a signal_scores row."""
+    """Generate a tamper-proof share token for a signal_scores row.
+
+    The HMAC truncation length controls the brute-force surface for an attacker
+    trying to guess a valid token for a known row. 12 hex chars = 48 bits ~=
+    online-bruteforceable in extreme cases. 24 hex chars = 96 bits, well past
+    practical online attack capacity.
+    """
     msg = str(row_id).encode()
-    sig = hmac.new(_share_secret().encode(), msg, hashlib.sha256).hexdigest()[:12]
+    sig = hmac.new(_share_secret().encode(), msg, hashlib.sha256).hexdigest()[:24]
     raw = f"{row_id}.{sig}".encode()
     return base64.urlsafe_b64encode(raw).decode().rstrip('=')
 
 
 def parse_share_token(token):
-    """Verify a share token and return the signal_scores row id, or None."""
+    """Verify a share token and return the signal_scores row id, or None.
+
+    Accepts both new (24-char sig) and legacy (12-char sig) formats so any
+    tokens already shared in the wild keep working.
+    """
     try:
         padded = token + '=' * (-len(token) % 4)
         decoded = base64.urlsafe_b64decode(padded.encode()).decode()
         row_id_str, sig = decoded.split('.', 1)
-        expected_sig = hmac.new(
+        full = hmac.new(
             _share_secret().encode(), row_id_str.encode(), hashlib.sha256
-        ).hexdigest()[:12]
+        ).hexdigest()
+        # Accept whichever length the caller's token used (24 = new, 12 = legacy)
+        expected_sig = full[:len(sig)] if len(sig) in (12, 24) else full[:24]
         if not hmac.compare_digest(sig, expected_sig):
             return None
         return int(row_id_str)
