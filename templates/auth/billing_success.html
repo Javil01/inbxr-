@@ -8,9 +8,23 @@
     <polyline points="22 4 12 14.01 9 11.01"/>
   </svg>
   <h1 class="auth-card__title">You're Upgraded!</h1>
-  <p class="auth-card__sub">Your subscription is now active. All premium features are unlocked.</p>
 
-  {% if is_new_account %}
+  {% if tier_name %}
+  <p class="auth-card__sub">
+    <strong>{{ tier_name|title }}</strong>{% if tier_price %} — {{ tier_price }}{% endif %}
+    is now active. All premium features are unlocked.
+  </p>
+  {% else %}
+  <p class="auth-card__sub">Your subscription is now active. All premium features are unlocked.</p>
+  {% endif %}
+
+  {% if webhook_pending %}
+  <div style="margin:20px 0;padding:16px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);border-radius:10px;">
+    <p style="font-size:0.9rem;color:rgba(255,255,255,0.85);margin:0;">
+      Stripe is finalizing your payment. Your account will be ready in a few seconds — refresh in 10s if you don't see it.
+    </p>
+  </div>
+  {% elif is_new_account %}
   <div style="margin:20px 0;padding:16px;background:rgba(34,197,94,0.06);border:1px solid rgba(34,197,94,0.15);border-radius:10px;">
     <p style="font-size:0.9rem;color:rgba(255,255,255,0.8);margin:0;">We created your account automatically. <strong>Check your email to set your password.</strong></p>
   </div>
@@ -28,6 +42,11 @@
   {% if session.get('user_id') %}
   <script>
   setTimeout(function(){ window.location.href = '{{ return_url or "/dashboard" }}'; }, 3000);
+  </script>
+  {% elif webhook_pending %}
+  <script>
+  // Auto-refresh once after 10s in case the webhook lands by then
+  setTimeout(function(){ window.location.reload(); }, 10000);
   </script>
   {% endif %}
 </div>

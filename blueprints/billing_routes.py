@@ -191,30 +191,74 @@ def webhook():
 
 @billing_bp.route("/success")
 def success():
-    """Post-checkout success page. Works for both logged-in and new users."""
+    """Post-checkout success page. Works for both logged-in and new users.
+
+    Auto-login is gated on:
+      - payment_status == "paid" (the email shown by Stripe could be anything; the
+        payment is the only real proof of ownership)
+      - the email matches a local user whose stripe_customer_id == the session's
+        customer (i.e., the webhook has already linked them)
+    Without both, we render the page in "logged-out" mode and prompt for login —
+    safer than trusting customer_details.email alone (it isn't verified by Stripe).
+    """
     from flask import session as flask_session
 
-    # Try to auto-login new user from Stripe session
     session_id = request.args.get("session_id")
-    if session_id and not flask_session.get("user_id") and _STRIPE_CONFIGURED:
+    tier_name = None
+    tier_price = None
+    webhook_pending = False
+
+    if session_id and _STRIPE_CONFIGURED:
         try:
-            checkout = stripe.checkout.Session.retrieve(session_id)
-            email = checkout.get("customer_details", {}).get("email", "")
-            if email:
+            checkout = stripe.checkout.Session.retrieve(
+                session_id,
+                expand=["subscription", "subscription.items.data.price"],
+            )
+            payment_status = checkout.get("payment_status")
+            email = (checkout.get("customer_details", {}) or {}).get("email", "")
+            customer_id = checkout.get("customer")
+
+            # Tier lookup from the expanded subscription (for display)
+            sub = checkout.get("subscription")
+            if isinstance(sub, dict):
+                items = (sub.get("items", {}) or {}).get("data", [])
+                if items:
+                    price = items[0].get("price", {}) or {}
+                    price_id = price.get("id")
+                    _ensure_price_map()
+                    tier_name = PRICE_TO_TIER.get(price_id)
+                    unit = price.get("unit_amount")
+                    if unit is not None:
+                        tier_price = f"${unit/100:.0f}/{price.get('recurring', {}).get('interval', 'mo')}"
+
+            # Auto-login only when payment cleared AND DB shows the same customer
+            if (
+                payment_status == "paid"
+                and email
+                and customer_id
+                and not flask_session.get("user_id")
+            ):
                 from modules.auth import get_user_by_email, login_user
                 user = get_user_by_email(email)
-                if user:
+                if user and user.get("stripe_customer_id") == customer_id:
+                    flask_session.clear()  # prevent session fixation
                     login_user(user)
+                elif user is None:
+                    # Webhook hasn't run yet — the user record will be created there.
+                    webhook_pending = True
         except Exception:
-            logger.exception("Failed to auto-login after checkout")
+            logger.exception("Failed to process checkout session on /success")
 
     return_url = flask_session.pop("billing_return_url", "/dashboard")
-    is_new = not flask_session.get("user_id")  # still not logged in = brand new
+    is_new = not flask_session.get("user_id")
     return render_template(
         "auth/billing_success.html",
         active_page="account",
         return_url=return_url,
         is_new_account=is_new,
+        tier_name=tier_name,
+        tier_price=tier_price,
+        webhook_pending=webhook_pending,
     )
 
 
@@ -291,15 +335,15 @@ def _handle_checkout_completed(session_obj):
             try:
                 from modules.auth import create_reset_token
                 token = create_reset_token(customer_email)
-                from modules.mailer import send as send_email
+                from modules.mailer import _send as send_email
                 base_url = os.environ.get("BASE_URL", "https://inbxr.us")
                 send_email(
                     to_email=customer_email,
                     subject="Welcome to InbXr — Set Your Password",
-                    html=f"""<h2>Welcome to InbXr!</h2>
+                    html_body=f"""<h2>Welcome to InbXr!</h2>
                     <p>Your <strong>{tier.title()}</strong> subscription is now active.</p>
                     <p>We created your account automatically. Click below to set your password:</p>
-                    <p><a href="{base_url}/reset-password?token={token}" style="display:inline-block;padding:12px 24px;background:#22c55e;color:#fff;text-decoration:none;border-radius:8px;font-weight:700;">Set My Password</a></p>
+                    <p><a href="{base_url}/reset-password/{token}" style="display:inline-block;padding:12px 24px;background:#22c55e;color:#fff;text-decoration:none;border-radius:8px;font-weight:700;">Set My Password</a></p>
                     <p>Or log in at <a href="{base_url}/login">{base_url}/login</a> using this email and request a password reset.</p>
                     <p style="color:#888;font-size:0.85rem;">If you didn't make this purchase, please contact us immediately.</p>""",
                 )
