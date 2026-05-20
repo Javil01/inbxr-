@@ -3,8 +3,8 @@
 {% block title %}Pricing{% endblock %}
 {% block content %}
 <span class="pricing-eyebrow" style="display:inline-block;font-size:0.7rem;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;color:var(--brand);background:rgba(37,99,235,0.08);padding:4px 14px;border-radius:99px;margin-bottom:14px;">Pricing</span>
-<h1 class="auth-card__title pricing-title">Simple pricing. Pay for what you watch.</h1>
-<p class="auth-card__sub">Start free with the 5-signal CSV reading. Upgrade when you want the full 7 signals, continuous monitoring, ESP sync, and weekly reports. Cancel anytime.</p>
+<h1 class="auth-card__title pricing-title">See what's about to break. Before the send.</h1>
+<p class="auth-card__sub">Free reads 5 of your 7 signals so you can see the obvious problems heading into your next campaign. Pro reads all 7, watches them every 6 hours, and fires an alert the moment one turns red &mdash; before the send goes out, not 6 weeks later. Cancel anytime.</p>
 
 <div class="pricing-grid">
 
@@ -16,7 +16,7 @@
       <span class="pricing-card__amount">$0</span>
       <span class="pricing-card__period">forever</span>
     </div>
-    <p class="pricing-card__desc">Start reading. Upload a CSV or type a sending domain and get a 5-signal composite reading with a letter grade in 60 seconds. Most users find a problem they didn't know existed in their first scan.</p>
+    <p class="pricing-card__desc">Start reading. Upload a CSV or type a sending domain and get a 5-signal Signal Score and letter grade in 60 seconds. Most users find a problem they were about to send into on their first scan.</p>
     <ul class="pricing-card__features">
       <li class="pricing-card__feature--highlight">5-signal Signal Score via CSV upload</li>
       <li class="pricing-card__feature--highlight">Domain Signal Score (auth + reputation)</li>
@@ -55,7 +55,7 @@
       <span class="pricing-card__amount">${{ t.price_monthly }}</span>
       <span class="pricing-card__period">/month</span>
     </div>
-    <p class="pricing-card__desc">All 7 signals plus the intelligence layer that watches what it found. At current decay rates the average at-risk email segment doubles in size every 45 days. Signal Watch catches that movement in the first 6-hour cycle. Early Warning surfaces the conditions trending toward danger. Signal Recommendations queue the suppressions while you sleep. By the time most marketers notice the problem in their open rate, Pro users have already seen it twice.</p>
+    <p class="pricing-card__desc">All 7 signals, watched every 6 hours, so problems surface before your next campaign sends &mdash; not 6 weeks later when your reply rate craters. At current decay rates the average at-risk email segment doubles in size every 45 days. Signal Watch catches that movement in the first 6-hour cycle. Early Warning surfaces the conditions trending toward danger. Signal Recommendations queue the suppressions while you sleep. By the time most marketers notice the problem in their open rate, Pro users have already seen it twice.</p>
     <ul class="pricing-card__features">
       <li><strong>{{ t.limits.checks_per_day }}</strong> checks/day</li>
       <li><strong>{{ t.limits.email_verifications_per_day }}</strong> email verifications/day</li>
