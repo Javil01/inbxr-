@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>How InbXr Works &middot; The 7 Signals, 10 Tools, and 6 Pillars</title>
+  <meta name="description" content="A one-page reference: how the 7 Inbox Signals, 10 InbXr tools, and the 6 Inbox Decay Rescue pillars fit together. See it before the next send.">
+  <meta property="og:title" content="How InbXr Works &middot; One-page reference">
+  <meta property="og:description" content="The 7 Signals, 10 Tools, and 6 Pillars — and exactly which tool reads which signal and serves which pillar.">
+  <meta property="og:url" content="https://inbxr.us/how-it-works">
+  <meta property="og:type" content="website">
+  <link rel="canonical" href="https://inbxr.us/how-it-works">
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/style.css?v=20260521a" />
+  {% include 'sections/_head_meta.html' %}
+</head>
+<body class="email-test-page">
+
+{% include 'sections/header.html' %}
+
+<style>
+:root {
+  --hiw-brand: #15c182;
+  --hiw-brand-dark: #03a071;
+  --hiw-copy: #7c3aed;
+  --hiw-copy-soft: #ede9fe;
+  --hiw-engine-soft: #d1fae5;
+  --hiw-ink: #161e2e;
+  --hiw-ink-2: #475569;
+  --hiw-ink-3: #94a3b8;
+  --hiw-border: #e2e8f0;
+  --hiw-bg-soft: #f8fafc;
+}
+
+.hiw-wrap { max-width: 1180px; margin: 0 auto; padding: 56px 24px 80px; color: var(--hiw-ink); }
+
+/* Hero */
+.hiw-hero { text-align: center; max-width: 780px; margin: 0 auto 56px; }
+.hiw-eyebrow {
+  display: inline-block; font-size: 0.72rem; font-weight: 800;
+  text-transform: uppercase; letter-spacing: 0.12em;
+  padding: 5px 14px; border-radius: 99px;
+  background: var(--hiw-engine-soft); color: var(--hiw-brand-dark);
+  margin-bottom: 18px;
+}
+.hiw-h1 {
+  font-size: 2.4rem; font-weight: 900; line-height: 1.12;
+  margin: 0 0 16px; letter-spacing: -0.025em;
+}
+.hiw-thesis {
+  font-size: 1.08rem; line-height: 1.55; color: var(--hiw-ink-2);
+  margin: 0 auto; max-width: 640px;
+}
+.hiw-thesis strong { color: var(--hiw-ink); }
+
+/* Three-column overview */
+.hiw-tri {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px;
+  margin-bottom: 64px;
+}
+.hiw-col {
+  background: #fff; border: 1px solid var(--hiw-border);
+  border-radius: 14px; padding: 26px;
+}
+.hiw-col__label {
+  font-size: 0.7rem; font-weight: 800; text-transform: uppercase;
+  letter-spacing: 0.1em; margin: 0 0 4px;
+}
+.hiw-col--signals .hiw-col__label { color: var(--hiw-brand-dark); }
+.hiw-col--tools   .hiw-col__label { color: var(--hiw-ink-2); }
+.hiw-col--pillars .hiw-col__label { color: var(--hiw-copy); }
+.hiw-col__h2 {
+  font-size: 1.15rem; font-weight: 800; margin: 0 0 16px;
+  letter-spacing: -0.01em;
+}
+.hiw-list { list-style: none; padding: 0; margin: 0; }
+.hiw-list li {
+  display: flex; gap: 10px; padding: 8px 0;
+  border-bottom: 1px dashed var(--hiw-border);
+  font-size: 0.88rem; line-height: 1.45;
+}
+.hiw-list li:last-child { border-bottom: 0; }
+.hiw-list__num {
+  flex: 0 0 22px; height: 22px; border-radius: 6px;
+  font-size: 0.72rem; font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--hiw-bg-soft); color: var(--hiw-ink-2);
+}
+.hiw-col--signals .hiw-list__num { background: var(--hiw-engine-soft); color: var(--hiw-brand-dark); }
+.hiw-col--pillars .hiw-list__num { background: var(--hiw-copy-soft); color: var(--hiw-copy); }
+.hiw-list__title { font-weight: 700; color: var(--hiw-ink); }
+.hiw-list__desc { color: var(--hiw-ink-2); font-size: 0.82rem; }
+.hiw-list__weight {
+  font-size: 0.7rem; font-weight: 700; color: var(--hiw-ink-3);
+  margin-left: 4px;
+}
+
+/* Matrix */
+.hiw-matrix-section { margin-bottom: 56px; }
+.hiw-section-h2 {
+  font-size: 1.5rem; font-weight: 900; margin: 0 0 8px;
+  letter-spacing: -0.02em; text-align: center;
+}
+.hiw-section-sub {
+  font-size: 0.95rem; color: var(--hiw-ink-2); text-align: center;
+  margin: 0 auto 28px; max-width: 640px; line-height: 1.5;
+}
+.hiw-legend {
+  display: flex; gap: 22px; justify-content: center; flex-wrap: wrap;
+  font-size: 0.82rem; color: var(--hiw-ink-2); margin-bottom: 22px;
+}
+.hiw-legend__dot {
+  display: inline-block; width: 14px; text-align: center;
+  font-size: 1.1rem; line-height: 1; vertical-align: middle;
+  margin-right: 4px;
+}
+.hiw-legend__dot--primary   { color: var(--hiw-brand); }
+.hiw-legend__dot--secondary { color: var(--hiw-ink-3); }
+.hiw-matrix-wrap { overflow-x: auto; border: 1px solid var(--hiw-border); border-radius: 14px; background: #fff; }
+.hiw-matrix {
+  width: 100%; border-collapse: collapse;
+  font-size: 0.84rem; min-width: 880px;
+}
+.hiw-matrix th, .hiw-matrix td {
+  padding: 10px 8px; text-align: center;
+  border-bottom: 1px solid var(--hiw-border);
+}
+.hiw-matrix thead th {
+  position: sticky; top: 0;
+  background: var(--hiw-bg-soft); color: var(--hiw-ink-2);
+  font-weight: 800; font-size: 0.72rem;
+  text-transform: uppercase; letter-spacing: 0.06em;
+  border-bottom: 2px solid var(--hiw-border);
+}
+.hiw-matrix thead .hiw-th--signals { color: var(--hiw-brand-dark); background: var(--hiw-engine-soft); }
+.hiw-matrix thead .hiw-th--pillars { color: var(--hiw-copy); background: var(--hiw-copy-soft); }
+.hiw-matrix th.hiw-th--tool {
+  text-align: left; padding-left: 16px; min-width: 180px;
+  background: #fff;
+}
+.hiw-matrix td.hiw-td--tool {
+  text-align: left; padding-left: 16px; min-width: 180px;
+  font-weight: 700; color: var(--hiw-ink); background: #fff;
+}
+.hiw-matrix td.hiw-td--tool small {
+  display: block; font-weight: 500; color: var(--hiw-ink-3);
+  font-size: 0.72rem; margin-top: 2px;
+}
+.hiw-matrix tbody tr:hover td { background: var(--hiw-bg-soft); }
+.hiw-matrix tbody tr:hover td.hiw-td--tool { background: var(--hiw-bg-soft); }
+.hiw-dot { font-size: 1.15rem; line-height: 1; }
+.hiw-dot--primary   { color: var(--hiw-brand); }
+.hiw-dot--secondary { color: var(--hiw-ink-3); }
+.hiw-dot--copy      { color: var(--hiw-copy); }
+.hiw-dot--copy-soft { color: #c4b5fd; }
+.hiw-dot--none      { color: #cbd5e1; }
+
+/* Reverse views */
+.hiw-reverse {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 22px;
+  margin-bottom: 56px;
+}
+.hiw-rev-card {
+  background: #fff; border: 1px solid var(--hiw-border);
+  border-radius: 14px; padding: 26px;
+}
+.hiw-rev-card h3 {
+  font-size: 1.1rem; font-weight: 800; margin: 0 0 16px;
+}
+.hiw-rev-card--signals h3 { color: var(--hiw-brand-dark); }
+.hiw-rev-card--pillars h3 { color: var(--hiw-copy); }
+.hiw-rev-row {
+  display: grid; grid-template-columns: 110px 1fr; gap: 10px;
+  padding: 10px 0; border-bottom: 1px dashed var(--hiw-border);
+  font-size: 0.86rem; line-height: 1.5;
+}
+.hiw-rev-row:last-child { border-bottom: 0; }
+.hiw-rev-key { font-weight: 700; color: var(--hiw-ink); }
+.hiw-rev-val { color: var(--hiw-ink-2); }
+.hiw-rev-val em { font-style: normal; color: var(--hiw-ink-3); font-size: 0.78rem; }
+
+/* CTA band */
+.hiw-cta {
+  background: linear-gradient(135deg, var(--hiw-engine-soft) 0%, #f0fdfa 100%);
+  border: 1px solid var(--hiw-brand); border-radius: 16px;
+  padding: 40px 32px; text-align: center;
+}
+.hiw-cta h2 {
+  font-size: 1.4rem; font-weight: 900; margin: 0 0 8px;
+  letter-spacing: -0.015em;
+}
+.hiw-cta p {
+  font-size: 0.95rem; color: var(--hiw-ink-2);
+  margin: 0 auto 22px; max-width: 540px; line-height: 1.55;
+}
+.hiw-cta__btns {
+  display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;
+}
+.hiw-cta__btn {
+  display: inline-block; padding: 12px 24px; border-radius: 99px;
+  font-weight: 700; font-size: 0.92rem; text-decoration: none;
+  transition: transform 0.15s;
+}
+.hiw-cta__btn--primary {
+  background: var(--hiw-brand); color: #fff;
+}
+.hiw-cta__btn--primary:hover { background: var(--hiw-brand-dark); transform: scale(1.03); }
+.hiw-cta__btn--outline {
+  border: 1.5px solid var(--hiw-brand-dark); color: var(--hiw-brand-dark);
+}
+
+/* Responsive */
+@media (max-width: 880px) {
+  .hiw-tri { grid-template-columns: 1fr; }
+  .hiw-reverse { grid-template-columns: 1fr; }
+  .hiw-h1 { font-size: 1.7rem; }
+}
+
+/* Print: fit on one wide sheet, kill backgrounds */
+@media print {
+  body { background: #fff; }
+  .hiw-wrap { padding: 18px; max-width: none; }
+  .hiw-hero { margin-bottom: 24px; }
+  .hiw-tri, .hiw-reverse { gap: 12px; margin-bottom: 24px; }
+  .hiw-col, .hiw-rev-card { padding: 14px; }
+  .hiw-matrix-section { margin-bottom: 24px; }
+  .hiw-cta { background: #fff; border: 1px solid var(--hiw-border); }
+  .hiw-h1 { font-size: 1.5rem; }
+  .hiw-list li { padding: 4px 0; font-size: 0.78rem; }
+  .hiw-matrix { font-size: 0.74rem; min-width: 0; }
+  .hiw-matrix th, .hiw-matrix td { padding: 5px 4px; }
+  header, footer, .nav, .site-footer { display: none !important; }
+  @page { size: landscape; margin: 12mm; }
+}
+</style>
+
+<main class="hiw-wrap">
+
+  {# ── Hero ──────────────────────────────────────────── #}
+  <section class="hiw-hero">
+    <span class="hiw-eyebrow">One-Page Reference</span>
+    <h1 class="hiw-h1">How InbXr works in one page.</h1>
+    <p class="hiw-thesis">
+      Your list broadcasts <strong>7 signals</strong> about your next campaign. We built <strong>10 tools</strong> to read them and <strong>6 rescue pillars</strong> to fix what's broken &mdash; before the next send, not 6 weeks after your reply rate dies.
+    </p>
+  </section>
+
+  {# ── Three-column overview ────────────────────────── #}
+  <section class="hiw-tri">
+
+    {# 7 Signals #}
+    <div class="hiw-col hiw-col--signals">
+      <p class="hiw-col__label">Signal Engine</p>
+      <h2 class="hiw-col__h2">The 7 Inbox Signals</h2>
+      <ul class="hiw-list">
+        <li>
+          <span class="hiw-list__num">1</span>
+          <div>
+            <span class="hiw-list__title">Bounce Exposure</span> <span class="hiw-list__weight">25pts</span><br>
+            <span class="hiw-list__desc">% of your list about to bounce in 30-60 days.</span>
+          </div>
+        </li>
+        <li>
+          <span class="hiw-list__num">2</span>
+          <div>
+            <span class="hiw-list__title">Engagement Trajectory</span> <span class="hiw-list__weight">25pts</span><br>
+            <span class="hiw-list__desc">Real-human opens after Apple MPP fakes are stripped.</span>
+          </div>
+        </li>
+        <li>
+          <span class="hiw-list__num">3</span>
+          <div>
+            <span class="hiw-list__title">Acquisition Quality</span> <span class="hiw-list__weight">15pts</span><br>
+            <span class="hiw-list__desc">How cohorts behaved on day one &mdash; warm or scraped?</span>
+          </div>
+        </li>
+        <li>
+          <span class="hiw-list__num">4</span>
+          <div>
+            <span class="hiw-list__title">Domain Reputation</span> <span class="hiw-list__weight">15pts</span><br>
+            <span class="hiw-list__desc">Both your sending rep and your recipient mix.</span>
+          </div>
+        </li>
+        <li>
+          <span class="hiw-list__num">5</span>
+          <div>
+            <span class="hiw-list__title">Spam Trap Exposure</span> <span class="hiw-list__weight">10pts</span><br>
+            <span class="hiw-list__desc">Probability of traps, scored before you send.</span>
+          </div>
+        </li>
+        <li>
+          <span class="hiw-list__num">6</span>
+          <div>
+            <span class="hiw-list__title">Authentication Standing</span> <span class="hiw-list__weight">5pts</span><br>
+            <span class="hiw-list__desc">SPF/DKIM/DMARC compliance with 2024-25 mandates.</span>
+          </div>
+        </li>
+        <li>
+          <span class="hiw-list__num">7</span>
+          <div>
+            <span class="hiw-list__title">Decay Velocity</span> <span class="hiw-list__weight">5pts</span><br>
+            <span class="hiw-list__desc">How fast your list is changing, and which direction.</span>
+          </div>
+        </li>
+      </ul>
+    </div>
+
+    {# 10 Tools #}
+    <div class="hiw-col hiw-col--tools">
+      <p class="hiw-col__label">Toolkit</p>
+      <h2 class="hiw-col__h2">The 10 InbXr Tools</h2>
+      <ul class="hiw-list">
+        <li><span class="hiw-list__num">1</span><div><span class="hiw-list__title">Email Test</span><br><span class="hiw-list__desc">Real send to seed mailboxes &mdash; full header report.</span></div></li>
+        <li><span class="hiw-list__num">2</span><div><span class="hiw-list__title">Sender Check</span><br><span class="hiw-list__desc">A-F grade on DNS auth + 62 blocklists.</span></div></li>
+        <li><span class="hiw-list__num">3</span><div><span class="hiw-list__title">Inbox Placement</span><br><span class="hiw-list__desc">Primary / Promotions / Spam across Gmail, Yahoo, Outlook.</span></div></li>
+        <li><span class="hiw-list__num">4</span><div><span class="hiw-list__title">Subject Scorer</span><br><span class="hiw-list__desc">A/B test up to 10 lines across 7 dimensions.</span></div></li>
+        <li><span class="hiw-list__num">5</span><div><span class="hiw-list__title">BIMI Checker</span><br><span class="hiw-list__desc">Logo + VMC cert + DMARC chain validation.</span></div></li>
+        <li><span class="hiw-list__num">6</span><div><span class="hiw-list__title">Header Analyzer</span><br><span class="hiw-list__desc">Raw email headers translated to plain English.</span></div></li>
+        <li><span class="hiw-list__num">7</span><div><span class="hiw-list__title">Blacklist Monitor</span><br><span class="hiw-list__desc">110+ blocklists watched 24/7 with alerts.</span></div></li>
+        <li><span class="hiw-list__num">8</span><div><span class="hiw-list__title">Email Verifier</span><br><span class="hiw-list__desc">Syntax, MX, disposable, SMTP &mdash; one address.</span></div></li>
+        <li><span class="hiw-list__num">9</span><div><span class="hiw-list__title">Warm-up Tracker</span><br><span class="hiw-list__desc">Daily volume log + safe-ramp thresholds.</span></div></li>
+        <li><span class="hiw-list__num">10</span><div><span class="hiw-list__title">Framework Lab</span><br><span class="hiw-list__desc">16 copy frameworks + AI rewrites in your tone.</span></div></li>
+      </ul>
+    </div>
+
+    {# 6 Pillars #}
+    <div class="hiw-col hiw-col--pillars">
+      <p class="hiw-col__label">Rescue Method</p>
+      <h2 class="hiw-col__h2">The 6 Decay Pillars</h2>
+      <ul class="hiw-list">
+        <li><span class="hiw-list__num">1</span><div><span class="hiw-list__title">Real Engagement</span><br><span class="hiw-list__desc">Calibrate the truthful baseline. Kill the Gaslighting Gap.</span></div></li>
+        <li><span class="hiw-list__num">2</span><div><span class="hiw-list__title">Decay Source Isolation</span><br><span class="hiw-list__desc">Diagnose Domain vs. List vs. Copy vs. Offer.</span></div></li>
+        <li><span class="hiw-list__num">3</span><div><span class="hiw-list__title">Domain Rescue</span><br><span class="hiw-list__desc">72-hour pause + 7-day rebuild ramp protocol.</span></div></li>
+        <li><span class="hiw-list__num">4</span><div><span class="hiw-list__title">List Rescue</span><br><span class="hiw-list__desc">3-layer triage + engagement-gradient segmentation.</span></div></li>
+        <li><span class="hiw-list__num">5</span><div><span class="hiw-list__title">Copy &amp; Offer Rescue</span><br><span class="hiw-list__desc">3-variable isolation + pivot decision tree.</span></div></li>
+        <li><span class="hiw-list__num">6</span><div><span class="hiw-list__title">Decay-Proofing</span><br><span class="hiw-list__desc">Weekly check + threshold triggers + monitoring.</span></div></li>
+      </ul>
+    </div>
+
+  </section>
+
+  {# ── Matrix ──────────────────────────────────────── #}
+  <section class="hiw-matrix-section">
+    <h2 class="hiw-section-h2">The cross-reference</h2>
+    <p class="hiw-section-sub">Which tool reads which Signal. Which tool serves which Pillar. One row per tool.</p>
+
+    <div class="hiw-legend">
+      <span><span class="hiw-legend__dot hiw-legend__dot--primary">&#9679;</span>Primary &mdash; the main answer</span>
+      <span><span class="hiw-legend__dot hiw-legend__dot--secondary">&#9675;</span>Secondary &mdash; supports / contributes</span>
+    </div>
+
+    <div class="hiw-matrix-wrap">
+      <table class="hiw-matrix">
+        <thead>
+          <tr>
+            <th class="hiw-th--tool">Tool</th>
+            <th class="hiw-th--signals" title="Bounce Exposure">S1</th>
+            <th class="hiw-th--signals" title="Engagement Trajectory">S2</th>
+            <th class="hiw-th--signals" title="Acquisition Quality">S3</th>
+            <th class="hiw-th--signals" title="Domain Reputation">S4</th>
+            <th class="hiw-th--signals" title="Spam Trap Exposure">S5</th>
+            <th class="hiw-th--signals" title="Authentication Standing">S6</th>
+            <th class="hiw-th--signals" title="Decay Velocity">S7</th>
+            <th class="hiw-th--pillars" title="Real Engagement">P1</th>
+            <th class="hiw-th--pillars" title="Decay Source Isolation">P2</th>
+            <th class="hiw-th--pillars" title="Domain Rescue">P3</th>
+            <th class="hiw-th--pillars" title="List Rescue">P4</th>
+            <th class="hiw-th--pillars" title="Copy &amp; Offer Rescue">P5</th>
+            <th class="hiw-th--pillars" title="Decay-Proofing">P6</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="hiw-td--tool">Email Test<small>Real send + header report</small></td>
+            <td></td><td><span class="hiw-dot hiw-dot--secondary">&#9675;</span></td><td></td><td><span class="hiw-dot hiw-dot--secondary">&#9675;</span></td><td></td><td><span class="hiw-dot hiw-dot--primary">&#9679;</span></td><td></td>
+            <td></td><td><span class="hiw-dot hiw-dot--secondary">&#9675;</span></td><td></td><td></td><td></td><td><span class="hiw-dot hiw-dot--secondary">&#9675;</span></td>
+          </tr>
+          <tr>
+            <td class="hiw-td--tool">Sender Check<small>DNS auth + 62 blocklists</small></td>
+            <td></td><td></td><td></td><td><span class="hiw-dot hiw-dot--primary">&#9679;</span></td><td></td><td><span class="hiw-dot hiw-dot--primary">&#9679;</span></td><td></td>
+            <td></td><td><span class="hiw-dot hiw-dot--secondary">&#9675;</span></td><td><span class="hiw-dot hiw-dot--primary">&#9679;</span></td><td></td><td></td><td><span class="hiw-dot hiw-dot--secondary">&#9675;</span></td>
+          </tr>
+          <tr>
+            <td class="hiw-td--tool">Inbox Placement<small>Primary / Promos / Spam</small></td>
+            <td></td><td><span class="hiw-dot hiw-dot--primary">&#9679;</span></td><td></td><td><span class="hiw-dot hiw-dot--secondary">&#9675;</span></td><td></td><td><span class="hiw-dot hiw-dot--secondary">&#9675;</span></td><td></td>
+            <td></td><td><span class="hiw-dot hiw-dot--primary">&#9679;</span></td><td></td><td></td><td></td><td><span class="hiw-dot hiw-dot--secondary">&#9675;</span></td>
+          </tr>
+          <tr>
+            <td class="hiw-td--tool">Subject Scorer<small>Copy Intelligence</small></td>
+            <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+            <td></td><td></td><td></td><td></td><td><span class="hiw-dot hiw-dot--copy">&#9679;</span></td><td></td>
+          </tr>
+          <tr>
+            <td class="hiw-td--tool">BIMI Checker<small>Logo + VMC + DMARC chain</small></td>
+            <td></td><td></td><td></td><td></td><td></td><td><span class="hiw-dot hiw-dot--secondary">&#9675;</span></td><td></td>
+            <td></td><td></td><td><span class="hiw-dot hiw-dot--secondary">&#9675;</span></td><td></td><td></td><td><span class="hiw-dot hiw-dot--secondary">&#9675;</span></td>
+          </tr>
+          <tr>
+            <td class="hiw-td--tool">Header Analyzer<small>Raw headers decoded</small></td>
+            <td></td><td></td><td></td><td><span class="hiw-dot hiw-dot--secondary">&#9675;</span></td><td></td><td><span class="hiw-dot hiw-dot--primary">&#9679;</span></td><td></td>
+            <td></td><td><span class="hiw-dot hiw-dot--primary">&#9679;</span></td><td><span class="hiw-dot hiw-dot--secondary">&#9675;</span></td><td></td><td></td><td></td>
+          </tr>
+          <tr>
+            <td class="hiw-td--tool">Blacklist Monitor<small>24/7 watchdog</small></td>
+            <td></td><td></td><td></td><td><span class="hiw-dot hiw-dot--primary">&#9679;</span></td><td></td><td></td><td><span class="hiw-dot hiw-dot--secondary">&#9675;</span></td>
+            <td></td><td></td><td><span class="hiw-dot hiw-dot--secondary">&#9675;</span></td><td></td><td></td><td><span class="hiw-dot hiw-dot--primary">&#9679;</span></td>
+          </tr>
+          <tr>
+            <td class="hiw-td--tool">Email Verifier<small>Single-address validation</small></td>
+            <td><span class="hiw-dot hiw-dot--primary">&#9679;</span></td><td></td><td></td><td></td><td><span class="hiw-dot hiw-dot--secondary">&#9675;</span></td><td></td><td></td>
+            <td><span class="hiw-dot hiw-dot--secondary">&#9675;</span></td><td></td><td></td><td><span class="hiw-dot hiw-dot--primary">&#9679;</span></td><td></td><td><span class="hiw-dot hiw-dot--secondary">&#9675;</span></td>
+          </tr>
+          <tr>
+            <td class="hiw-td--tool">Warm-up Tracker<small>Daily volume log</small></td>
+            <td></td><td></td><td></td><td><span class="hiw-dot hiw-dot--secondary">&#9675;</span></td><td></td><td><span class="hiw-dot hiw-dot--secondary">&#9675;</span></td><td></td>
+            <td></td><td></td><td><span class="hiw-dot hiw-dot--primary">&#9679;</span></td><td></td><td></td><td><span class="hiw-dot hiw-dot--secondary">&#9675;</span></td>
+          </tr>
+          <tr>
+            <td class="hiw-td--tool">Framework Lab<small>Copy Intelligence</small></td>
+            <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+            <td></td><td></td><td></td><td></td><td><span class="hiw-dot hiw-dot--copy">&#9679;</span></td><td></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p class="hiw-section-sub" style="margin-top:20px;font-size:0.86rem;">
+      <strong>Note:</strong> Signal 3 (Acquisition Quality) and Signal 7 (Decay Velocity) are read by the <strong>Signal Engine itself</strong> on your uploaded CSV or connected ESP &mdash; not by any standalone tool. That's the deliberate boundary between the free toolkit and Pro automation.
+    </p>
+  </section>
+
+  {# ── Reverse views ─────────────────────────────────── #}
+  <section class="hiw-reverse">
+
+    <div class="hiw-rev-card hiw-rev-card--signals">
+      <h3>By Signal &mdash; which tools read it</h3>
+      <div class="hiw-rev-row"><div class="hiw-rev-key">S1 Bounce Exposure</div><div class="hiw-rev-val">Email Verifier</div></div>
+      <div class="hiw-rev-row"><div class="hiw-rev-key">S2 Engagement Trajectory</div><div class="hiw-rev-val">Inbox Placement <em>(+ Email Test)</em></div></div>
+      <div class="hiw-rev-row"><div class="hiw-rev-key">S3 Acquisition Quality</div><div class="hiw-rev-val"><em>Signal Engine only &mdash; Pro/Agency</em></div></div>
+      <div class="hiw-rev-row"><div class="hiw-rev-key">S4 Domain Reputation</div><div class="hiw-rev-val">Sender Check &middot; Blacklist Monitor <em>(+ Header Analyzer, Warm-up, Placement)</em></div></div>
+      <div class="hiw-rev-row"><div class="hiw-rev-key">S5 Spam Trap Exposure</div><div class="hiw-rev-val">Email Verifier <em>(disposable + dormancy)</em></div></div>
+      <div class="hiw-rev-row"><div class="hiw-rev-key">S6 Auth Standing</div><div class="hiw-rev-val">Sender Check &middot; Header Analyzer &middot; Email Test <em>(+ BIMI, Warm-up)</em></div></div>
+      <div class="hiw-rev-row"><div class="hiw-rev-key">S7 Decay Velocity</div><div class="hiw-rev-val">Blacklist Monitor <em>(over time)</em> &mdash; primary read is the Signal Engine</div></div>
+    </div>
+
+    <div class="hiw-rev-card hiw-rev-card--pillars">
+      <h3>By Pillar &mdash; which tools serve it</h3>
+      <div class="hiw-rev-row"><div class="hiw-rev-key">P1 Real Engagement</div><div class="hiw-rev-val">Email Verifier <em>(cleaner list = truer baseline)</em>. Actual MPP calc happens in the Signal Engine.</div></div>
+      <div class="hiw-rev-row"><div class="hiw-rev-key">P2 Decay Source Isolation</div><div class="hiw-rev-val">Header Analyzer &middot; Inbox Placement <em>(+ Sender Check, Email Test)</em></div></div>
+      <div class="hiw-rev-row"><div class="hiw-rev-key">P3 Domain Rescue</div><div class="hiw-rev-val">Sender Check &middot; Warm-up Tracker <em>(+ Blacklist Monitor, Header Analyzer, BIMI)</em></div></div>
+      <div class="hiw-rev-row"><div class="hiw-rev-key">P4 List Rescue</div><div class="hiw-rev-val">Email Verifier <em>(surface clean)</em>. The 3-layer triage lives in Signal Map.</div></div>
+      <div class="hiw-rev-row"><div class="hiw-rev-key">P5 Copy &amp; Offer Rescue</div><div class="hiw-rev-val">Subject Scorer &middot; Framework Lab</div></div>
+      <div class="hiw-rev-row"><div class="hiw-rev-key">P6 Decay-Proofing</div><div class="hiw-rev-val">Blacklist Monitor <em>(+ scheduled Sender Check, Inbox Placement, Email Verifier, Warm-up)</em></div></div>
+    </div>
+
+  </section>
+
+  {# ── CTA ───────────────────────────────────────────── #}
+  <section class="hiw-cta">
+    <h2>See what's about to break. Before the send.</h2>
+    <p>The 10 tools read the surface. The Signal Engine reads all 7. The Pillars rescue what's already broken. Start with your Signal Score &mdash; free, no signup.</p>
+    <div class="hiw-cta__btns">
+      <a href="/" class="hiw-cta__btn hiw-cta__btn--primary">Get my Signal Score &rarr;</a>
+      <a href="/pricing" class="hiw-cta__btn hiw-cta__btn--outline">See Pro / Agency pricing</a>
+    </div>
+  </section>
+
+</main>
+
+{% include 'sections/footer.html' %}
+</body>
+</html>

@@ -968,6 +968,16 @@ def toolkit_page():
     )
 
 
+@public_signal_bp.route("/how-it-works")
+def how_it_works_page():
+    """One-page reference: 7 Signals + 10 Tools + 6 Pillars + matrix."""
+    return render_template(
+        "public/how_it_works.html",
+        allow_index=True,
+        active_page="how-it-works",
+    )
+
+
 # ── Embeddable Signal Score badge ───────────────────────
 #
 # Two badge formats, both keyed to a domain:
