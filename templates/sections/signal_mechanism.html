@@ -8,7 +8,10 @@
 <section class="signal-mech">
   <div class="signal-mech__inner">
     <span class="signal-mech__eyebrow">The Signal Engine &middot; 7 Inbox Signals</span>
-    <h2 class="signal-mech__h2">The inbox rules keep changing. Your emails are getting left behind.</h2>
+    <h2 class="signal-mech__h2">
+      <span class="signal-mech__h2-setup">The inbox keeps changing.</span>
+      <span class="signal-mech__h2-punch">Your emails are getting left behind.</span>
+    </h2>
     <p class="signal-mech__sub">
       Apple fakes your opens. Microsoft rejects weak DMARC. Gmail scores your imports on day-one behavior your ESP can't read. None of it hits your dashboard &mdash; all of it hits your reply rate, six weeks late.
     </p>
@@ -127,6 +130,22 @@
   line-height: 1.15;
   color: var(--text-1);
   margin: 0 0 18px;
+}
+.signal-mech__h2-setup,
+.signal-mech__h2-punch { display: block; }
+.signal-mech__h2-setup {
+  font-size: 1.45rem;
+  font-weight: 600;
+  color: var(--text-2);
+  letter-spacing: -0.01em;
+  margin-bottom: 6px;
+}
+.signal-mech__h2-punch {
+  font-size: 2.55rem;
+  font-weight: 900;
+  letter-spacing: -0.035em;
+  line-height: 1.08;
+  color: var(--text-1);
 }
 .signal-mech__sub {
   font-size: 1.05rem;
@@ -327,6 +346,8 @@
 
 @media (max-width: 720px) {
   .signal-mech__h2 { font-size: 1.6rem; }
+  .signal-mech__h2-setup { font-size: 1.05rem; }
+  .signal-mech__h2-punch { font-size: 1.75rem; }
   .signal-vs__h2 { font-size: 1.3rem; }
   .ghost-opens-card { padding: 24px 20px; }
   .ghost-opens-card__val { font-size: 1.1rem; }
