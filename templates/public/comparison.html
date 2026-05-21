@@ -169,6 +169,16 @@
   color: var(--text-3);
   margin: 12px 0 0;
 }
+.cmp-sources {
+  font-size: 0.76rem;
+  line-height: 1.55;
+  color: var(--text-3, #94a3b8);
+  margin: 32px auto 0;
+  padding-top: 18px;
+  border-top: 1px dashed var(--border-1, #e2e8f0);
+  text-align: left;
+}
+.cmp-sources strong { color: var(--text-2); font-weight: 600; }
 .cmp-other-comparisons {
   margin-top: 48px;
   padding-top: 32px;
@@ -286,6 +296,10 @@
     <h2 class="cmp-section__h" style="margin-top:24px;">When you need InbXr instead</h2>
     <p>{{ competitor.when_you_need_inbxr }}</p>
   </div>
+
+  <p class="cmp-sources">
+    <strong>Sources for ISP-mandate claims:</strong> Apple Mail Privacy Protection (announced WWDC 2021, iOS 15+) &middot; Gmail &amp; Yahoo Bulk Sender Guidelines (effective February 1, 2024) &middot; Microsoft Outlook.com Sender Requirements (effective May 5, 2025). Competitor feature coverage assessed from each vendor's public documentation as of {{ '2026-05-21' }}.
+  </p>
 
   <div class="cmp-cta">
     <h2 class="cmp-cta__h">Get your 7 Signal reading in 30 seconds</h2>

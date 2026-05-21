@@ -18,6 +18,13 @@
 .lp-signal-block__p { font-size: 0.95rem; line-height: 1.65; color: var(--text-2); margin: 0 0 12px; }
 .lp-signal-block__p strong { color: var(--text-1); }
 
+/* Sources line */
+.lp-arg-sources {
+  font-size: 0.78rem; line-height: 1.55; color: var(--text-3, #94a3b8);
+  max-width: 760px; margin: 8px auto 24px; text-align: center;
+}
+.lp-arg-sources strong { color: var(--text-2); font-weight: 600; }
+
 /* Argument close */
 .lp-arg-close { background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border: 1px solid #bae6fd; border-radius: 14px; padding: 32px; margin: 28px 0; }
 .lp-arg-close h3 { font-size: 1.5rem; font-weight: 900; color: var(--text-1); margin: 0 0 14px; }
@@ -133,6 +140,11 @@
       <p class="lp-signal-block__p"><strong>Proof:</strong> The weekly rate at which contacts migrate from active to warm to at-risk to dormant is calculable from ESP sync data. That rate, projected forward, produces a date: the point at which the Signal Score crosses the danger threshold and deliverability damage becomes statistically likely.</p>
       <p class="lp-signal-block__p"><strong>Benefit:</strong> InbXr tells you how many days you have before your signal score hits the danger threshold. "Your at-risk segment is growing at 340 contacts per week. At this rate you will cross the danger threshold in 18 days." That sentence does not exist in any other deliverability tool in the market. That is the difference between a rearview mirror and a windshield.</p>
     </div>
+
+    <!-- Sources -->
+    <p class="lp-arg-sources">
+      <strong>Sources:</strong> Apple Mail Privacy Protection (announced WWDC 2021, launched iOS 15+) &middot; Gmail &amp; Yahoo Bulk Sender Guidelines (effective February 1, 2024) &middot; Microsoft Outlook.com Sender Requirements (effective May 5, 2025) &middot; Open-rate inflation estimates per Litmus and Email on Acid State of Email reports, 2022&ndash;2024.
+    </p>
 
     <!-- Argument close -->
     <div class="lp-arg-close">
