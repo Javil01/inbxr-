@@ -12,6 +12,9 @@
     <p class="signal-mech__sub">
       Apple fakes your opens. Microsoft rejects weak DMARC. Gmail scores your imports on day-one behavior your ESP can't read. None of it hits your dashboard &mdash; all of it hits your reply rate, six weeks late.
     </p>
+    <p class="signal-mech__sources">
+      <strong>Sources:</strong> Apple Mail Privacy Protection (announced WWDC 2021, iOS 15+) &middot; Microsoft Outlook.com Sender Requirements (effective May 5, 2025) &middot; Gmail &amp; Yahoo Bulk Sender Guidelines (effective February 1, 2024).
+    </p>
     <p class="signal-mech__sub">
       We read all 7 of your list's signals <strong>before</strong> you hit send. So the next rule change doesn't ambush a campaign you couldn't see coming.
     </p>
@@ -131,6 +134,18 @@
   color: var(--text-2);
   max-width: 720px;
   margin: 0 auto 40px;
+}
+.signal-mech__sources {
+  font-size: 0.78rem;
+  line-height: 1.55;
+  color: var(--text-3, #94a3b8);
+  max-width: 720px;
+  margin: -28px auto 36px;
+  text-align: center;
+}
+.signal-mech__sources strong {
+  color: var(--text-2);
+  font-weight: 600;
 }
 .signal-mech__pills {
   display: grid;
