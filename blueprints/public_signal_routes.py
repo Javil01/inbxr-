@@ -989,7 +989,7 @@ def how_it_works_page():
 #
 # To swap the Gumroad URL: edit DECAY_RESCUE_GUMROAD_URL below.
 
-DECAY_RESCUE_GUMROAD_URL = "https://gumroad.com/l/REPLACE_WITH_GUMROAD_PRODUCT_SLUG"
+DECAY_RESCUE_GUMROAD_URL = "https://inboxer42.gumroad.com/l/lxzgzm"
 
 
 @public_signal_bp.route("/decay-rescue")
