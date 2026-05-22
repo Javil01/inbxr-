@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <link rel="preconnect" href="https://fonts.googleapis.com" />
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet" />
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html, body {
     width: 1280px; height: 720px;
-    background: #0c1a3a;
+    background: #050a16;
     font-family: 'Inter', -apple-system, sans-serif;
     overflow: hidden;
   }
@@ -16,203 +16,393 @@
     position: relative;
     width: 1280px; height: 720px;
     background:
-      radial-gradient(circle at 85% 75%, rgba(21,193,130,0.18) 0%, transparent 50%),
-      radial-gradient(circle at 15% 20%, rgba(124,58,237,0.10) 0%, transparent 45%),
-      linear-gradient(135deg, #0c1a3a 0%, #1e293b 100%);
+      radial-gradient(ellipse 800px 600px at 78% 50%, rgba(21,193,130,0.16) 0%, transparent 60%),
+      radial-gradient(ellipse 1000px 800px at 0% 0%, rgba(124,58,237,0.07) 0%, transparent 50%),
+      linear-gradient(135deg, #050a16 0%, #0c1a3a 60%, #0a1428 100%);
     color: #fff;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
     padding: 56px 64px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
+    align-items: center;
   }
 
-  /* Top brand strip */
+  /* Subtle grid pattern overlay */
+  .cover::before {
+    content: '';
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+    background-size: 48px 48px;
+    pointer-events: none;
+  }
+
+  /* ── Left: typography ── */
+  .copy {
+    position: relative; z-index: 2;
+  }
   .brand-row {
-    display: flex; align-items: center; justify-content: space-between;
-  }
-  .brand-logo {
-    font-size: 22px; font-weight: 800; letter-spacing: -0.02em;
     display: flex; align-items: center; gap: 10px;
+    margin-bottom: 36px;
   }
-  .brand-logo__mark {
-    width: 32px; height: 32px; border-radius: 8px;
+  .brand-mark {
+    width: 28px; height: 28px; border-radius: 7px;
     background: #15c182;
     display: flex; align-items: center; justify-content: center;
-    font-size: 18px; color: #0c1a3a;
+    color: #050a16; font-weight: 900; font-size: 15px;
+  }
+  .brand-name {
+    font-size: 17px; font-weight: 800; letter-spacing: -0.01em;
+    color: #fff;
+  }
+  .brand-bar {
+    width: 1px; height: 18px; background: rgba(255,255,255,0.15);
+    margin: 0 4px;
   }
   .brand-tag {
-    font-size: 12px; font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; font-weight: 700;
     text-transform: uppercase; letter-spacing: 0.15em;
     color: rgba(255,255,255,0.5);
   }
 
-  /* Main */
-  .main {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 48px;
-    align-items: center;
-  }
-  .copy-side .eyebrow {
+  .eyebrow {
     display: inline-block;
-    font-size: 12px; font-weight: 800;
-    text-transform: uppercase; letter-spacing: 0.18em;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.2em;
     color: #6ee7b7;
-    background: rgba(21,193,130,0.12);
+    padding: 5px 12px;
     border: 1px solid rgba(21,193,130,0.3);
-    padding: 6px 14px; border-radius: 99px;
+    border-radius: 3px;
     margin-bottom: 22px;
   }
-  .copy-side h1 {
-    font-size: 64px; font-weight: 900; line-height: 1.02;
-    letter-spacing: -0.035em;
+  .h1 {
+    font-size: 70px; font-weight: 900; line-height: 0.97;
+    letter-spacing: -0.04em;
     margin-bottom: 18px;
+    color: #fff;
   }
-  .copy-side h1 em {
-    font-style: normal;
-    color: #6ee7b7;
-  }
-  .copy-side .tagline {
-    font-size: 19px; line-height: 1.5;
-    color: rgba(255,255,255,0.75);
-    max-width: 460px;
+  .h1__line2 { color: #6ee7b7; }
+
+  .tagline {
+    font-size: 18px; line-height: 1.45;
+    color: rgba(255,255,255,0.72);
+    max-width: 480px;
+    margin-bottom: 32px;
     font-weight: 500;
   }
-  .copy-side .tagline strong { color: #fff; font-weight: 700; }
+  .tagline strong { color: #fff; font-weight: 700; }
 
-  /* Pillar stack on the right */
-  .pillars {
-    display: flex; flex-direction: column; gap: 8px;
-    padding-left: 12px;
+  .stat-row {
+    display: flex; gap: 24px; align-items: center;
+    padding-top: 22px;
+    border-top: 1px solid rgba(255,255,255,0.1);
   }
-  .pillar {
-    display: flex; align-items: center; gap: 14px;
-    padding: 12px 16px;
+  .stat {
+    display: flex; flex-direction: column;
+  }
+  .stat__num {
+    font-size: 28px; font-weight: 900; color: #fff;
+    letter-spacing: -0.02em; line-height: 1;
+  }
+  .stat__label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.12em;
+    color: rgba(255,255,255,0.45);
+    margin-top: 6px;
+  }
+
+  /* ── Right: physical product ── */
+  .product-stage {
+    position: relative; z-index: 2;
+    width: 100%; height: 540px;
+    display: flex; align-items: center; justify-content: center;
+    perspective: 1400px;
+  }
+
+  /* Background loose papers */
+  .paper {
+    position: absolute;
+    background: #f1f5f9;
+    border: 1px solid #cbd5e1;
+    border-radius: 2px;
+    box-shadow: 0 30px 50px rgba(0,0,0,0.45);
+  }
+  .paper-1 {
+    width: 200px; height: 270px;
+    top: 78px; left: 20px;
+    transform: rotate(-18deg);
+  }
+  .paper-2 {
+    width: 220px; height: 280px;
+    top: 60px; right: 24px;
+    transform: rotate(14deg);
+  }
+  .paper__lines {
+    padding: 16px 14px;
+  }
+  .paper__lines div {
+    height: 5px;
+    background: #cbd5e1;
+    margin-bottom: 6px;
+    border-radius: 1px;
+  }
+  .paper__lines div:nth-child(1) { width: 85%; height: 7px; background: #94a3b8; margin-bottom: 12px; }
+  .paper__lines div:nth-child(2) { width: 70%; }
+  .paper__lines div:nth-child(3) { width: 90%; }
+  .paper__lines div:nth-child(4) { width: 60%; }
+  .paper__lines div:nth-child(5) { width: 80%; }
+  .paper__lines div:nth-child(6) { width: 65%; }
+  .paper__lines div:nth-child(7) { width: 88%; }
+  .paper__lines div:nth-child(8) { width: 55%; }
+
+  /* The "field manual" — a 3D bound book */
+  .manual {
+    position: relative;
+    width: 320px; height: 440px;
+    transform: rotateY(-14deg) rotateX(2deg) rotateZ(-1deg);
+    transform-style: preserve-3d;
+    box-shadow:
+      40px 60px 80px rgba(0,0,0,0.55),
+      0 0 0 1px rgba(255,255,255,0.04);
+  }
+
+  /* Spine accent (left edge, teal stripe) */
+  .manual::before {
+    content: '';
+    position: absolute;
+    left: -1px; top: 0; bottom: 0;
+    width: 12px;
+    background: linear-gradient(180deg, #15c182 0%, #03a071 100%);
+    box-shadow: inset -2px 0 4px rgba(0,0,0,0.25);
+  }
+  /* Subtle "book thickness" on the right edge */
+  .manual::after {
+    content: '';
+    position: absolute;
+    right: -6px; top: 4px; bottom: 4px;
+    width: 6px;
+    background: linear-gradient(90deg, #1e2937 0%, #0a1322 100%);
+    border-radius: 0 2px 2px 0;
+  }
+
+  .manual__cover {
+    position: relative;
+    width: 100%; height: 100%;
+    background: linear-gradient(160deg, #0c1a3a 0%, #1e293b 50%, #0c1a3a 100%);
+    border: 1px solid #2a3854;
+    border-radius: 2px 4px 4px 2px;
+    padding: 36px 32px 32px 36px;
+    display: flex; flex-direction: column;
+    color: #fff;
+  }
+
+  /* Top crest */
+  .manual__crest {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 24px;
+  }
+  .manual__crest-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: #6ee7b7;
+  }
+  .manual__crest-text {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.22em;
+    color: #6ee7b7;
+  }
+
+  .manual__cat {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.2em;
+    color: rgba(255,255,255,0.45);
+    margin-bottom: 14px;
+  }
+  .manual__title {
+    font-size: 32px; font-weight: 900;
+    letter-spacing: -0.025em;
+    line-height: 1;
+    margin-bottom: 12px;
+  }
+  .manual__subtitle {
+    font-size: 11px; font-weight: 600;
+    color: rgba(255,255,255,0.62);
+    line-height: 1.4;
+    margin-bottom: 20px;
+  }
+
+  /* Pillar grid on cover */
+  .manual__pillars {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 5px;
+    margin-bottom: 18px;
+  }
+  .pillar-chip {
+    display: flex; align-items: center; gap: 5px;
+    padding: 5px 7px;
     background: rgba(255,255,255,0.04);
     border: 1px solid rgba(255,255,255,0.08);
-    border-radius: 10px;
+    border-radius: 3px;
   }
-  .pillar__num {
-    flex: 0 0 32px; width: 32px; height: 32px; border-radius: 8px;
-    background: rgba(21,193,130,0.18);
+  .pillar-chip__num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8px; font-weight: 900;
     color: #6ee7b7;
-    display: flex; align-items: center; justify-content: center;
-    font-weight: 900; font-size: 14px;
   }
-  .pillar__name {
-    font-size: 14px; font-weight: 700;
-    color: rgba(255,255,255,0.92);
+  .pillar-chip__name {
+    font-size: 8.5px; font-weight: 600;
+    color: rgba(255,255,255,0.78);
+    letter-spacing: -0.005em;
   }
-  .pillar__sub {
-    font-size: 11px; color: rgba(255,255,255,0.5);
-    margin-top: 2px;
-  }
-  .pillar--accent { border-color: rgba(21,193,130,0.4); }
-  .pillar--accent .pillar__num { background: #15c182; color: #0c1a3a; }
 
-  /* Footer strip */
-  .footer-row {
+  /* Bottom stamp */
+  .manual__footer {
+    margin-top: auto;
     display: flex; align-items: center; justify-content: space-between;
+    padding-top: 14px;
     border-top: 1px solid rgba(255,255,255,0.08);
-    padding-top: 22px;
   }
-  .footer-left {
-    display: flex; align-items: center; gap: 28px;
-    font-size: 13px; color: rgba(255,255,255,0.55);
+  .manual__edition {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.15em;
+    color: rgba(255,255,255,0.4);
   }
-  .footer-left strong { color: #fff; font-weight: 700; }
-  .price-badge {
-    display: inline-flex; align-items: baseline; gap: 8px;
-    padding: 8px 18px;
-    background: #15c182; color: #0c1a3a;
-    border-radius: 99px;
-    font-weight: 900; font-size: 22px;
-    letter-spacing: -0.01em;
+  .manual__stamp {
+    width: 38px; height: 38px;
+    border: 1.5px solid rgba(110,231,183,0.45);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    transform: rotate(-12deg);
   }
-  .price-badge__compare {
-    font-size: 13px; font-weight: 600;
-    color: rgba(12,26,58,0.55);
-    text-decoration: line-through;
+  .manual__stamp-inner {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 7px; font-weight: 800;
+    color: rgba(110,231,183,0.75);
+    text-align: center;
+    line-height: 1.1;
+    letter-spacing: 0.04em;
+  }
+
+  /* USB-stick/asset accent floating */
+  .asset-stick {
+    position: absolute;
+    bottom: 32px; left: 38px;
+    width: 110px; height: 34px;
+    background: linear-gradient(180deg, #15c182 0%, #03a071 100%);
+    border-radius: 4px;
+    box-shadow: 0 18px 30px rgba(0,0,0,0.4);
+    transform: rotate(-6deg);
+    display: flex; align-items: center;
+    padding: 0 10px;
+    z-index: 3;
+  }
+  .asset-stick__tip {
+    width: 14px; height: 18px; background: #1e293b;
+    border-radius: 2px;
+    margin-right: 8px;
+  }
+  .asset-stick__label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px; font-weight: 800;
+    color: #050a16;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
   }
 </style>
 </head>
 <body>
   <div class="cover">
 
-    <div class="brand-row">
-      <div class="brand-logo">
-        <span class="brand-logo__mark">i</span>
-        <span>InbXr</span>
-      </div>
-      <span class="brand-tag">From the makers of the 7 Inbox Signals</span>
-    </div>
-
-    <div class="main">
-      <div class="copy-side">
-        <span class="eyebrow">The 6-Pillar Forensic Protocol</span>
-        <h1>The Inbox Decay Rescue</h1>
-        <p class="tagline">
-          Find the source &mdash; Domain, List, Copy, or Offer &mdash; <strong>before the next campaign goes out.</strong>
-        </p>
+    <div class="copy">
+      <div class="brand-row">
+        <div class="brand-mark">i</div>
+        <span class="brand-name">InbXr</span>
+        <div class="brand-bar"></div>
+        <span class="brand-tag">From the makers of The 7 Inbox Signals</span>
       </div>
 
-      <div class="pillars">
-        <div class="pillar">
-          <div class="pillar__num">1</div>
-          <div>
-            <div class="pillar__name">Real Engagement</div>
-            <div class="pillar__sub">Strip the Apple-Mail fake opens</div>
-          </div>
+      <span class="eyebrow">The 6-Pillar Field Manual</span>
+      <h1 class="h1">
+        The Inbox<br>
+        <span class="h1__line2">Decay Rescue.</span>
+      </h1>
+      <p class="tagline">
+        The forensic protocol agencies use to find the source &mdash; Domain, List, Copy, or Offer &mdash; <strong>before the next campaign goes out.</strong>
+      </p>
+
+      <div class="stat-row">
+        <div class="stat">
+          <div class="stat__num">6</div>
+          <div class="stat__label">Pillars</div>
         </div>
-        <div class="pillar pillar--accent">
-          <div class="pillar__num">2</div>
-          <div>
-            <div class="pillar__name">Decay Source Isolation</div>
-            <div class="pillar__sub">Name the root cause</div>
-          </div>
+        <div class="stat">
+          <div class="stat__num">30</div>
+          <div class="stat__label">Worksheets &amp; Tools</div>
         </div>
-        <div class="pillar">
-          <div class="pillar__num">3</div>
-          <div>
-            <div class="pillar__name">Domain Rescue</div>
-            <div class="pillar__sub">72-hour pause &middot; 7-day ramp</div>
-          </div>
-        </div>
-        <div class="pillar">
-          <div class="pillar__num">4</div>
-          <div>
-            <div class="pillar__name">List Rescue</div>
-            <div class="pillar__sub">3-layer triage &middot; re-warming</div>
-          </div>
-        </div>
-        <div class="pillar">
-          <div class="pillar__num">5</div>
-          <div>
-            <div class="pillar__name">Copy &amp; Offer Rescue</div>
-            <div class="pillar__sub">Isolate which one is decaying</div>
-          </div>
-        </div>
-        <div class="pillar">
-          <div class="pillar__num">6</div>
-          <div>
-            <div class="pillar__name">Decay-Proofing</div>
-            <div class="pillar__sub">Monitoring rhythm + triggers</div>
-          </div>
+        <div class="stat">
+          <div class="stat__num">90 min</div>
+          <div class="stat__label">First Diagnosis</div>
         </div>
       </div>
     </div>
 
-    <div class="footer-row">
-      <div class="footer-left">
-        <span><strong>30</strong> assets</span>
-        <span><strong>277KB</strong> playbook</span>
-        <span><strong>14-day</strong> refund</span>
-        <span><strong>Lifetime</strong> updates</span>
+    <div class="product-stage">
+
+      <div class="paper paper-1">
+        <div class="paper__lines">
+          <div></div><div></div><div></div><div></div>
+          <div></div><div></div><div></div><div></div>
+        </div>
       </div>
-      <div class="price-badge">
-        <span class="price-badge__compare">$97</span>
-        <span>$47</span>
+      <div class="paper paper-2">
+        <div class="paper__lines">
+          <div></div><div></div><div></div><div></div>
+          <div></div><div></div><div></div><div></div>
+        </div>
       </div>
+
+      <div class="manual">
+        <div class="manual__cover">
+
+          <div class="manual__crest">
+            <div class="manual__crest-dot"></div>
+            <span class="manual__crest-text">Operations Brief &middot; Confidential</span>
+          </div>
+
+          <div class="manual__cat">A Field Manual For Email Operators</div>
+          <h2 class="manual__title">The Inbox Decay Rescue</h2>
+          <p class="manual__subtitle">Diagnose. Isolate. Rescue. Decay-proof.</p>
+
+          <div class="manual__pillars">
+            <div class="pillar-chip"><span class="pillar-chip__num">01</span><span class="pillar-chip__name">Real Engagement</span></div>
+            <div class="pillar-chip"><span class="pillar-chip__num">02</span><span class="pillar-chip__name">Source Isolation</span></div>
+            <div class="pillar-chip"><span class="pillar-chip__num">03</span><span class="pillar-chip__name">Domain Rescue</span></div>
+            <div class="pillar-chip"><span class="pillar-chip__num">04</span><span class="pillar-chip__name">List Rescue</span></div>
+            <div class="pillar-chip"><span class="pillar-chip__num">05</span><span class="pillar-chip__name">Copy &amp; Offer</span></div>
+            <div class="pillar-chip"><span class="pillar-chip__num">06</span><span class="pillar-chip__name">Decay-Proofing</span></div>
+          </div>
+
+          <div class="manual__footer">
+            <span class="manual__edition">Protocol v1.0 &middot; Agency Edition</span>
+            <div class="manual__stamp">
+              <span class="manual__stamp-inner">CLEARED<br>FOR USE</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="asset-stick">
+        <div class="asset-stick__tip"></div>
+        <span class="asset-stick__label">30 Assets</span>
+      </div>
+
     </div>
 
   </div>
