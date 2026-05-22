@@ -978,6 +978,47 @@ def how_it_works_page():
     )
 
 
+# ── Front-end offer: The Inbox Decay Rescue ─────────────
+#
+# $47 workbook sold via Gumroad. The landing page lives here for SEO
+# and to give us control of the sales copy; checkout itself is Gumroad
+# (so refunds, file delivery, customer DB are all theirs). After
+# checkout, Gumroad redirects to /decay-rescue/thank-you?email=...
+# where we pitch Pillar 7 (Pro upgrade) with the buyer's email
+# pre-filled into /signup.
+#
+# To swap the Gumroad URL: edit DECAY_RESCUE_GUMROAD_URL below.
+
+DECAY_RESCUE_GUMROAD_URL = "https://gumroad.com/l/REPLACE_WITH_GUMROAD_PRODUCT_SLUG"
+
+
+@public_signal_bp.route("/decay-rescue")
+def decay_rescue_page():
+    """Sales landing page for the $47 Inbox Decay Rescue workbook."""
+    return render_template(
+        "public/decay_rescue.html",
+        gumroad_url=DECAY_RESCUE_GUMROAD_URL,
+        allow_index=True,
+        active_page="decay-rescue",
+    )
+
+
+@public_signal_bp.route("/decay-rescue/thank-you")
+def decay_rescue_thank_you():
+    """Post-Gumroad-checkout page. Pitches InbXr Pro as Pillar 7."""
+    from flask import request
+    # Gumroad supports {{purchase.email}} or similar in redirect URLs.
+    # See GUMROAD_SETUP.md for the exact template format.
+    buyer_email = (request.args.get("email") or "").strip()
+    return render_template(
+        "public/decay_rescue_thank_you.html",
+        buyer_email=buyer_email,
+        # Intentionally noindex (set in the template's <meta>) so this
+        # page doesn't show in search — it's a post-purchase artifact.
+        active_page="decay-rescue",
+    )
+
+
 # ── Embeddable Signal Score badge ───────────────────────
 #
 # Two badge formats, both keyed to a domain:

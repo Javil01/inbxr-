@@ -1,8 +1,13 @@
 {% extends "auth/base_auth.html" %}
 {% block title %}Sign Up{% endblock %}
 {% block content %}
+{% if signup_source == 'decay-rescue' %}
+<h1 class="auth-card__title">Activate Pillar 7 &mdash; Automation</h1>
+<p class="auth-card__sub">You just bought the methodology. Now run it on autopilot. Start your Pro account &mdash; we'll automate Pillars 1, 2, 4, 5, and 6 across your list every 6 hours.</p>
+{% else %}
 <h1 class="auth-card__title">Create Your Account</h1>
 <p class="auth-card__sub">Own the Inbox. Own the Sale. Free tier available. No credit card required. Cancel anytime.</p>
+{% endif %}
 
 {% if error %}
 <div class="auth-alert auth-alert--error">{{ error }}</div>
@@ -12,7 +17,7 @@
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
   <label class="auth-label">
     <span>Email</span>
-    <input type="email" name="email" required autocomplete="email" placeholder="you@company.com" />
+    <input type="email" name="email" required autocomplete="email" placeholder="you@company.com" value="{{ prefill_email|default('', true) }}" />
   </label>
   <label class="auth-label">
     <span>Password</span>

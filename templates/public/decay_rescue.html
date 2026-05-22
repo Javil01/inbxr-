@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Inbox Decay Rescue &middot; The 6-Pillar Forensic Protocol</title>
+  <meta name="description" content="The 6-pillar forensic protocol agencies use to find email deliverability decay — Domain, List, Copy, or Offer — before the next campaign goes out. 30 assets. $47.">
+  <meta property="og:title" content="The Inbox Decay Rescue &middot; The 6-Pillar Forensic Protocol">
+  <meta property="og:description" content="The forensic methodology agencies use to find decay before the next send. 6 pillars. 30 assets. $47.">
+  <meta property="og:url" content="https://inbxr.us/decay-rescue">
+  <meta property="og:type" content="product">
+  <link rel="canonical" href="https://inbxr.us/decay-rescue">
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/style.css?v=20260521a" />
+  {% include 'sections/_head_meta.html' %}
+</head>
+<body class="email-test-page">
+
+{% include 'sections/header.html' %}
+
+<style>
+:root {
+  --dr-brand: #15c182;
+  --dr-brand-dark: #03a071;
+  --dr-ink: #161e2e;
+  --dr-ink-2: #475569;
+  --dr-ink-3: #94a3b8;
+  --dr-border: #e2e8f0;
+  --dr-bg-soft: #f8fafc;
+  --dr-engine-soft: #d1fae5;
+}
+
+.dr-wrap { color: var(--dr-ink); }
+
+/* Hero */
+.dr-hero {
+  background: linear-gradient(135deg, #0c1a3a 0%, #1e293b 100%);
+  color: #fff; padding: 80px 24px 64px;
+}
+.dr-hero__inner { max-width: 880px; margin: 0 auto; text-align: center; }
+.dr-eyebrow {
+  display: inline-block; font-size: 0.72rem; font-weight: 800;
+  text-transform: uppercase; letter-spacing: 0.12em;
+  padding: 5px 16px; border-radius: 99px;
+  background: rgba(21,193,130,0.15); color: #6ee7b7;
+  margin-bottom: 22px;
+}
+.dr-h1 {
+  font-size: 2.6rem; font-weight: 900; line-height: 1.1;
+  margin: 0 0 18px; letter-spacing: -0.025em;
+}
+.dr-h1 em { font-style: normal; color: #6ee7b7; }
+.dr-tagline {
+  font-size: 1.15rem; line-height: 1.55;
+  color: rgba(255,255,255,0.78);
+  max-width: 700px; margin: 0 auto 28px;
+}
+.dr-tagline strong { color: #fff; }
+.dr-price-strip {
+  display: inline-flex; gap: 18px; align-items: center; flex-wrap: wrap;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 99px; padding: 10px 22px;
+  font-size: 0.92rem; color: rgba(255,255,255,0.85);
+  margin-bottom: 24px;
+}
+.dr-price-strip__amount {
+  font-size: 1.4rem; font-weight: 900; color: #6ee7b7;
+  letter-spacing: -0.01em;
+}
+.dr-price-strip__compare { text-decoration: line-through; color: var(--dr-ink-3); }
+.dr-cta-btn {
+  display: inline-flex; align-items: center; gap: 10px;
+  background: var(--dr-brand); color: #fff;
+  padding: 16px 32px; border-radius: 99px;
+  font-weight: 800; font-size: 1rem; text-decoration: none;
+  box-shadow: 0 8px 24px rgba(21,193,130,0.35);
+  transition: transform 0.15s, background 0.15s;
+}
+.dr-cta-btn:hover { background: var(--dr-brand-dark); transform: scale(1.03); color: #fff; }
+.dr-cta-btn--ghost {
+  background: transparent;
+  border: 1.5px solid rgba(255,255,255,0.3);
+  box-shadow: none;
+}
+.dr-cta-btn--ghost:hover { background: rgba(255,255,255,0.06); color: #fff; }
+.dr-hero__assurance {
+  font-size: 0.82rem; color: rgba(255,255,255,0.55);
+  margin: 18px 0 0; line-height: 1.55;
+}
+
+/* Section wrappers */
+.dr-section { padding: 64px 24px; }
+.dr-section--alt { background: var(--dr-bg-soft); }
+.dr-section__inner { max-width: 880px; margin: 0 auto; }
+.dr-section__inner--wide { max-width: 1080px; }
+.dr-h2 {
+  font-size: 1.9rem; font-weight: 900; letter-spacing: -0.025em;
+  line-height: 1.18; margin: 0 0 18px;
+}
+.dr-h2--center { text-align: center; }
+.dr-lead {
+  font-size: 1.08rem; line-height: 1.65; color: var(--dr-ink-2);
+  margin: 0 0 16px;
+}
+.dr-lead strong { color: var(--dr-ink); }
+
+/* Problem stack */
+.dr-problems { display: grid; gap: 14px; margin: 28px 0 0; }
+.dr-problem {
+  background: #fff; border: 1px solid var(--dr-border);
+  border-left: 3px solid #ef4444; border-radius: 10px;
+  padding: 18px 22px;
+  font-size: 0.96rem; line-height: 1.55; color: var(--dr-ink-2);
+}
+.dr-problem strong { color: var(--dr-ink); }
+
+/* Pillars */
+.dr-pillars { display: grid; gap: 16px; }
+.dr-pillar {
+  background: #fff; border: 1px solid var(--dr-border);
+  border-radius: 14px; padding: 26px;
+  transition: border-color 0.15s, transform 0.15s;
+}
+.dr-pillar:hover { border-color: var(--dr-brand); transform: translateY(-2px); }
+.dr-pillar__head {
+  display: flex; align-items: center; gap: 14px;
+  margin-bottom: 10px;
+}
+.dr-pillar__num {
+  display: flex; align-items: center; justify-content: center;
+  width: 38px; height: 38px; border-radius: 10px;
+  background: var(--dr-engine-soft); color: var(--dr-brand-dark);
+  font-weight: 900; font-size: 1rem; flex: 0 0 38px;
+}
+.dr-pillar__title {
+  font-size: 1.05rem; font-weight: 800; color: var(--dr-ink); margin: 0;
+}
+.dr-pillar__desc {
+  font-size: 0.92rem; line-height: 1.6; color: var(--dr-ink-2);
+  margin: 0 0 10px;
+}
+.dr-pillar__deliverables {
+  font-size: 0.82rem; color: var(--dr-ink-3); margin: 0;
+}
+.dr-pillar__deliverables strong { color: var(--dr-ink-2); font-weight: 600; }
+
+/* Whats included grid */
+.dr-included { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 28px; }
+.dr-inc {
+  background: #fff; border: 1px solid var(--dr-border);
+  border-radius: 12px; padding: 22px; text-align: center;
+}
+.dr-inc__num {
+  font-size: 2rem; font-weight: 900; color: var(--dr-brand-dark);
+  line-height: 1; margin-bottom: 8px;
+}
+.dr-inc__label {
+  font-size: 0.82rem; color: var(--dr-ink-2); line-height: 1.4;
+}
+
+/* Who its for */
+.dr-fit { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 24px; }
+.dr-fit__card {
+  background: #fff; border: 1px solid var(--dr-border);
+  border-radius: 12px; padding: 22px;
+}
+.dr-fit__card--yes { border-color: var(--dr-brand); background: rgba(21,193,130,0.04); }
+.dr-fit__h3 { font-size: 1rem; font-weight: 800; margin: 0 0 14px; }
+.dr-fit__h3--yes { color: var(--dr-brand-dark); }
+.dr-fit__h3--no  { color: var(--dr-ink-3); }
+.dr-fit__list { list-style: none; padding: 0; margin: 0; }
+.dr-fit__list li {
+  padding: 6px 0 6px 22px; position: relative;
+  font-size: 0.9rem; line-height: 1.5; color: var(--dr-ink-2);
+}
+.dr-fit__list li::before {
+  position: absolute; left: 0; top: 6px;
+  font-weight: 800;
+}
+.dr-fit__card--yes .dr-fit__list li::before { content: "✓"; color: var(--dr-brand); }
+.dr-fit__card--no  .dr-fit__list li::before { content: "×"; color: var(--dr-ink-3); }
+
+/* Closing CTA */
+.dr-close {
+  background: linear-gradient(135deg, var(--dr-engine-soft) 0%, #f0fdfa 100%);
+  border: 1px solid var(--dr-brand);
+  border-radius: 18px; padding: 44px 32px; text-align: center;
+  margin: 32px auto 0; max-width: 760px;
+}
+.dr-close h2 {
+  font-size: 1.6rem; font-weight: 900; letter-spacing: -0.02em;
+  color: var(--dr-ink); margin: 0 0 12px;
+}
+.dr-close p {
+  font-size: 1rem; line-height: 1.6; color: var(--dr-ink-2);
+  margin: 0 auto 22px; max-width: 540px;
+}
+.dr-close__price {
+  font-size: 2.4rem; font-weight: 900; color: var(--dr-ink);
+  display: inline-flex; align-items: baseline; gap: 8px;
+  margin-bottom: 22px; letter-spacing: -0.02em;
+}
+.dr-close__price-compare {
+  font-size: 1rem; font-weight: 600;
+  color: var(--dr-ink-3); text-decoration: line-through;
+}
+.dr-close__assurance {
+  font-size: 0.8rem; color: var(--dr-ink-3);
+  margin: 14px 0 0; line-height: 1.55;
+}
+
+/* FAQ */
+.dr-faq { max-width: 760px; margin: 0 auto; }
+.dr-faq__item {
+  border-bottom: 1px solid var(--dr-border);
+  padding: 18px 0;
+}
+.dr-faq__q {
+  font-size: 1rem; font-weight: 700; color: var(--dr-ink);
+  margin: 0 0 8px;
+}
+.dr-faq__a {
+  font-size: 0.93rem; line-height: 1.6; color: var(--dr-ink-2);
+  margin: 0;
+}
+
+/* Inbxr cross-reference */
+.dr-cross {
+  background: var(--dr-bg-soft); border: 1px solid var(--dr-border);
+  border-radius: 14px; padding: 24px;
+  margin: 32px 0 0;
+}
+.dr-cross__h {
+  font-size: 0.72rem; font-weight: 800; text-transform: uppercase;
+  letter-spacing: 0.1em; color: var(--dr-brand-dark); margin: 0 0 10px;
+}
+.dr-cross p {
+  font-size: 0.95rem; line-height: 1.6; color: var(--dr-ink-2);
+  margin: 0 0 12px;
+}
+.dr-cross a {
+  color: var(--dr-brand-dark); font-weight: 700; text-decoration: none;
+}
+.dr-cross a:hover { text-decoration: underline; }
+
+@media (max-width: 760px) {
+  .dr-h1 { font-size: 1.85rem; }
+  .dr-h2 { font-size: 1.4rem; }
+  .dr-included { grid-template-columns: 1fr 1fr; }
+  .dr-fit { grid-template-columns: 1fr; }
+  .dr-section { padding: 48px 20px; }
+}
+</style>
+
+<main class="dr-wrap">
+
+  {# ── Hero ─────────────────────────────────────────── #}
+  <section class="dr-hero">
+    <div class="dr-hero__inner">
+      <span class="dr-eyebrow">The 6-Pillar Forensic Protocol</span>
+      <h1 class="dr-h1">The Inbox Decay Rescue.<br>Find the source <em>before</em> the next send.</h1>
+      <p class="dr-tagline">
+        Most deliverability tools tell you what just broke. <strong>The Inbox Decay Rescue is the 6-pillar forensic protocol agencies use to find the source &mdash; Domain, List, Copy, or Offer &mdash; before the next campaign goes out.</strong> 30 assets. One named methodology. Built for the senders whose dashboards have stopped telling the truth.
+      </p>
+      <div class="dr-price-strip">
+        <span><span class="dr-price-strip__compare">$97</span> &nbsp; <span class="dr-price-strip__amount">$47</span></span>
+        <span>One-time. Lifetime access. All future updates.</span>
+      </div>
+      <p>
+        <a href="{{ gumroad_url|default('#') }}" class="dr-cta-btn">
+          Get the Rescue Protocol &rarr;
+        </a>
+      </p>
+      <p class="dr-hero__assurance">Instant download &middot; PDF playbook + 30 worksheets, calculators, and templates &middot; Refundable within 14 days, no questions</p>
+    </div>
+  </section>
+
+  {# ── Problem ──────────────────────────────────────── #}
+  <section class="dr-section">
+    <div class="dr-section__inner">
+      <h2 class="dr-h2">Your campaigns underperform and you can't pin down why.</h2>
+      <p class="dr-lead">You did everything right. SPF, DKIM, DMARC all green. List verifier ran clean last week. New subject lines tested. New segment. And the open rate still dropped, the reply rate cratered, and you're not sure which lever to pull <strong>or whether you've already pulled the wrong one</strong>.</p>
+      <div class="dr-problems">
+        <div class="dr-problem"><strong>You ran the list verifier again.</strong> Found nothing. Re-sent the campaign anyway. It still underperformed.</div>
+        <div class="dr-problem"><strong>You rewrote the subject line three times.</strong> Marginal change. You don't know whether the copy is fatigued or the list is.</div>
+        <div class="dr-problem"><strong>You started warming up a new domain.</strong> Six weeks in. Still not sure if the old one was the actual problem.</div>
+        <div class="dr-problem"><strong>You explained it to your client by saying "deliverability is complicated."</strong> They nodded. Neither of you knew what to do next.</div>
+      </div>
+      <p class="dr-lead" style="margin-top:28px;">The Inbox Decay Rescue gives you a <strong>diagnosis, not a guess</strong>. Six pillars, each one a step in the protocol &mdash; from measuring your real engagement baseline to executing a Domain / List / Copy / Offer rescue and decay-proofing what's left.</p>
+    </div>
+  </section>
+
+  {# ── 6 Pillars ────────────────────────────────────── #}
+  <section class="dr-section dr-section--alt">
+    <div class="dr-section__inner">
+      <h2 class="dr-h2 dr-h2--center">The 6 Pillars</h2>
+      <p class="dr-lead" style="text-align:center;margin-bottom:32px;">Each pillar produces a deliverable. Each deliverable feeds the next. By the end you have a calibrated baseline, a named root cause, an executed rescue, and a monitoring rhythm.</p>
+
+      <div class="dr-pillars">
+        <div class="dr-pillar">
+          <div class="dr-pillar__head">
+            <span class="dr-pillar__num">1</span>
+            <h3 class="dr-pillar__title">Real Engagement &mdash; calibrate your truthful baseline</h3>
+          </div>
+          <p class="dr-pillar__desc">Apple Mail auto-opens are inflating your dashboard by 20-40%. Pillar 1 strips them out and gives you a Real Engagement Score and a Gaslighting Gap (how much your ESP is lying). This becomes the reference point for every weekly check from here on.</p>
+          <p class="dr-pillar__deliverables"><strong>Deliverables:</strong> Real Engagement Calculator (xlsx) &middot; Baseline Worksheet (docx) &middot; MPP-Detection Reference (pdf)</p>
+        </div>
+
+        <div class="dr-pillar">
+          <div class="dr-pillar__head">
+            <span class="dr-pillar__num">2</span>
+            <h3 class="dr-pillar__title">Decay Source Isolation &mdash; name the root cause</h3>
+          </div>
+          <p class="dr-pillar__desc">Domain, List, Copy, or Offer? Most operators throw the kitchen sink at every drop. The Isolation Test runs you through a symptom-to-source diagnostic until you have a Root Cause Verdict document. Now you know which of the next 3 pillars to execute &mdash; not all of them.</p>
+          <p class="dr-pillar__deliverables"><strong>Deliverables:</strong> 4-Source Decay Map (pdf) &middot; Symptom-to-Source Diagnostic Table (pdf) &middot; Isolation Test Worksheet (docx) &middot; Root Cause Verdict Template (docx)</p>
+        </div>
+
+        <div class="dr-pillar">
+          <div class="dr-pillar__head">
+            <span class="dr-pillar__num">3</span>
+            <h3 class="dr-pillar__title">Domain Rescue &mdash; the 72-hour pause and 7-day rebuild</h3>
+          </div>
+          <p class="dr-pillar__desc">If the Verdict says Domain Decay, you execute the protocol. Volume down, engagement-segmented sends only, gradual rebuild at ISP level. This is the procedure that doesn't dig the hole deeper while you're climbing out.</p>
+          <p class="dr-pillar__deliverables"><strong>Deliverables:</strong> 72-Hour Pause Protocol Checklist (pdf) &middot; 7-Day Rebuild Ramp Calendar (xlsx) &middot; Domain Recovery Tracker (xlsx)</p>
+        </div>
+
+        <div class="dr-pillar">
+          <div class="dr-pillar__head">
+            <span class="dr-pillar__num">4</span>
+            <h3 class="dr-pillar__title">List Rescue &mdash; triage what's left, suppress what's gone</h3>
+          </div>
+          <p class="dr-pillar__desc">The 3-Layer Triage sorts your contacts into Active / At-Risk / Dormant. The Engagement Gradient Segmentation puts the Re-Warming Sequence on the borderline contacts and suppresses the rest. Most operators end up with a smaller list that triples in reply rate within 6 weeks.</p>
+          <p class="dr-pillar__deliverables"><strong>Deliverables:</strong> 3-Layer Triage Checklist (pdf) &middot; Engagement Gradient Segmentation (xlsx) &middot; List Rescue Tracker (xlsx) &middot; Re-Warming Sequence Calendar (xlsx)</p>
+        </div>
+
+        <div class="dr-pillar">
+          <div class="dr-pillar__head">
+            <span class="dr-pillar__num">5</span>
+            <h3 class="dr-pillar__title">Copy &amp; Offer Rescue &mdash; isolate which one is decaying</h3>
+          </div>
+          <p class="dr-pillar__desc">The 3-Variable Isolation Test separates subject vs. body vs. CTA so you stop rewriting subject lines forever when the actual problem is offer fatigue. The 5-Question Offer Audit and Pivot Decision Tree force a real decision: refresh the copy with Pattern Interrupt, or pivot the angle entirely.</p>
+          <p class="dr-pillar__deliverables"><strong>Deliverables:</strong> 3-Variable Isolation Test (docx) &middot; 5-Question Offer Audit (docx) &middot; Pattern Interrupt Framework Reference (pdf) &middot; Pivot Decision Tree (pdf) &middot; Reply Velocity Calculator (xlsx)</p>
+        </div>
+
+        <div class="dr-pillar">
+          <div class="dr-pillar__head">
+            <span class="dr-pillar__num">6</span>
+            <h3 class="dr-pillar__title">Decay-Proofing &mdash; install the monitoring rhythm</h3>
+          </div>
+          <p class="dr-pillar__desc">Pillars 1-5 are firefighting. Pillar 6 is sprinklers. Install the 4-Signal Weekly Decay Check. Set thresholds that trigger action. Build the automation bridge that catches decay starting &mdash; before it becomes another rescue project. The agencies that don't churn clients are the ones running this pillar.</p>
+          <p class="dr-pillar__deliverables"><strong>Deliverables:</strong> 4-Signal Weekly Decay Check (docx) &middot; Automation Bridge Calculator (xlsx) &middot; Cold Email Health Report Template (docx) &middot; Decay Threshold Triggers Reference (pdf)</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {# ── What's included ──────────────────────────────── #}
+  <section class="dr-section">
+    <div class="dr-section__inner">
+      <h2 class="dr-h2 dr-h2--center">What's in the rescue kit</h2>
+      <div class="dr-included">
+        <div class="dr-inc">
+          <div class="dr-inc__num">277KB</div>
+          <div class="dr-inc__label">The Playbook PDF &mdash; the methodology, end to end</div>
+        </div>
+        <div class="dr-inc">
+          <div class="dr-inc__num">30</div>
+          <div class="dr-inc__label">Worksheets, calculators, checklists, templates</div>
+        </div>
+        <div class="dr-inc">
+          <div class="dr-inc__num">6</div>
+          <div class="dr-inc__label">Self-contained pillar folders &mdash; run them in order</div>
+        </div>
+        <div class="dr-inc">
+          <div class="dr-inc__num">∞</div>
+          <div class="dr-inc__label">Re-runs across as many client lists as you manage</div>
+        </div>
+        <div class="dr-inc">
+          <div class="dr-inc__num">$0</div>
+          <div class="dr-inc__label">Future updates &mdash; you get every version</div>
+        </div>
+        <div class="dr-inc">
+          <div class="dr-inc__num">14d</div>
+          <div class="dr-inc__label">Refundable. Run a pillar. Decide.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {# ── Who it's for ─────────────────────────────────── #}
+  <section class="dr-section dr-section--alt">
+    <div class="dr-section__inner">
+      <h2 class="dr-h2 dr-h2--center">Who this is built for</h2>
+      <div class="dr-fit">
+        <div class="dr-fit__card dr-fit__card--yes">
+          <h3 class="dr-fit__h3 dr-fit__h3--yes">You should buy this if:</h3>
+          <ul class="dr-fit__list">
+            <li>You run email for clients and need a defensible diagnosis when a campaign tanks</li>
+            <li>You're a founder running cold outbound at scale and feel like you're flying blind</li>
+            <li>You've already tried "clean the list, change the subject, warm the domain" and it didn't fix it</li>
+            <li>You want a methodology you can re-run on every new account &mdash; not a one-shot fix</li>
+            <li>You want the language and frameworks to explain decay to a client without hand-waving</li>
+          </ul>
+        </div>
+        <div class="dr-fit__card dr-fit__card--no">
+          <h3 class="dr-fit__h3 dr-fit__h3--no">This is not for you if:</h3>
+          <ul class="dr-fit__list">
+            <li>You send one newsletter a month to 500 people &mdash; the protocol is overkill</li>
+            <li>You want a "spam tester" that gives you a green light in 30 seconds</li>
+            <li>You're not willing to fill out a worksheet to get a real answer</li>
+            <li>You expect the workbook to do the diagnostic for you automatically &mdash; that's what InbXr Pro is for (see below)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {# ── Closing CTA ──────────────────────────────────── #}
+  <section class="dr-section">
+    <div class="dr-section__inner">
+      <div class="dr-close">
+        <h2>Get the protocol. Run it on your worst-performing list this week.</h2>
+        <p>If the diagnosis surfaces a problem you didn't know existed &mdash; and most first runs do &mdash; the rescue protocol pays for itself in the first campaign you don't tank.</p>
+        <div class="dr-close__price">
+          <span class="dr-close__price-compare">$97</span>
+          <span>$47</span>
+        </div>
+        <p>
+          <a href="{{ gumroad_url|default('#') }}" class="dr-cta-btn">
+            Get the Rescue Protocol &rarr;
+          </a>
+        </p>
+        <p class="dr-close__assurance">14-day no-questions refund &middot; Lifetime access &middot; All future updates &middot; Instant download</p>
+      </div>
+
+      <div class="dr-cross">
+        <p class="dr-cross__h">Then there's Pillar 7</p>
+        <p>The workbook teaches the methodology. <a href="/pricing">InbXr Pro</a> is Pillar 7 &mdash; what you don't run manually. Signal Watch, Early Warning, Recovery Sequences, Pre-send Check. The same 6-pillar method, running on autopilot every 6 hours, across every list and client account you manage.</p>
+        <p>If you're going to run this workbook for 5+ clients monthly, <a href="/pricing">see how Pro and Agency automate it &rarr;</a></p>
+      </div>
+    </div>
+  </section>
+
+  {# ── FAQ ──────────────────────────────────────────── #}
+  <section class="dr-section dr-section--alt">
+    <div class="dr-section__inner">
+      <h2 class="dr-h2 dr-h2--center">Common questions</h2>
+      <div class="dr-faq">
+
+        <div class="dr-faq__item">
+          <p class="dr-faq__q">Is this a course or a workbook?</p>
+          <p class="dr-faq__a">Workbook + methodology. It's PDFs, spreadsheets, and worksheets you fill out as you run the protocol. No video. No drip. No login. Buy, download, run it on a list today.</p>
+        </div>
+
+        <div class="dr-faq__item">
+          <p class="dr-faq__q">How long does it take to run?</p>
+          <p class="dr-faq__a">First-time on one list: roughly 90 minutes for Pillars 1-2 (the diagnostic). Pillars 3-5 depend on which rescue you need to execute and the size of your list. Pillar 6 (the monitoring rhythm) takes ~15 minutes a week to maintain.</p>
+        </div>
+
+        <div class="dr-faq__item">
+          <p class="dr-faq__q">Do I need InbXr Pro to use this?</p>
+          <p class="dr-faq__a">No. The workbook is self-contained &mdash; every calculation you need is in the included xlsx files. Pro is for people who get tired of running it manually across multiple accounts. (Which, if you're running this for clients, will happen by month 2.)</p>
+        </div>
+
+        <div class="dr-faq__item">
+          <p class="dr-faq__q">Why $47 if it's worth more?</p>
+          <p class="dr-faq__a">Because the upgrade path is real. A meaningful percentage of buyers move to InbXr Pro within 30 days. We can price the workbook as a true forensic methodology and still make the unit economics work because the SaaS is the long-term relationship.</p>
+        </div>
+
+        <div class="dr-faq__item">
+          <p class="dr-faq__q">Refund policy?</p>
+          <p class="dr-faq__a">14 days, no questions. Run a pillar, decide. If it's not the most defensible deliverability methodology you've seen at this price, ask for a refund and you get one.</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+</main>
+
+{% include 'sections/email_test_footer.html' %}
+</body>
+</html>

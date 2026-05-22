@@ -39,7 +39,15 @@ def signup():
         return redirect(url_for("auth.account"))
 
     if request.method == "GET":
-        return render_template("auth/signup.html", error=None, active_page="signup")
+        prefill_email = (request.args.get("email") or "").strip()
+        signup_source = (request.args.get("from") or "").strip().lower()
+        return render_template(
+            "auth/signup.html",
+            error=None,
+            active_page="signup",
+            prefill_email=prefill_email,
+            signup_source=signup_source,
+        )
 
     # Throttle: 5 signups/hr per IP. Stops automated account creation
     # without inconveniencing humans (you only sign up once).

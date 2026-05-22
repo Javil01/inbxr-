@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Welcome &middot; The Inbox Decay Rescue</title>
+  <meta name="robots" content="noindex" />
+  <meta name="description" content="Your Inbox Decay Rescue is on its way. Now meet Pillar 7 — automation.">
+  <link rel="canonical" href="https://inbxr.us/decay-rescue/thank-you">
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/style.css?v=20260521a" />
+  {% include 'sections/_head_meta.html' %}
+</head>
+<body class="email-test-page">
+
+{% include 'sections/header.html' %}
+
+<style>
+:root {
+  --ty-brand: #15c182;
+  --ty-brand-dark: #03a071;
+  --ty-ink: #161e2e;
+  --ty-ink-2: #475569;
+  --ty-ink-3: #94a3b8;
+  --ty-border: #e2e8f0;
+  --ty-bg-soft: #f8fafc;
+  --ty-engine-soft: #d1fae5;
+}
+
+.ty-wrap { max-width: 760px; margin: 0 auto; padding: 64px 24px 80px; color: var(--ty-ink); }
+
+/* Delivery banner */
+.ty-delivery {
+  background: linear-gradient(135deg, var(--ty-engine-soft) 0%, #f0fdfa 100%);
+  border: 1px solid var(--ty-brand);
+  border-radius: 16px; padding: 28px;
+  display: flex; align-items: center; gap: 18px;
+  margin-bottom: 36px;
+}
+.ty-delivery__icon {
+  flex: 0 0 44px; width: 44px; height: 44px;
+  border-radius: 12px; background: var(--ty-brand); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+}
+.ty-delivery__text { flex: 1; }
+.ty-delivery h1 {
+  font-size: 1.3rem; font-weight: 900; margin: 0 0 4px;
+  letter-spacing: -0.015em;
+}
+.ty-delivery p {
+  font-size: 0.92rem; line-height: 1.55; color: var(--ty-ink-2);
+  margin: 0;
+}
+.ty-delivery code {
+  background: rgba(0,0,0,0.04); padding: 1px 6px; border-radius: 4px;
+  font-size: 0.86em; font-weight: 600; color: var(--ty-ink);
+}
+
+/* Pitch */
+.ty-pitch__eyebrow {
+  display: inline-block; font-size: 0.72rem; font-weight: 800;
+  text-transform: uppercase; letter-spacing: 0.12em;
+  padding: 5px 14px; border-radius: 99px;
+  background: var(--ty-engine-soft); color: var(--ty-brand-dark);
+  margin-bottom: 16px;
+}
+.ty-h1 {
+  font-size: 2.1rem; font-weight: 900; letter-spacing: -0.025em;
+  line-height: 1.15; margin: 0 0 16px;
+}
+.ty-lead {
+  font-size: 1.05rem; line-height: 1.6; color: var(--ty-ink-2);
+  margin: 0 0 22px;
+}
+.ty-lead strong { color: var(--ty-ink); }
+
+.ty-callout {
+  background: #fff; border: 1px solid var(--ty-border);
+  border-left: 3px solid var(--ty-brand); border-radius: 10px;
+  padding: 22px 24px; margin: 0 0 28px;
+}
+.ty-callout h2 {
+  font-size: 1.1rem; font-weight: 800; margin: 0 0 14px;
+  color: var(--ty-ink);
+}
+.ty-callout ul { list-style: none; padding: 0; margin: 0; }
+.ty-callout li {
+  font-size: 0.92rem; line-height: 1.55; color: var(--ty-ink-2);
+  padding: 6px 0 6px 26px; position: relative;
+}
+.ty-callout li::before {
+  content: "→"; color: var(--ty-brand-dark); font-weight: 800;
+  position: absolute; left: 0; top: 6px;
+}
+.ty-callout li strong { color: var(--ty-ink); }
+
+.ty-cta-row {
+  display: flex; gap: 12px; align-items: center; flex-wrap: wrap;
+  margin: 28px 0 16px;
+}
+.ty-cta {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: var(--ty-brand); color: #fff;
+  padding: 14px 26px; border-radius: 99px;
+  font-weight: 800; font-size: 0.95rem; text-decoration: none;
+  box-shadow: 0 8px 20px rgba(21,193,130,0.3);
+  transition: transform 0.15s, background 0.15s;
+}
+.ty-cta:hover { background: var(--ty-brand-dark); transform: scale(1.03); color: #fff; }
+.ty-cta--ghost {
+  background: transparent; color: var(--ty-ink-2);
+  border: 1px solid var(--ty-border);
+  box-shadow: none;
+}
+.ty-cta--ghost:hover { background: var(--ty-bg-soft); color: var(--ty-ink); }
+.ty-assurance {
+  font-size: 0.8rem; color: var(--ty-ink-3); margin: 4px 0 0;
+}
+
+/* Day-by-day sequence */
+.ty-sequence {
+  background: var(--ty-bg-soft);
+  border: 1px solid var(--ty-border);
+  border-radius: 14px; padding: 24px; margin: 36px 0 0;
+}
+.ty-sequence h3 {
+  font-size: 1rem; font-weight: 800; margin: 0 0 14px;
+  color: var(--ty-ink);
+}
+.ty-sequence__row {
+  display: grid; grid-template-columns: 70px 1fr; gap: 14px;
+  padding: 10px 0;
+  border-bottom: 1px dashed var(--ty-border);
+}
+.ty-sequence__row:last-child { border-bottom: 0; }
+.ty-sequence__day {
+  font-weight: 800; color: var(--ty-brand-dark);
+  font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.06em;
+  padding-top: 2px;
+}
+.ty-sequence__what {
+  font-size: 0.9rem; line-height: 1.5; color: var(--ty-ink-2);
+}
+.ty-sequence__what strong { color: var(--ty-ink); }
+
+@media (max-width: 600px) {
+  .ty-h1 { font-size: 1.55rem; }
+  .ty-delivery { flex-direction: column; align-items: flex-start; padding: 22px; }
+  .ty-cta-row { flex-direction: column; align-items: stretch; }
+  .ty-cta, .ty-cta--ghost { justify-content: center; }
+}
+</style>
+
+<main class="ty-wrap">
+
+  {# ── Delivery banner ──────────────────────────────── #}
+  <div class="ty-delivery">
+    <div class="ty-delivery__icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="22" height="22"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4 12 14.01l-3-3"/></svg>
+    </div>
+    <div class="ty-delivery__text">
+      <h1>Your Inbox Decay Rescue is on its way.</h1>
+      <p>
+        Gumroad just sent the download link {% if buyer_email %}to <code>{{ buyer_email }}</code>{% else %}to the email you used at checkout{% endif %}. If it's not in your inbox in the next 5 minutes, check Promotions / spam, then ping support.
+      </p>
+    </div>
+  </div>
+
+  {# ── Pillar 7 pitch ───────────────────────────────── #}
+  <span class="ty-pitch__eyebrow">Pillar 7 &middot; Automation</span>
+  <h1 class="ty-h1">You bought the methodology. Now run it on autopilot.</h1>
+  <p class="ty-lead">
+    The 6 pillars you just downloaded are the forensic protocol. Every calculator, every triage, every rescue &mdash; you can run them by hand. Most agency owners we know do, for the first few client lists.
+  </p>
+  <p class="ty-lead">
+    Then comes the second account. The third. By the fifth list, the workbook isn't enough anymore. <strong>That's where InbXr Pro picks up.</strong>
+  </p>
+
+  <div class="ty-callout">
+    <h2>Pillars 1, 2, 4, 5, and 6 &mdash; automated:</h2>
+    <ul>
+      <li><strong>Pillar 1 (Real Engagement):</strong> MPP-adjusted engagement running on every send. No more Baseline Worksheet.</li>
+      <li><strong>Pillar 2 (Decay Source Isolation):</strong> Signal Map names the source automatically. No more Isolation Test by hand.</li>
+      <li><strong>Pillar 4 (List Rescue):</strong> 3-Layer Triage and Re-Warming Sequences auto-generated against your live data.</li>
+      <li><strong>Pillar 5 (Copy &amp; Offer Rescue):</strong> 16 frameworks + AI Copy Rewriter in your tone.</li>
+      <li><strong>Pillar 6 (Decay-Proofing):</strong> Weekly Decay Check runs every 6 hours. Early Warning fires the moment a threshold trips.</li>
+    </ul>
+  </div>
+
+  <p class="ty-lead">
+    Pillar 3 (Domain Rescue) is the one part you'll still execute manually &mdash; but Pro tells you the moment you need to start, before your sender score takes a quarter to rebuild.
+  </p>
+
+  <div class="ty-cta-row">
+    <a href="/signup?email={{ buyer_email|urlencode }}&from=decay-rescue" class="ty-cta">
+      Start InbXr Pro &rarr;
+    </a>
+    <a href="/pricing" class="ty-cta ty-cta--ghost">
+      See pricing first
+    </a>
+  </div>
+  <p class="ty-assurance">$29/month. Cancel anytime. 30-day money-back guarantee. No credit card to start an account &mdash; Pro is gated at upgrade.</p>
+
+  {# ── Day-by-day email sequence preview ────────────── #}
+  <div class="ty-sequence">
+    <h3>Watch your inbox &mdash; the rescue isn't just the workbook</h3>
+    <div class="ty-sequence__row">
+      <div class="ty-sequence__day">Day 1</div>
+      <div class="ty-sequence__what"><strong>Welcome + Pillar 1 starter pack.</strong> The fastest 30-minute path to your first Real Engagement Score on your worst list.</div>
+    </div>
+    <div class="ty-sequence__row">
+      <div class="ty-sequence__day">Day 3</div>
+      <div class="ty-sequence__what"><strong>Pillar 2 deep-dive.</strong> The Symptom-to-Source table, walked through with three real-agency case examples.</div>
+    </div>
+    <div class="ty-sequence__row">
+      <div class="ty-sequence__day">Day 5</div>
+      <div class="ty-sequence__what"><strong>Which rescue is yours.</strong> Help interpreting your Root Cause Verdict and picking your next pillar.</div>
+    </div>
+    <div class="ty-sequence__row">
+      <div class="ty-sequence__day">Day 7</div>
+      <div class="ty-sequence__what"><strong>Pillar 6 install.</strong> The monitoring rhythm that keeps you out of rescue mode permanently.</div>
+    </div>
+    <div class="ty-sequence__row">
+      <div class="ty-sequence__day">Day 14</div>
+      <div class="ty-sequence__what"><strong>How most buyers upgrade.</strong> When the workbook starts to feel like work &mdash; that's when Pro takes over.</div>
+    </div>
+  </div>
+
+</main>
+
+{% include 'sections/email_test_footer.html' %}
+</body>
+</html>
