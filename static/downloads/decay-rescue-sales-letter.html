@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Inbox Decay Rescue · The 4-Source Decay Test</title>
+<meta name="description" content="There are exactly four things that decay an email campaign. Your ESP doesn't know which one is killing yours. The 4-Source Decay Test names it — before the next send.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@600;700&family=Lora:ital,wght@0,500;0,600;1,500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0f172a;
+    --ink-2: #334155;
+    --ink-3: #64748b;
+    --ink-4: #94a3b8;
+    --brand: #15c182;
+    --brand-dark: #03a071;
+    --brand-soft: #d1fae5;
+    --navy: #0c1a3a;
+    --navy-deep: #050a16;
+    --border: #e2e8f0;
+    --border-soft: #f1f5f9;
+    --bg-soft: #f8fafc;
+    --highlight: #fef3c7;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    color: var(--ink);
+    background: #fff;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── Hero band ─────────────────────────────────────── */
+  .hero {
+    background:
+      radial-gradient(ellipse 1000px 700px at 80% 0%, rgba(21,193,130,0.14) 0%, transparent 55%),
+      radial-gradient(ellipse 1000px 700px at 10% 100%, rgba(124,58,237,0.06) 0%, transparent 50%),
+      linear-gradient(160deg, var(--navy-deep) 0%, var(--navy) 60%, var(--navy-deep) 100%);
+    color: #fff;
+    padding: 56px 24px 64px;
+    text-align: center;
+  }
+  .hero__inner { max-width: 820px; margin: 0 auto; }
+  .hero__brand {
+    display: inline-flex; align-items: center; gap: 10px;
+    margin-bottom: 28px;
+    font-size: 14px; font-weight: 700;
+    color: rgba(255,255,255,0.7);
+  }
+  .hero__brand-mark {
+    width: 26px; height: 26px; border-radius: 6px;
+    background: var(--brand); color: var(--navy-deep);
+    display: inline-flex; align-items: center; justify-content: center;
+    font-weight: 900; font-size: 14px;
+  }
+  .hero__brand-sep { width: 1px; height: 14px; background: rgba(255,255,255,0.25); }
+  .hero__brand-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.18em;
+    color: rgba(255,255,255,0.5);
+  }
+
+  .hero__eyebrow {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.2em;
+    color: #6ee7b7;
+    background: rgba(21,193,130,0.12);
+    border: 1px solid rgba(21,193,130,0.3);
+    padding: 6px 16px; border-radius: 99px;
+    margin-bottom: 26px;
+  }
+  .hero__headline {
+    font-size: 44px; font-weight: 900; line-height: 1.08;
+    letter-spacing: -0.03em;
+    margin-bottom: 22px;
+  }
+  .hero__headline em {
+    font-style: normal; color: #6ee7b7;
+  }
+  .hero__deck {
+    font-size: 17px; line-height: 1.55;
+    color: rgba(255,255,255,0.78);
+    max-width: 680px; margin: 0 auto 32px;
+  }
+  .hero__deck strong { color: #fff; font-weight: 700; }
+
+  .hero__cta-row {
+    display: inline-flex; flex-direction: column; gap: 12px;
+    margin-top: 6px;
+  }
+  .cta-btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    background: var(--brand); color: var(--navy-deep);
+    padding: 16px 30px; border-radius: 99px;
+    font-weight: 800; font-size: 16px; text-decoration: none;
+    box-shadow: 0 10px 28px rgba(21,193,130,0.4);
+    transition: transform 0.15s, background 0.15s;
+    letter-spacing: -0.005em;
+  }
+  .cta-btn:hover { background: #6ee7b7; transform: scale(1.03); }
+  .cta-btn--big { padding: 18px 38px; font-size: 17px; }
+  .hero__assurance {
+    font-size: 12px; color: rgba(255,255,255,0.5);
+    margin-top: 14px;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.05em;
+  }
+
+  /* ── Body sections ─────────────────────────────────── */
+  .body { padding: 64px 24px 32px; }
+  .body__inner {
+    max-width: 680px; margin: 0 auto;
+    font-size: 17px; line-height: 1.7;
+    color: var(--ink-2);
+  }
+  .body__inner p { margin-bottom: 18px; }
+  .body__inner p strong { color: var(--ink); font-weight: 700; }
+  .body__inner p em { color: var(--ink); font-style: italic; }
+
+  .section-eyebrow {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.18em;
+    color: var(--brand-dark);
+    margin: 36px 0 14px;
+  }
+  .h2 {
+    font-size: 32px; font-weight: 900;
+    color: var(--ink);
+    line-height: 1.18; letter-spacing: -0.025em;
+    margin-bottom: 22px;
+  }
+  .h2--center { text-align: center; }
+  .h2 em { font-style: normal; color: var(--brand-dark); }
+
+  /* Pull quote */
+  .pullquote {
+    margin: 32px -8px;
+    padding: 4px 0 4px 22px;
+    border-left: 4px solid var(--brand);
+    font-family: 'Lora', Georgia, serif;
+    font-style: italic;
+    font-size: 22px; line-height: 1.4;
+    color: var(--ink);
+  }
+
+  /* Highlight (yellow-marker style) */
+  .hl {
+    background: linear-gradient(180deg, transparent 55%, var(--highlight) 55%);
+    padding: 0 2px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+
+  /* Big Idea callout */
+  .callout {
+    margin: 32px 0;
+    background: linear-gradient(135deg, var(--navy-deep) 0%, var(--navy) 100%);
+    color: #fff;
+    border-radius: 14px;
+    padding: 32px;
+    position: relative; overflow: hidden;
+  }
+  .callout::before {
+    content: '';
+    position: absolute;
+    right: -50px; top: -50px;
+    width: 200px; height: 200px;
+    background: radial-gradient(circle, rgba(21,193,130,0.18) 0%, transparent 65%);
+    pointer-events: none;
+  }
+  .callout__label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.18em;
+    color: #6ee7b7;
+    margin-bottom: 12px;
+  }
+  .callout__name {
+    font-size: 28px; font-weight: 900; letter-spacing: -0.025em;
+    margin-bottom: 12px;
+  }
+  .callout__def {
+    font-size: 16px; line-height: 1.6;
+    color: rgba(255,255,255,0.85);
+  }
+  .callout__def strong { color: #fff; font-weight: 700; }
+
+  /* Four sources grid */
+  .sources-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin: 28px 0;
+  }
+  .source-card {
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--brand);
+    border-radius: 8px;
+    padding: 18px 20px;
+  }
+  .source-card__num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; font-weight: 800;
+    color: var(--brand-dark);
+    letter-spacing: 0.1em;
+    margin-bottom: 6px;
+  }
+  .source-card__name {
+    font-size: 16px; font-weight: 800; color: var(--ink);
+    margin-bottom: 4px;
+  }
+  .source-card__def {
+    font-size: 13px; color: var(--ink-2); line-height: 1.5;
+  }
+
+  /* Pillars */
+  .pillar {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px 26px;
+    margin-bottom: 14px;
+  }
+  .pillar__head {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 10px;
+  }
+  .pillar__num {
+    width: 34px; height: 34px; border-radius: 8px;
+    background: var(--brand-soft); color: var(--brand-dark);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 900; font-size: 14px;
+    flex: 0 0 34px;
+  }
+  .pillar__title {
+    font-size: 17px; font-weight: 800; color: var(--ink);
+    line-height: 1.25;
+  }
+  .pillar__body {
+    font-size: 15px; line-height: 1.55;
+    color: var(--ink-2);
+    margin-bottom: 10px;
+  }
+  .pillar__body strong { color: var(--ink); }
+  .pillar__deliv {
+    font-size: 12.5px; color: var(--ink-3);
+    line-height: 1.5;
+    padding-top: 8px;
+    border-top: 1px dashed var(--border);
+  }
+  .pillar__deliv strong { color: var(--ink-2); font-weight: 600; }
+
+  /* Stat strip */
+  .stat-strip {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin: 28px 0;
+  }
+  .stat {
+    text-align: center;
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 14px;
+  }
+  .stat__num {
+    font-size: 26px; font-weight: 900;
+    color: var(--brand-dark);
+    line-height: 1; letter-spacing: -0.02em;
+    margin-bottom: 6px;
+  }
+  .stat__label {
+    font-size: 11.5px; color: var(--ink-3);
+    line-height: 1.35;
+    font-family: 'JetBrains Mono', monospace;
+    text-transform: uppercase; letter-spacing: 0.06em;
+  }
+
+  /* Objection block */
+  .objection { margin: 22px 0; }
+  .objection__q {
+    font-weight: 800; color: var(--ink);
+    font-size: 17px;
+    margin-bottom: 8px;
+  }
+  .objection__a {
+    font-size: 16px; line-height: 1.6;
+    color: var(--ink-2);
+  }
+  .objection__a strong { color: var(--ink); }
+
+  /* CTA section */
+  .cta-section {
+    background: linear-gradient(135deg, var(--brand-soft) 0%, #f0fdfa 100%);
+    border: 1px solid var(--brand);
+    border-radius: 18px;
+    padding: 40px 36px;
+    margin: 36px 0;
+    text-align: center;
+  }
+  .cta-section h2 {
+    font-size: 24px; font-weight: 900;
+    color: var(--ink); letter-spacing: -0.02em;
+    margin-bottom: 14px;
+  }
+  .cta-section p {
+    font-size: 15px; color: var(--ink-2); line-height: 1.55;
+    margin-bottom: 22px; max-width: 480px; margin-left: auto; margin-right: auto;
+  }
+  .cta-section__assurance {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; color: var(--ink-3);
+    margin-top: 14px;
+    letter-spacing: 0.04em;
+  }
+
+  /* Sign-off */
+  .signoff {
+    margin: 36px 0 28px;
+    font-family: 'Lora', Georgia, serif;
+    font-style: italic;
+    font-size: 18px;
+    color: var(--ink);
+  }
+
+  /* PS sections */
+  .ps {
+    margin-top: 28px;
+    padding-top: 22px;
+    border-top: 1px solid var(--border);
+  }
+  .ps__label {
+    font-weight: 900; color: var(--ink);
+    font-size: 16px; margin-bottom: 8px;
+  }
+  .ps__body {
+    font-size: 15.5px; line-height: 1.65; color: var(--ink-2);
+  }
+  .ps__body strong { color: var(--ink); }
+  .ps__body a { color: var(--brand-dark); font-weight: 700; }
+
+  /* Footer */
+  .footer {
+    background: var(--bg-soft);
+    border-top: 1px solid var(--border);
+    padding: 28px 24px;
+    text-align: center;
+    font-size: 12px;
+    color: var(--ink-4);
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.05em;
+  }
+  .footer a { color: var(--ink-3); text-decoration: underline; }
+
+  /* E5 Framework annotation pill (optional, can be toggled off in print) */
+  .e5-pill {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.15em;
+    background: rgba(21,193,130,0.1);
+    color: var(--brand-dark);
+    padding: 3px 8px; border-radius: 3px;
+    margin-left: 8px;
+    vertical-align: middle;
+  }
+
+  /* Responsive */
+  @media (max-width: 720px) {
+    .hero { padding: 40px 18px 48px; }
+    .hero__headline { font-size: 30px; }
+    .hero__deck { font-size: 15px; }
+    .body { padding: 44px 18px 24px; }
+    .body__inner { font-size: 16px; }
+    .h2 { font-size: 24px; }
+    .pullquote { font-size: 18px; }
+    .callout { padding: 24px; }
+    .callout__name { font-size: 22px; }
+    .sources-grid { grid-template-columns: 1fr; }
+    .stat-strip { grid-template-columns: 1fr; }
+    .cta-section { padding: 30px 22px; }
+  }
+
+  /* Print friendly */
+  @media print {
+    .hero { background: var(--navy); }
+    .cta-btn { background: var(--brand); color: #fff; box-shadow: none; }
+    .e5-pill { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════════════
+     HERO — Headline + Deck + Top CTA
+     E5: Engineer · Headline + Marketing Thesis
+     ════════════════════════════════════════════════════ -->
+<header class="hero">
+  <div class="hero__inner">
+    <div class="hero__brand">
+      <span class="hero__brand-mark">i</span>
+      <span>InbXr</span>
+      <span class="hero__brand-sep"></span>
+      <span class="hero__brand-tag">From The Makers Of The 7 Inbox Signals</span>
+    </div>
+
+    <span class="hero__eyebrow">A Forensic Protocol For Agencies Who Can't Afford To Keep Guessing</span>
+
+    <h1 class="hero__headline">
+      Your 37% open rate is a lie.<br>
+      There are <em>exactly four things</em> that decay email campaigns.<br>
+      Your ESP doesn't know which one is killing yours.
+    </h1>
+
+    <p class="hero__deck">
+      Introducing <strong>The 4-Source Decay Test</strong> &mdash; the forensic diagnostic that names whether your campaign decay is Domain, List, Copy, or Offer. <strong>Before the next send.</strong> Not six weeks after your reply rate dies and your client emails you asking why.
+    </p>
+
+    <div class="hero__cta-row">
+      <a href="https://inboxer42.gumroad.com/l/lxzgzm" class="cta-btn cta-btn--big">
+        Get The Inbox Decay Rescue &mdash; $47 &rarr;
+      </a>
+      <span class="hero__assurance">14-day refund · Lifetime updates · Instant download</span>
+    </div>
+  </div>
+</header>
+
+<!-- ════════════════════════════════════════════════════
+     BODY
+     ════════════════════════════════════════════════════ -->
+<main class="body">
+  <div class="body__inner">
+
+    <!-- ── LEAD ─────────────────────────────────────────
+         E5: Engineer · Lead (Story + Big Secret hybrid)
+         Sets the emotional hook by putting the reader inside
+         the moment of failure they recognize from their own life.
+    ──────────────────────────────────────────────────── -->
+
+    <p>There's a moment that happens in every email operator's career.</p>
+
+    <p>You send the campaign. The one you've been rebuilding for two weeks. The one with the cleaned list, the new subject line, the warmed-up sending domain, the framework-tested body copy.</p>
+
+    <p>It goes out 8 AM Tuesday.</p>
+
+    <p>Open rate looks fine that afternoon. <strong>34%.</strong> About what you expected.</p>
+
+    <p>Then by Friday, the reply rate is cratering.</p>
+
+    <p>Your client emails you. <em>"Are we sure this is working?"</em></p>
+
+    <p>You log into the ESP. The dashboard says open rate is still 33%. Sender score: green. Reputation: clean. No blocklist hits. SPF, DKIM, DMARC all passing.</p>
+
+    <p>So you do what you always do.</p>
+
+    <p>You re-run the list verifier. Nothing flagged. You rewrite the subject line. Marginal lift. You consider standing up another sending domain to "freshen the warm-up."</p>
+
+    <p>And here's the part nobody talks about:</p>
+
+    <div class="pullquote">
+      You're not actually fixing anything. You're guessing.
+    </div>
+
+    <p>You don't know whether the problem is your domain, your list, your copy, or your offer. So you're throwing every tool at every layer, hoping something sticks. The campaign underperforms. Then the next one underperforms. <span class="hl">The client stops trusting the numbers. You stop trusting them too.</span></p>
+
+    <p>I'm going to show you why this happens to even the most experienced operators. And then I'm going to put a 6-pillar forensic protocol in your hands that <strong>names which one of four sources is decaying your email</strong> &mdash; so the next time it happens, you have a diagnosis, not a guess.</p>
+
+    <p>But first you need to see something most operators have never been told.</p>
+
+    <!-- ── MARKETING ARGUMENT — Part 1 ──────────────────
+         E5: Engineer · Marketing Argument
+         The Big Idea: "The Gaslighting Gap" — a named,
+         novel concept the entire educational argument hinges on.
+    ──────────────────────────────────────────────────── -->
+
+    <span class="section-eyebrow">The Big Idea</span>
+    <h2 class="h2">Your dashboard has been lying to you<br>since September 2021.</h2>
+
+    <p>You know about Apple Mail Privacy Protection. You've read the blog posts. You've heard the open rates aren't real anymore.</p>
+
+    <p>You probably don't know how bad it actually is.</p>
+
+    <p>In September 2021, Apple shipped Mail Privacy Protection on iOS 15. Every iPhone Mail user, by default, has their email pre-opened by Apple's servers <em>the moment it arrives</em>. The pixel fires. The open registers. Your ESP counts it.</p>
+
+    <p>Industry data from Litmus and Email on Acid puts the open-rate inflation at <strong>20-40% across the board</strong>. Some senders are seeing 60%.</p>
+
+    <p>That "37% open rate" you've been celebrating? Strip out the Apple-Mail fakes and your real number is somewhere between <span class="hl">18% and 28%</span>.</p>
+
+    <p>I call this <strong>The Gaslighting Gap</strong> &mdash; the percentage your dashboard is lying to you by.</p>
+
+    <div class="callout">
+      <div class="callout__label">The Big Idea</div>
+      <div class="callout__name">The Gaslighting Gap</div>
+      <p class="callout__def">
+        The percentage your ESP dashboard inflates your engagement metrics by &mdash; thanks to Apple Mail Privacy Protection pre-opening every email automatically since September 2021. <strong>Industry average: 20-40% inflation. Severe cases: 60%+.</strong> Every deliverability decision you make on top of a 37% open rate that's secretly 18% is corrupted.
+      </p>
+    </div>
+
+    <p>And here's what makes it lethal: the gap doesn't just inflate your vanity metric. It corrupts every decision you make downstream.</p>
+
+    <p>You think a campaign worked because the open rate "held." So you do another like it. The real engagement was already declining &mdash; you just couldn't see it. By the time the reply rate crashes, you've already pushed three more campaigns into the same dying segment.</p>
+
+    <p>By the time you realize there's a problem, <strong>the damage has been compounding for six weeks.</strong></p>
+
+    <p>You needed to know in week one.</p>
+
+    <!-- ── MARKETING ARGUMENT — Part 2 ──────────────────
+         Why current tools can't solve this. Eliminates the
+         prospect's first objection ("I already have tools").
+    ──────────────────────────────────────────────────── -->
+
+    <span class="section-eyebrow">Why Your Existing Stack Won't Help</span>
+    <h2 class="h2">Every deliverability tool you've ever paid for does <em>one</em> thing. The actual problem is four.</h2>
+
+    <p>Every deliverability tool on the market does one of four things:</p>
+
+    <p><strong>ESPs</strong> show you a dashboard that's lying to you. We just established that.</p>
+
+    <p><strong>List verifiers</strong> (ZeroBounce, NeverBounce, Bouncify) tell you which addresses bounce. That's one signal &mdash; bounce risk. It's a lagging indicator and a single layer. Your list can be 100% verified and still tank.</p>
+
+    <p><strong>Spam testers</strong> (Mail-Tester, GlockApps) check your domain authentication and inbox placement on a single send. Useful one time. Useless as an ongoing diagnostic protocol.</p>
+
+    <p><strong>Audit tools</strong> (MXToolbox) tell you whether your SPF, DKIM, and DMARC records exist. They don't tell you whether your <em>list</em> is decaying, whether your <em>copy</em> is fatigued, or whether your <em>offer</em> has stopped resonating.</p>
+
+    <p>Notice what's missing.</p>
+
+    <p><span class="hl">No tool on the market &mdash; and I mean no tool &mdash; diagnoses across all four sources of email decay.</span> They check one layer each, and they check it in isolation.</p>
+
+    <p>So when your campaign underperforms, you don't know which tool's red light to chase. You chase all of them. You fix things that weren't broken. You miss the thing that was.</p>
+
+    <p>Most operators eventually develop the same habit. They run the verifier, they rewrite the subject line, they warm a new domain &mdash; and they tell the client "deliverability is complicated" when none of it works.</p>
+
+    <p>That's not deliverability being complicated.</p>
+
+    <div class="pullquote">
+      That's running every test except the one that would tell you the answer.
+    </div>
+
+    <!-- ── MARKETING ARGUMENT — Part 3 ──────────────────
+         E5: Engineer · Unique Mechanism reveal
+         The "4-Source Decay Test" — proprietary, named,
+         visualized. This is the campaign's central asset.
+    ──────────────────────────────────────────────────── -->
+
+    <span class="section-eyebrow">The Unique Mechanism</span>
+    <h2 class="h2">The test you've never run<br>is called <em>The 4-Source Decay Test.</em></h2>
+
+    <p>There are exactly four sources that can decay an email campaign. Not five, not seven, not fifteen. <strong>Four:</strong></p>
+
+    <div class="sources-grid">
+      <div class="source-card">
+        <div class="source-card__num">Source 01</div>
+        <div class="source-card__name">Domain Decay</div>
+        <div class="source-card__def">Your sender reputation has dropped at one or more ISPs.</div>
+      </div>
+      <div class="source-card">
+        <div class="source-card__num">Source 02</div>
+        <div class="source-card__name">List Decay</div>
+        <div class="source-card__def">Engagement-falsifying contacts or rotted addresses are corrupting your metrics.</div>
+      </div>
+      <div class="source-card">
+        <div class="source-card__num">Source 03</div>
+        <div class="source-card__name">Copy Decay</div>
+        <div class="source-card__def">Your subject line, opener, or CTA has fatigued.</div>
+      </div>
+      <div class="source-card">
+        <div class="source-card__num">Source 04</div>
+        <div class="source-card__name">Offer Decay</div>
+        <div class="source-card__def">The underlying value proposition has stopped resonating.</div>
+      </div>
+    </div>
+
+    <p>Each one looks the same from your dashboard &mdash; a drop in performance. They feel identical to the operator running the campaign.</p>
+
+    <p><strong>But they require completely different rescue strategies.</strong></p>
+
+    <p>If you have Domain Decay and you respond by rewriting the subject line, you've wasted a week and the problem has gotten worse. If you have Copy Decay and you stand up a new sending domain, you've spent six weeks warming a domain that was never the issue.</p>
+
+    <p>The 4-Source Decay Test is a forensic diagnostic. You run a controlled isolation test &mdash; sending a tightly matched control against your suspect variable &mdash; and the measured delta tells you which of the four sources is actually decaying.</p>
+
+    <p>When you finish the test, you have a document called a <strong>Root Cause Verdict</strong> that names the source, cites the evidence, and assigns a severity rating.</p>
+
+    <p>That document is also suitable as a client-facing artifact for the moderate and severe verdicts. So instead of explaining "deliverability is complicated" to your client at the next call, you hand them a one-page diagnosis that says:</p>
+
+    <div class="pullquote">
+      "Primary source: List Decay. Severity: moderate. Evidence: control segment real engagement 31%; suspect segment 12%. Rescue protocol: Pillar 4."
+    </div>
+
+    <p>Your client now trusts you. They've never seen another agency do this.</p>
+
+    <!-- ── MARKETING ARGUMENT — Part 4 ──────────────────
+         The full 6-pillar protocol. Each pillar gets a
+         dimensionalized benefit (Brown's FDE framework).
+    ──────────────────────────────────────────────────── -->
+
+    <span class="section-eyebrow">The Full Protocol</span>
+    <h2 class="h2">The 4-Source Decay Test is <em>Pillar 2</em> of a 6-pillar protocol called The Inbox Decay Rescue.</h2>
+
+    <p>Here is the full sequence, end to end.</p>
+
+    <div class="pillar">
+      <div class="pillar__head">
+        <span class="pillar__num">1</span>
+        <h3 class="pillar__title">Real Engagement &mdash; calibrate your truthful baseline</h3>
+      </div>
+      <p class="pillar__body">You can't diagnose decay against a baseline that's lying. Pillar 1 strips the Apple MPP fakes out of your data and produces a Real Engagement Score &mdash; the truthful number, not the dashboard number. It also calculates your Gaslighting Gap. <strong>You walk out of Pillar 1 with a calibrated baseline for every client account.</strong></p>
+      <p class="pillar__deliv"><strong>Deliverables:</strong> Real Engagement Calculator (xlsx) · Baseline Worksheet (docx) · MPP-Detection Reference (pdf)</p>
+    </div>
+
+    <div class="pillar">
+      <div class="pillar__head">
+        <span class="pillar__num">2</span>
+        <h3 class="pillar__title">Decay Source Isolation &mdash; The 4-Source Decay Test</h3>
+      </div>
+      <p class="pillar__body">Run the 4-Source Decay Test. Produce the Root Cause Verdict. <strong>Now you know which pillar (3, 4, or 5) to execute. Not all three. Not the kitchen sink.</strong></p>
+      <p class="pillar__deliv"><strong>Deliverables:</strong> 4-Source Decay Map (pdf) · Symptom-to-Source Diagnostic Table (pdf) · Isolation Test Worksheet (docx) · Root Cause Verdict Template (docx)</p>
+    </div>
+
+    <div class="pillar">
+      <div class="pillar__head">
+        <span class="pillar__num">3</span>
+        <h3 class="pillar__title">Domain Rescue &mdash; the 72-hour pause and 7-day rebuild</h3>
+      </div>
+      <p class="pillar__body">If the Verdict says Domain Decay, you execute the 72-Hour Pause Protocol followed by the 7-Day Rebuild Ramp. Volume drops, engagement-segmented sends only, gradual rebuild at ISP level. <strong>This is the protocol that doesn't dig the hole deeper while you're climbing out.</strong></p>
+      <p class="pillar__deliv"><strong>Deliverables:</strong> 72-Hour Pause Protocol Checklist (pdf) · 7-Day Rebuild Ramp Calendar (xlsx) · Domain Recovery Tracker (xlsx)</p>
+    </div>
+
+    <div class="pillar">
+      <div class="pillar__head">
+        <span class="pillar__num">4</span>
+        <h3 class="pillar__title">List Rescue &mdash; triage what's left, suppress what's gone</h3>
+      </div>
+      <p class="pillar__body">3-Layer Triage sorts contacts into Active / At-Risk / Dormant. Engagement Gradient Segmentation puts the Re-Warming Sequence on borderline contacts and suppresses the rest. <strong>Most operators end up with a smaller list that triples in reply rate within six weeks.</strong></p>
+      <p class="pillar__deliv"><strong>Deliverables:</strong> 3-Layer Triage Checklist (pdf) · Engagement Gradient Segmentation (xlsx) · List Rescue Tracker (xlsx) · Re-Warming Sequence Calendar (xlsx)</p>
+    </div>
+
+    <div class="pillar">
+      <div class="pillar__head">
+        <span class="pillar__num">5</span>
+        <h3 class="pillar__title">Copy &amp; Offer Rescue &mdash; isolate which one is decaying</h3>
+      </div>
+      <p class="pillar__body">The 3-Variable Isolation Test separates subject vs. body vs. CTA so you stop rewriting subject lines forever when the actual problem is offer fatigue. The 5-Question Offer Audit and the Pivot Decision Tree force a real decision: refresh with a Pattern Interrupt framework, or pivot the angle entirely.</p>
+      <p class="pillar__deliv"><strong>Deliverables:</strong> 3-Variable Isolation Test (docx) · 5-Question Offer Audit (docx) · Pattern Interrupt Framework Reference (pdf) · Pivot Decision Tree (pdf) · Reply Velocity Calculator (xlsx)</p>
+    </div>
+
+    <div class="pillar">
+      <div class="pillar__head">
+        <span class="pillar__num">6</span>
+        <h3 class="pillar__title">Decay-Proofing &mdash; install the monitoring rhythm</h3>
+      </div>
+      <p class="pillar__body">Pillars 1 through 5 are firefighting. Pillar 6 is sprinklers. Install the 4-Signal Weekly Decay Check. Set thresholds that trigger action automatically. <strong>The agencies that don't churn clients are the agencies that run Pillar 6.</strong></p>
+      <p class="pillar__deliv"><strong>Deliverables:</strong> 4-Signal Weekly Decay Check (docx) · Automation Bridge Calculator (xlsx) · Cold Email Health Report Template (docx) · Decay Threshold Triggers Reference (pdf)</p>
+    </div>
+
+    <!-- ── DIMENSIONALIZED BENEFIT BLOCK ────────────────
+         E5: FDE Benefits — Functional → Dimensionalized → Emotional
+         Paints the picture of what life looks like AFTER.
+    ──────────────────────────────────────────────────── -->
+
+    <span class="section-eyebrow">What This Looks Like When It's Yours</span>
+    <h2 class="h2">Picture the next time a client campaign tanks.</h2>
+
+    <p>It's Wednesday morning. Your client just sent you a Slack message: <em>"Open rates dropped on the campaign yesterday. What's going on?"</em></p>
+
+    <p>You don't panic. You don't open six different tools. You don't tell them "deliverability is complicated."</p>
+
+    <p>You open Pillar 2. You run the Isolation Test against the suspect segment for 90 minutes. By lunch you have a Root Cause Verdict that names the source: <em>List Decay, moderate severity.</em></p>
+
+    <p>You email the client at 1 PM: <em>"Diagnosed. List Decay. Here's the one-page verdict. Executing Pillar 4 (List Rescue) starting today. Expect re-warming sequence complete in 6 days."</em></p>
+
+    <p>You attach the Verdict.</p>
+
+    <p>They reply within an hour: <em>"This is the most professional deliverability response we've ever gotten. Thank you."</em></p>
+
+    <p>That's the moment this product pays for itself. <span class="hl">Not the $47. Not even the retainer. The trust.</span></p>
+
+    <!-- ── OFFER & DELIVERABLES ────────────────────────
+         E5: Engineer · Offer
+         Specific deliverables stack + risk reversal.
+    ──────────────────────────────────────────────────── -->
+
+    <span class="section-eyebrow">What You Get When You Click Below</span>
+    <h2 class="h2">Here is exactly what's in your hands.</h2>
+
+    <div class="stat-strip">
+      <div class="stat">
+        <div class="stat__num">277KB</div>
+        <div class="stat__label">Playbook PDF<br>End-to-end methodology</div>
+      </div>
+      <div class="stat">
+        <div class="stat__num">30</div>
+        <div class="stat__label">Worksheets, calculators<br>checklists, templates</div>
+      </div>
+      <div class="stat">
+        <div class="stat__num">6</div>
+        <div class="stat__label">Self-contained<br>pillar folders</div>
+      </div>
+      <div class="stat">
+        <div class="stat__num">90 min</div>
+        <div class="stat__label">To first diagnosis<br>on a real list</div>
+      </div>
+      <div class="stat">
+        <div class="stat__num">∞</div>
+        <div class="stat__label">Re-runs across<br>every client account</div>
+      </div>
+      <div class="stat">
+        <div class="stat__num">14d</div>
+        <div class="stat__label">No-questions refund<br>Lifetime updates</div>
+      </div>
+    </div>
+
+    <!-- ── OBJECTION ELIMINATION ───────────────────────
+         E5: Engineer · Argument continuation
+         Direct objection-mapping block.
+    ──────────────────────────────────────────────────── -->
+
+    <span class="section-eyebrow">Four Objections Before You Click</span>
+    <h2 class="h2">Let me address the objections you're already having.</h2>
+
+    <div class="objection">
+      <p class="objection__q">"I send one newsletter a month. This is overkill."</p>
+      <p class="objection__a">Yes, it probably is. This protocol is built for operators sending multiple campaigns a week, managing client accounts, or running cold outbound at scale. If you're sending a monthly newsletter to 500 people, save your $47 and stop reading.</p>
+    </div>
+
+    <div class="objection">
+      <p class="objection__q">"I already have a deliverability stack. ZeroBounce, MXToolbox, the works."</p>
+      <p class="objection__a">Good. Keep them. <strong>This isn't a replacement for those tools.</strong> It's the diagnostic protocol that tells you which of those tools to actually run when something breaks &mdash; and how to interpret what they tell you. Your existing stack covers individual checks. The Inbox Decay Rescue is the methodology that uses them in sequence.</p>
+    </div>
+
+    <div class="objection">
+      <p class="objection__q">"Can't I just figure this out myself? Email isn't that hard."</p>
+      <p class="objection__a">You can. Most operators do. It takes about three years of catastrophic campaign failures, four lost client retainers, and roughly <strong>$20,000 in opportunity cost</strong>. You'd be paying $47 to skip the tuition.</p>
+    </div>
+
+    <div class="objection">
+      <p class="objection__q">"How do I know this isn't just AI-generated junk?"</p>
+      <p class="objection__a">The work product speaks for itself. Open any worksheet &mdash; the Real Engagement Calculator, the Root Cause Verdict Template, the Engagement Gradient Segmentation &mdash; and you'll see the level of operational specificity that's only built by someone who's run this protocol against real client accounts. Or refund it. You have 14 days. Either it's real, or you got your money back. There's no third outcome.</p>
+    </div>
+
+    <!-- ── PRICE ANCHOR + SCARCITY ─────────────────────
+         E5: Engineer · Offer continuation
+    ──────────────────────────────────────────────────── -->
+
+    <span class="section-eyebrow">A Note On The Price</span>
+    <h2 class="h2">This will be a $97 product within 90 days.</h2>
+
+    <p>I'm launching at <strong>$47</strong> because I want first-100-buyer reviews and a body of work to anchor the methodology against. After 100 sales, the price doubles to $97. <span class="hl">There is no email warning, no countdown timer in your inbox.</span> The price changes when the counter ticks over.</p>
+
+    <p>If you read this far and think this might be worth running on your worst-performing list, the question isn't whether you should buy it. The question is whether you want to pay $47 or $97 for the same thing.</p>
+
+    <p>Run the math on what one underperforming client campaign costs you in retainer risk. That's the comparison.</p>
+
+    <!-- ── CLOSE & CTA ─────────────────────────────────
+         E5: Engineer · Offer (close)
+    ──────────────────────────────────────────────────── -->
+
+    <div class="cta-section">
+      <h2>What happens when you click below.</h2>
+      <p>You'll be taken to Gumroad. You enter your email, your card, and you'll have the ZIP file in your hands inside two minutes. Open the ZIP. Read the Playbook. Pick your worst-performing list. Run Pillars 1 and 2 against it tonight. <strong>By tomorrow morning, you have a Real Engagement Score, a Gaslighting Gap, and a Root Cause Verdict.</strong></p>
+      <a href="https://inboxer42.gumroad.com/l/lxzgzm" class="cta-btn cta-btn--big">
+        Get The Inbox Decay Rescue &mdash; $47 &rarr;
+      </a>
+      <p class="cta-section__assurance">14-day no-questions refund · Lifetime updates · Instant download</p>
+    </div>
+
+    <p class="signoff">&mdash; The InBoXer Team</p>
+
+    <!-- ── PS sections ─────────────────────────────────
+         Multiple P.S.es re-anchoring different angles.
+    ──────────────────────────────────────────────────── -->
+
+    <div class="ps">
+      <div class="ps__label">P.S.</div>
+      <p class="ps__body">I haven't talked about <strong>InbXr</strong>, the deliverability intelligence platform this protocol came out of. That's deliberate. You don't need it to use the workbook &mdash; the 30 assets are self-contained, every calculation has a worksheet, every diagnostic has a template. If you want to know what running this protocol on autopilot every 6 hours looks like, the platform's at <a href="https://inbxr.us">inbxr.us</a>. Most workbook buyers don't sign up until month two &mdash; when they realize they've run this protocol against five different client accounts by hand and want the time back. That's the right order. <strong>Buy the methodology first. Run it. Then decide whether you want to automate it.</strong></p>
+    </div>
+
+    <div class="ps">
+      <div class="ps__label">P.P.S.</div>
+      <p class="ps__body">Three numbers, to leave you with:<br><br>
+        <strong>Four.</strong> The number of sources that decay an email campaign. The 4-Source Decay Test names which one is yours.<br>
+        <strong>Ninety minutes.</strong> To first diagnosis on your worst-performing list.<br>
+        <strong>$47.</strong> Before the price doubles to $97 at 100 sales.<br><br>
+        If you've ever stared at an underperforming campaign and not known which lever to pull, this is the workbook that ends the guessing.</p>
+    </div>
+
+    <div class="ps">
+      <div class="ps__label">P.P.P.S.</div>
+      <p class="ps__body"><strong>Sources for ISP-mandate claims:</strong> Apple Mail Privacy Protection (announced WWDC 2021, launched iOS 15+) · Gmail &amp; Yahoo Bulk Sender Guidelines (effective February 1, 2024) · Microsoft Outlook.com Sender Requirements (effective May 5, 2025). Open-rate inflation estimates per Litmus and Email on Acid State of Email reports, 2022&ndash;2024.</p>
+    </div>
+
+    <p style="text-align:center; margin-top: 40px;">
+      <a href="https://inboxer42.gumroad.com/l/lxzgzm" class="cta-btn">
+        Get The Inbox Decay Rescue &mdash; $47 &rarr;
+      </a>
+    </p>
+
+  </div>
+</main>
+
+<footer class="footer">
+  &copy; InbXr · <a href="https://inbxr.us">inbxr.us</a> · The Inbox Decay Rescue v1.0 · Agency Edition · support@inbxr.us
+</footer>
+
+</body>
+</html>
