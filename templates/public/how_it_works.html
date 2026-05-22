@@ -231,6 +231,15 @@
   .hiw-matrix { font-size: 0.74rem; min-width: 0; }
   .hiw-matrix th, .hiw-matrix td { padding: 5px 4px; }
   header, footer, .nav, .site-footer, #cookieConsent { display: none !important; }
+  /* Drop the 6 Pillars from the PDF artifact — they belong to the workbook
+     product, not the INBXR reference. Screen page keeps them. */
+  .hiw-col--pillars,
+  .hiw-th--pillars,
+  .hiw-matrix tbody td:nth-child(n+9):nth-child(-n+14),
+  .hiw-rev-card--pillars,
+  .hiw-print-hide { display: none !important; }
+  .hiw-tri { grid-template-columns: 1fr 1fr; }
+  .hiw-reverse { grid-template-columns: 1fr; }
   @page { size: landscape; margin: 12mm; }
 }
 </style>
@@ -242,7 +251,7 @@
     <span class="hiw-eyebrow">One-Page Reference</span>
     <h1 class="hiw-h1">How InbXr works in one page.</h1>
     <p class="hiw-thesis">
-      Your list broadcasts <strong>7 signals</strong> about your next campaign. We built <strong>10 tools</strong> to read them and <strong>6 rescue pillars</strong> to fix what's broken &mdash; before the next send, not 6 weeks after your reply rate dies.
+      Your list broadcasts <strong>7 signals</strong> about your next campaign. We built <strong>10 tools</strong> to read them <span class="hiw-print-hide">and <strong>6 rescue pillars</strong> to fix what's broken</span> &mdash; before the next send, not 6 weeks after your reply rate dies.
     </p>
     <p style="margin-top:22px;">
       <a href="/static/downloads/inbxr-how-it-works.pdf" download style="display:inline-flex;align-items:center;gap:8px;padding:11px 22px;border-radius:99px;background:var(--hiw-brand);color:#fff;font-weight:700;font-size:0.9rem;text-decoration:none;transition:transform 0.15s,background 0.15s;" onmouseover="this.style.background='var(--hiw-brand-dark)';this.style.transform='scale(1.03)';" onmouseout="this.style.background='var(--hiw-brand)';this.style.transform='scale(1)';">
