@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  @page { size: Letter; margin: 0; }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: #fff;
+    color: #161e2e;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  body {
+    width: 8.5in; min-height: 11in;
+  }
+
+  .page {
+    position: relative;
+    width: 8.5in; height: 11in;
+    padding: 0.6in 0.7in;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Top brand strip */
+  .brand {
+    display: flex; align-items: center; gap: 10px;
+    padding-bottom: 18px;
+    border-bottom: 2px solid #0c1a3a;
+  }
+  .brand__mark {
+    width: 30px; height: 30px; border-radius: 7px;
+    background: #15c182;
+    display: flex; align-items: center; justify-content: center;
+    color: #050a16; font-weight: 900; font-size: 16px;
+  }
+  .brand__name {
+    font-size: 18px; font-weight: 800; color: #0c1a3a;
+    letter-spacing: -0.01em;
+  }
+  .brand__sep {
+    width: 1px; height: 18px; background: #cbd5e1;
+    margin: 0 4px;
+  }
+  .brand__tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.18em;
+    color: #64748b;
+  }
+
+  /* Eyebrow + H1 */
+  .eyebrow {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.2em;
+    color: #03a071;
+    padding: 5px 12px;
+    border: 1px solid rgba(21,193,130,0.4);
+    border-radius: 3px;
+    margin: 32px 0 18px;
+  }
+  .h1 {
+    font-size: 44px; font-weight: 900; line-height: 1.05;
+    letter-spacing: -0.03em;
+    color: #0c1a3a;
+    margin-bottom: 16px;
+    max-width: 6.2in;
+  }
+  .h1__teal { color: #03a071; }
+  .lead {
+    font-size: 15px; line-height: 1.55;
+    color: #475569; max-width: 6in;
+    margin-bottom: 30px;
+  }
+  .lead strong { color: #0c1a3a; font-weight: 700; }
+
+  /* What you have / what's next blocks */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+    margin-bottom: 32px;
+  }
+  .card {
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 20px;
+    background: #f8fafc;
+  }
+  .card--accent {
+    border-color: #15c182;
+    background: linear-gradient(135deg, rgba(21,193,130,0.06) 0%, rgba(21,193,130,0.02) 100%);
+  }
+  .card__num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; font-weight: 800;
+    text-transform: uppercase; letter-spacing: 0.18em;
+    color: #94a3b8;
+    margin-bottom: 8px;
+  }
+  .card--accent .card__num { color: #03a071; }
+  .card__h {
+    font-size: 17px; font-weight: 800;
+    color: #0c1a3a;
+    margin-bottom: 10px;
+    line-height: 1.2;
+  }
+  .card__p {
+    font-size: 12.5px; line-height: 1.55;
+    color: #475569;
+  }
+  .card__p strong { color: #0c1a3a; font-weight: 700; }
+
+  /* The big CTA section */
+  .cta-block {
+    background: #0c1a3a;
+    background: linear-gradient(135deg, #050a16 0%, #0c1a3a 100%);
+    color: #fff;
+    border-radius: 14px;
+    padding: 32px 36px;
+    margin-bottom: 28px;
+    position: relative;
+    overflow: hidden;
+  }
+  .cta-block::before {
+    content: '';
+    position: absolute;
+    right: -50px; top: -50px;
+    width: 200px; height: 200px;
+    background: radial-gradient(circle, rgba(21,193,130,0.18) 0%, transparent 65%);
+    pointer-events: none;
+  }
+  .cta-block__eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.18em;
+    color: #6ee7b7;
+    margin-bottom: 10px;
+  }
+  .cta-block__h {
+    font-size: 22px; font-weight: 900;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+    margin-bottom: 14px;
+  }
+  .cta-block__p {
+    font-size: 13px; line-height: 1.55;
+    color: rgba(255,255,255,0.78);
+    margin-bottom: 22px;
+    max-width: 5.5in;
+  }
+  .cta-link {
+    display: inline-block;
+    background: #15c182;
+    color: #050a16;
+    padding: 14px 26px;
+    border-radius: 99px;
+    font-weight: 800;
+    font-size: 14px;
+    text-decoration: none;
+    box-shadow: 0 6px 18px rgba(21,193,130,0.4);
+    letter-spacing: -0.005em;
+  }
+  .cta-url {
+    display: inline-block;
+    margin-top: 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: rgba(255,255,255,0.55);
+    text-decoration: none;
+    letter-spacing: 0.02em;
+  }
+  .cta-block__note {
+    font-size: 11px;
+    color: rgba(255,255,255,0.55);
+    margin-top: 16px;
+    line-height: 1.5;
+  }
+  .cta-block__note strong { color: rgba(255,255,255,0.8); font-weight: 600; }
+
+  /* Pillar map */
+  .pillar-map {
+    margin-bottom: 24px;
+  }
+  .pillar-map__h {
+    font-size: 12px; font-weight: 800;
+    text-transform: uppercase; letter-spacing: 0.14em;
+    color: #64748b;
+    margin-bottom: 14px;
+  }
+  .pillar-row {
+    display: grid;
+    grid-template-columns: 28px 1fr 110px;
+    gap: 14px;
+    padding: 8px 0;
+    border-bottom: 1px dashed #e2e8f0;
+    font-size: 12px; line-height: 1.4;
+  }
+  .pillar-row:last-child { border-bottom: 0; }
+  .pillar-row__num {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 900; color: #03a071;
+    font-size: 11px;
+  }
+  .pillar-row__name { color: #0c1a3a; font-weight: 700; }
+  .pillar-row__sub { color: #94a3b8; font-size: 11px; }
+  .pillar-row__pro {
+    text-align: right;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px; font-weight: 800;
+    text-transform: uppercase; letter-spacing: 0.1em;
+    color: #03a071;
+  }
+  .pillar-row__pro--manual { color: #94a3b8; }
+
+  /* Footer */
+  .footer {
+    margin-top: auto;
+    padding-top: 18px;
+    border-top: 1px solid #e2e8f0;
+    display: flex; align-items: center; justify-content: space-between;
+    font-size: 10px;
+    color: #94a3b8;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.08em;
+  }
+  .footer__right { text-align: right; }
+</style>
+</head>
+<body>
+  <div class="page">
+
+    <div class="brand">
+      <div class="brand__mark">i</div>
+      <span class="brand__name">InbXr</span>
+      <div class="brand__sep"></div>
+      <span class="brand__tag">The 6-Pillar Field Manual &middot; Protocol v1.0</span>
+    </div>
+
+    <span class="eyebrow">Start Here &middot; 60 Seconds Before You Open Anything Else</span>
+    <h1 class="h1">You bought the methodology.<br><span class="h1__teal">Now activate Pillar 7.</span></h1>
+    <p class="lead">
+      The ZIP you just downloaded is the complete forensic protocol &mdash; 30 worksheets, calculators, and templates across 6 pillars. You can run it by hand on every list you manage. Most operators do, for the first few accounts. <strong>Then it scales beyond what a spreadsheet can carry.</strong>
+    </p>
+
+    <div class="two-col">
+      <div class="card">
+        <div class="card__num">What's in the ZIP</div>
+        <h3 class="card__h">The Inbox Decay Rescue &mdash; Manual Protocol</h3>
+        <p class="card__p">Six self-contained pillar folders. The Playbook PDF (277KB). 30 worksheets, calculators, and templates. Run them in order. By the time you finish Pillar 2, you'll have a named root cause &mdash; not a guess.</p>
+      </div>
+      <div class="card card--accent">
+        <div class="card__num">What's at inbxr.us</div>
+        <h3 class="card__h">Pillar 7 &mdash; Automation</h3>
+        <p class="card__p">Pillars 1, 2, 4, 5, and 6 &mdash; <strong>running on autopilot</strong> every 6 hours, across every list and client account. The same methodology, automated. Free trial; cancel anytime.</p>
+      </div>
+    </div>
+
+    <div class="cta-block">
+      <div class="cta-block__eyebrow">Activate Now &middot; 60 Seconds</div>
+      <h2 class="cta-block__h">Continue at inbxr.us &mdash; we've already started your account.</h2>
+      <p class="cta-block__p">Open the URL below, sign in with the email you used at checkout, and your InbXr Pro trial is ready. Same vocabulary as this workbook. Same 6 pillars. Just automated.</p>
+      <a href="https://inbxr.us/decay-rescue/thank-you" class="cta-link">Activate Pillar 7 &rarr;</a>
+      <a href="https://inbxr.us/decay-rescue/thank-you" class="cta-url">https://inbxr.us/decay-rescue/thank-you</a>
+      <p class="cta-block__note">
+        <strong>Tip:</strong> Use the same email address you used to buy this workbook. The signup form will pre-fill so you're activated in one click.
+      </p>
+    </div>
+
+    <div class="pillar-map">
+      <p class="pillar-map__h">What gets automated when you activate Pillar 7</p>
+
+      <div class="pillar-row">
+        <span class="pillar-row__num">01</span>
+        <div>
+          <div class="pillar-row__name">Real Engagement</div>
+          <div class="pillar-row__sub">Apple MPP-adjusted opens on every send.</div>
+        </div>
+        <span class="pillar-row__pro">Pro &mdash; Full</span>
+      </div>
+      <div class="pillar-row">
+        <span class="pillar-row__num">02</span>
+        <div>
+          <div class="pillar-row__name">Decay Source Isolation</div>
+          <div class="pillar-row__sub">Signal Map names the source automatically.</div>
+        </div>
+        <span class="pillar-row__pro">Pro &mdash; Full</span>
+      </div>
+      <div class="pillar-row">
+        <span class="pillar-row__num">03</span>
+        <div>
+          <div class="pillar-row__name">Domain Rescue</div>
+          <div class="pillar-row__sub">Manual workflow; Pro flags when to start.</div>
+        </div>
+        <span class="pillar-row__pro pillar-row__pro--manual">Manual + Flagged</span>
+      </div>
+      <div class="pillar-row">
+        <span class="pillar-row__num">04</span>
+        <div>
+          <div class="pillar-row__name">List Rescue</div>
+          <div class="pillar-row__sub">Recovery Sequences auto-generated on your data.</div>
+        </div>
+        <span class="pillar-row__pro">Pro &mdash; Full</span>
+      </div>
+      <div class="pillar-row">
+        <span class="pillar-row__num">05</span>
+        <div>
+          <div class="pillar-row__name">Copy &amp; Offer Rescue</div>
+          <div class="pillar-row__sub">16 frameworks + AI Rewriter in your tone.</div>
+        </div>
+        <span class="pillar-row__pro">Pro &mdash; Full</span>
+      </div>
+      <div class="pillar-row">
+        <span class="pillar-row__num">06</span>
+        <div>
+          <div class="pillar-row__name">Decay-Proofing</div>
+          <div class="pillar-row__sub">Weekly check + Early Warning every 6 hours.</div>
+        </div>
+        <span class="pillar-row__pro">Pro &mdash; Full</span>
+      </div>
+    </div>
+
+    <div class="footer">
+      <span>&copy; InbXr &middot; The Inbox Decay Rescue v1.0 &middot; Agency Edition</span>
+      <span class="footer__right">Refunds within 14 days &middot; support@inbxr.us</span>
+    </div>
+
+  </div>
+</body>
+</html>
