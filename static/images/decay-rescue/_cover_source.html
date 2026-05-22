@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    width: 1280px; height: 720px;
+    background: #0c1a3a;
+    font-family: 'Inter', -apple-system, sans-serif;
+    overflow: hidden;
+  }
+  .cover {
+    position: relative;
+    width: 1280px; height: 720px;
+    background:
+      radial-gradient(circle at 85% 75%, rgba(21,193,130,0.18) 0%, transparent 50%),
+      radial-gradient(circle at 15% 20%, rgba(124,58,237,0.10) 0%, transparent 45%),
+      linear-gradient(135deg, #0c1a3a 0%, #1e293b 100%);
+    color: #fff;
+    padding: 56px 64px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  /* Top brand strip */
+  .brand-row {
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .brand-logo {
+    font-size: 22px; font-weight: 800; letter-spacing: -0.02em;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .brand-logo__mark {
+    width: 32px; height: 32px; border-radius: 8px;
+    background: #15c182;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; color: #0c1a3a;
+  }
+  .brand-tag {
+    font-size: 12px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.15em;
+    color: rgba(255,255,255,0.5);
+  }
+
+  /* Main */
+  .main {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 48px;
+    align-items: center;
+  }
+  .copy-side .eyebrow {
+    display: inline-block;
+    font-size: 12px; font-weight: 800;
+    text-transform: uppercase; letter-spacing: 0.18em;
+    color: #6ee7b7;
+    background: rgba(21,193,130,0.12);
+    border: 1px solid rgba(21,193,130,0.3);
+    padding: 6px 14px; border-radius: 99px;
+    margin-bottom: 22px;
+  }
+  .copy-side h1 {
+    font-size: 64px; font-weight: 900; line-height: 1.02;
+    letter-spacing: -0.035em;
+    margin-bottom: 18px;
+  }
+  .copy-side h1 em {
+    font-style: normal;
+    color: #6ee7b7;
+  }
+  .copy-side .tagline {
+    font-size: 19px; line-height: 1.5;
+    color: rgba(255,255,255,0.75);
+    max-width: 460px;
+    font-weight: 500;
+  }
+  .copy-side .tagline strong { color: #fff; font-weight: 700; }
+
+  /* Pillar stack on the right */
+  .pillars {
+    display: flex; flex-direction: column; gap: 8px;
+    padding-left: 12px;
+  }
+  .pillar {
+    display: flex; align-items: center; gap: 14px;
+    padding: 12px 16px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 10px;
+  }
+  .pillar__num {
+    flex: 0 0 32px; width: 32px; height: 32px; border-radius: 8px;
+    background: rgba(21,193,130,0.18);
+    color: #6ee7b7;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 900; font-size: 14px;
+  }
+  .pillar__name {
+    font-size: 14px; font-weight: 700;
+    color: rgba(255,255,255,0.92);
+  }
+  .pillar__sub {
+    font-size: 11px; color: rgba(255,255,255,0.5);
+    margin-top: 2px;
+  }
+  .pillar--accent { border-color: rgba(21,193,130,0.4); }
+  .pillar--accent .pillar__num { background: #15c182; color: #0c1a3a; }
+
+  /* Footer strip */
+  .footer-row {
+    display: flex; align-items: center; justify-content: space-between;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    padding-top: 22px;
+  }
+  .footer-left {
+    display: flex; align-items: center; gap: 28px;
+    font-size: 13px; color: rgba(255,255,255,0.55);
+  }
+  .footer-left strong { color: #fff; font-weight: 700; }
+  .price-badge {
+    display: inline-flex; align-items: baseline; gap: 8px;
+    padding: 8px 18px;
+    background: #15c182; color: #0c1a3a;
+    border-radius: 99px;
+    font-weight: 900; font-size: 22px;
+    letter-spacing: -0.01em;
+  }
+  .price-badge__compare {
+    font-size: 13px; font-weight: 600;
+    color: rgba(12,26,58,0.55);
+    text-decoration: line-through;
+  }
+</style>
+</head>
+<body>
+  <div class="cover">
+
+    <div class="brand-row">
+      <div class="brand-logo">
+        <span class="brand-logo__mark">i</span>
+        <span>InbXr</span>
+      </div>
+      <span class="brand-tag">From the makers of the 7 Inbox Signals</span>
+    </div>
+
+    <div class="main">
+      <div class="copy-side">
+        <span class="eyebrow">The 6-Pillar Forensic Protocol</span>
+        <h1>The Inbox Decay Rescue</h1>
+        <p class="tagline">
+          Find the source &mdash; Domain, List, Copy, or Offer &mdash; <strong>before the next campaign goes out.</strong>
+        </p>
+      </div>
+
+      <div class="pillars">
+        <div class="pillar">
+          <div class="pillar__num">1</div>
+          <div>
+            <div class="pillar__name">Real Engagement</div>
+            <div class="pillar__sub">Strip the Apple-Mail fake opens</div>
+          </div>
+        </div>
+        <div class="pillar pillar--accent">
+          <div class="pillar__num">2</div>
+          <div>
+            <div class="pillar__name">Decay Source Isolation</div>
+            <div class="pillar__sub">Name the root cause</div>
+          </div>
+        </div>
+        <div class="pillar">
+          <div class="pillar__num">3</div>
+          <div>
+            <div class="pillar__name">Domain Rescue</div>
+            <div class="pillar__sub">72-hour pause &middot; 7-day ramp</div>
+          </div>
+        </div>
+        <div class="pillar">
+          <div class="pillar__num">4</div>
+          <div>
+            <div class="pillar__name">List Rescue</div>
+            <div class="pillar__sub">3-layer triage &middot; re-warming</div>
+          </div>
+        </div>
+        <div class="pillar">
+          <div class="pillar__num">5</div>
+          <div>
+            <div class="pillar__name">Copy &amp; Offer Rescue</div>
+            <div class="pillar__sub">Isolate which one is decaying</div>
+          </div>
+        </div>
+        <div class="pillar">
+          <div class="pillar__num">6</div>
+          <div>
+            <div class="pillar__name">Decay-Proofing</div>
+            <div class="pillar__sub">Monitoring rhythm + triggers</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-row">
+      <div class="footer-left">
+        <span><strong>30</strong> assets</span>
+        <span><strong>277KB</strong> playbook</span>
+        <span><strong>14-day</strong> refund</span>
+        <span><strong>Lifetime</strong> updates</span>
+      </div>
+      <div class="price-badge">
+        <span class="price-badge__compare">$97</span>
+        <span>$47</span>
+      </div>
+    </div>
+
+  </div>
+</body>
+</html>
