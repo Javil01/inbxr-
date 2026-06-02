@@ -46,7 +46,7 @@
   <h2 class="sr-gate__status">{{ readiness.status_label }}</h2>
   <p class="sr-gate__message">{{ readiness.message }}</p>
   {% if readiness.score is defined %}
-    <div class="sr-gate__score">Signal Score: <strong>{{ readiness.score|round|int }}/100</strong> ({{ readiness.grade }})</div>
+    <div class="sr-gate__score">INBXR Score: <strong>{{ readiness.score|round|int }}/100</strong> ({{ readiness.grade }})</div>
   {% endif %}
 </div>
 
@@ -72,5 +72,5 @@
 </div>
 {% endif %}
 
-<p style="text-align:center;margin-top:20px;"><a href="/signal-score">&larr; Back to Signal Score</a></p>
+<p style="text-align:center;margin-top:20px;"><a href="/signal-score">&larr; Back to INBXR Score</a></p>
 {% endblock %}

@@ -2,7 +2,7 @@
 InbXr — Signal Intelligence Blueprint
 
 All routes for the 7 Inbox Signals system:
-- /signal-score            Signal Score Dashboard (primary)
+- /signal-score            INBXR Score Dashboard (primary)
 - /signal-score/calculate  Trigger a manual calculation
 - /signal-score/from-csv   Upload CSV for free-tier reading
 - /signal-score/history    Historical trend data
@@ -107,7 +107,7 @@ def _weakest_signal(latest_score):
 @signal_bp.route("/signal-score")
 def signal_score_dashboard():
     """
-    Signal Score Dashboard — main 7-signal visualization page.
+    INBXR Score Dashboard — main 7-signal visualization page.
 
     PUBLIC ROUTE. Anonymous visitors see the educational empty state +
     a working CSV upload path (the result renders inline without
@@ -117,7 +117,7 @@ def signal_score_dashboard():
     user = get_current_user()
 
     # Anonymous visitor: render the dedicated low-friction landing page.
-    # Primary action: type a domain and get a Signal Score in 30 seconds
+    # Primary action: type a domain and get a INBXR Score in 30 seconds
     # (calls /signal-score/from-domain). Secondary action: upload a CSV
     # for the full 7-signal read. No narrow auth-card wrapper, no wall
     # of educational copy before the first action.
@@ -140,7 +140,7 @@ def signal_score_dashboard():
             "signal/anonymous.html",
             active_page="signal_score",
             allow_index=True,
-            title="Free Signal Score — The 7 Inbox Signals",
+            title="Free INBXR Score — The 7 Inbox Signals",
             og_data=og_data,
         )
 
@@ -194,7 +194,7 @@ def signal_score_dashboard():
         tier=tier,
         is_anonymous=False,
         allow_index=True,
-        title="Signal Score",
+        title="INBXR Score",
     )
 
 
@@ -203,7 +203,7 @@ def signal_score_dashboard():
 @tier_required("pro", "agency", "api")
 def calculate_signal_score_now():
     """
-    Manually trigger a Signal Score recalculation.
+    Manually trigger a INBXR Score recalculation.
     Requires a connected ESP — users without one should use the CSV upload path.
     """
     from modules.esp_contact_sync import get_contacts_for_signal_score
@@ -262,9 +262,9 @@ def calculate_signal_score_now():
 @signal_bp.route("/signal-score/from-domain", methods=["POST"])
 def calculate_signal_score_from_domain():
     """
-    Calculate a partial Signal Score from a domain alone.
+    Calculate a partial INBXR Score from a domain alone.
 
-    PUBLIC ENDPOINT. The lowest-friction Signal Score entry point. Anonymous
+    PUBLIC ENDPOINT. The lowest-friction INBXR Score entry point. Anonymous
     visitors type a domain, get back 2 of 7 signals (Authentication Standing
     + Domain Reputation) calculated from public DNS data. The other 5 signals
     require list data and return as locked cards in the UI.
@@ -323,7 +323,7 @@ def calculate_signal_score_from_domain():
 @signal_bp.route("/signal-score/from-csv", methods=["POST"])
 def calculate_signal_score_csv():
     """
-    Calculate a Signal Score from an uploaded CSV file.
+    Calculate a INBXR Score from an uploaded CSV file.
 
     PUBLIC ENDPOINT. Anonymous visitors get a full 7-signal reading
     without signup — the result returns inline as JSON for the dashboard
@@ -450,13 +450,13 @@ def calculate_signal_score_csv():
 
 # ── Public share URL ──────────────────────────────────
 #
-# Read-only share of a saved Signal Score report. Token is HMAC-signed
+# Read-only share of a saved INBXR Score report. Token is HMAC-signed
 # against the app SECRET_KEY so visitors can't enumerate other users'
 # reports by incrementing an id. No auth required.
 
 @signal_bp.route("/signal-score/public/<token>")
 def signal_score_public(token):
-    """Public read-only Signal Score report by tamper-proof share token."""
+    """Public read-only INBXR Score report by tamper-proof share token."""
     row_id = parse_share_token(token)
     if not row_id:
         return render_template(
@@ -466,7 +466,7 @@ def signal_score_public(token):
             signal_dimensions=SIGNAL_DIMENSION_COPY,
             grade_copy=SIGNAL_GRADE_COPY,
             allow_index=False,
-            title="Signal Score Report",
+            title="INBXR Score Report",
         ), 404
 
     row = get_signal_score_by_id(row_id)
@@ -479,7 +479,7 @@ def signal_score_public(token):
             signal_dimensions=SIGNAL_DIMENSION_COPY,
             grade_copy=SIGNAL_GRADE_COPY,
             allow_index=False,
-            title="Signal Score Report",
+            title="INBXR Score Report",
         ), 404
 
     # Pre-parse the scores_json so the template doesn't need a custom filter
@@ -500,14 +500,14 @@ def signal_score_public(token):
         grade_copy=SIGNAL_GRADE_COPY,
         trajectory_labels=TRAJECTORY_DIRECTION_LABELS,
         allow_index=False,
-        title="Signal Score Report",
+        title="INBXR Score Report",
     )
 
 
 @signal_bp.route("/signal-score/<int:row_id>/share-token")
 @login_required
 def signal_score_share_token(row_id):
-    """Return the share token URL for a saved Signal Score row (auth-only)."""
+    """Return the share token URL for a saved INBXR Score row (auth-only)."""
     user = get_current_user()
     row = fetchone(
         "SELECT id, user_id FROM signal_scores WHERE id = ?",
@@ -529,7 +529,7 @@ def signal_score_share_token(row_id):
 @tier_required("agency", "api")
 def agency_clients_page():
     """Multi-client dashboard for Agency tier. Lists all clients the
-    agency tracks, with a live Signal Score card per client pulled from
+    agency tracks, with a live INBXR Score card per client pulled from
     the domain_leaderboard cache. Agencies add clients via the form and
     re-score on demand."""
     user = get_current_user()
@@ -556,7 +556,7 @@ def agency_clients_page():
 def agency_clients_add():
     """Add a new client to the agency's dashboard. Requires client_name
     and domain. Scoring happens in the background by calling the
-    Domain Signal Score engine immediately so the card renders with
+    Domain INBXR Score engine immediately so the card renders with
     real data right away."""
     user = get_current_user()
     data = request.get_json(silent=True) or request.form.to_dict()
@@ -605,7 +605,7 @@ def agency_clients_delete(client_id):
 @login_required
 @tier_required("agency", "api")
 def agency_clients_rescore(client_id):
-    """Re-run the Domain Signal Score for a specific client's domain.
+    """Re-run the Domain INBXR Score for a specific client's domain.
     Used when the agency has just deployed a DNS fix and wants to see
     the updated score immediately rather than waiting for the next
     user-initiated scan."""
@@ -749,7 +749,7 @@ def signal_score_pdf():
         if reason == "no_score_yet":
             return jsonify({
                 "ok": False,
-                "error": "Run your first Signal Score before exporting a PDF.",
+                "error": "Run your first INBXR Score before exporting a PDF.",
             }), 400
         return jsonify({"ok": False, "error": f"PDF generation failed ({reason})."}), 500
 
@@ -780,7 +780,7 @@ def signal_score_pdf():
 @signal_bp.route("/signal-score/history")
 @login_required
 def signal_score_history():
-    """Signal Score history as JSON for chart rendering."""
+    """INBXR Score history as JSON for chart rendering."""
     user = get_current_user()
     history = get_signal_history(user["id"], esp_integration_id=None, limit=90)
 
@@ -913,7 +913,7 @@ def preview_rule(rule_id):
     if not latest:
         return jsonify({
             "ok": False,
-            "error": "No Signal Score calculated yet. Run a calculation first."
+            "error": "No INBXR Score calculated yet. Run a calculation first."
         }), 400
 
     integration_id = latest.get("esp_integration_id")
@@ -1032,7 +1032,7 @@ def _calculate_send_readiness(latest):
         return {
             "status": "amber",
             "status_label": "No signal data",
-            "message": "Calculate your Signal Score first.",
+            "message": "Calculate your INBXR Score first.",
             "issues": [],
             "actions": ["Connect your ESP or upload a CSV"],
         }

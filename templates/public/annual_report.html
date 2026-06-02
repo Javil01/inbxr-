@@ -113,7 +113,7 @@
       </div>
       <div class="rpt-kpi">
         <div class="rpt-kpi__num">{{ data.avg_score|round|int }}</div>
-        <div class="rpt-kpi__label">Average Signal Score</div>
+        <div class="rpt-kpi__label">Average INBXR Score</div>
       </div>
       <div class="rpt-kpi">
         <div class="rpt-kpi__num">{{ data.distribution_pct.get('A', 0) + data.distribution_pct.get('B', 0) }}%</div>
@@ -140,7 +140,7 @@
 
     <div class="rpt-section">
       <h2>Percentile thresholds</h2>
-      <p>If your Signal Score is 80 and you're wondering whether that's good, these are the bands. A score at the P75 line puts you in the top quartile of scanned senders.</p>
+      <p>If your INBXR Score is 80 and you're wondering whether that's good, these are the bands. A score at the P75 line puts you in the top quartile of scanned senders.</p>
 
       <div class="rpt-percentiles">
         <h3>Score distribution (percentiles)</h3>

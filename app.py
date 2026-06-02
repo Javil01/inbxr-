@@ -779,6 +779,7 @@ def sitemap_xml():
         ('/blog', '0.8', 'daily'),
         ('/pricing', '0.7', 'monthly'),
         ('/support', '0.5', 'monthly'),
+        ('/inbxr-score', '0.9', 'weekly'),
         ('/seven-signals', '0.8', 'weekly'),
         ('/bulk-domain-check', '0.7', 'monthly'),
         ('/email-test', '0.8', 'weekly'),
@@ -1051,7 +1052,7 @@ def index():
                            is_admin=_is_admin(),
                            active_page="index",
                            page_title="InbXr · The 7 Inbox Signals · Email Deliverability Intelligence",
-                           page_description="The only tool that scores your email list across all 7 inbox signals before you hit send. Including 2 dimensions no other platform measures. Get your free Signal Score in 30 seconds.",
+                           page_description="The only tool that scores your email list across all 7 inbox signals before you hit send. Including 2 dimensions no other platform measures. Get your free INBXR Score in 30 seconds.",
                            canonical_url="https://inbxr.us/")
 
 
@@ -1059,7 +1060,7 @@ def index():
 def inbox_send_test():
     """Standalone Inboxer Send Test page. Moved off the homepage to
     preserve single-path clarity on '/' (which is layer-focused
-    around the Domain Signal Score)."""
+    around the Domain INBXR Score)."""
     return render_template("inbox_send_test.html",
                            is_admin=_is_admin(),
                            active_page="email_test",
@@ -1132,6 +1133,40 @@ def seven_signals():
                            page_title="The 7 Inbox Signals · How InbXr Reads Your List",
                            page_description="The full breakdown of the 7 inbox signals every email list is broadcasting. What each signal measures, why it matters, and how InbXr reads them all.",
                            canonical_url="https://inbxr.us/seven-signals")
+
+
+# INBXR Score: the named standard. /seven-signals explains the mechanism and
+# /methodology publishes the formulas; this page is the brand/standard anchor
+# that ties them together with the credit-score framing and the two-tier model.
+INBXR_SCORE_VERSION = "1.0"
+
+@app.route("/inbxr-score")
+def inbxr_score_standard():
+    """Canonical 'what is the INBXR Score' standard page.
+
+    Positions the INBXR Score as a named deliverability/list-health standard:
+    credit-score framing, predictive (leading-indicator) wedge vs incumbent
+    IP-reputation scores, and the honest two-tier model (full 7-signal score
+    for ESP-connected senders vs the domain-side Lite score computable for any
+    domain). We show inbxr.us's own domain-side Lite score for transparency.
+    """
+    from modules.dogfood import get_latest_dogfood_score
+    try:
+        own_score = get_latest_dogfood_score()
+    except Exception:
+        own_score = None
+    return render_template(
+        "public/inbxr_score.html",
+        allow_index=True,
+        is_admin=_is_admin(),
+        active_page="inbxr_score",
+        score_version=INBXR_SCORE_VERSION,
+        own_score=own_score,
+        title="The INBXR Score · The deliverability standard for email senders",
+        page_title="The INBXR Score · The deliverability standard for email senders",
+        page_description="The INBXR Score is a 0-100 deliverability and list-health standard for email senders, built on the 7 Inbox Signals. A credit score for your sending reputation — it predicts what breaks next, before you send.",
+        canonical_url="https://inbxr.us/inbxr-score",
+    )
 
 
 @app.route("/api/support/chat", methods=["POST"])

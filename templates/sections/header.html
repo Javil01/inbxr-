@@ -91,6 +91,7 @@ window.showToast=function(msg,type,duration){
       {% else %}
         {# Visitors: layer-first nav. Home + The 7 Signals as primary, Toolkit as secondary utilities. #}
         <a href="/" class="nav-link nav-link--featured{% if active_page == 'index' %} nav-link--active{% endif %}">Home</a>
+        <a href="/inbxr-score" class="nav-link{% if active_page == 'inbxr_score' %} nav-link--active{% endif %}">The INBXR Score</a>
         <a href="/seven-signals" class="nav-link{% if active_page == 'seven_signals' %} nav-link--active{% endif %}">The 7 Signals</a>
         <div class="nav-dropdown">
           <button class="nav-link nav-link--dropdown{% if active_page in ['sender','blacklist_monitor','placement','analyzer','email_verifier','subject_scorer','header_analyzer','bimi','bulk_domain_check','frameworks','why_am_i_in_spam','inherited_list_first_aid','email_test'] %} nav-link--active{% endif %}">
@@ -98,7 +99,7 @@ window.showToast=function(msg,type,duration){
             <svg width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </button>
           <div class="nav-dropdown__menu">
-            <a href="/signal-score"    class="nav-dropdown__link{% if active_page == 'signal_score' %} nav-dropdown__link--active{% endif %}">Signal Score</a>
+            <a href="/signal-score"    class="nav-dropdown__link{% if active_page == 'signal_score' %} nav-dropdown__link--active{% endif %}">INBXR Score</a>
             <a href="/why-am-i-in-spam" class="nav-dropdown__link{% if active_page == 'why_am_i_in_spam' %} nav-dropdown__link--active{% endif %}">Why Am I in Spam?</a>
             <a href="/analyzer"        class="nav-dropdown__link{% if active_page == 'analyzer' %} nav-dropdown__link--active{% endif %}">Copy Intelligence</a>
             <a href="/inherited-list-first-aid" class="nav-dropdown__link{% if active_page == 'inherited_list_first_aid' %} nav-dropdown__link--active{% endif %}">List Rescue</a>

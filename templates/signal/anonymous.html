@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Free Signal Score &middot; The 7 Inbox Signals &middot; InbXr</title>
-  <meta name="description" content="Get your free Signal Score in 30 seconds. Type your sending domain and see 2 of 7 inbox signals instantly. No signup. No CSV needed.">
+  <title>Free INBXR Score &middot; The 7 Inbox Signals &middot; InbXr</title>
+  <meta name="description" content="Get your free INBXR Score in 30 seconds. Type your sending domain and see 2 of 7 inbox signals instantly. No signup. No CSV needed.">
   {% if og_data and og_data.domain %}
-  <meta property="og:title" content="{{ og_data.domain }} &middot; Grade {{ og_data.grade }} &middot; Signal Score {{ og_data.score }}/100">
+  <meta property="og:title" content="{{ og_data.domain }} &middot; Grade {{ og_data.grade }} &middot; INBXR Score {{ og_data.score }}/100">
   <meta property="og:description" content="Scored by the InbXr Signal Engine across 7 inbox signals. Check yours free in 30 seconds.">
   {% else %}
-  <meta property="og:title" content="Free Signal Score &middot; InbXr">
-  <meta property="og:description" content="Get your free Signal Score in 30 seconds. Type your sending domain and see 2 of 7 inbox signals instantly.">
+  <meta property="og:title" content="Free INBXR Score &middot; InbXr">
+  <meta property="og:description" content="Get your free INBXR Score in 30 seconds. Type your sending domain and see 2 of 7 inbox signals instantly.">
   {% endif %}
   <meta property="og:url" content="https://inbxr.us/signal-score">
   <meta property="og:type" content="website">
@@ -269,7 +269,7 @@ body.prefilled-mode .sig-anon-csv {
 
 <main class="sig-anon-wrap">
 
-  <span class="sig-anon-eyebrow sig-anon-eyebrow-default">Free Signal Score &middot; 30 seconds &middot; No signup</span>
+  <span class="sig-anon-eyebrow sig-anon-eyebrow-default">Free INBXR Score &middot; 30 seconds &middot; No signup</span>
   <span class="sig-anon-eyebrow sig-anon-eyebrow-prefilled">Upload your list &middot; Full 7-signal reading</span>
   <h1 class="sig-anon-h1 sig-anon-h1-default">Check your email deliverability in 30 seconds.</h1>
   <h1 class="sig-anon-h1 sig-anon-h1-prefilled">See the other 5 signals your ESP can't read.</h1>
@@ -298,7 +298,7 @@ body.prefilled-mode .sig-anon-csv {
       <input type="text" id="anonDomainInput" name="domain" placeholder="yourcompany.com" required aria-label="Your sending domain" />
       <button type="submit" id="anonDomainBtn">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-        Get my Signal Score
+        Get my INBXR Score
       </button>
     </form>
     <p class="sig-anon-form-note">30 seconds &middot; No signup &middot; No credit card &middot; Reads Authentication Standing + Domain Reputation</p>
@@ -339,7 +339,7 @@ body.prefilled-mode .sig-anon-csv {
         {'key':'domain_reputation','name':'04 · Domain Reputation','weight':'15 pts','desc':'Sender-domain blocklist status + recipient provider concentration.'},
         {'key':'dormancy_risk','name':'05 · Spam Trap Exposure','weight':'10 pts','desc':'Probabilistic trap risk from dormancy depth, list age, acquisition pattern.'},
         {'key':'authentication_standing','name':'06 · Authentication Standing','weight':'5 pts','desc':'SPF + DKIM + DMARC + List-Unsubscribe vs 2024-2025 ISP mandates.'},
-        {'key':'decay_velocity','name':'07 · Decay Velocity','weight':'5 pts','desc':'Rate of change in your composite Signal Score. Trend language, no fake day counts.'}
+        {'key':'decay_velocity','name':'07 · Decay Velocity','weight':'5 pts','desc':'Rate of change in your composite INBXR Score. Trend language, no fake day counts.'}
       ] %}
       {% for s in edu_signals %}
       <div class="sig-edu-card">
@@ -406,7 +406,7 @@ body.prefilled-mode .sig-anon-csv {
     panel.classList.add('is-visible');
     if (btn) {
       btn.disabled = false;
-      btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg> Get my Signal Score';
+      btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg> Get my INBXR Score';
     }
   }
 
@@ -433,7 +433,7 @@ body.prefilled-mode .sig-anon-csv {
     .then(function(r){ return r.json(); })
     .then(function(d){
       btn.disabled = false;
-      btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg> Get my Signal Score';
+      btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg> Get my INBXR Score';
       if (d.ok) {
         renderResult(d);
       } else {
@@ -442,7 +442,7 @@ body.prefilled-mode .sig-anon-csv {
     })
     .catch(function(){
       btn.disabled = false;
-      btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg> Get my Signal Score';
+      btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg> Get my INBXR Score';
       renderError('Network error. Please try again.');
     });
   });

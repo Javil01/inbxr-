@@ -203,7 +203,7 @@
   <p class="lb-sub">
     Every domain typed into the InbXr homepage gets scored by the
     <strong>Signal Engine</strong>. This board shows the top 50 by Domain
-    Signal Score, ranked across authentication and reputation. Anonymized
+    INBXR Score, ranked across authentication and reputation. Anonymized
     aggregate data. Add your own in 30 seconds.
   </p>
 
@@ -219,7 +219,7 @@
     </div>
     <div class="lb-stat">
       <div class="lb-stat__num">{{ stats.avg_score|round|int }}</div>
-      <div class="lb-stat__label">Average Signal Score</div>
+      <div class="lb-stat__label">Average INBXR Score</div>
     </div>
     <div class="lb-stat">
       <div class="lb-stat__num">{{ stats.grade_distribution.get('A', 0) + stats.grade_distribution.get('B', 0) }}</div>
@@ -280,7 +280,7 @@
 
   <div class="lb-cta">
     <h3 class="lb-cta__h">Add your domain to the board</h3>
-    <p class="lb-cta__sub">Type your sending domain on the homepage and get your Signal Score in 30 seconds. Your score automatically updates on this board.</p>
+    <p class="lb-cta__sub">Type your sending domain on the homepage and get your INBXR Score in 30 seconds. Your score automatically updates on this board.</p>
     <a href="/" class="lb-cta__btn">Score my domain &rarr;</a>
   </div>
 

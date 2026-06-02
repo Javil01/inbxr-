@@ -1,5 +1,5 @@
 {% extends "auth/base_auth.html" %}
-{% block title %}Signal Score. The 7 Inbox Signals{% endblock %}
+{% block title %}INBXR Score. The 7 Inbox Signals{% endblock %}
 {% block content %}
 <style>
 .sig-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; }
@@ -210,7 +210,7 @@
 
 <div class="sig-header">
   <div>
-    <h1>Signal Score</h1>
+    <h1>INBXR Score</h1>
     <p class="sig-header__sub">The 7 Inbox Signals. Read every 6 hours</p>
   </div>
   <div class="sig-actions">
@@ -231,18 +231,18 @@
 {% if not latest %}
   {# ── Anonymous / empty-state: educational + working upload ── #}
   <div class="sig-anon-hero">
-    <span class="sig-anon-hero__eyebrow">Free Signal Score · 60 seconds · No signup</span>
+    <span class="sig-anon-hero__eyebrow">Free INBXR Score · 60 seconds · No signup</span>
     <h1 class="sig-anon-hero__title">Read all 7 signals your email list is broadcasting.</h1>
     <p class="sig-anon-hero__sub">
       Most email tools check one signal: bounce rate. Your list is broadcasting six more ·
       MPP-adjusted engagement, acquisition cohort quality, dormancy risk, domain reputation,
-      authentication standing, and decay velocity. InbXr reads all 7 and gives you one Signal Score.
+      authentication standing, and decay velocity. InbXr reads all 7 and gives you one INBXR Score.
     </p>
 
     <label for="csvUploadInput" class="sig-anon-hero__drop">
       <div class="sig-anon-hero__drop-icon">📁</div>
       <p class="sig-anon-hero__drop-title">Upload a CSV with an "email" column</p>
-      <p class="sig-anon-hero__drop-sub">We'll calculate your Signal Score instantly. Nothing is saved without your permission.</p>
+      <p class="sig-anon-hero__drop-sub">We'll calculate your INBXR Score instantly. Nothing is saved without your permission.</p>
     </label>
     <input type="file" id="csvUploadInput" accept=".csv" style="display:none" onchange="uploadCsv(this)" />
 
@@ -270,7 +270,7 @@
       {'key':'domain_reputation','name':'04 · Domain Reputation','weight':'15 pts','desc':'Sender-domain blocklist status + recipient provider concentration. High Yahoo/AOL density = spikier deliverability risk.','market':False},
       {'key':'dormancy_risk','name':'05 · Spam Trap Exposure','weight':'10 pts','desc':'Probabilistic spam trap risk based on the conditions that produce trap hits. Dormancy depth, list age, and acquisition source pattern. Score the segment most likely to carry trap risk before you send.','market':False},
       {'key':'authentication_standing','name':'06 · Authentication Standing','weight':'5 pts','desc':'SPF + DKIM + DMARC + List-Unsubscribe scored against the 2024-2025 Gmail, Yahoo, and Microsoft enforcement requirements.','market':False},
-      {'key':'decay_velocity','name':'07 · Decay Velocity','weight':'5 pts','desc':'Rate of change in your composite Signal Score. Trend language only. No fake day-count predictions.','market':False}
+      {'key':'decay_velocity','name':'07 · Decay Velocity','weight':'5 pts','desc':'Rate of change in your composite INBXR Score. Trend language only. No fake day-count predictions.','market':False}
     ] %}
     {% for s in edu_signals %}
     <div class="sig-edu-card">
@@ -300,7 +300,7 @@
     <h2 class="sig-empty__title">Want continuous monitoring instead of a one-shot read?</h2>
     <p class="sig-empty__text">
       Connect Mailchimp, ActiveCampaign, Mailgun, or AWeber and InbXr recalculates your
-      Signal Score every 6 hours, fires Early Warning alerts when any dimension trends toward
+      INBXR Score every 6 hours, fires Early Warning alerts when any dimension trends toward
       danger, and runs the Signal Recommendations you set up. All hands-off.
     </p>
     <div class="sig-empty__actions">
@@ -340,7 +340,7 @@
         <span class="sig-score-grade" style="color: {{ '#059669' if latest.signal_grade in ['A','B'] else ('#d97706' if latest.signal_grade == 'C' else '#dc2626') }};">
           {{ latest.signal_grade }}. {{ grade_info.label }}
         </span>
-        <span class="sig-score-label">Signal Score</span>
+        <span class="sig-score-label">INBXR Score</span>
       </div>
     </div>
     <div class="sig-hero__info">
@@ -453,13 +453,13 @@
 
 {% endif %}
 
-{# Connected Platform Health. Renders for all users (with or without Signal Score data) #}
+{# Connected Platform Health. Renders for all users (with or without INBXR Score data) #}
 {% if tier in ('pro', 'agency', 'api') %}
 <div class="sig-esp-section" id="espHealthSection">
   <div class="sig-esp-section__header">
     <div>
       <h3 class="sig-esp-section__title">Connected Platform Health</h3>
-      <p class="sig-esp-section__sub">Aggregate data from your connected email platforms. Backward-looking supporting view for your Signal Score.</p>
+      <p class="sig-esp-section__sub">Aggregate data from your connected email platforms. Backward-looking supporting view for your INBXR Score.</p>
     </div>
     <a href="{{ url_for('integrations.integrations_page') }}" class="sig-btn sig-btn--outline" style="font-size:0.78rem;padding:6px 14px;">Manage Integrations</a>
   </div>
@@ -472,7 +472,7 @@
 
 <script>
 function recalculateNow() {
-  if (!confirm('Recalculate your Signal Score now? This pulls latest data from your connected ESP.')) return;
+  if (!confirm('Recalculate your INBXR Score now? This pulls latest data from your connected ESP.')) return;
   fetch('/signal-score/calculate', {
     method: 'POST',
     headers: {
@@ -502,7 +502,7 @@ function uploadCsv(input) {
     drop.style.opacity = '0.6';
     drop.style.pointerEvents = 'none';
     const dt = drop.querySelector('.sig-anon-hero__drop-title');
-    if (dt) dt.textContent = 'Calculating your Signal Score…';
+    if (dt) dt.textContent = 'Calculating your INBXR Score…';
   }
 
   fetch('/signal-score/from-csv', {
@@ -583,7 +583,7 @@ function renderAnonResult(d) {
         <div class="sig-anon-result__grade" style="color:inherit;">Grade ${grade}</div>
       </div>
       <div class="sig-anon-result__summary">
-        <h2 class="sig-anon-result__summary-title">Your Signal Score: ${score}/100 (${grade})</h2>
+        <h2 class="sig-anon-result__summary-title">Your INBXR Score: ${score}/100 (${grade})</h2>
         <p class="sig-anon-result__summary-desc">
           ${gradeLabel}. Analyzed ${d.rows_parsed || 0} contacts from your CSV.
           ${d.rows_skipped ? d.rows_skipped + ' rows skipped (invalid or duplicate).' : ''}
@@ -596,7 +596,7 @@ function renderAnonResult(d) {
     <div class="sig-anon-result__cta-box">
       <h3 class="sig-anon-result__cta-title">Want continuous monitoring on this list?</h3>
       <p class="sig-anon-result__cta-sub">
-        Create a free account to save this report, track your Signal Score over time, set up
+        Create a free account to save this report, track your INBXR Score over time, set up
         Signal Recommendations with dry-run preview, and get Early Warning alerts when any dimension
         trends toward danger.
       </p>

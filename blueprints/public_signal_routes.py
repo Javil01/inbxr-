@@ -210,7 +210,7 @@ QUIZ_QUESTIONS = [
 
 @public_signal_bp.route("/quiz")
 def quiz_page():
-    """CUT IN V1. The quiz is replaced by Domain Signal Score as the lead magnet.
+    """CUT IN V1. The quiz is replaced by Domain INBXR Score as the lead magnet.
     Redirect to /signal-score which is the stronger front door."""
     from flask import redirect
     return redirect("/signal-score", code=301)
@@ -277,7 +277,7 @@ def quiz_score():
 
     weakest_info = signal_copy_map.get(weakest_signal, {
         "name": "Unknown",
-        "action": "Run a full Signal Score against your list to diagnose.",
+        "action": "Run a full INBXR Score against your list to diagnose.",
     })
 
     return jsonify({
@@ -796,7 +796,7 @@ def inherited_list_first_aid_export():
 # ── /verified-sender — InbXr Verified Sender certification ──
 #
 # Public product page + badge serving endpoints. Brands pay for an
-# annual certification that requires a Signal Score >= 80 (Grade B+).
+# annual certification that requires a INBXR Score >= 80 (Grade B+).
 # The badge is a static SVG served from /api/verified/<domain>.svg
 # and is the distribution vehicle for the product.
 
@@ -938,7 +938,7 @@ def annual_report_page():
 
 # ── /leaderboard — public domain leaderboard ─────────────
 #
-# Every time the Domain Signal Score engine runs against a domain,
+# Every time the Domain INBXR Score engine runs against a domain,
 # a row lands in domain_leaderboard. This page shows the top 50,
 # plus aggregate stats. Pure SEO surface: auto-updates, deep
 # anonymization, and a permanent incentive for visitors to type
@@ -1019,7 +1019,7 @@ def decay_rescue_thank_you():
     )
 
 
-# ── Embeddable Signal Score badge ───────────────────────
+# ── Embeddable INBXR Score badge ───────────────────────
 #
 # Two badge formats, both keyed to a domain:
 #
@@ -1081,7 +1081,7 @@ def _get_badge_data(domain):
             "not_found": False,
         }
 
-    # Not yet scored — run the Domain Signal Score engine now to seed
+    # Not yet scored — run the Domain INBXR Score engine now to seed
     # the leaderboard, then re-read. This doubles as a "badge install"
     # that automatically populates the public leaderboard.
     try:
@@ -1135,11 +1135,11 @@ def badge_svg(domain):
 
     data = _get_badge_data(clean)
     if data["not_found"]:
-        label = "Signal Score"
+        label = "INBXR Score"
         value = "not scored"
         fill = "#64748b"
     else:
-        label = "Signal Score"
+        label = "INBXR Score"
         value = f"{data['score']} ({data['grade']})"
         fill = _grade_color(data["grade"])
 
@@ -1195,7 +1195,7 @@ def badge_js_loader():
   wrap.target = "_blank";
   wrap.rel = "noopener";
   wrap.style.cssText = "display:inline-flex;align-items:center;gap:0;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Arial,sans-serif;font-size:11px;font-weight:700;text-decoration:none;border-radius:4px;overflow:hidden;line-height:1;vertical-align:middle;";
-  wrap.innerHTML = '<span style="background:#0f172a;color:#fff;padding:5px 8px;">Signal Score</span><span style="background:#64748b;color:#fff;padding:5px 8px;">loading</span>';
+  wrap.innerHTML = '<span style="background:#0f172a;color:#fff;padding:5px 8px;">INBXR Score</span><span style="background:#64748b;color:#fff;padding:5px 8px;">loading</span>';
   self.parentNode.insertBefore(wrap, self);
 
   fetch("https://inbxr.us/api/badge/" + encodeURIComponent(domain) + ".json")
@@ -1203,7 +1203,7 @@ def badge_js_loader():
     .then(function(d) {
       var color = {A:"#059669",B:"#0891b2",C:"#d97706",D:"#dc2626",F:"#991b1b"}[d.grade] || "#64748b";
       var right = d.ok ? (d.score + " (" + d.grade + ")") : "not scored";
-      wrap.innerHTML = '<span style="background:#0f172a;color:#fff;padding:5px 8px;">Signal Score</span><span style="background:' + color + ';color:#fff;padding:5px 8px;">' + right + '</span>';
+      wrap.innerHTML = '<span style="background:#0f172a;color:#fff;padding:5px 8px;">INBXR Score</span><span style="background:' + color + ';color:#fff;padding:5px 8px;">' + right + '</span>';
     })
     .catch(function() {});
 })();
@@ -1223,9 +1223,9 @@ def badge_docs_page():
     return render_template(
         "public/badge_docs.html",
         allow_index=True,
-        title="Embeddable Signal Score Badge · Show Off Your Deliverability · InbXr",
+        title="Embeddable INBXR Score Badge · Show Off Your Deliverability · InbXr",
         meta_description=(
-            "Embed your InbXr Signal Score on your website, GitHub README, "
+            "Embed your INBXR Score on your website, GitHub README, "
             "or email signature. Single script tag or image URL. Live, "
             "auto-updating. Works anywhere HTML renders."
         ),

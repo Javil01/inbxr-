@@ -4,7 +4,7 @@
     <div class="hero-split">
       <div class="hero-split__copy">
         <span class="sender-hero__eyebrow">The Signal Engine &middot; 7 Inbox Signals</span>
-        <h1 class="sender-hero__title">Your Email List Has a Signal Score. You've NEVER Seen Yours.</h1>
+        <h1 class="sender-hero__title">Your Email List Has a INBXR Score. You've NEVER Seen Yours.</h1>
         <p class="sender-hero__sub">It's the single best leading indicator of your next campaign's performance &mdash; the 7 hidden factors about your list that bounce rate and open rate only show you after the damage is done. Two of them, no other platform measures.</p>
 
         {# "Replaces 5 tools" strip removed from hero — comparison pages
@@ -14,7 +14,7 @@
           <input type="text" id="heroDomainInput" name="domain" placeholder="yourcompany.com" required aria-label="Your sending domain" />
           <button type="submit" class="hero-cta-btn">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-            Get my Signal Score
+            Get my INBXR Score
           </button>
         </form>
         <p class="hero-assurance">Your score appears right here in 30 seconds. No email required.</p>
@@ -438,7 +438,7 @@
             <div class="hero-act__transition" id="act1Transition">
               <div class="hero-act__trans-btn">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-                But is it true? Run Signal Score
+                But is it true? Run INBXR Score
               </div>
               <div class="hero-act__trans-cursor">
                 <svg viewBox="0 0 24 24" width="16" height="16" fill="#fff"><path d="M4 0l16 12-7 2 4 8-3 1-4-8-6 5z"/></svg>
@@ -453,11 +453,11 @@
                 <span class="hero-mock__dot hero-mock__dot--red"></span>
                 <span class="hero-mock__dot hero-mock__dot--yellow"></span>
                 <span class="hero-mock__dot hero-mock__dot--green"></span>
-                <span class="hero-mock__tab">InbXr Signal Score</span>
+                <span class="hero-mock__tab">INBXR Score</span>
               </div>
               <div class="hero-mock__body">
                 <div class="hero-mock__row">
-                  <span class="hero-mock__label">Signal Score</span>
+                  <span class="hero-mock__label">INBXR Score</span>
                   <span class="hero-mock__grade hero-mock__grade--d">D</span>
                 </div>
                 <div class="hero-mock__divider"></div>
@@ -506,11 +506,11 @@
                 <span class="hero-mock__dot hero-mock__dot--red"></span>
                 <span class="hero-mock__dot hero-mock__dot--yellow"></span>
                 <span class="hero-mock__dot hero-mock__dot--green"></span>
-                <span class="hero-mock__tab">InbXr Signal Score</span>
+                <span class="hero-mock__tab">INBXR Score</span>
               </div>
               <div class="hero-mock__body">
                 <div class="hero-mock__row">
-                  <span class="hero-mock__label">Signal Score</span>
+                  <span class="hero-mock__label">INBXR Score</span>
                   <span class="hero-mock__grade hero-mock__grade--a">A</span>
                 </div>
                 <div class="hero-mock__divider"></div>
@@ -741,7 +741,7 @@
             '<div class="res-grade">Grade ' + grade + '</div>' +
           '</div>' +
           '<div class="res-summary">' +
-            '<h3>' + esc(d.domain) + ' &middot; Partial Signal Score</h3>' +
+            '<h3>' + esc(d.domain) + ' &middot; Partial INBXR Score</h3>' +
             '<p>' + summary + '</p>' +
           '</div>' +
         '</div>' +
@@ -908,7 +908,7 @@
         '<a href="/signup?from=signal-score&domain=' + encodeURIComponent(domain) + '" class="res-cta-btn">Sign up free to see all 7 signals &rarr;</a>' +
       '</div>' +
       '<div style="text-align:center;margin-top:12px;">' +
-        '<button type="button" class="hero-share-btn" id="heroShareBtn" style="background:none;border:1px solid rgba(255,255,255,0.2);color:rgba(255,255,255,0.7);padding:8px 18px;border-radius:999px;font-size:0.82rem;font-weight:600;cursor:pointer;font-family:inherit;">Share your Signal Score</button>' +
+        '<button type="button" class="hero-share-btn" id="heroShareBtn" style="background:none;border:1px solid rgba(255,255,255,0.2);color:rgba(255,255,255,0.7);padding:8px 18px;border-radius:999px;font-size:0.82rem;font-weight:600;cursor:pointer;font-family:inherit;">Share your INBXR Score</button>' +
       '</div>';
   }
 
@@ -983,7 +983,7 @@
         if (navigator.clipboard) {
           navigator.clipboard.writeText(url).then(function(){
             shareBtn.textContent = 'Copied!';
-            setTimeout(function(){ shareBtn.textContent = 'Share your Signal Score'; }, 2000);
+            setTimeout(function(){ shareBtn.textContent = 'Share your INBXR Score'; }, 2000);
           });
         }
       });
@@ -1152,7 +1152,7 @@
     .then(function(r){ return r.json(); })
     .then(function(d){
       btn.disabled = false;
-      btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg> Get my Signal Score';
+      btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg> Get my INBXR Score';
       if (!d.ok) {
         renderError(d.error || 'Could not analyze that domain.');
         return;
@@ -1162,12 +1162,12 @@
       setTimeout(function(){ panel.scrollIntoView({behavior: 'smooth', block: 'center'}); }, 100);
       // Kick off the send test path in parallel — this is the new
       // compound experience that fuses the old email tester UX with
-      // the new Domain Signal Score flow.
+      // the new Domain INBXR Score flow.
       startSendTest();
     })
     .catch(function(){
       btn.disabled = false;
-      btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg> Get my Signal Score';
+      btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg> Get my INBXR Score';
       renderError('Network error. Please try again.');
     });
   });

@@ -25,14 +25,14 @@
 
 <div class="sm-header">
   <h1>Signal Map</h1>
-  <p class="sm-header__sub">Contact segment breakdown from your current Signal Score reading</p>
+  <p class="sm-header__sub">Contact segment breakdown from your current INBXR Score reading</p>
 </div>
 
 {% if not latest or not latest.total_contacts %}
   <div class="sm-card">
     <div class="sm-empty">
       <p>No contact data yet.</p>
-      <p><a href="/signal-score">Run your first Signal Score reading &rarr;</a></p>
+      <p><a href="/signal-score">Run your first INBXR Score reading &rarr;</a></p>
     </div>
   </div>
 {% else %}
@@ -66,6 +66,6 @@
 {% endif %}
 
 <p style="text-align:center;font-size:0.85rem;color:var(--text-3);">
-  <a href="/signal-score">&larr; Back to Signal Score</a>
+  <a href="/signal-score">&larr; Back to INBXR Score</a>
 </p>
 {% endblock %}

@@ -14,11 +14,11 @@ CORS: allowed for all origins so the API can be called from
 Endpoints:
 
     GET  /api/v1/signal-score/<domain>
-         → Full Domain Signal Score for a domain. Same engine that
+         → Full Domain INBXR Score for a domain. Same engine that
            powers the homepage lookup. Returns all 7 signals.
 
     GET  /api/v1/my-score
-         → The authenticated user's latest Signal Score from their
+         → The authenticated user's latest INBXR Score from their
            connected ESP integration. Returns full list-backed data.
 
     GET  /api/v1/leaderboard
@@ -88,13 +88,13 @@ def health():
     })
 
 
-# ── Domain Signal Score lookup ──────────────────────────
+# ── Domain INBXR Score lookup ──────────────────────────
 
 
 @api_v1_bp.route("/signal-score/<domain>")
 @api_key_required
 def api_signal_score_domain(domain):
-    """Return the Domain Signal Score for any sending domain.
+    """Return the Domain INBXR Score for any sending domain.
 
     This is a 2-of-7 signal reading (auth + reputation) that works
     from public DNS data alone. For full 7-signal readings, use
@@ -151,13 +151,13 @@ def api_signal_score_domain(domain):
     })
 
 
-# ── Authenticated user's own Signal Score ──────────────
+# ── Authenticated user's own INBXR Score ──────────────
 
 
 @api_v1_bp.route("/my-score")
 @api_key_required
 def api_my_signal_score():
-    """Return the authenticated user's latest Signal Score from their
+    """Return the authenticated user's latest INBXR Score from their
     connected ESP. Full 7-signal reading with list data (bounce
     exposure, engagement trajectory, etc). Only populated if the
     user has an active ESP integration and Signal Watch has run."""
@@ -187,7 +187,7 @@ def api_my_signal_score():
     if not row:
         return jsonify({
             "ok": False,
-            "error": "No Signal Score on record yet. Connect an ESP or upload a CSV first.",
+            "error": "No INBXR Score on record yet. Connect an ESP or upload a CSV first.",
             "code": "no_score",
         }), 404
 

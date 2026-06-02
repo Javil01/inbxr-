@@ -1,0 +1,209 @@
+{% extends "auth/base_auth.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+
+<style>
+.is-wrap { max-width: 820px; margin: 0 auto; }
+.is-eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; padding: 4px 14px; border-radius: 99px; background: rgba(37,99,235,0.1); color: var(--brand); margin-bottom: 16px; }
+.is-eyebrow__ver { background: var(--brand); color: #fff; padding: 1px 8px; border-radius: 99px; font-size: 0.62rem; letter-spacing: 0.05em; }
+.is-title { font-size: 2.4rem; font-weight: 900; color: var(--text-1); margin: 0 0 16px; line-height: 1.12; }
+.is-intro { font-size: 1.08rem; color: var(--text-2); line-height: 1.6; margin-bottom: 14px; max-width: 720px; }
+.is-intro strong { color: var(--text-1); }
+
+/* Predictive wedge callout */
+.is-wedge { display: grid; grid-template-columns: 1fr 1fr; gap: 0; border: 1px solid var(--border); border-radius: 14px; overflow: hidden; margin: 36px 0; }
+.is-wedge__col { padding: 24px 26px; }
+.is-wedge__col--past { background: var(--bg-2); }
+.is-wedge__col--next { background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); }
+.is-wedge__tag { font-size: 0.68rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-3); margin-bottom: 8px; }
+.is-wedge__col--next .is-wedge__tag { color: var(--brand); }
+.is-wedge__head { font-size: 1.05rem; font-weight: 800; color: var(--text-1); margin-bottom: 6px; }
+.is-wedge__body { font-size: 0.9rem; color: var(--text-2); line-height: 1.5; }
+@media (max-width: 640px) { .is-wedge { grid-template-columns: 1fr; } }
+
+.is-h2 { font-size: 1.5rem; font-weight: 900; color: var(--text-1); margin: 48px 0 8px; }
+.is-sub { font-size: 0.98rem; color: var(--text-2); line-height: 1.55; margin-bottom: 20px; max-width: 700px; }
+
+/* Grade bands */
+.is-bands { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin: 20px 0; }
+.is-band { border: 1px solid var(--border); border-radius: 10px; padding: 16px 10px; text-align: center; background: var(--bg-1, #fff); }
+.is-band__grade { font-size: 1.6rem; font-weight: 900; line-height: 1; }
+.is-band__range { font-size: 0.74rem; color: var(--text-3); font-weight: 700; margin-top: 6px; }
+.is-band__label { font-size: 0.74rem; color: var(--text-2); margin-top: 4px; }
+.is-band--a .is-band__grade { color: #16a34a; }
+.is-band--b .is-band__grade { color: #2563eb; }
+.is-band--c .is-band__grade { color: #ca8a04; }
+.is-band--d .is-band__grade { color: #ea580c; }
+.is-band--f .is-band__grade { color: #dc2626; }
+@media (max-width: 560px) { .is-bands { grid-template-columns: repeat(2, 1fr); } }
+
+/* Two-tier model */
+.is-tiers { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 20px 0; }
+.is-tier { border: 1px solid var(--border); border-radius: 14px; padding: 26px; background: var(--bg-1, #fff); }
+.is-tier--full { border-color: var(--brand); box-shadow: 0 0 0 1px var(--brand); }
+.is-tier__name { font-size: 1.15rem; font-weight: 800; color: var(--text-1); margin: 0 0 4px; }
+.is-tier__tagline { font-size: 0.8rem; color: var(--brand); font-weight: 700; margin-bottom: 14px; }
+.is-tier__row { display: flex; gap: 10px; font-size: 0.88rem; color: var(--text-2); line-height: 1.45; margin-bottom: 10px; }
+.is-tier__row::before { content: "✓"; color: #16a34a; font-weight: 900; flex-shrink: 0; }
+.is-tier__row--no::before { content: "—"; color: var(--text-3); }
+.is-tier__note { font-size: 0.78rem; color: var(--text-3); margin-top: 14px; line-height: 1.5; }
+@media (max-width: 640px) { .is-tiers { grid-template-columns: 1fr; } }
+
+/* Signals table */
+.is-signals { border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin: 20px 0; }
+.is-signal { display: flex; align-items: center; gap: 14px; padding: 13px 18px; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+.is-signal:last-child { border-bottom: none; }
+.is-signal__num { font-size: 0.7rem; font-weight: 800; color: var(--text-3); width: 26px; flex-shrink: 0; }
+.is-signal__name { font-weight: 700; color: var(--text-1); flex: 1; }
+.is-signal__name span { font-weight: 600; color: var(--text-3); font-size: 0.74rem; }
+.is-signal__wt { font-size: 0.8rem; font-weight: 800; color: var(--brand); width: 56px; text-align: right; flex-shrink: 0; }
+.is-signal--lite { background: rgba(37,99,235,0.04); }
+
+/* Own score / transparency */
+.is-own { display: flex; align-items: center; gap: 22px; border: 1px solid var(--border); border-radius: 14px; padding: 24px 28px; margin: 20px 0; background: var(--bg-2); }
+.is-own__grade { font-size: 3rem; font-weight: 900; line-height: 1; color: #16a34a; }
+.is-own__meta { flex: 1; }
+.is-own__title { font-weight: 800; color: var(--text-1); margin-bottom: 4px; }
+.is-own__body { font-size: 0.85rem; color: var(--text-2); line-height: 1.5; }
+.is-own__body code { font-family: 'SF Mono', Monaco, Consolas, monospace; font-size: 0.8rem; }
+
+.is-changelog { background: var(--bg-2); border: 1px solid var(--border); border-radius: 12px; padding: 22px 26px; margin: 20px 0; }
+.is-changelog__item { font-size: 0.86rem; color: var(--text-2); line-height: 1.5; margin-bottom: 8px; }
+.is-changelog__item strong { color: var(--text-1); }
+
+.is-cta { background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border-radius: 14px; padding: 34px; text-align: center; margin-top: 44px; }
+.is-cta__title { font-size: 1.35rem; font-weight: 800; color: var(--text-1); margin: 0 0 10px; }
+.is-cta__btn { display: inline-block; background: var(--brand); color: #fff; padding: 13px 30px; border-radius: 8px; font-weight: 700; text-decoration: none; }
+.is-cta__alt { display: block; margin-top: 14px; font-size: 0.85rem; }
+.is-cta__alt a { color: var(--brand); font-weight: 600; }
+</style>
+
+<div class="is-wrap">
+
+  <span class="is-eyebrow">The INBXR Score <span class="is-eyebrow__ver">v{{ score_version }}</span></span>
+  <h1 class="is-title">A credit score for your email sending reputation.</h1>
+  <p class="is-intro">
+    The <strong>INBXR Score</strong> is a single 0&ndash;100 number, graded A&ndash;F, that tells you
+    how healthy your email program is &mdash; and where it's headed. It's built on the
+    <a href="/seven-signals">7 Inbox Signals</a> every list broadcasts, and it's the standard we use to
+    evaluate senders, certify partners, and power the <a href="/leaderboard">public sender registry</a>.
+  </p>
+  <p class="is-intro">
+    Think of it the way lenders think of a FICO score. One portable number that anyone can pull,
+    that summarizes risk, and that you can actively improve. Except this one is about whether your
+    next campaign reaches the inbox.
+  </p>
+
+  <!-- Predictive wedge: the open lane vs incumbent reputation scores -->
+  <div class="is-wedge">
+    <div class="is-wedge__col is-wedge__col--past">
+      <div class="is-wedge__tag">Legacy reputation scores</div>
+      <div class="is-wedge__head">Grade what already happened</div>
+      <div class="is-wedge__body">
+        IP-reputation scores read your past sending behavior &mdash; complaints and bounces you've
+        already generated. By the time the number moves, the damage is done.
+      </div>
+    </div>
+    <div class="is-wedge__col is-wedge__col--next">
+      <div class="is-wedge__tag">The INBXR Score</div>
+      <div class="is-wedge__head">Predicts what breaks next</div>
+      <div class="is-wedge__body">
+        A leading indicator. It reads the list-health signals that <em>cause</em> deliverability
+        problems before your next send, so you can fix them ahead of time &mdash; not after a campaign
+        lands in spam.
+      </div>
+    </div>
+  </div>
+
+  <!-- Grade bands -->
+  <h2 class="is-h2">How the score reads</h2>
+  <p class="is-sub">
+    A 0&ndash;100 composite of the 7 Inbox Signals, rounded to an integer and mapped to a letter grade.
+    The bands are fixed and published &mdash; the same scale for every sender, every time.
+  </p>
+  <div class="is-bands">
+    <div class="is-band is-band--a"><div class="is-band__grade">A</div><div class="is-band__range">90&ndash;100</div><div class="is-band__label">Excellent</div></div>
+    <div class="is-band is-band--b"><div class="is-band__grade">B</div><div class="is-band__range">75&ndash;89</div><div class="is-band__label">Good</div></div>
+    <div class="is-band is-band--c"><div class="is-band__grade">C</div><div class="is-band__range">60&ndash;74</div><div class="is-band__label">Fair</div></div>
+    <div class="is-band is-band--d"><div class="is-band__grade">D</div><div class="is-band__range">45&ndash;59</div><div class="is-band__label">At risk</div></div>
+    <div class="is-band is-band--f"><div class="is-band__grade">F</div><div class="is-band__range">0&ndash;44</div><div class="is-band__label">Critical</div></div>
+  </div>
+
+  <!-- Two-tier model: full vs Lite -->
+  <h2 class="is-h2">Full score vs. Lite score</h2>
+  <p class="is-sub">
+    Five of the seven signals read your list's per-contact engagement &mdash; data only your ESP holds.
+    So the score comes in two honest tiers. We never present one as the other.
+  </p>
+  <div class="is-tiers">
+    <div class="is-tier is-tier--full">
+      <div class="is-tier__name">INBXR Score</div>
+      <div class="is-tier__tagline">Full &middot; all 7 signals</div>
+      <div class="is-tier__row">Reads list-side signals: engagement, acquisition quality, dormancy, decay velocity</div>
+      <div class="is-tier__row">Reads domain-side signals: authentication &amp; domain reputation</div>
+      <div class="is-tier__row">The true predictive score &mdash; what breaks next</div>
+      <div class="is-tier__note">Requires connecting your ESP (or a one-time CSV upload). Free to start.</div>
+    </div>
+    <div class="is-tier">
+      <div class="is-tier__name">INBXR Score Lite</div>
+      <div class="is-tier__tagline">Domain-side &middot; 2 signals</div>
+      <div class="is-tier__row">Authentication Standing (SPF / DKIM / DMARC / one-click unsubscribe)</div>
+      <div class="is-tier__row">Domain Reputation (110+ blocklists, provider mix)</div>
+      <div class="is-tier__row is-tier__row--no">List-side signals require ESP data &mdash; shown as pending</div>
+      <div class="is-tier__note">Computable for <em>any</em> domain, with no signup. This powers the public registry and embeddable badges.</div>
+    </div>
+  </div>
+
+  <!-- The 7 signals -->
+  <h2 class="is-h2">The 7 Inbox Signals inside the score</h2>
+  <p class="is-sub">
+    Each signal carries a fixed weight. Domain-side signals (highlighted) are what the Lite score can
+    read for any domain. See the <a href="/methodology">full methodology</a> for every formula and data source.
+  </p>
+  <div class="is-signals">
+    <div class="is-signal"><div class="is-signal__num">01</div><div class="is-signal__name">Bounce Exposure</div><div class="is-signal__wt">25 pts</div></div>
+    <div class="is-signal"><div class="is-signal__num">02</div><div class="is-signal__name">Engagement Trajectory <span>· MPP-adjusted</span></div><div class="is-signal__wt">25 pts</div></div>
+    <div class="is-signal"><div class="is-signal__num">03</div><div class="is-signal__name">Acquisition Quality</div><div class="is-signal__wt">15 pts</div></div>
+    <div class="is-signal is-signal--lite"><div class="is-signal__num">04</div><div class="is-signal__name">Domain Reputation <span>· Lite</span></div><div class="is-signal__wt">15 pts</div></div>
+    <div class="is-signal"><div class="is-signal__num">05</div><div class="is-signal__name">Spam Trap Exposure</div><div class="is-signal__wt">10 pts</div></div>
+    <div class="is-signal is-signal--lite"><div class="is-signal__num">06</div><div class="is-signal__name">Authentication Standing <span>· Lite</span></div><div class="is-signal__wt">5 pts</div></div>
+    <div class="is-signal"><div class="is-signal__num">07</div><div class="is-signal__name">Decay Velocity</div><div class="is-signal__wt">5 pts</div></div>
+  </div>
+
+  {% if own_score %}
+  <!-- Transparency: our own domain-side Lite score -->
+  <h2 class="is-h2">We hold ourselves to the standard</h2>
+  <p class="is-sub">Here's inbxr.us's own INBXR Score Lite, recalculated automatically &mdash; not a hardcoded number.</p>
+  <div class="is-own">
+    <div class="is-own__grade">{{ own_score.grade }}</div>
+    <div class="is-own__meta">
+      <div class="is-own__title">{{ own_score.domain }} &mdash; {{ own_score.total }}/100 (Lite)</div>
+      <div class="is-own__body">
+        Auth <code>{{ own_score.auth_score }}</code> &middot; Reputation <code>{{ own_score.rep_score }}</code>.
+        {{ own_score.visible_signals }} of 7 signals shown; the other {{ own_score.locked_signals }} are list-side
+        and need a connected ESP. Last calculated {{ own_score.calculated_at }} UTC.
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Versioning / changelog -->
+  <h2 class="is-h2">A versioned, stable standard</h2>
+  <p class="is-sub">
+    A standard is only trustworthy if its methodology is stable and its changes are documented.
+    Weights and formulas are versioned; we publish a changelog rather than silently re-tuning.
+  </p>
+  <div class="is-changelog">
+    <div class="is-changelog__item"><strong>v{{ score_version }}</strong> &mdash; Current. 7 signals, fixed weights (25/25/15/15/10/5/5), A&ndash;F bands at 90/75/60/45. Trend language only; no day-count predictions until cross-sender historical data supports them.</div>
+    <div class="is-changelog__item"><strong>Methodology</strong> &mdash; Every formula, data source, and the things we explicitly refuse to fake are published on the <a href="/methodology">methodology page</a>.</div>
+  </div>
+
+  <div class="is-cta">
+    <h2 class="is-cta__title">Get your INBXR Score</h2>
+    <p style="font-size:0.92rem;color:var(--text-2);margin:0 0 18px;">Check any domain's Lite score free, or connect your ESP for the full predictive score.</p>
+    <a href="/signal-score" class="is-cta__btn">Score my list &rarr;</a>
+    <span class="is-cta__alt"><a href="/leaderboard">Browse the public sender registry</a> &middot; <a href="/badge">Add a score badge to your site</a></span>
+  </div>
+
+</div>
+{% endblock %}
